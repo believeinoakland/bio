@@ -6901,3 +6901,15 @@ the design: "Your team's Civicsmith is already fetching the newest list of known
 verified: on tranche/T52 at its tip with these words files: words 0, format 0; file-safety one failure more than without, R24 in `test/m/file-safety/rows.test.mjs`, which lists the stand-ins still owed and now finds this row landed: FILE-SAFETY drops `refusal.SIGNATURES_RUN_UNDER_WAY` from that list and its stand-in.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`; `screens/words-reads.json`.
 owed: BOB: merge this commit (MERGE) with FILE-SAFETY's R24 list brought up to date.
+
+### DEC-450 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcedaAqFXn43yDDqk4vj, UX design #42) (T52's opening; `screens/parked-T52.md`; K4269, K4270)
+for: design (T52)
+question: The parked words items taken up as T52 opens, and C-M2 (whether a checked typed page is citable), parked by DEC-439 to bring to Bob at T52's opening.
+why it is Bob's: the words are not (P17); C-M2 is (what counts as evidence): brought to him as A8 on https://claude.ai/artifact/KXfceZqCJkEocZFxyrBAkf (options: citable once checked, recommended; citable at once, labeled; never).
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed for the words.
+decided: 2026-10-27 · the design session (P17)
+the design: `screen.money.proposed` "proposed by the assistant" (house word); `money.ingest.partial` drops "Background reading: {ingest}" (an internal key); `money.index.events_is_not_wired_here` names what is not connected ("Contract awards and change orders"); `screen.document.reading.stated` worded as `.toolarge` is ("This document holds {size}, more than …"); `notice-producers.index.fetch_done_detail` says "file you captured", as `notice.fetch.done`; `calculations.index.the_source_reads_as_one` says "separator", as its neighbor. Singulars: `screen.document.reading.notext.one`, `screen.capture.supporting.toolarge.one`, `screen.capture.supporting.unavailable.one`. Fix round 7's 14 code keys and DEC-433's unit and part-name items stay with their jobs (tests assert them; code passes the unit).
+verified: on tranche/T52 with these words files: words 0, format 0; `calculations/r7-delimiter` passes; `screens-inquiry/r10-stated` fails with and without (the tranche's own).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-450 block, five rows in place); `screens/parked-T52.md`.
+owed: BOB: merge this commit (MERGE); the owning jobs choose the `.one` rows when the count is 1.

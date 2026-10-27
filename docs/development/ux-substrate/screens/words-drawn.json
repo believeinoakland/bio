@@ -39272,7 +39272,7 @@
   },
   {
    "key": "screen.document.reading.stated",
-   "en": "This document is {size}, which is more than your team's Civicsmith can read. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "en": "This document holds {size}, more than your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
    "protected": false,
    "note": "DEC-418: B481 screens-inquiry (G6, K4571): a reading stated final with its size (a bound that must stay is stated); no OCR act is offered after it"
   },
@@ -41948,7 +41948,7 @@
   },
   {
    "key": "money.ingest.partial",
-   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete.",
    "protected": false,
    "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key"
   },
@@ -42104,7 +42104,7 @@
   },
   {
    "key": "money.index.events_is_not_wired_here",
-   "en": "Events aren't connected here yet, so the contract's award and its change orders can't be read.",
+   "en": "Contract awards and change orders aren't connected here yet, so they can't be read for this contract.",
    "protected": false,
    "note": "DEC-424: B495 money: the reason the money screen's committed-against-paid line gives when no figure can be shown (screens-investigate/money.mjs, cap.difference.why)"
   },
@@ -42122,7 +42122,7 @@
   },
   {
    "key": "notice-producers.index.fetch_done_detail",
-   "en": "The large page you asked for is fetched and filed. Open it to read it.",
+   "en": "The large file you captured is fetched and filed. Open it to read it.",
    "protected": false,
    "note": "DEC-424: B495 notice-producers R27: the Queue item's line (fetch-done)"
   },
@@ -42308,7 +42308,7 @@
   },
   {
    "key": "calculations.index.the_source_reads_as_one",
-   "en": "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
+   "en": "the source reads as one cell per line (separator found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
    "protected": false,
    "note": "DEC-428: B503 calculations/index.mjs:566 (G64)"
   },
@@ -44345,6 +44345,24 @@
    "en": "Your team's Civicsmith is already fetching the newest list of known harmful files, so it did not start another. Look again in a few minutes. Nothing was changed.",
    "protected": false,
    "note": "DEC-449: B544, the refusal while the signature run is under way (scanMirror)"
+  },
+  {
+   "key": "screen.document.reading.notext.one",
+   "en": "Page {pages} has no words that can be read, so it can't be searched or cited. You can still open it.",
+   "protected": false,
+   "note": "DEC-450: the singular of screen.document.reading.notext (one page)"
+  },
+  {
+   "key": "screen.capture.supporting.toolarge.one",
+   "en": "One was too large to keep.",
+   "protected": false,
+   "note": "DEC-450: the singular of screen.capture.supporting.toolarge"
+  },
+  {
+   "key": "screen.capture.supporting.unavailable.one",
+   "en": "One couldn't be fetched from where it is published.",
+   "protected": false,
+   "note": "DEC-450: the singular of screen.capture.supporting.unavailable"
   }
  ],
  "rewrite": {
@@ -44553,6 +44571,7 @@
   "capture.fieldneeded": "This can be captured only once “{field}” is filled in.",
   "refusal.SUBJECT_IN_ACTIVE_PLAN": "That matter is already in another open plan of this project. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
   "screen.find-in.notread": "{n} documents could not be searched, because they are not read yet or are pictures of text. They may hold what you looked for.",
-  "screen.find-in.notread.one": "One document could not be searched, because it is not read yet or is a picture of text. It may hold what you looked for."
+  "screen.find-in.notread.one": "One document could not be searched, because it is not read yet or is a picture of text. It may hold what you looked for.",
+  "screen.money.proposed": "proposed by the assistant; not included"
  }
 }

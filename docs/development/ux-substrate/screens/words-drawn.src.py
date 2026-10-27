@@ -7318,7 +7318,7 @@ w418('notice.fetch.done.door', 'Open the document', 'notice-producers (K4562): t
 w418('screen.document.reading.progress', "Being read: {read} of {total} so far. Your team's Civicsmith is reading this file in pieces, and this page updates as it goes.", 'screens-inquiry / screens-intake (K4571): a large text file read in the background; minted under screen.document.reading.*; {read} and {total} sizes such as 4 MB')
 w418('screen.document.reading.partial', 'Until the whole file is read, searching and citing cover only what has been read so far.', 'screens-inquiry / screens-intake (K4571): beside the progress line of a large text file; never a silent partial read')
 w418('screen.document.reading.done', 'Read in full. Every line of this file can now be searched and cited.', 'screens-inquiry / screens-intake (K4571): when the background reading of a large text file has finished')
-w418('screen.document.reading.stated', "This document is {size}, which is more than your team's Civicsmith can read. It is kept whole and you can open it, but its words can't be searched or cited.", 'screens-inquiry (G6, K4571): a reading stated final with its size (a bound that must stay is stated); no OCR act is offered after it')
+w418('screen.document.reading.stated', "This document holds {size}, more than your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.", 'screens-inquiry (G6, K4571): a reading stated final with its size (a bound that must stay is stated); no OCR act is offered after it')
 w418('screen.document.reading.repairable', "An earlier attempt did not read this document, but your team's Civicsmith can read it now. Press Read it to try again.", 'screens-inquiry (G8): an old reading that can be repaired; drawn with the Read it door')
 w418('screen.document.reading.repairable.door', 'Read it', "screens-inquiry (G8): the door beside the repairable statement")
 w418('refusal.DOCUMENT_COPY_PENDING', "The publishable copy of {document}, a file a member supplied, is still being made. Try again in a few minutes. Nothing was changed.", 'screens-publish (G9, G10): a case relying on a member-supplied file whose cleaned copy is not made yet; {document} the document named')
@@ -7786,7 +7786,7 @@ w424('calculations.index.one_act_reads_at_most', "One request can read at most {
 w424('calculations.declared.moneyingestread', "Reads what a money ingest has stored, a page at a time, with the true counts and whether the ingest is complete. Changes nothing.", "G55: the declared op's description (a builders' line like the other declared ops'; written because BOB asked for the row)")
 w424('notice-producers.ingest.done', "Your table has been read: {written} of {rows} rows were written as money facts, and {not_written} were not.", "G55: the Queue item to the member who asked, when a background ingest is done; {written} {rows} {not_written} counts")
 w424('notice-producers.ingest.stopped', 'Reading your table stopped after {written} of {rows} rows were written as money facts; the rest were not. The facts already written stay, marked as not complete.', "G55: the Queue item when a background ingest was stopped; {written} {rows} counts; the stop's own reason follows from calculations.ingest.stopped_*")
-w424('money.ingest.partial', "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}", "G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key")
+w424('money.ingest.partial', "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete.", "G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key")
 # G47 (K4666): a case document over its size bound
 w424('case-authoring.index.case_document_too_large', "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.", "case-authoring R14 (G47): preparing a case whose document is over its bound; {size} {bound} in MB, {materials} {members} counts")
 w424('case-authoring.checks.case_document_too_large', "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.", "G47: the same sentence as the check's translation (C-136.9); same fills")
@@ -7817,11 +7817,11 @@ w424('money.index.the_period_states_no_zone', "The period names no time zone, an
 w424('money.index.the_periods_end_why', "The end of the period: {why}", "money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it")
 w424('money.index.the_periods_start_why', "The start of the period: {why}", "money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it")
 w424('money.index.the_profiles_fiscal_year_for', "Your team's profile for {body} has no fiscal year {fiscal}.", "money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}")
-w424('money.index.events_is_not_wired_here', "Events aren't connected here yet, so the contract's award and its change orders can't be read.", "money: the reason the money screen's committed-against-paid line gives when no figure can be shown (screens-investigate/money.mjs, cap.difference.why)")
+w424('money.index.events_is_not_wired_here', "Contract awards and change orders aren't connected here yet, so they can't be read for this contract.", "money: the reason the money screen's committed-against-paid line gives when no figure can be shown (screens-investigate/money.mjs, cap.difference.why)")
 w424('money.index.more_than_one', "more than one", "money: a fill of money.undetermined.fact_concerns_events, drawn in a trail's 'where it moved' reason")
 # B (judged read): the Queue's own items, where the kind has no queue.<kind> row
 w424('notice-producers.index.fetch_done_summary', "{document} has been fetched", "notice-producers R27: the Queue item's title (fetch-done); {document} its title. Beside notice.fetch.done (DEC-418), which the Queue draws only where it holds a queue.<kind> row")
-w424('notice-producers.index.fetch_done_detail', "The large page you asked for is fetched and filed. Open it to read it.", "notice-producers R27: the Queue item's line (fetch-done)")
+w424('notice-producers.index.fetch_done_detail', 'The large file you captured is fetched and filed. Open it to read it.', "notice-producers R27: the Queue item's line (fetch-done)")
 w424('notice-producers.index.machine_work_from_your_standing', "The assistant worked from your standing question: {v1}{v2}. You are told about this once.", "notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'")
 w424('notice-producers.index.open_the_document', "Open the document", "notice-producers R27: the fetch-done item's door; the same words as notice.fetch.done.door (DEC-418)")
 
@@ -7864,7 +7864,7 @@ def w428(key, en, note):
 w428('acquisition.index.render_did_not_return', "the page as a visitor saw it did not come back in time", "acquisition/index.mjs:1492: a final render's failure detail")
 w428('acquisition.index.the_rendered_document_is_length', "the rendered document is {length} bytes, over this surface's {MAX}.", "acquisition/index.mjs:1511 (G72): {length} and {MAX} byte counts")
 w428('calculations.index.taking_every_row_of_a', "Taking every row of a table is the rare case, so say why you need them all. Nothing was written.", "calculations/index.mjs:1762 (G63): an all-rows read with no reason given (K1468)")
-w428('calculations.index.the_source_reads_as_one', "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", "calculations/index.mjs:566 (G64)")
+w428('calculations.index.the_source_reads_as_one', "the source reads as one cell per line (separator found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", "calculations/index.mjs:566 (G64)")
 w428('capture.index.vouched_basis', "this document is already vouched for, so whether it could be vouched for in a batch is not asked", "capture/index.mjs:259 (G78): the batch-vouch basis of a document already vouched for")
 w428('capture.index.file_too_large', "the file exceeds what this surface will capture even in parts; nothing was written", "capture/index.mjs:745")
 w428('capture.index.file_bytes_unreadable', "the file's bytes could not be read whole or held under their own digest, so nothing was written", "capture/index.mjs:757, :770")
@@ -8264,6 +8264,16 @@ w447('screen.follow.open.whole', 'Open all of it in {screen}', 'B543: the fold s
 
 # DEC-449: B544 (FILE-SAFETY #1, T52-12; file-safety C-140.45)
 W.append(dict(key='refusal.SIGNATURES_RUN_UNDER_WAY', en='Your team\'s Civicsmith is already fetching the newest list of known harmful files, so it did not start another. Look again in a few minutes. Nothing was changed.', protected=False, note='DEC-449: B544, the refusal while the signature run is under way (scanMirror)'))
+
+# DEC-450: T52's parked words (screens/parked-T52.md, DEC-396, DEC-427, DEC-433)
+REWRITE.update({
+ 'screen.money.proposed': 'proposed by the assistant; not included',
+})
+def w450(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-450: ' + note))
+w450('screen.document.reading.notext.one', "Page {pages} has no words that can be read, so it can't be searched or cited. You can still open it.", 'the singular of screen.document.reading.notext (one page)')
+w450('screen.capture.supporting.toolarge.one', 'One was too large to keep.', 'the singular of screen.capture.supporting.toolarge')
+w450('screen.capture.supporting.unavailable.one', "One couldn't be fetched from where it is published.", 'the singular of screen.capture.supporting.unavailable')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

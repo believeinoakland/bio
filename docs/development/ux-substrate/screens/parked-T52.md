@@ -1,6 +1,6 @@
 # Parked for T52 (K4269, K4270)
 
-Design changes that do not meet T51's bar (an operation that does not work, or a required screen that cannot be reached). Each line: what, where, source. Taken up when T52 opens.
+Design changes that do not meet T51's bar (an operation that does not work, or a required screen that cannot be reached). Each line: what, where, source. Taken up when T52 opens. **T52 opened: the words items done in DEC-450; C-M2 brought to Bob as A8; the rest stay with BOB's jobs as named.**
 
 
 - `screen.money.proposed` says "proposed by the machine": "the assistant" (house word). Money trail. Seen at DEC-396 (B444 10).
