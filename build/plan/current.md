@@ -38,10 +38,10 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 ## Layer 2
 
 **member-roster**
-- T52-6 · W3 · A-K6 tally · MINOR · `memberList` returns a proposed administrator's row with the endorsers and the administrators still awaited (`endorsedBy`, `endorsementsOwed` exist). PL1 W3.
+- T52-6 · W3 · A-K6 tally · MINOR · `memberList` returns a proposed administrator's row with the endorsers and the administrators still awaited (`endorsedBy`, `endorsementsOwed` exist): member-roster R83 (K5369). PL1 W3.
 
 **membership**
-- T52-7 · W4 · A-K8 (b)(c) · MINOR · `projectInvite` answers a distinct code for invited-not-joined, and checks `founderHandle()` first ("that is you / already an owner"); `memberByHandle` stays (R48). The owner-add arm `project-roster/index.mjs:295` has the same shape: it joins only if the red test reaches it. Words owed. PL1 W4.
+- T52-7 · W4 · A-K8 (b)(c) · MINOR · `projectInvite` answers a distinct code for invited-not-joined, and checks `founderHandle()` first ("that is you / already an owner"); `memberByHandle` stays (R48): membership R157 (K5369). The owner-add arm `project-roster/index.mjs:295` has the same shape: it joins only if the red test reaches it. Words owed. PL1 W4.
 
 **promotion**
 - T52-8 · K5339 red · `row-census.test.mjs`: first: settle the cause, then fix it.
