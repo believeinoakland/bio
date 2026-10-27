@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | AI provider selection; the assistant whole (N1220) | AI-DESIGN | drafting module requirements (A42's lines recorded, K5428-K5433) | none | none |
 | Service levels (K4746); performance and responsiveness; record placement and region picker (N1271, N1273, N1274, N1264, K4599) | PLATFORM | drafting (P-1) | P1-P4 on QUESTIONS.html | time budgets, combined read and fold, load test |
-| Deferred features: registers (N1259), following the trail (N1260), places in layers (N1257), email capture (N824) and the rest of `next.md` | CAPABILITIES | drafting (C2; DEC-447 answers N1260's points) | N1259's open points (K4403), N1269, N1272: to come | none |
+| Deferred features: registers (N1259), following the trail (N1260), places in layers (N1257), email capture (N824) and the rest of `next.md` | CAPABILITIES | READY (C35; every question answered, K5543 closed a2 R135) | N1259's open points (K4403), N1269, N1272: to come | none |
 | File types and sizes (N1266, N1267, N1267a), acceptance corpus (N1268) | FILES | finalizing the type table (F1-F3 answered, K5435-K5437; text 100 MB, K5427) | none | none |
 | The alpha's defects found whole; T52's carried entries confirmed | JOURNEYS | walking 91 screens (W5: 77 of 96 carried defects stand) | none | none |
 | Tests rethink, option A | TESTS-SWEEP | census done (S2); converting class A | none | n/a (merged by BOB) |
