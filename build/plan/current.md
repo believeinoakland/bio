@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 OPEN · layer 5 OPEN · layer 6 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T52 · the beta (K5257)
 **Status** · OPEN · BOB #319 · session_018Bhced5gpDxaidQNabEbp6 · depth 1
-**Jobs** · provenance: PROVENANCE #1 session_018BhcegeZLSnAJh5Ey7J1cm; acquisition: ACQUISITION #1 session_018BhcecZdYrp1PSPuA5cddp
-**Owed** · start capture; start file-safety
+**Jobs** · provenance: PROVENANCE #1 session_018BhcegeZLSnAJh5Ey7J1cm; acquisition: ACQUISITION #1 session_018BhcecZdYrp1PSPuA5cddp; capture: CAPTURE #1 session_018Bhceg3SiVazrFQtyH9cRX
+**Owed** · start file-safety
 
 T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are written from `next.md` and the 0.87.0 walk's placement (K5354); R14 (civicos-process PR #13) is adopted before its first test run (K5351).
 
