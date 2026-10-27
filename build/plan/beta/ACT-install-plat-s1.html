@@ -1,0 +1,47 @@
+<title>Install the Study Copy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one column of numbered steps (a real sequence), warnings set off in an amber box */
+:root{--bg:#f7f8f6;--surface:#fff;--fg:#1d2321;--muted:#5b6662;--line:#d9dfdb;--accent:#1f6b52;--warn:#9a5b13;--warn-soft:#fbf1e3;--serif:Georgia,"Source Serif 4",serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--surface:#1c2320;--fg:#e6ebe8;--muted:#9aa7a1;--line:#2f3a35;--accent:#6fcba4;--warn:#e9b46a;--warn-soft:#3a2d1a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917;--surface:#1c2320;--fg:#e6ebe8;--muted:#9aa7a1;--line:#2f3a35;--accent:#6fcba4;--warn:#e9b46a;--warn-soft:#3a2d1a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--sans);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 48px}
+main{max-width:42rem;margin:0 auto;display:grid;gap:22px}
+h1{font-family:var(--serif);font-size:1.9rem;line-height:1.2;margin:0;text-wrap:balance}
+p{margin:0} .lede{color:var(--muted)}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+ol{margin:0;padding-left:1.4rem;display:grid;gap:12px}
+li{padding-left:4px}
+code{font-size:.95em;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
+.warn{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:6px;padding:12px 16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 20px;display:grid;gap:8px}
+strong{font-weight:650}
+</style>
+<main>
+  <span class="eyebrow">An act only you can take · from BOB #321 · 27 October 2026</span>
+  <h1>Install a second test copy for the speed study</h1>
+  <p class="lede">You asked for the study of Levels 2 and 3 to start (K5444). Its first measurements need a copy of Civicsmith separate from biosmoke8, which teams use for testing. A new copy can only be created through the installer while signed in to your Cloudflare account, so this step is yours. It takes about 20 minutes at a computer. The copy is called <code>plat-s1</code>. It holds only made-up and public documents, and it touches nothing of biosmoke8's.</p>
+
+  <div class="warn"><strong>Two things to avoid.</strong> On step 5 the page also offers to "update" or "remove" biosmoke8: press neither. On step 7 a one-time password appears: <strong>do not paste it into the chat</strong>. Keep it to yourself.</div>
+
+  <div class="box">
+    <p><strong>Before you start:</strong> be signed in to Cloudflare in your browser, on the account you use for Civicsmith.</p>
+  </div>
+
+  <ol>
+    <li>Open <code>https://newgroup.believeinoakland.workers.dev/</code></li>
+    <li>When asked "Do you already have a Cloudflare account?", press <strong>Yes</strong>.</li>
+    <li>Type the short name <code>plat-s1</code> and press <strong>Continue</strong>. A box says the name can never be changed: confirm it.</li>
+    <li>Press <strong>Continue to Cloudflare</strong>, and on Cloudflare's page allow the six permissions it lists.</li>
+    <li>You'll see a page saying Civicsmith already exists in this account, with the words "Nothing was created or changed". That is expected. Under <strong>"Install alongside it"</strong>, type <code>plat-s1</code> again, press that button and confirm. If Cloudflare asks again, allow it.</li>
+    <li>Watch the progress lines for about 20 minutes. There's nothing to choose along the way.</li>
+    <li>At the end you'll see the copy's address and a <strong>one-time password</strong>. Don't paste the password into the chat.</li>
+    <li>Press <strong>"Continue to your team's Civicsmith: become its first administrator"</strong>. Choose your own handle and a password of at least 12 characters, and save the ten recovery codes. These are yours alone.</li>
+    <li>In the copy, open <strong>Members</strong> and add a member with the role <strong>administrator</strong>. It shows an invitation link once, starting with the copy's address and containing <code>#invite=</code>. <strong>Copy that link and paste it into the chat with me.</strong> That's how the study lane gets in. It works once, and the lane uses it within the hour.</li>
+  </ol>
+
+  <div class="box">
+    <p><strong>After that, the rest is mine.</strong> I mark the copy as a test copy, and the study lane signs itself in with the link and adds its own member. Neither of us ever sees your password.</p>
+    <p class="lede">If the install stops partway (its size is near Cloudflare's limits), just tell me what the page says. It can resume, and I'll work out the next step. Don't start over.</p>
+  </div>
+</main>

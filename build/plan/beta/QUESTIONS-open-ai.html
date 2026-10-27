@@ -2,29 +2,21 @@
 
     <span class="eyebrow">The assistant's costs · from the UX design stream</span>
 
-    <article class="q" id="U1">
-      <div class="meta"><span class="k">U1</span><span>UX-DESIGN · cost visibility</span><span>asked 27 Oct</span></div>
-      <h3>Should team leaders see how much each member's AI work costs?</h3>
-      <p>Today's drawing (DEC-420) shows administrators the cost per account and per project, without naming members. Each member sees their own use and cost. AI-DESIGN asks for cost per member as well. Who may see that about a member is your call.</p>
-      <p class="note">Example: Lakeshore Tenants pays for one team account. Mai runs many long readings for "Pothole repairs"; Teo runs few. Rosa, an administrator, sees the month's total and Pothole repairs' share. Should she also see "Mai: $41, Teo: $3"?</p>
-      <ul class="opts">
-        <li><span class="k">A · Leaders see every member's cost by name</span><span>The team can spot heavy use and talk about it. But members may hold back from work they feel is watched, and a member's pattern of work becomes visible to leaders.</span></li>
-        <li><span class="k">B · Per account and per project only; each member sees their own (today's drawing)</span><span>No member is singled out, and projects still show where the money goes. But an administrator can't tell who drives a project's spending without asking.</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">C · As B, but when a team or project limit is reached, an administrator may open the per-member breakdown for that account and month</span><span>Opening it is recorded in the account's history, with who looked and why. Everyday use stays private, administrators get what they need when money runs short, and the look itself is on the record.</span></li>
-      </ul>
-    </article>
 
 
     <span class="eyebrow">The assistant · from the AI-DESIGN lane</span>
     <p class="lede">In the beta, a team, a project or a member chooses which AI the assistant runs on, from a list Civicsmith keeps. Each AI on the list carries Civicsmith's evidence: the privacy checks the team set, and a test of whether it can do each part of the assistant's work (asking, drafting, reading documents, reading unclear pages, checks and plans, drafting a case's account).</p>
     <article class="q" id="AI1">
-      <div class="meta"><span class="k">AI1</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>What lets the assistant reach members in the beta?</h3>
-      <p>Today's rule: an AI part reaches members only after it passes a set of real public matters with answers written by people. That set has never been written, so under today's rule no member could use the assistant in the beta at all.</p>
+      <div class="meta"><span class="k">AI1</span><span>AI-DESIGN</span><span>asked 27 Oct · rewritten 27 Oct at your request</span></div>
+      <h3>What must an AI prove before members can use it in the beta?</h3>
+      <p><span class="k">Why this matters.</span> The assistant's work is split into parts: answering questions, drafting, reading documents, reading unclear pages, running checks and plans, and drafting a case's account. Before any part is switched on for members with a given AI (say Claude, GPT or Gemini), Civicsmith has to know that AI does that part well enough. Otherwise a member could get a wrong answer that looks right.</p>
+      <p><span class="k">Today's rule (from 2026-10, N829, K2479).</span> A part reaches members only after the AI passes a <em>test set of real public matters</em>: real Oakland documents and questions, with the correct answers written by people, not machines. That set was meant to be written later. It has never been written: it ships with no matters in it, and who writes it is yours to decide. So under today's rule, no AI can pass, and no member could use the assistant in the beta at all.</p>
+      <p><span class="k">What Civicsmith can do without that set.</span> It has its own automatic test for each part (Gate 1). It uses invented cases whose right answers are known, so a program can score the AI without a person reading each answer. It is cheaper and quicker, but the cases are made up, so they may miss how real documents trip an AI up. The pass marks for this test are yours to set (AD13), once a first measuring run on your sample accounts shows what the AIs actually score.</p>
+      <p class="note">Example: before "read an unclear scanned page" is switched on with a given AI, Gate 1 feeds it 200 invented scanned pages with known text and scores how much it gets right. Under option B, if that AI clears the mark you set, members can use that part with that AI. Later, once the real Oakland test set exists, the AI is also scored on it, the score is shown to teams, and the part is switched off for that AI if it falls below the mark.</p>
       <ul class="opts">
-        <li><span class="k">A · Keep the rule</span><span>Nothing reaches members until you supply or approve the real matters and each part passes them.</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · A part reaches members once the chosen AI passes Civicsmith's own test for that part</span><span>Invented cases, scored by code. You set the pass marks after a first measuring run on your sample accounts. The real matters, once written, become a standing accuracy check shown to teams, and a part that falls below its mark there is withdrawn.</span></li>
-        <li><span class="k">C · Members may use untested parts, labeled "untested"</span><span>As test copies do today.</span></li>
+        <li><span class="k">A · Keep today's rule</span><span>Nothing reaches members until the real test set is written (by you, or by people you name) and each part passes it. The safest, but the beta has no assistant until that work is done, and that could take weeks.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Gate 1 now; the real test set later, as a standing check</span><span>A part reaches members once the chosen AI passes Civicsmith's automatic test, at the marks you set after the first measuring run. When the real test set exists, it becomes an ongoing accuracy check shown to teams, and a part that falls below its mark there is switched off. The beta gets a working assistant, and every AI is still held to a measured bar. What it needs from you: setting the pass marks after the first run, and later, naming who writes the real set.</span></li>
+        <li><span class="k">C · Let members use untested parts, labeled "untested"</span><span>As test copies do today. The quickest, but members could rely on an AI that has never been checked for that kind of work.</span></li>
       </ul>
     </article>
     <article class="q" id="AI2">
