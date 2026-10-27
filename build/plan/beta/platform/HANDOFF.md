@@ -70,3 +70,5 @@
 **P-18 · 2026-10-27** · Step 1b (Seed A-lite) done: `study/s1-results.md` §1b. The administrator invitation BOB asked for (K5473 (4)) for PLATFORM #2 was **refused by auto mode** (a permission grant), so Bob must issue it; I did not work around it.
 
 **P-19 · 2026-10-27** · PLATFORM #2 took over (#1 archived). The invitation link given twice is dead; asked BOB for a fresh one. Bob's K5535 (C32) folded: PL44-PL45 (interpretation ceiling per level, from measured densities; method only, no figure) in `load-test-draft.md`, L4 and a request to CAPABILITIES in `time-budgets-draft.md`.
+
+**P-20 · 2026-10-27** · CAPABILITIES' counts (via BOB #323) for `interpretationOf`, `partsOf`, `proposeParts` graded in `time-budgets-draft.md` §3 (read act 1 s; full-load share with slicing and a kept answer; Explore, never first wave) and tied to the combined read (K4599, T-a to time Document with and without them) and to PL45. All proposed, none measured.
