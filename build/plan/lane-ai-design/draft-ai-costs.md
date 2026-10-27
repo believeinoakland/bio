@@ -1,6 +1,6 @@
 # The assistant's costs to a team, and what is measured on which copy (draft)
 
-**Status** · DRAFT, AI-DESIGN #3, 2026-10-27; READY for PLANNING and PLATFORM. No requirement lines of its own: the lines that carry these costs are in `draft-ai-use.md` (usage, estimates, thresholds), `draft-ai-gate.md` (test cost and ceiling, characterization), `draft-agent-model.md` (gateway log as a usage source) and `draft-ai-catalogue.md` (prices with date). This file says who pays what, and how each figure is obtained. Every figure below is an example from the lane's research (`NOTES.md`, `NOTES-2.md`, read 2026-10-17 to 10-21, grade Stated unless marked) and is to be re-confirmed before it is shown. An unconfirmed figure is OPEN and restricts nothing (K3540).
+**Status** · READY for PLANNING and PLATFORM. No requirement lines of its own: the lines that carry these costs are in `draft-ai-use.md` (usage, estimates, thresholds), `draft-ai-gate.md` (test cost and ceiling, characterization), `draft-agent-model.md` (gateway log as a usage source) and `draft-ai-catalogue.md` (prices with date). This file says who pays what, and how each figure is obtained. Every figure below is an example from the lane's research (`NOTES.md`, `NOTES-2.md`, read 2026-10-17 to 10-21, grade Stated unless marked) and is to be re-confirmed before it is shown. An unconfirmed figure is OPEN and restricts nothing (K3540).
 
 ## 1. Who pays what
 
@@ -21,7 +21,8 @@ Example price spread, to show why the estimate matters (same model, `gpt-oss-120
 1. **Before connecting:** each plan's price basis and an estimate for typical work (from characterization's standard tasks) (`aiproviders` "Add an AI").
 2. **Before a run or a costly act:** an estimate range on the account that will serve it; if a hop is possible, the extra cost of moving (a cold cache) (`aimoments` (h)).
 3. **After:** the actual cost, by AI and effort, beside the estimate (`ai-use` R11, R15).
-4. **Over time:** spend against each limit; alerts at thresholds the owner sets; reconciliation with the provider's own figures where it offers them, else the gateway log's per-call cost.
+4. **Who is using what** (Bob, K5459): the paying team's administrators, or a paying project's owners, see each member's use and cost on the accounts they pay for, so they can talk with that member before it gets out of hand (`draft-ai-use.md` R27). A member's own account and personal subscription stay private to that member.
+5. **Over time:** spend against each limit; alerts at thresholds the owner sets; reconciliation with the provider's own figures where it offers them, else the gateway log's per-call cost.
 
 ## 3. What is measured, and on which copy
 

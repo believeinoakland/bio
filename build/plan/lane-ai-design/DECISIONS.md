@@ -51,6 +51,9 @@ One line per decision (LANES.md §1): id · date · his words, quoted, never rew
 - AD38 · 2026-10-21 · health reports opt-in and content-free: "ok" · A20 · K4421
 - AD39 · 2026-10-21 · "Agreed" (who may set an ordered list: team administrators for team accounts, a project's owner for project accounts, each member for their own) · REQUIREMENTS §14 (4) · K4443
 
+## Costs
+- AD43 · 2026-10-27 · "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." (option A of UX-DESIGN's cost-visibility question; personal subscriptions stay private) · BOB #321's relay · K5459
+
 ## The lane's scope
 - AD40 · 2026-10-21 · "This session … isn't going to be making decisions relating to UX design for the AI assisted features. The requirements related to UX that we should document here should include reference to the AI provider/plan/type options being presented in a way similar to cybersecurity options." · REQUIREMENTS §9 · K4421
 - AD41 · 2026-10-21 · "These aren't issues that need to be addressed in this lane" (provider-document research stopped; remaining gaps OPEN, restricting nothing) · A18 · K4421

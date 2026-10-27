@@ -1,6 +1,6 @@
 # AI-DESIGN #3 · design brief for the beta's assistant (the frame every module draft follows)
 
-**Status** · 2026-10-27, AI-DESIGN #3. Not a ruling. It fixes, for the lane's own drafts, the technical choices AI-DESIGN #2 left to BOB, each as the lane's **recommendation to BOB** (marked [rec]); BOB decides them (P17), and a draft is revised if he decides otherwise. Bob's decisions are in `DECISIONS.md` (AD-n) and the K lines in `RULINGS-FOR-BOB.md`; the product requirements are `AI-PROVIDER-REQUIREMENTS.md`; the boundary `BOUNDARY-REQUIREMENTS.md` (BR-n); the suite `SUITE-REQUIREMENTS.md` (SR-n, CH-n); classification `WAY-THERE.md`.
+**Status** · 2026-10-27, AI-DESIGN #3. Not a ruling. **Every [rec] below decided by BOB as recommended (K5457).** It fixes, for the lane's own drafts, the technical choices AI-DESIGN #2 left to BOB, each as the lane's **recommendation to BOB** (marked [rec]); BOB decides them (P17), and a draft is revised if he decides otherwise. Bob's decisions are in `DECISIONS.md` (AD-n) and the K lines in `RULINGS-FOR-BOB.md`; the product requirements are `AI-PROVIDER-REQUIREMENTS.md`; the boundary `BOUNDARY-REQUIREMENTS.md` (BR-n); the suite `SUITE-REQUIREMENTS.md` (SR-n, CH-n); classification `WAY-THERE.md`.
 
 ## 1. Packaging [rec: Option 1, BOUNDARY §10]
 | module | layer | change | holds |
@@ -19,10 +19,11 @@
 
 ## 2. Vocabulary every draft uses
 - **entry**: a catalogue row `{entry_id, provider, host, model, version, plan_ids, capabilities, effort_set, limits, prices, checks:{P1..P7}, gate:{part: verdict}, characterization, lifecycle, evidence}`; `entry_id` is the only model name above the adapters (AIR1).
-- **plan**: `{plan_id, provider, kind: api|subscription|aggregator|gateway|builtin|custom, scope: member|project|team|unconfirmed, means_allowed:[gateway|sealed|reference|issued], runtime, token_storage, restrictions[], binding_terms[], guidance_id, free_tier_trains: bool|null}`.
+- **plan**: `{plan_id, provider, kind: api|subscription|aggregator|gateway|builtin|custom, scope: member|project|team|unconfirmed, means_allowed:[gateway|sealed|reference|issued|none], runtimes:[shared_worker|member_runtime|member_device], token_storage, money: reported|priced|none|OPEN, restrictions[], binding_terms[], guidance_id, free_tier_trains: bool|null}`.
 - **part**: one of the assistant's parts Gate 1 judges (the roles of `ai-accounts.USE_KINDS` and the harness's modes); a part not passed is refused by name for that entry (SR10).
 - **checks in force** for a piece of work: the team's locked checks, plus the project's ticked checks for work directly in the project, plus the member's own for their own choices; an entry is offered only if it is `met` on every check in force (OPEN or not met: not offered).
-- **means**: `gateway` (default for team and project API keys [rec]), `sealed`, `reference`, `issued`.
+- **means**: `gateway` (default for team and project API keys [rec]), `sealed`, `reference`, `issued`, `none` (built-in Workers AI, no credential).
+- **part ids**: `ask`, `draft`, `read`, `transcribe`, `run`, `account` (`draft-assistant-screens.md` §1); the canonical names table is that file's §7 (reconciled 2026-10-27). Stored level values stay `group` in code; words say team.
 - **hop**: a move down an ordered list at a step boundary; recorded `{run, step, from, to, reason, payer_change}`.
 - **label**: `{provider, host, model_version, effort, account_level, owner}` on every machine result.
 - Words people read say **team**, never group (K3472), and are read by key from the word table (K3810); tests assert keys, never English (K5418, option A).
