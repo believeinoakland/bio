@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import * as SC from "./shared-cache.mjs";
 /* control-plane R121 (fix round 4, C5a, P9; K4429, K4428; amends R105, R115): THE DOOR'S CLOCK. The object keeps the stages of an `acquire`
    in its own memory, which a restart loses (plane R73), so the door clocks what it can see from its own isolate: each call it makes to the
    object (`Server-Timing`, one metric per route, the op as the first) and the three phases of an `acquire` (`acquire`, `reading`, `promote`).
@@ -165,19 +166,30 @@ function counted(res, clock, route) {
 }
 
 /* a stub whose `fetch` is clocked; every other property is the stub's own, and a function keeps the stub as its `this`, called as `target[key](...)` and never through `.apply` (on a workerd RPC stub `.apply` is itself a remote call, K5131) */
-function clockedStub(stub, clock) {
+function clockedStub(stub, clock, env = null, room = "") {
   if (!stub || (typeof stub !== "object" && typeof stub !== "function")) return stub;
   return new Proxy(stub, {
     get(target, key) {
       const v = target[key];
       if (key !== "fetch" || typeof v !== "function") return typeof v === "function" ? (...a) => target[key](...a) : v;
       return async (input, init) => {
+        /* PROTO C (throwaway; shared-cache.mjs): off unless env.PROTO_C is set */
+        const mode = SC.modeOf(env);
+        const ck = mode ? SC.keyOf(mode, input, init) : null;
+        if (ck) {
+          const t0 = Date.now();
+          const kept = SC.lookup(room, env, ck);
+          if (kept) { const ms = Date.now() - t0; SC.tell(ck, true, ms); clock.call(ck.route, ms); clock.stateTiming("protoc", ms, "hit"); return SC.answerOf(kept); }
+        }
+        if (SC.heldPagedOf(env)) input = SC.pagedHeld(input);
         const route = routeOf(input);
         const phase = Object.hasOwn(PHASE_OF_ROUTE, route) ? PHASE_OF_ROUTE[route] : null;
         const t = Date.now();
         if (phase) clock.begin(phase);
         try {
           const res = await v.call(target, input, init);
+          if (mode) SC.noteVersion(room, res);
+          if (ck) { SC.tell(ck, false, Date.now() - t); clock.stateTiming("protoc", Date.now() - t, "miss"); await SC.fill(room, ck, res); }
           const stated = objectTime(res);
           if (stated !== null) clock.within(route, stated);
           clock.state(statedEntries(res && res.headers && typeof res.headers.get === "function" ? res.headers.get("server-timing") : null));
@@ -193,7 +205,7 @@ function clockedStub(stub, clock) {
    what it learned per environment (instance-setup's fleet versions, kept 60 s per `env`, G118) would otherwise never find its own entry. So the clocked environment is made once for an
    `env` and reads the request's clock from the request's async context (`withClock`). */
 const current = new AsyncLocalStorage();
-const NO_CLOCK = Object.freeze({ begin() {}, end() {}, call() {}, within() {}, state() {}, bodyRead() {} });
+const NO_CLOCK = Object.freeze({ stateTiming() {}, begin() {}, end() {}, call() {}, within() {}, state() {}, bodyRead() {} });
 export const withClock = (clock, fn) => current.run(clock, fn);
 const clockedEnvs = new WeakMap();
 
@@ -206,7 +218,7 @@ export function clockedEnv(env, clock) {
   const ns = new Proxy(store, {
     get(target, key) {
       const v = target[key];
-      if (key === "get" && typeof v === "function") return (...a) => clockedStub(target.get(...a), current.getStore() ?? NO_CLOCK);
+      if (key === "get" && typeof v === "function") return (...a) => clockedStub(target.get(...a), current.getStore() ?? NO_CLOCK, env, String(a[0]?.name ?? a[0]));
       return typeof v === "function" ? (...a) => target[key](...a) : v;
     },
   });

@@ -47,6 +47,7 @@ import { extractionOf } from "../extraction/index.mjs";
 import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } from "./app.mjs";
 /* R116 (fix round 2; C15): the interface words kept for the release and compressed */
 import { interfaceWordsCache } from "./words-cache.mjs";
+import { probe as probeOfCache } from "./shared-cache.mjs";
 /* R121 (fix round 4, C5a, P9): the door's clock, in its own isolate */
 import { makeClock, clockedEnv, withClock, withServerTiming } from "./phase-clock.mjs";
 import { interfacePage, interfaceScript, interfaceScriptHash, pageWork } from "../interface-shell/index.mjs";
@@ -1231,6 +1232,7 @@ export function makeFetch(hooks = {}) {
 
        `vocabulary` is the full set, so an interface can tell "not held" from
        "not a capability at all" without hardcoding the list. */
+    if (op === "protocprobe") return json({ ok: true, result: probeOfCache(env), store: storeName, tokenClass: cls }, 200);   /* PROTO C */
     if (op === "whoami") {
       return json({ ok: true, result: {
         tokenClass: cls,
