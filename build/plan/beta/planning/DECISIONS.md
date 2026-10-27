@@ -10,3 +10,7 @@
 - K2425 · "D42 - email: A", after upload is in use (N824) · `build/plan/next.md`
 - K4635 · "You were suggestion A now and perhaps B for the beta. I agree with that." (N1271, the record split) · `build/plan/next.md`
 - K4747 · "The region picker for teams with legal requirements still comes after the alpha." (N1273) · `build/plan/next.md`
+- K5436 · 2026-10-27 · on QUESTIONS.html F2, of option B2: "as recommened" (a file of a type not yet read is kept whole, safe-graded and named, never refused for its type alone; RAR, programs, installers and disk images still refused) · `build/rulings.md`
+- K5435 · 2026-10-27 · on QUESTIONS.html F1, of option A2: "As recommended" (FILES's Tier 2 types read in the beta) · `build/rulings.md`
+- K5437 · 2026-10-27 · on QUESTIONS.html F3: "as recommened" (MBOX read; Tier 3 held and named until a real file is shown) · `build/rulings.md`
+- DEC-457 to DEC-464 · 2026-10-27 · A1-A8: "as recommended" (A1, A2, A3, A5, A6, A7); A4 "B, but only drop metadata is necessary"; A8 "B, with the proper grade assigned. Having a review further attest to a reading is better than not, but still only incrementally better." · `docs/development/DECISIONS.md`
