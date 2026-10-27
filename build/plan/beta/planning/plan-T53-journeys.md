@@ -178,7 +178,7 @@
 - T53 · R-27 · "N documents could not be read for this" with no reason, though the reading holds "$61,500" · REG R-27 · D1 screens-daily R?3 (owner also retrieval, reading-pipeline).
 - T53 · R-63 · help ends with no way on; records help names no law · REG R-63 · D1 screens-daily R?4 (help half) and D3 screens-action R?16 (records-help half).
 
-**screens-inquiry**
+**screens-inquiry** (after the split, Before R1 (9) of the plan, the rows on the Document page go to `screens-document`: R-18, and the Document halves of R-30 and R-40)
 - T53 · R-17 · strength stays "Unrated" after citing both sides; no "What this passage earns" fold · REG R-17 · MERGE T52-66 (C-K1+D-K2; C-K2 waits UX-DESIGN B541); no draft line.
 - T53 · R-18 · developer sentences and 64-hex fingerprint on the document page · REG R-18 · D2 screens-inquiry R?1. +T52-66 (B-K7+C-K16: ISO instant); B-K6 sentences have no entry. LANE: FILES (D2 Needs: how a reading is described).
 - T53 · R-19 · "Shared origin" names two passages of one file · REG R-19 · MERGE T52-66 (C-K4+D-K11); no draft line.

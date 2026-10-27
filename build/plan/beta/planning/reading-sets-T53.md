@@ -1,6 +1,6 @@
 # T53's job reading sets, measured against 600 KB (PLANNING L37)
 
-**Status** · DRAFT for BOB · PLANNING #4, 2026-10-27. Section 0 step 3 of `HANDOFF.md`: each job's reading set measured against the 600 KB budget (K2700) before the plan is READY, with a relief proposal where a set is over. Every point here is BOB's (P17: reading sets, splits for size and STARTs are BOB's, K617, K2700, mechanics §17); nothing is Bob's. Measured on `lane/planning` at a78921bd (tranche/T53 merged in), by a scratch script over `plan-T53-draft.md`, `plan-T53-capabilities.md` and `plan-T53-journeys.md`.
+**Status** · DECIDED: R1-R7 as recommended and DEC-475's wait lengths confirmed (BOB #324, P17, P20; its K line to follow); applied to the plan and re-measured at L40 (§5) · PLANNING #4, 2026-10-27. Section 0 step 3 of `HANDOFF.md`: each job's reading set measured against the 600 KB budget (K2700) before the plan is READY, with a relief proposal where a set is over. Every point here is BOB's (P17: reading sets, splits for size and STARTs are BOB's, K617, K2700, mechanics §17); nothing is Bob's. Measured on `lane/planning` at a78921bd (tranche/T53 merged in), by a scratch script over `plan-T53-draft.md`, `plan-T53-capabilities.md` and `plan-T53-journeys.md`.
 
 ## 1. What was counted
 
@@ -56,6 +56,18 @@ Every other job with T53 entries is under 450 KB on both counts (the new modules
 - **R6 · The other modules past 4,000 lines.** For each module of finding 5 other than screens-inquiry and screens-settings: its T53 job reports its size in its completion and BOB plans the split for the next tranche (K617's second clause), except where the job's set is still over 600 KB after R1-R3 (acquisition, op-declarations, op-grades, jurisdictions, capture by this count): those get, in order, R2's sections, then a split before R1 along a seam BOB names (candidates: acquisition's `unpack.mjs` to reader-container's client, CONSISTENCY §2.4; capture's N824 member job apart; op-grades' tranche tables `t33.mjs`, `t41.mjs`), else a task digest. **Recommend**, re-measured at each START.
 - **R7 · Each plan entry names its drafts by file**, so the reading set is drawn from the plan alone. **Recommend**; PLANNING applies it to `plan-T53-draft.md` on BOB's word.
 
-## 5. Re-measure
+## 5. Re-measure after R1-R5 (L40)
 
-Once BOB decides R1-R7, PLANNING re-runs the measure with the sections named (a short per-module table in this file), and the plan's Before R1 gains the splits BOB chooses (with member-roster R27's `MODULE_ORDER` re-pinned, R61). The tests column is filled at each START, when the tests naming a changed requirement are known.
+Same count as §1 with the three shared files out (R1), and each lane draft over 30 KB named by three or more modules counted as its general sections plus the sections whose heading names the module (R2). screens-inquiry's requirements divided 60/40 (the split map moves them by screen), its code by file (`document.mjs` to screens-document). KB: req + drafts + code.
+
+| module | req | drafts | code | total |
+|---|---|---|---|---|
+| screens-settings | 99 | 133 | 365 | 598 (counts the AI-screen drafts now in screens-ai: about 550 without) |
+| screens-inquiry (question, project, objective) | 93 | 47 | 454 | 595 |
+| capture | 100 | 96 | 363 | 561 |
+| jurisdictions | 75 | 176 | 297 | 549 |
+| screens-daily, acquisition | 98, 101 | 83, 107 | 353, 326 | 535, 535 |
+| screens-action, installer, op-declarations, op-grades | 75, 77, 110, 89 | 74, 100, 111, 94 | 382, 351, 306, 340 | 532, 529, 528, 524 |
+| screens-investigate, screens-document, extraction, interface-shell | 76, 62, 92, 125 | 113, 91, 37, 107 | 319, 334, 359, 250 | 510, 488, 488, 484 |
+
+Every other job is under 455 KB. No job is over 600 KB, so R6's condition for a further split is met by none: the other modules past 4,000 lines stay whole this tranche, each job reporting its size at completion (K617). Near the budget: screens-inquiry and screens-settings; their STARTs re-measure with the tests named, and a task digest of used services is ready. The tests to read are counted at each START.
