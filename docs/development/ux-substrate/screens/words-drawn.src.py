@@ -7060,7 +7060,7 @@ W.append(dict(key='screen.registers.import.which.fec', en='Federal campaign fina
 W.append(dict(key='screen.registers.import.which.form700', en='Economic interest filings (Form 700)', protected=False, note='DEC-407: option'))
 W.append(dict(key='screen.registers.import.which.lobbyists', en='Oakland lobbyist directory', protected=False, note='DEC-407: option'))
 W.append(dict(key='screen.registers.import.which.licenses', en='State license files', protected=False, note='DEC-407: option'))
-W.append(dict(key='screen.registers.import.go', en='Bring in this register', protected=False, note='DEC-407: button (registerimport)'))
+W.append(dict(key='screen.registers.import.go', en='Bring in this register', protected=False, note='DEC-407: button (registerfileimport, K5471)'))
 W.append(dict(key='screen.registers.search.head', en='Search the registers', protected=False, note='DEC-407: section'))
 W.append(dict(key='screen.registers.search.who', en='Person or organization', protected=False, note='DEC-407: field'))
 W.append(dict(key='screen.registers.search.min', en='Smallest amount', protected=False, note='DEC-407: field'))
@@ -8478,6 +8478,11 @@ def w469(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-469: ' + note))
 # the consistency read of DEC-465 to DEC-468
 w469('screen.aimoments.mock.j', 'you stopped instead of switching', 'aimoments: the mock option for a run the member stopped (screen.run.declined)')
+
+def w470(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-470: ' + note))
+# K5471 (4), B557: the register file import's op is registerfileimport (events R38's registerimport is another act)
+w470('act.owed_registerimport.does', 'Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.', 'held under the old op name while the code still reads it (screens-settings keys.mjs and the L11 modules); dropped when they read act.owed_registerfileimport.does')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
