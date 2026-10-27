@@ -40115,42 +40115,42 @@
       "en": "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2702
+      "line": 2704
     },
     {
       "id": "op-declarations.index.an_alias_of_a_declared",
       "en": "An alias of a declared op (R21): its op's explanation serves it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2654
+      "line": 2656
     },
     {
       "id": "op-declarations.index.money_detectors_run_sweep",
       "en": "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2553
+      "line": 2555
     },
     {
       "id": "op-declarations.index.reevaluation_raise_sweep",
       "en": "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or monitoring calls.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2551
+      "line": 2553
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs",
       "en": "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2538
+      "line": 2540
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs_2",
       "en": "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES IT.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2544
+      "line": 2546
     },
     {
       "id": "op-grades.marks.dec_300_5_over_the",
@@ -45141,7 +45141,7 @@
       "en": "substrate: id allocation",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 2058
+      "line": 2087
     },
     {
       "id": "record-core.index.a_counts_registration_names_its",
@@ -45162,7 +45162,7 @@
       "en": "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1311
+      "line": 1338
     },
     {
       "id": "record-core.index.a_lease_is_taken_under",
@@ -45183,35 +45183,35 @@
       "en": "Part {n} of {parts} of the document was not held. Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1993
+      "line": 2020
     },
     {
       "id": "record-core.index.a_setting_is_recorded_under",
       "en": "a setting is recorded under a name, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1913
+      "line": 1940
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with",
       "en": "a setting is recorded with who set it, and no one was named; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1915
+      "line": 1942
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with_2",
       "en": "a setting is recorded with a value, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1917
+      "line": 1944
     },
     {
       "id": "record-core.index.a_settings_value_is_stored",
       "en": "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1920
+      "line": 1947
     },
     {
       "id": "record-core.index.a_statistics_source_names_its",
@@ -45225,21 +45225,21 @@
       "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1764
+      "line": 1791
     },
     {
       "id": "record-core.index.a_store_gate_names_its_2",
       "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1763
+      "line": 1790
     },
     {
       "id": "record-core.index.a_whole_document_is_named",
       "en": "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1982
+      "line": 2009
     },
     {
       "id": "record-core.index.allocid_needs_a_prefix",
@@ -45260,14 +45260,14 @@
       "en": "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1840
+      "line": 1867
     },
     {
       "id": "record-core.index.an_expunge_names_one_of",
       "en": "an expunge names one of the grounds unlawful, confidential, court_order (with the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1836
+      "line": 1863
     },
     {
       "id": "record-core.index.an_opaque_id_to_record",
@@ -45281,7 +45281,7 @@
       "en": "an {what} names its module{v1} and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1257
+      "line": 1284
     },
     {
       "id": "record-core.index.applied_of_count_item_s",
@@ -45330,7 +45330,7 @@
       "en": "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1924
+      "line": 1951
     },
     {
       "id": "record-core.index.module_has_already_registered_its",
@@ -45351,28 +45351,28 @@
       "en": "{module} has already registered its {what}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1261
+      "line": 1288
     },
     {
       "id": "record-core.index.module_has_already_registered_its_4",
       "en": "{module} has already registered its grammar; the first still stands.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1315
+      "line": 1342
     },
     {
       "id": "record-core.index.module_s_check_on_table",
       "en": "{module}'s check on {table} did not answer a pass or a refusal{v1}. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1806
+      "line": 1833
     },
     {
       "id": "record-core.index.no_row_of_name_matches",
       "en": "no row of {name} matches the key; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1843
+      "line": 1870
     },
     {
       "id": "record-core.index.op_act_acts_on_at",
@@ -45407,77 +45407,77 @@
       "en": "{String} is not a table {String_2} declared expunge: tombstone; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1838
+      "line": 1865
     },
     {
       "id": "record-core.index.table_is_already_declared_by",
       "en": "{table} is already declared by {declaredBy}, and a table is declared once; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1528
+      "line": 1555
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and",
       "en": "{table} is derived-rebuildable and names no rebuild; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1521
+      "line": 1548
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and_2",
       "en": "{table} is derived-rebuildable and names no key columns; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1524
+      "line": 1551
     },
     {
       "id": "record-core.index.table_is_module_s_table",
       "en": "{table} is {module}'s table; {String} does not write it. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1783
+      "line": 1810
     },
     {
       "id": "record-core.index.table_names_no_cls_class",
       "en": "{table} names no {cls} class; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1515
+      "line": 1542
     },
     {
       "id": "record-core.index.table_s_checks_are_already",
       "en": "{table}'s checks are already registered by {module}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1767
+      "line": 1794
     },
     {
       "id": "record-core.index.table_s_cls_class_is",
       "en": "{table}'s {cls} class is one of {allowed}; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1517
+      "line": 1544
     },
     {
       "id": "record-core.index.table_was_not_declared_a",
       "en": "{table} was not declared: a table's name, and every column or table its declaration names, is a plain identifier; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1512
+      "line": 1539
     },
     {
       "id": "record-core.index.the_audits_answer_key_key",
       "en": "the audit's answer key {key} is already held by {keyHeldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1260
+      "line": 1287
     },
     {
       "id": "record-core.index.the_check_id_is_already",
       "en": "the check {id} is already claimed by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1316
+      "line": 1343
     },
     {
       "id": "record-core.index.the_figure_key_is_already",
@@ -45491,7 +45491,7 @@
       "en": "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1310
+      "line": 1337
     },
     {
       "id": "record-core.index.the_instances_figures_are_already",
@@ -45505,14 +45505,14 @@
       "en": "The parts, read in order, do not hash to the document's fingerprint. Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 2002
+      "line": 2029
     },
     {
       "id": "record-core.index.the_store_would_not_take",
       "en": "The store would not take the document whole ({why}). Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 2008
+      "line": 2035
     },
     {
       "id": "record-core.index.your_teams_civicsmith_could_not",
