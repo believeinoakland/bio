@@ -7,3 +7,4 @@ id · date · his words (quoted, never reworded) · source
 - K3320 · (earlier) · "I can install, sign in, the screens are usable, I can create a project … and work on a real investigation" · CHARTER.md
 - K5348 · 2026-10 · "The live walk can be scheduled for after the release, the installer update, and the site updates. Any issues found during the live walk can be folded into the next tranche that will work toward the beta release." · walk-T51b-live/BRIEF.md
 - K5417, K5418 · 2026-10-27 · "let's get all of this designed, then integrated into a comprehensive build plan, and THEN start building it" · beta/LANES.md
+- DEC-472 · 2026-10-27 · the UX design session decided eight of this lane's "Not decided" screen points (K5474; one-click acts, Security at a usual of zero, assistant not ready, keyboard access to explanations, where a signed-in member lands, pickers, offices, a signed case's ungraded line); words in `docs/development/DECISIONS.md` DEC-472 · drafts aligned
