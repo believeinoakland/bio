@@ -77,8 +77,9 @@ A second, smaller question: whether a large file's reading time is promised to t
 
 - **L1** The registry's untimed screens, and the write acts, on a seeded `PERF` project the lane owns (P14, P26); biosmoke8 after its re-creation in western North America (K4747): the first figure to take is whether the hop fell from 108-135 ms (P23's "before").
 - **L2** Each budget re-timed after each deploy that BOB names, quiet copy, net of the proxy (K4733).
+- **L4** (Bob's K5535, C32) The 2 s ops of N1272 R119: `interpretationOf`, `proposeParts` and `partsOf` at a 5,000-page, 1-million-row document, quiet copy, then under the per-level load with the interpretation densities of PL44; and the ceiling on a team's interpreted parts for each level (PL45), set from those runs and not before.
 - **L3** Under load: the per-level load test (`load-test-draft.md`), on a scratch copy, never biosmoke8.
 
 ## 7. What I need from other lanes
 
-CAPABILITIES, FILES: each new screen or op, with its class and its estimated reads, and the rows and bytes it adds to a team's record (MAP.md §2). UX-DESIGN: nothing yet; the budgets name no design.
+CAPABILITIES: the ops that read interpretation (`interpretationOf`, `proposeParts`, `partsOf`, `cellsOf` with `interpreted`) each need a class (read-heavy, 2 s) in `time-budgets` and a declared read count; the rows and bytes one interpretation row adds, to confirm PL44's measurement. CAPABILITIES, FILES: each new screen or op, with its class and its estimated reads, and the rows and bytes it adds to a team's record (MAP.md §2). UX-DESIGN: nothing yet; the budgets name no design.

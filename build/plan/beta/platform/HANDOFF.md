@@ -20,10 +20,12 @@
 
 **The study, where it stands.** S0 found a room per project is a re-architecture of whole-store `transact` (616 tables, about 106 project-scoped): first candidates are **B** (bulk text and indexes out; search from an index outside SQLite) and **C** (a Worker-side cache of shared reads), A only as paper. S1 runs on `plat-s1` (0.87.0, Level 1, installed by Bob; `s1-tooling-notes.md`): step 1a done (empty team, six screens, 0.58-0.66 s net, hop `do-session` 50-57 ms against biosmoke8's 108-135 ms: placement about halves it); **step 1b done in small** (Seed A-lite: 120 files, 104 MB, 123 bundles, 28,889 text units, about 200 MB database; eight screens re-timed, net 0.57-0.91 s: `study/s1-results.md`). **Next: grow the seed** (the plan's Seed A is 500 documents and 0.4 GB; documents reach a project through the project's own door `/app/capture/address/<project id>` and the file upload is one act with no reason box: see the tooling notes), re-time, then 1c, 1d (needs the plane-only throwaway redeploy from `proto/levels-2-3`, BOB deploys), 1e ramp, 1f containers: **ask BOB before 1e and 1f**, naming what runs and for how long.
 
+**K5535 (C32) taken (P-19):** the interpretation ceiling per level is PL44-PL45 in `load-test-draft.md`; no figure until measured.
+
 **Open with Bob / BOB.** Nothing open with Bob. BOB: K5470 (auto mode refused setting `CIVICSMITH_TEST_INSTANCE` on plat-s1 via the API: not needed by my tools; say so if a journey-check walk is wanted). Needs from others: FILES' L1-L6 and P-M17 (BOB places); AI-DESIGN to confirm the AI-act and Gate 1 budgets.
 
 **Next steps.**
-1. Get an administrator invitation for PLATFORM #2 from Bob via BOB; enrol; invite a member.
+1. Get a fresh administrator invitation from Bob via BOB (the one sent twice, ending ...1663162c1, is dead: "This link no longer works"); enrol at once; invite a member. Credentials file: scratchpad `creds.env` (handles plat2-admin, plat2-member), unused.
 2. Solve filing a document into a project; seed (1b) and re-time; then 1c.
 3. Build the throwaway measuring ops and the plane-only patch on `proto/levels-2-3` (workers), ask BOB to deploy; run 1d.
 4. After S1, S2 (prototypes B and C by workers on `proto/levels-2-3`), S3 (Enterprise quoted), S4 (the report to Bob, plain words, through BOB onto QUESTIONS.html).
@@ -66,3 +68,5 @@
 **P-17 · 2026-10-27** · Handover written (about 37 % context): section 0 and the prompt rewritten; `study/s1-tooling-notes.md` holds how to drive `plat-s1` (project `PROJ-2026-7919-plat-s1-study-project` made; the upload API shape; how a document reaches a project is not yet found). Credentials stay in PLATFORM #1's scratchpad and cannot pass on.
 
 **P-18 · 2026-10-27** · Step 1b (Seed A-lite) done: `study/s1-results.md` §1b. The administrator invitation BOB asked for (K5473 (4)) for PLATFORM #2 was **refused by auto mode** (a permission grant), so Bob must issue it; I did not work around it.
+
+**P-19 · 2026-10-27** · PLATFORM #2 took over (#1 archived). The invitation link given twice is dead; asked BOB for a fresh one. Bob's K5535 (C32) folded: PL44-PL45 (interpretation ceiling per level, from measured densities; method only, no figure) in `load-test-draft.md`, L4 and a request to CAPABILITIES in `time-budgets-draft.md`.
