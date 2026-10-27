@@ -34196,7 +34196,7 @@
   },
   {
    "key": "screen.members.cap.administer.confirm",
-   "en": "Choosing “look after the team's Civicsmith” proposes {who} as an administrator. {who} becomes one once every administrator has agreed, and your choice counts as the first agreement. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
+   "en": "Choosing “look after the team's Civicsmith” proposes {who} as an administrator. {who} becomes one once every current administrator agrees; your choice counts as the first agreement. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
    "protected": false,
    "note": "DEC-384: B411 T-05: the confirmation"
   },
@@ -38204,7 +38204,7 @@
   },
   {
    "key": "screen.follow.who.money",
-   "en": "Money paid or received",
+   "en": "Payments made or received",
    "protected": false,
    "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
   },
@@ -43490,7 +43490,7 @@
   },
   {
    "key": "screen.standard.through.none.summary",
-   "en": "If no end date is recorded",
+   "en": "If no end date is stated",
    "protected": false,
    "note": "DEC-438: the mockup fold over the unknown state"
   },
@@ -44018,7 +44018,7 @@
   },
   {
    "key": "screen.case-editor.published.note",
-   "en": "Edition {n} is published and is never changed. Its scope, what it leaves out, its findings and the declared bias it was signed under are fixed in it as published. A correction, or anything new, goes in the next edition.",
+   "en": "Edition {n} is published and cannot be changed. Its scope, what it leaves out, its findings and the bias your team declared are fixed as published. To correct it or add anything, start the next edition.",
    "protected": false,
    "note": "DEC-444: D-K9: replaces the stale bias line and draft fields once published"
   },
@@ -44036,31 +44036,31 @@
   },
   {
    "key": "screen.case-editor.next.lead",
-   "en": "A next edition starts from Docket, where your team keeps everything the case has filed and received. It starts as a draft and is published like any case.",
+   "en": "A next edition starts as a draft from Docket, where your team keeps everything filed and received for this case, and is published like any case.",
    "protected": false,
    "note": "DEC-444: D-K9: above the link to Docket's \"Start the next edition\" (casedraft with the case, R52, DEC-374)"
   },
   {
    "key": "screen.counsel.made.head",
-   "en": "Packets made for this action",
+   "en": "Packets assembled for this action",
    "protected": false,
    "note": "DEC-444: E-K7 (filings R11, R13): the versions made, newest first"
   },
   {
    "key": "screen.counsel.made.lead",
-   "en": "Each time a member assembles the packet, a new version is made from the record as it stands then. Earlier versions stay readable, exactly as they were made. Only a member who may see this action and every project the packet draws on can read or save one.",
+   "en": "Each time a member assembles the packet, a new version is saved from the record as it stands then. Earlier versions stay readable, exactly as they were assembled. Only a member who may see this action and every project the packet draws on can read or save one.",
    "protected": false,
    "note": "DEC-444: E-K7: filings R11 (who may read), R13 (the versions listed)"
   },
   {
    "key": "screen.counsel.made.by",
-   "en": "Made by {who}, {date}, for {counsel}, {organization}",
+   "en": "Assembled by {who}, {date}, for {counsel}, {organization}",
    "protected": false,
    "note": "DEC-444: E-K7: a version's made line beside its id and version; {counsel} the counsel named and {organization} theirs (screen.counsel.made.by.noorg without one); then the reason quoted"
   },
   {
    "key": "screen.counsel.made.by.noorg",
-   "en": "Made by {who}, {date}, for {counsel}",
+   "en": "Assembled by {who}, {date}, for {counsel}",
    "protected": false,
    "note": "DEC-444: E-K7: the made line when no organization is named"
   },
@@ -44072,7 +44072,7 @@
   },
   {
    "key": "screen.counsel.made.exported",
-   "en": "Saved as a file once: by {who}, {date}, for {counsel}.",
+   "en": "Saved as a file by {who}, {date}, for {counsel}.",
    "protected": false,
    "note": "DEC-444: E-K7: the export record (counselPacketExport); one row per export"
   },
@@ -44102,7 +44102,7 @@
   },
   {
    "key": "screen.counsel.export.note",
-   "en": "Saving a version as a file records who saved it, when, and for which lawyer. The file keeps the marking on every page.",
+   "en": "Saving a version as a file records who saved it, when, and for which counsel. The file keeps the marking on every page.",
    "protected": false,
    "note": "DEC-444: E-K7: counselPacketExport records who, which version, when, which counsel"
   },
@@ -44126,7 +44126,7 @@
   },
   {
    "key": "screen.document.reading.reread",
-   "en": "Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.",
+   "en": "Civicsmith read {replaced} of the pages again more carefully and recovered more of their text; the rest kept their first reading.",
    "protected": false,
    "note": "DEC-445: shown in place of textchain.say.push.page_re_read, which stays as stored (record text, digests pinned); the screen draws this"
   },
@@ -44156,7 +44156,7 @@
   },
   {
    "key": "screen.finder.shown",
-   "en": "{shown} of {total} documents shown.",
+   "en": "Showing {shown} of {total} matching documents.",
    "protected": false,
    "note": "DEC-445: DS11: Find's own row, in place of screen.held.archivemore (\"files\", a Held row)"
   },
@@ -44222,7 +44222,7 @@
   },
   {
    "key": "screen.plan.tier.row",
-   "en": "tier 2, file with caution",
+   "en": "How careful to be: 2 · file with caution",
    "protected": false,
    "note": "DEC-446: DS13: the legal option's tier shown in its row"
   },
@@ -44234,7 +44234,7 @@
   },
   {
    "key": "screen.queue.item.weight",
-   "en": "weight: Reasoned, asks for a reason",
+   "en": "Needs a reason from you",
    "protected": false,
    "note": "DEC-446: DS4: the item's weight, after its rung, in its meta line"
   },
