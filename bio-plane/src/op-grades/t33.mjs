@@ -354,6 +354,7 @@ export const T33_NON_ACTS = {
   waitlook: "personal state, keyed by the member's own dated wait: records that they looked and moves nothing in the inquiry",
   /* corpus-export */
   exportpage: R("one page of a carried table's rows and their digest, for an export"),
+  tablebytes: R("the administrator's measure of each table of the database: its rows and bytes, and the database's size"),
   exportrender: "export: keyed by (viewer, format); renders what the viewer would be carried and logs who took it",
   /* actions, action-clocks */
   addresseesuggest: R("the offices the record holds as responsible for an action's subject on its date, as a suggestion"),

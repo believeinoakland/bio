@@ -906,6 +906,7 @@ function build() {
      (its R40: the page a NON_ACT, the run a substrate absence) and its totality reads a graded key this table lacks as
      stale (its R12), K516's precedent. */
   exportpage:            null,
+  tablebytes:            null,
   moneydetectorsrun:     null,
   /* T35 (K2038): the credit page and `recover` take NO WORKING CAPABILITY — each public, reached by every caller — and
      are PRESENT, null, because op-grades names both in NON_ACTS (its R22) and affordances' totality reads a NON_ACTS key
