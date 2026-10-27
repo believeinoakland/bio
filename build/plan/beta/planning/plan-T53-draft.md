@@ -43,7 +43,7 @@
 **format-registry**
 - T53 · N1266 (K5435-K5437) · the beta's roster, detection by content, macro variant, encrypted, unlisted named (K5436), refused set, `formatNameFor` · `files/REQ-format-registry-beta.md` RF1-RF9
 - T53 · DEC-467 · one table the screens read: each kind's plain name (by key) and its limits (runtime-limits' per-kind rows), for Add's "What can be added", held, refused and over-limit sentences · DEC-467 · `files/KIND-TABLE.md` (READY; built from runtime-limits' Level 1 rows, never the other way) `[owed: BOB confirms the stated figure for audio and video]`
-- T53 · DEC-473 · {kind} read `file.kind.<key>` by KIND-TABLE's key column (48 rows; the many-to-one map in DEC-473's owed), {reason} `file.refused.reason.*`; A4-R3's `left_out` kinds read `screen.photo.dropped.<kind>` (with screens-intake, screens-inquiry) · DEC-473 `[waits: BOB's merge of DEC-473 from the design stream]`
+- T53 · DEC-473 · {kind} read `file.kind.<key>` by KIND-TABLE's key column (48 rows; the many-to-one map in DEC-473's owed), {reason} `file.refused.reason.*`; A4-R3's `left_out` kinds read `screen.photo.dropped.<kind>` (with screens-intake, screens-inquiry) · DEC-473 (merged, U506)
 
 **reader-container** (new; K4831 (2))
 - T53 · N1266, N1267 · legacy Office and RTF by conversion, macros never run, every image kind to OCR-ready frames, archives as streams within bounds, refusal before any read · `files/REQ-readers-beta.md` CC1-CC6 (CC4 replaced by A4, CONSISTENCY §2.2)
@@ -82,9 +82,10 @@
 - T53 · DEC-465, DEC-466, K5471 · `aikeyseal` (R69), a member's own list order (R70), declared ops (R71), a share flag turned off (R72), `GATEWAY_UNAVAILABLE` naming who can grant it (R73), the readiness summary (R74); a member clears the payer flag on her own account (R68) · `lane-ai-design/draft-ai-accounts-dec465.md` (AI11 B, K5486: any project the member has joined; the draft's "owns" changed by AI-DESIGN)
 - T53 · K5457 · migration: apikey to the Anthropic API plan (sealed), signin to subscription (issued), project sign-in accounts ended and told once · same, R59
 - T53 · K5478, DEC-471, K5493 · `aicreditsclear` replaces R68 ("Clear it and turn the account back on"); the credits stop a Queue item, kind `ai-credits-stop` (R75); a dated terms change is a notice, never a step (R76); the `membership` role-change listener (For BOB 3, decided K5501: below) · `lane-ai-design/draft-ai-accounts-dec465.md`
-- T53 · K5501 · a member removed from a project (`projectRemove`) or revoked from the team loses her placements of shared accounts on its list in the same act, each a change, the project's owners told once; who placed an entry recorded (`placed_by`) (ai-accounts R77, R27 amended) · `planning/lines-K5501-role-change.md` `[owed: BOB on its five technical points]`
+- T53 · K5501 · a member removed from a project (`projectRemove`) or revoked from the team loses her placements of shared accounts on its list in the same act, each a change, the project's owners told once; who placed an entry recorded (`placed_by`) (ai-accounts R77, R27 amended) · `planning/lines-K5501-role-change.md` (its five technical points decided as recommended, K5502)
 
 **credentials**
+- T53 · CAPABILITIES C22 · R29 ("never one a daemon uses") amended if Bob accepts the follow-as-asked reading of K5498 (the state API read only when a member asks) `[waits: Bob]`
 - T53 · K5457 · R27, R32, R48, R63, R66, R73 amended, R72 retired (the sealed key; `aicredential` on `AI_GRANT_OPS`) · `lane-ai-design/draft-ai-accounts.md` (credentials delta)
 
 ## Layer 3

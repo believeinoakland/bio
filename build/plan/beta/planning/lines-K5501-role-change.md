@@ -1,6 +1,6 @@
 # K5501 — a member who can no longer place a shared account: lines
 
-**Status** · DRAFT for BOB · PLANNING #3 (L16), 2026-10-27, K5501. Lines for BOB to write; ids provisional (BOB numbers at writing).
+**Status** · READY for BOB · PLANNING #3 (L16, L17), 2026-10-27, K5501; the five open points below decided as recommended (K5502, BOB #322). Lines for BOB to write; ids provisional (BOB numbers at writing).
 
 Source: `draft-ai-accounts-dec465.md` R49, R72 and For BOB 3 (decided as recommended, K5501). Read against `membership.md` (R34-R36, R54, R55, R66, R127), `member-roster.md` (R5, R16, R25, R26), `project-roster.md` (R2, R4) and `ai-accounts.md` (R16, R26, R27, R41, uses).
 

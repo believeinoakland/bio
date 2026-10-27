@@ -7,12 +7,12 @@
 **State.** PLANNING #3 took over at L16. Folded into `plan-T53-draft.md` by layer (36 KB): the seven A drafts (READY for BOB; lines on Bob's open L questions bracketed); FILES (readers, registry, sizes, corpus, KIND-TABLE, DEC-473's names); PLATFORM (time budgets, combined read, load test, record placement PL30-PL35); AI-DESIGN final (A43-A58, `FOLD-AI.md`); CAPABILITIES N1257 and N1260 (with K5495-K5500 noted where their lines will land); JOURNEYS (`plan-T53-journeys.md`: §B's eight UX points decided by DEC-472, four by K5474, only J1-J7 wait on Bob); K5501's lines drafted (`lines-K5501-role-change.md`: membership R158 `onProjectLeft`, ai-accounts R77 and R27 amended; five technical points for BOB). `CONSISTENCY.md` rows 1-20 all decided.
 
 **Next steps, in order.**
-1. BOB: K5501's five technical points (`lines-K5501-role-change.md`, end), each with a recommendation.
-2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)); DEC-473 waits on BOB's merge from the design stream.
+1. (done, K5502) K5501's lines READY for BOB.
+2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
 3. On Bob's answers (L1-L26, J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** BOB: K5501's points. Bob: L1-L26, J1-J7, N1257 D3, L18, the published-place default. Lanes: as step 2.
+**Waiting on.** Bob: C22's reading of K5498 (credentials R29); L1-L26, J1-J7, N1257 D3, L18, the published-place default. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -77,3 +77,7 @@ AI-DESIGN READY and final against AI1-AI16 (AD1-AD58), merged into tranche/T53. 
 ## L16 · 2026-10-27 · takeover; K5501 drafted; DEC-472, DEC-473, K5495-K5500 folded
 
 PLANNING #3 took over (reading set as the prompt names; tranche/T53 merged in), archived #2. K5501: a Sonnet worker read `membership.md` whole and drafted `lines-K5501-role-change.md`: the only act that ends a member's place in a project is `projectRemove` (membership R36, layer 2, before ai-accounts: a downward use); `onProjectLeft` (R158) fires there; ai-accounts R77 removes her placements (and her own account wherever placed) and tells the owners; R27 amended for team revocation (same listener function). Found: who placed a list entry is not recorded (rec `placed_by`); `leaving` still counts as joined (fire at the removal); ai-accounts' Uses cite membership R79, R81, moved to member-roster R25, R26 at T51. PLANNING corrected `MODULE_ORDER` to member-roster R27. DEC-472 (all eight as recommended) and K5474 marked in `plan-T53-journeys.md` §A; J1-J7 labelled. Plan: K5501 entries (layer 2), K5497 (jurisdictions), K5495-K5496 (extraction), K5498-K5500 (registers owed), DEC-473 (format-registry), JOURNEYS' wait narrowed to J1-J7. DECISIONS gains K5495-K5500.
+
+## L17 · 2026-10-27 · K5502; DEC-473 merged; C22 noted
+
+BOB #322 decided K5501's five points as recommended (K5502): `lines-K5501-role-change.md` READY for BOB, the plan's entry unbracketed. DEC-473 merged into tranche/T53 (U506); its plan wait dropped. CAPABILITIES C22: credentials R29 is amended if Bob accepts the follow-as-asked reading of K5498; a waiting entry under credentials. BOB #323 takes over from #322.
