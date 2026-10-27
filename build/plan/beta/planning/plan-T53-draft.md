@@ -117,7 +117,7 @@
 ## Layer 8
 
 **case-grammar**, **case-catalogue**, **publication**, **public-read**, **case-import**
-- T53 · A5 (DEC-461), A8 (DEC-464) · case-document format `/10`: the ungraded-passages and typed-passages blocks, their C-41.18 and C-41.19 checks, the edition's statements recorded and served, imported editions' statements kept apart, typist and checkers credited as each chose · `planning/lines-A5-A8-case-modules.md` `[owed: Q-A5-1, Q-A58-1, Q-A58-2, L11]`
+- T53 · A5 (DEC-461), A8 (DEC-464) · case-document format `/10`: the ungraded-passages and typed-passages blocks, their C-41.18 and C-41.19 checks, the edition's statements recorded and served, imported editions' statements kept apart, typist and checkers credited as each chose · `planning/lines-A5-A8-case-modules.md` `[owed: L23 (Q-A5-1), L26 (Q-A58-1), L11]`
 
 **case-disclosures**, **basis-versions**
 - T53 · A5, A8 · ungraded passages listed; a typed passage printed as typed, labelled as of signing; a frozen reading names typist and checkers · `planning/lines-A5-A8-case-modules.md`
@@ -155,7 +155,7 @@
 - T53 · N1257 · a layer change told once (renumbered R58) `[owed: READY]`
 
 **queue**, **screens-daily**
-- T53 · A6 · a per-key choice of act passed through (queue), a line and two acts per key, never handled by "choose several" (screens-daily) · `planning/lines-A6-queue-acts.md` `[owed: Q-A6-1, Q-A6-2]`
+- T53 · A6 · a per-key choice of act passed through (queue), a line and two acts per key, never handled by "choose several" (screens-daily) · `planning/lines-A6-queue-acts.md` (Q-A6-1, Q-A6-2 decided, K5456; their wording a UX need)
 - C T52-62 to T52-65, T52-104 (screens-daily)
 
 **interface-shell**
