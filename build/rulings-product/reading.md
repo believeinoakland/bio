@@ -16,3 +16,4 @@
 - A photo's place in a published edition (Bob, K5514, on F4: "as recommended"): the author chooses per photo, off unless turned on.
 - Safe pictures come first for ordinary JPEG and PNG photos. Other formats (iPhone HEIC, WebP, TIFF) show only words until their readers arrive with the file-type work. Acceptable? (Bob, K5520, on L6: "as recommended"): A · Yes, JPEG and PNG first After measuring what phones actually upload.
 - A photo's camera serial number and owner name: keep them as data shown beside the picture, or drop them? (Bob, K5521, on L7: "as recommended"): A · Keep them They can show that two photos came from the same camera, and they are kept as confidential as the photo itself.
+- Where a photo was taken (its GPS position): how is it shown? (Bob, K5522, on L8: "as recommended"): A · As text, to every member who may see the photo, with no map link A map link would tell a map company the place.
