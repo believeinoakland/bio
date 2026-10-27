@@ -49,3 +49,4 @@
 - When a member opens a record that isn't theirs to see, does Civicsmith admit it exists? (Bob, K5554, on J2: "as recommended"): C · "You can't open this", with who to ask The project's owner is named only when the member can already see that project.
 - What kind of proceeding can a team register before it has chosen its places? (Bob, K5556, on J3: "as recommended"): C · The screen says to choose the team's places first and links there, with A beside it so the team isn't stuck
 - What can a person's page record? (Bob, K5557, on J4: "as recommended"): A · Add membership and credential to what can be recorded The page already shows them; only adding them is missing.
+- Who files a correction, a withdrawal or a court order on a case's docket? (Bob, K5558, on J5: "as recommended"): A · The project's owner, from the docket page
