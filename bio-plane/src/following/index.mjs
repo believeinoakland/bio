@@ -55,7 +55,7 @@ import { actionsOf } from "../actions/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { isCalendarDate, validAt, localDay, dayRange } from "../civil-time/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone } from "../../../jurisdictions/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf } from "../read-bounds.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
@@ -215,7 +215,15 @@ export class Following {
     const c = combine(Array.isArray(ids) ? ids : []);
     return c && c.ok ? c.view : {};
   }
-  zone() { const z = this.view().time_zone; return z && typeof z.value === "string" ? z.value : "UTC"; }
+  /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles'), else the view's. */
+  zone() {
+    try {
+      const g = typeof this.record.getSetting === "function"
+        ? governingZone(this.record.getSetting("jurisdiction_profiles"), this.record.getSetting("team_time_zone")) : null;
+      if (g) return g;
+    } catch { /* read the view below */ }
+    const z = this.view().time_zone; return z && typeof z.value === "string" ? z.value : "UTC";
+  }
 
   async #bytes(sha) {
     if (this.bytesOpt) return this.bytesOpt(sha);

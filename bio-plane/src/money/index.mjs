@@ -18,7 +18,7 @@ import { entitiesOf, noEntity, noSuchEntity, gradeRank } from "../entities/index
 import { checkContentExtent, canonicalExtent, describeExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { eventsOf, noSuchEvent } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone } from "../../../jurisdictions/index.mjs";
 import { isHypothesisId, canonicalJson, sha256HexSync, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { bounds, compare, fiscalPeriod, validAt, reasonText } from "../civil-time/index.mjs";
 import { parseFigure, add, subtract, relate, SUM_RULE } from "../calc-grammar/index.mjs";
@@ -273,7 +273,10 @@ export class Money {
     if (!isObj(p)) return badPeriod(localize("money.index.a_period_is_from_to", "a period is {from, to, precision, zone} or {fiscal, body}"));
     const extra = Object.keys(p).find((k) => !PERIOD_FIELDS.has(k));
     if (extra) return badPeriod(localize("money.index.a_period_has_no_field", "a period has no field {extra}", { extra: String(extra.slice(0, 40)) }));
-    const tz = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
+    /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles'), else the view's */
+    let tz = null;
+    try { tz = governingZone(this.#record.getSetting("jurisdiction_profiles"), this.#record.getSetting("team_time_zone")); } catch { tz = null; }
+    if (!tz) tz = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
     const zone = filled(p.zone) ? p.zone : tz;
     if (!zone) return badPeriod(localize("money.index.the_period_states_no_zone", "the period states no zone and the active profiles give no time zone"));
     if (p.fiscal !== undefined) {

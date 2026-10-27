@@ -53,7 +53,7 @@ import { captureOf } from "../capture/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
-import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { combine as combineProfiles, governingZone } from "../../../jurisdictions/index.mjs";
 import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, INQUIRY_PASSAGE_CHECKS, QUESTION_WORDS,
          INQUIRY_WARNINGS } from "./checks.mjs";
 import { checkInquiryEntry, inquiryQuestionOf } from "./grammar.mjs";
@@ -1314,7 +1314,9 @@ export class Inquiry {
         view = c && c.ok ? c.view : null;
       }
     } catch { view = null; }
-    const z = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
+    let g = null; /* K5292 (jurisdictions R98): the team's governing zone first */
+    try { g = governingZone(this.record.getSetting("jurisdiction_profiles"), this.record.getSetting("team_time_zone")); } catch { g = null; }
+    const z = g || (view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null);
     if (!z) return null;
     const probe = localDay("2026-01-01T00:00:00Z", z);
     return typeof probe === "string" ? z : null;

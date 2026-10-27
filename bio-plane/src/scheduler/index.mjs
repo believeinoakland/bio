@@ -88,7 +88,7 @@ import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { governingZone } from "../../../jurisdictions/index.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
@@ -192,8 +192,7 @@ export function localDayOf(ms, zone) {
 export function viewZone(record) {
   try {
     const ids = record && typeof record.getSetting === "function" ? record.getSetting("jurisdiction_profiles") : null;
-    const c = Array.isArray(ids) && ids.length ? combine(ids) : null;
-    const z = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+    const z = governingZone(ids, record.getSetting("team_time_zone")); /* K5292 (jurisdictions R98) */
     return typeof z === "string" && z ? z : null;
   } catch { return null; }
 }

@@ -20,7 +20,7 @@ import { eventsOf } from "../events/index.mjs";
 import { isHypothesisId, isMachineIdentity, ISO_TS_RE, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { validAt, bounds as dtBounds, compare } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { governingZone } from "../../../jurisdictions/index.mjs";
 import { LINES_SCHEMA, LINES_TABLES, LINES_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, END_KINDS, OWNER,
          CONNECTION_KINDS, connectionKind, lineKindOf, PARTY_ROLES, OCDS_PARTY_ROLES } from "./vocab.mjs";
@@ -190,9 +190,8 @@ export class Lines {
   #zone() {
     try {
       const ids = this.#record.getSetting("jurisdiction_profiles");
-      const c = combine(Array.isArray(ids) ? ids : []);
-      const z = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
-      return filled(z) ? z : null;
+      const g = governingZone(ids, this.#record.getSetting("team_time_zone")); /* K5292 (jurisdictions R98) */
+      return filled(g) ? g : null;
     } catch { return null; }
   }
 

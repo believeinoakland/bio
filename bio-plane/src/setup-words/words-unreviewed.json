@@ -2399,133 +2399,133 @@
       "en": "a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never stored. It goes to the member who last took it up, else the member who set the scenario's current version, each while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when a member judges it or closes the plan.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 674
+      "line": 680
     },
     {
       "id": "action-producers.index.a_fact_due_is_local",
       "en": "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are action-clocks' (its R11). It goes to the members who created those actions while active members who may see them, else their projects' active owners, else the administrators, and is raised once per fact and status.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1023
+      "line": 1029
     },
     {
       "id": "action-producers.index.a_legal_mark_on_a",
       "en": "a legal mark on a docket entry with no hold placed from it is action-holds' fact (its R3, over docket R27), read here and never stored. It goes to every administrator, and to whoever marked it while an active member, once (DEC-69, DEC-70), and leaves when a hold is placed from the mark (action-holds R2).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 827
+      "line": 833
     },
     {
       "id": "action-producers.index.a_legal_pressure_mark_with",
       "en": "a legal pressure mark with no hold stated is action-holds' fact (its R2, R3), read here and never stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once (DEC-69, DEC-70), and leaves when any member states a hold on that mark: in place (its R2) or released (its R5).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 813
+      "line": 819
     },
     {
       "id": "action-producers.index.a_legal_pressure_record_with",
       "en": "a legal pressure record with no hold placed from it is action-holds' fact (its R3, R12), read here and never stored. It goes to every administrator and to the member who recorded it while an active member, once (DEC-69, DEC-70), and leaves when a hold is placed from the record (action-holds R2).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 840
+      "line": 846
     },
     {
       "id": "action-producers.index.a_passed_date_is_action",
       "en": "a passed date is action-clocks' fact (its R3): a stored status, or a pending entry dated before the action's local day (`local_day`), its basis kind as `basis_of` names it; a pending entry of an action whose zone is not held is left out and counted (`zone_undetermined`). It goes to the member who last took the entry up, else the member who created the action, each while an active member who may see it, else the project's active owners, else the administrators, and is raised once: nothing here repeats it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 621
+      "line": 627
     },
     {
       "id": "action-producers.index.a_paused_plans_day_to",
       "en": "a paused plan's day to look again is action-plans' (its R40), told once. It goes to the member who paused it while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when the plan is resumed or closed.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1482
+      "line": 1488
     },
     {
       "id": "action-producers.index.a_proposed_stage_is_escalations",
       "en": "a proposed stage is escalation's (its R16): its trigger met by the record, dated by the record's own instant and never by this read. It goes to the member who last took the escalation up, else the member who opened it, each while an active member who may see it, else the project's active owners, else the administrators.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 716
+      "line": 722
     },
     {
       "id": "action-producers.index.a_release_that_ended_a",
       "en": "a release that ended a hold in place is action-holds' fact (its R5, R8), read here and never stored. It is told to every administrator and to each member who placed the hold (DEC-113), once (DEC-69, DEC-70), and leaves when its recipient disposes of it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 901
+      "line": 907
     },
     {
       "id": "action-producers.index.a_reminder_is_the_members",
       "en": "a reminder is the member's own request, held by action-clocks (its R4) and due when its day has come (its R5): it goes to the member who set it, while she is an active member who may see the action, and to nobody else, and it leaves when that member answers it (its R6) or the entry or the action no longer calls for it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 761
+      "line": 767
     },
     {
       "id": "action-producers.index.a_review_asked_for_is",
       "en": "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a version in review who has not reviewed its present text. It goes to that member and to nobody else, and is raised once (DEC-69, DEC-94).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 952
+      "line": 958
     },
     {
       "id": "action-producers.index.a_review_come_due_is",
       "en": "a review come due is plan-work's (its R4): a member-set rhythm reached a day with no review entry since. It goes to the member who set the rhythm while an active member who may see the plan, else the project's active owners, else the administrators, and is raised once per day.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1339
+      "line": 1345
     },
     {
       "id": "action-producers.index.a_watchs_once_only_question",
       "en": "a watch's once-only question is following's (its R24): due when the plan closes or every promise its matters adopted reads met, to the link's author while an active member who may see the plan, else the project's active owners, else the administrators (a standing question's to its author alone). It is raised once and leaves when the link is answered or its watch ends.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1274
+      "line": 1280
     },
     {
       "id": "action-producers.index.an_approved_draft_or_communication",
       "en": "an approved draft or communication not recorded sent is filings' fact (its R53), read here and never stored. It goes to the member who approved it, else the member who created the action, each while an active member who may see it, else the project's active owners. It leaves when the sending is recorded, or the action is dropped or resolved; nothing here repeats it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1432
+      "line": 1438
     },
     {
       "id": "action-producers.index.an_entry_on_this_cases",
       "en": "an entry on this case's docket was marked as a legal threat{said}. Record that the team is preserving what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is stated on the mark.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 825
+      "line": 831
     },
     {
       "id": "action-producers.index.the_hold_on_a_legal",
       "en": "the hold on a legal threat recorded on this action (position {ord}) was released{v1}. {v2} This is told once, to the administrators and to whoever placed the hold.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 894
+      "line": 900
     },
     {
       "id": "action-producers.index.the_rhythm_a_member_set",
       "en": "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. Open the review to see what changed, and record what the members decided. You are reminded only because the team asked for it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1322
+      "line": 1328
     },
     {
       "id": "action-producers.index.whether_a_member_is_still",
       "en": "whether a member is still here is membership's (its R68, R74); which items routed to her is the latest take-up (plan-work R11), else who created or set the item. The list holds only items you may see, and is told to the project's active owners, else the administrators, once.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1201
+      "line": 1207
     },
     {
       "id": "action-producers.index.words_and_more_more",
       "en": "{words}; and {more} more",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1220
+      "line": 1226
     },
     {
       "id": "action-producers.words.noreply_canon",
@@ -2798,77 +2798,77 @@
       "en": "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 3386
+      "line": 3399
     },
     {
       "id": "actions.declared.addresseesuggest",
       "en": "read: the offices the record holds as responsible for an action's subject on its date, as a suggestion; writes nothing",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 3388
+      "line": 3401
     },
     {
       "id": "actions.index.a_machine_write_may_move",
       "en": "a machine write may move a pending clock entry whose date, or stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 791
+      "line": 804
     },
     {
       "id": "actions.index.a_named_counterparty_is_an",
       "en": "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 753
+      "line": 766
     },
     {
       "id": "actions.index.a_premise_override_is_a",
       "en": "a premise override is a member's open statement that the team acts on a breach it has not determined, on a stated ground and with the reason why. A machine credential may not state or change one. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 822
+      "line": 835
     },
     {
       "id": "actions.index.a_resolved_action_names_how",
       "en": "a resolved action names how it ended: one of {RESOLUTIONS}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 759
+      "line": 772
     },
     {
       "id": "actions.index.action_kind_string_is_not",
       "en": "action_kind '{String}' is not a kind your team's Civicsmith offers: one of {kinds}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 725
+      "line": 738
     },
     {
       "id": "actions.index.an_action_recorded_for_a",
       "en": "an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to {v1}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 855
+      "line": 868
     },
     {
       "id": "actions.index.an_action_recorded_for_a_2",
       "en": "an action recorded for a breach rests on a conformance determination, and no determination can be read on your team's Civicsmith yet, so none could be found. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1334
+      "line": 1347
     },
     {
       "id": "actions.index.an_entry_carries_the_captured",
       "en": "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader would quote instead of the thing the team can defend.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 3321
+      "line": 3334
     },
     {
       "id": "actions.index.clock_i_date_date_is",
       "en": "clock[{i}].date '{date}' is not YYYY-MM-DD",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 769
+      "line": 782
     },
     {
       "id": "actions.index.contact_names_a_member_of",
@@ -2882,161 +2882,161 @@
       "en": "copied[{i}].entity_id names a person or no office the subject registry holds: a copied office is an office, never a private individual (R77, R9). Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 988
+      "line": 1001
     },
     {
       "id": "actions.index.copied_i_entity_id_not",
       "en": "copied[{i}].entity_id: not an office entity (R9, arm: office)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 989
+      "line": 1002
     },
     {
       "id": "actions.index.correspondence_artifact_sha_sha_does",
       "en": "correspondence artifact_sha '{sha}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1260
+      "line": 1273
     },
     {
       "id": "actions.index.counterparty_entity_id_eid_names",
       "en": "counterparty.entity_id '{eid}' names a person in the subject registry: an action is addressed to an office, an organisation or an audience, never a private individual (R9, arm: person)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 747
+      "line": 760
     },
     {
       "id": "actions.index.counterparty_entity_id_eid_names_2",
       "en": "counterparty.entity_id '{eid}' names {v1}: an office addressee's entity is an office entity (R9, arm: office)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 750
+      "line": 763
     },
     {
       "id": "actions.index.direction_is_one_of_correspondence",
       "en": "direction is one of {CORRESPONDENCE_DIRECTIONS}. A reply that never came is recorded as no_response with the date it was due, not omitted (DEC-13).",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1690
+      "line": 1703
     },
     {
       "id": "actions.index.marking_pressure_directed_at_the",
       "en": "marking pressure directed at the team is a member's judgement; a machine credential may not mark it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 2042
+      "line": 2055
     },
     {
       "id": "actions.index.message_nothing_was_written",
       "en": "{message}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 848
+      "line": 861
     },
     {
       "id": "actions.index.minutes_are_the_meeting_one",
       "en": "minutes are a meeting, a date and a passage: the meeting named on one line of 1 to 200 characters with no quote or backslash, the day it was held, and the passage of the minutes as a capture and the part of it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1785
+      "line": 1798
     },
     {
       "id": "actions.index.nothing_arrived_so_there_are",
       "en": "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13).",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1703
+      "line": 1716
     },
     {
       "id": "actions.index.pressure_is_marked_on_a",
       "en": "pressure is marked on a received entry; this one is {v1}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 2048
+      "line": 2061
     },
     {
       "id": "actions.index.rel_rel_target_target_status",
       "en": "  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: \"{v1}\"",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 588
+      "line": 601
     },
     {
       "id": "actions.index.speaker_is_the_member_id",
       "en": "speaker is the member id of the member who spoke for the team in this sending. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 2007
+      "line": 2020
     },
     {
       "id": "actions.index.stage_stage_is_not_one",
       "en": "stage '{stage}' is not one the law this request is made under lists, as your team's jurisdiction states it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1926
+      "line": 1939
     },
     {
       "id": "actions.index.text_session_log_entry",
       "en": "{text}\n## Session Log\n\n{entry}",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 610
+      "line": 623
     },
     {
       "id": "actions.index.the_passage_has_a_part",
       "en": "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1795
+      "line": 1808
     },
     {
       "id": "actions.index.the_record_asserts_only_what",
       "en": "the record asserts only what was quoted, by whom, when, and for which request. It sets quotes side by side and judges none of them (DEC-24).",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 2526
+      "line": 2539
     },
     {
       "id": "actions.index.the_teams_contact_for_an",
       "en": "the team's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 868
+      "line": 881
     },
     {
       "id": "actions.index.this_action_states_that_the",
       "en": "this action states that the body owes the team no reply, so silence is never recorded as a non-response. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1825
+      "line": 1838
     },
     {
       "id": "actions.index.this_actions_part_holds_count",
       "en": "this action's {part} holds {count} entries; an action holds at most {limit}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1204
+      "line": 1217
     },
     {
       "id": "actions.index.v1_a_risk_tier_is",
       "en": "{v1} A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 667
+      "line": 680
     },
     {
       "id": "actions.index.whether_a_body_owes_the",
       "en": "whether a body owes the team a reply is a member's statement; a machine credential may not set or change it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1029
+      "line": 1042
     },
     {
       "id": "actions.index.who_spoke_for_the_team",
       "en": "who spoke for the team in a sending is a member's statement; a machine credential may not set it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1074
+      "line": 1087
     },
     {
       "id": "admission.index.no_member_of_this_team",
@@ -23350,161 +23350,161 @@
       "en": "duty-directed: keyed by a new DUT- id; writes duties' rows and moves no bundle",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1864
+      "line": 1871
     },
     {
       "id": "duties.index.a_commitments_or_windows_date",
       "en": "a commitment's or window's date is a calendar day or a date-time.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 333
+      "line": 340
     },
     {
       "id": "duties.index.a_court_source_names_a",
       "en": "a court source names a standard of kind court (an order, decree, or recommendation held as one).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 431
+      "line": 438
     },
     {
       "id": "duties.index.a_date_trigger_states_its",
       "en": "a date trigger states its date (a calendar day or a date-time).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 465
+      "line": 472
     },
     {
       "id": "duties.index.a_dependency_names_its_lead",
       "en": "a dependency names its lead (time.lead) and why (time.why).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 335
+      "line": 342
     },
     {
       "id": "duties.index.a_dependency_source_says_why",
       "en": "a dependency source says why the obligation must precede its event (source.why).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 451
+      "line": 458
     },
     {
       "id": "duties.index.a_due_dates_basis_is",
       "en": "a due date's basis is one of {BASIS_KINDS}.{v1}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 326
+      "line": 333
     },
     {
       "id": "duties.index.a_hypothesis_id_is_held",
       "en": "a hypothesis id is held in a field.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 507
+      "line": 514
     },
     {
       "id": "duties.index.a_modality_is_one_of",
       "en": "a modality is one of {MODALITIES}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 272
+      "line": 279
     },
     {
       "id": "duties.index.a_person_owes_an_obligation",
       "en": "a person owes an obligation only where a held law or court order binds them by name or role: cite it as the source and say what it binds (source.binds).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 300
+      "line": 307
     },
     {
       "id": "duties.index.a_policys_review_is_the",
       "en": "a policy's review is the body's own commitment (time.basis commitment) over the standard it reviews (review.standard is the source's).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 373
+      "line": 380
     },
     {
       "id": "duties.index.a_practice_source_states_the",
       "en": "a practice source states the measured practice (source.statement).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 449
+      "line": 456
     },
     {
       "id": "duties.index.a_prohibition_or_threshold_whose",
       "en": "a prohibition or threshold whose terms cite money facts and name funds or entities.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1602
+      "line": 1609
     },
     {
       "id": "duties.index.a_promise_rests_on_a",
       "en": "a promise rests on a standard of kind commitment, and {String} is of kind {v1}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1743
+      "line": 1750
     },
     {
       "id": "duties.index.a_reported_status_is_one",
       "en": "a reported status is one of the profile's response vocabulary: {statuses}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 362
+      "line": 369
     },
     {
       "id": "duties.index.a_reported_status_quotes_a",
       "en": "a reported status quotes a held passage (its content id).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 367
+      "line": 374
     },
     {
       "id": "duties.index.a_required_response_is_started",
       "en": "a required response is started by the report's date, and the report held as a standard states none (its period's start).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 716
+      "line": 723
     },
     {
       "id": "duties.index.a_rule_basis_names_the",
       "en": "a rule basis names the rule (time.rule) it is computed from.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 331
+      "line": 338
     },
     {
       "id": "duties.index.a_source_is_one_of",
       "en": "a source is one of {SOURCE_KINDS}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 417
+      "line": 424
     },
     {
       "id": "duties.index.a_source_trigger_names_the",
       "en": "a source trigger names the module whose items start it (trigger.source).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 463
+      "line": 470
     },
     {
       "id": "duties.index.a_state_is_one_of",
       "en": "a state is one of {OCCURRENCE_STATES}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1305
+      "line": 1312
     },
     {
       "id": "duties.index.a_trigger_is_one_of",
       "en": "a trigger is one of {TRIGGER_KINDS}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 459
+      "line": 466
     },
     {
       "id": "duties.index.a_withdrawn_obligation_is_not",
       "en": "a withdrawn obligation is not revised.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 832
+      "line": 839
     },
     {
       "id": "duties.index.act_is_a_members_own",
@@ -23518,7 +23518,7 @@
       "en": "an event trigger names the event kind (trigger.event_kind) and the entity it concerns.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 461
+      "line": 468
     },
     {
       "id": "duties.index.an_obligation_is_named_by",
@@ -23532,119 +23532,119 @@
       "en": "an obligation names its obligor (an entity id).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 275
+      "line": 282
     },
     {
       "id": "duties.index.an_obligation_owed_by_an",
       "en": "an obligation owed by an organisation outside government names the office that enforces it (enforcer).{stays}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 315
+      "line": 322
     },
     {
       "id": "duties.index.an_organisations_own_policy_binds",
       "en": "an organisation's own policy binds no public body or person as an obligation here unless an adoption puts it in force for that body.{stays}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 293
+      "line": 300
     },
     {
       "id": "duties.index.arising_in_names_a_registered",
       "en": "arising_in names a registered proceeding or a held capture.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 352
+      "line": 359
     },
     {
       "id": "duties.index.arisingin_names_the_held_capture",
       "en": "arisingIn names the held capture of the reply or report.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 674
+      "line": 681
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ); nothing reads now itself.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1122
+      "line": 1129
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy_2",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1274
+      "line": 1281
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy_3",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1310
+      "line": 1317
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy_4",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ); nothing reads now itself.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1560
+      "line": 1567
     },
     {
       "id": "duties.index.capture_not_seen",
       "en": "the record holds no such capture you can see",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 641
+      "line": 648
     },
     {
       "id": "duties.index.entity_kind_owes_no_obligation",
       "en": "an entity of kind {kind} owes no obligation.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 311
+      "line": 318
     },
     {
       "id": "duties.index.events_cannot_answer_uses",
       "en": "the events service cannot answer the uses of a power",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1391
+      "line": 1398
     },
     {
       "id": "duties.index.events_not_available",
       "en": "the events service is not available",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1031
+      "line": 1038
     },
     {
       "id": "duties.index.expansion_stopped_at_bound",
       "en": "the expansion stopped at its bound (24 months or 500 instances)",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1045
+      "line": 1052
     },
     {
       "id": "duties.index.extent_names_no_part",
       "en": "the extent names no part of that capture",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 646
+      "line": 653
     },
     {
       "id": "duties.index.field_cites_a_capture_that",
       "en": "{field} cites a capture that is not the policy's held text.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 626
+      "line": 633
     },
     {
       "id": "duties.index.field_names_the_extent_of",
       "en": "{field} names the extent of the capture that states it",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 642
+      "line": 649
     },
     {
       "id": "duties.index.give_your_reason_in_1",
@@ -23658,21 +23658,21 @@
       "en": "linking a use to a power",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1523
+      "line": 1530
     },
     {
       "id": "duties.index.matching_event_to_obligation",
       "en": "matching an event to an obligation",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1232
+      "line": 1239
     },
     {
       "id": "duties.index.name_1_to_captures_max",
       "en": "name 1 to {CAPTURES_MAX} captures, each by its sha256.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1558
+      "line": 1565
     },
     {
       "id": "duties.index.name_the_clause_the_obligation",
@@ -23686,329 +23686,329 @@
       "en": "no occurrence of this obligation answers to that key.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1247
+      "line": 1254
     },
     {
       "id": "duties.index.no_occurrence_of_this_obligation_2",
       "en": "no occurrence of this obligation answers to that key.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1316
+      "line": 1323
     },
     {
       "id": "duties.index.no_proposal_answers_to_that",
       "en": "no proposal answers to that id.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 775
+      "line": 782
     },
     {
       "id": "duties.index.place_one_of",
       "en": "as is one of obligor, obligee, enforcer",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 971
+      "line": 978
     },
     {
       "id": "duties.index.powers_are_read_for_an",
       "en": "powers are read for an office.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1357
+      "line": 1364
     },
     {
       "id": "duties.index.proposing_obligation_no_stamp",
       "en": "proposing an obligation with no stamp",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 544
+      "line": 551
     },
     {
       "id": "duties.index.proposing_response_no_stamp",
       "en": "proposing an obligation from a response with no stamp",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 665
+      "line": 672
     },
     {
       "id": "duties.index.proposing_review_no_stamp",
       "en": "proposing a review with no stamp",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 586
+      "line": 593
     },
     {
       "id": "duties.index.say_the_act_owed_in",
       "en": "say the act owed, in 1 to {WORDS_MAX} characters (performance.act).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 339
+      "line": 346
     },
     {
       "id": "duties.index.say_why_in_your_own",
       "en": "say why, in your own words (cause).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1308
+      "line": 1315
     },
     {
       "id": "duties.index.sector_no_acting_line",
       "en": "this organisation's sector is {sector}, and no {lines} line, and no source it rests on, ties it to a public body.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 310
+      "line": 317
     },
     {
       "id": "duties.index.stated_basis_team_deadline",
       "en": " A deadline the other side has stated is a deadline on the team, as are the team's own obligations to a venue: they are the team's own deadlines on its actions, never a body's obligation here.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 327
+      "line": 334
     },
     {
       "id": "duties.index.table_is_appended_to_and",
       "en": "{table} is appended to and never {v1}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 495
+      "line": 502
     },
     {
       "id": "duties.index.the_active_jurisdiction_profiles_hold",
       "en": "the active jurisdiction profiles hold no response vocabulary, so no status can be quoted.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 363
+      "line": 370
     },
     {
       "id": "duties.index.the_active_jurisdiction_profiles_hold_2",
       "en": "the active jurisdiction profiles hold no such rule.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 571
+      "line": 578
     },
     {
       "id": "duties.index.the_commitment_standard_proposal_is",
       "en": "the commitment {standard_proposal} is still a proposal; adopt it as a standard first.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 761
+      "line": 768
     },
     {
       "id": "duties.index.the_commitment_this_obligation_rests",
       "en": "the commitment this obligation rests on is still a proposal; adopt it as a standard first.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 423
+      "line": 430
     },
     {
       "id": "duties.index.the_events_read_stopped_at",
       "en": "the events read stopped at its bound of {v1}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1030
+      "line": 1037
     },
     {
       "id": "duties.index.the_extents_words_are_not",
       "en": "the extent's words are not held as read text.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 593
+      "line": 600
     },
     {
       "id": "duties.index.the_field_amount_holds_an",
       "en": "the field '{amount}' holds an amount.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 512
+      "line": 519
     },
     {
       "id": "duties.index.the_field_duekey_would_store",
       "en": "the field '{dueKey}' would store a due date.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 510
+      "line": 517
     },
     {
       "id": "duties.index.the_field_found_holds_an",
       "en": "the field '{found}' holds an amount; cite money facts (performance.money_facts) instead.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 487
+      "line": 494
     },
     {
       "id": "duties.index.the_kind_is_one_of",
       "en": "the kind is one of {RESPONSE_KINDS}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 668
+      "line": 675
     },
     {
       "id": "duties.index.the_policy_of_v1_stays",
       "en": " The policy of {v1} stays held as a standard and may be compared with what the organisation does (calculations); it is not tracked here as an obligation.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 289
+      "line": 296
     },
     {
       "id": "duties.index.the_portion_named_is_not",
       "en": "the portion named is not one the standard holds.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 436
+      "line": 443
     },
     {
       "id": "duties.index.the_project_named_is_not",
       "en": "the project named is not held.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 375
+      "line": 382
     },
     {
       "id": "duties.index.the_proposal_was_adopted",
       "en": "the proposal was adopted.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 776
+      "line": 783
     },
     {
       "id": "duties.index.the_proposed_commitment_cannot_be",
       "en": "the proposed commitment cannot be read here, so whether it is adopted is not known.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 741
+      "line": 748
     },
     {
       "id": "duties.index.the_quote_is_an_extent",
       "en": "the quote is an extent of another capture than the one the obligation arises in.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 678
+      "line": 685
     },
     {
       "id": "duties.index.the_quotes_words_are_not",
       "en": "the quote's words are not held as read text.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 689
+      "line": 696
     },
     {
       "id": "duties.index.the_rule_named_is_not",
       "en": "the rule named is not one the governing view holds for a body answering this report.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 723
+      "line": 730
     },
     {
       "id": "duties.index.the_uses_of_a_power",
       "en": "the uses of a power are read for a duty of modality power.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1484
+      "line": 1491
     },
     {
       "id": "duties.index.the_version_named_is_not",
       "en": "the version named is not a held version of the standard's instrument.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 443
+      "line": 450
     },
     {
       "id": "duties.index.trigger_source_unregistered",
       "en": "no module has registered this trigger source",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1052
+      "line": 1059
     },
     {
       "id": "duties.index.unlinking_use_from_power",
       "en": "unlinking a use from a power",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1523
+      "line": 1530
     },
     {
       "id": "duties.index.uses_could_not_be_read",
       "en": "the uses could not be read",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1400
+      "line": 1407
     },
     {
       "id": "duties.index.why_the_words_are_kept",
       "en": "{why}; the words are kept as written: \"{String}\".",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 594
+      "line": 601
     },
     {
       "id": "duties.index.why_the_words_are_kept_2",
       "en": "{why}; the words are kept as written: \"{String}\".",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 690
+      "line": 697
     },
     {
       "id": "entities.declared.aliaswithdraw",
       "en": "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2215
+      "line": 2225
     },
     {
       "id": "entities.declared.entityalias",
       "en": "registry write, keyed by entity",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2213
+      "line": 2223
     },
     {
       "id": "entities.declared.entitybyalias",
       "en": "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2232
+      "line": 2242
     },
     {
       "id": "entities.declared.entitycreate",
       "en": "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2211
+      "line": 2221
     },
     {
       "id": "entities.declared.relationdeclare",
       "en": "registry write, keyed by entity pair",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2217
+      "line": 2227
     },
     {
       "id": "entities.declared.resolutiondefect",
       "en": "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2223
+      "line": 2233
     },
     {
       "id": "entities.declared.resolutions",
       "en": "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2236
+      "line": 2246
     },
     {
       "id": "entities.declared.resolve",
       "en": "recogniser write, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2219
+      "line": 2229
     },
     {
       "id": "entities.declared.resolvetestify",
       "en": "recogniser testimony, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2221
+      "line": 2231
     },
     {
       "id": "entities.index.a_declared_relation_carries_a",
@@ -24351,7 +24351,7 @@
       "en": "space must be one of {map}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2126
+      "line": 2136
     },
     {
       "id": "entities.index.testimony_asserted_by_v1_on",
@@ -24610,14 +24610,14 @@
       "en": "{v1} has the shape of no form of the {label}{v2}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2134
+      "line": 2144
     },
     {
       "id": "entities.index.v1_names_no_captured_document",
       "en": "{v1} names no captured document this record holds that you can see",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2146
+      "line": 2156
     },
     {
       "id": "escalation.checks.reading_what_the_government_answered",
@@ -28677,392 +28677,392 @@
       "en": "register-directed: keyed by the register's address; a member's follow, moving no bundle",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1811
+      "line": 1819
     },
     {
       "id": "following.declared.secondlook",
       "en": "item-directed: a member asks a second look at one followed item, seen by every member with the date and note; moves no bundle",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1815
+      "line": 1823
     },
     {
       "id": "following.declared.secondlookclear",
       "en": "item-directed: a member clears a second look at one followed item, with who and when; moves no bundle",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1817
+      "line": 1825
     },
     {
       "id": "following.declared.watchitem",
       "en": "item-directed: a member's own watch on one followed item, read back only to its setter; moves no bundle",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1813
+      "line": 1821
     },
     {
       "id": "following.index.a_follow_is_read_daily",
       "en": "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 331
+      "line": 339
     },
     {
       "id": "following.index.a_follow_is_read_daily_2",
       "en": "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 396
+      "line": 404
     },
     {
       "id": "following.index.a_follow_is_read_daily_3",
       "en": "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 447
+      "line": 455
     },
     {
       "id": "following.index.a_follow_is_read_daily_4",
       "en": "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 478
+      "line": 486
     },
     {
       "id": "following.index.a_second_look_carries_a",
       "en": "a second look carries a note: one line of at most {SECOND_LOOK_NOTE_MAX} characters, saying what to check",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1486
+      "line": 1494
     },
     {
       "id": "following.index.account_gated_member_credential",
       "en": "an account-gated register is read with the member's own credential",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 893
+      "line": 901
     },
     {
       "id": "following.index.act_names_item",
       "en": "an act on an item names the item",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1449
+      "line": 1457
     },
     {
       "id": "following.index.answer_keep_member_act",
       "en": "answering whether to keep a watch is a member's own act",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1309
+      "line": 1317
     },
     {
       "id": "following.index.answer_keep_or_stop",
       "en": "an answer either keeps the watch until a day, or stops it now",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1321
+      "line": 1329
     },
     {
       "id": "following.index.body_no_legistar_id",
       "en": "the body holds no identifier in a scheme the active profiles name for Legistar",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 327
+      "line": 335
     },
     {
       "id": "following.index.end_date_member_act",
       "en": "a follow's end date is set by a member's own act",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 359
+      "line": 367
     },
     {
       "id": "following.index.end_date_set_by_author",
       "en": "a follow's end date is set by the member who made it",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 365
+      "line": 373
     },
     {
       "id": "following.index.follow_already_ended",
       "en": "the follow has already ended",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 366
+      "line": 374
     },
     {
       "id": "following.index.follow_ended_by_author_only",
       "en": "a follow is ended only by the member who made it",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 347
+      "line": 355
     },
     {
       "id": "following.index.follow_home_visible_bundle",
       "en": "the follow's home is a bundle you may see, whose project it lives in",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 265
+      "line": 273
     },
     {
       "id": "following.index.follow_is_member_act",
       "en": "a follow is a member's own act; the machine follows nothing of its own accord",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 263
+      "line": 271
     },
     {
       "id": "following.index.follow_no_longer_held",
       "en": "the follow is no longer held",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1347
+      "line": 1355
     },
     {
       "id": "following.index.keep_names_day",
       "en": "keeping a watch names the day it is kept until",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1325
+      "line": 1333
     },
     {
       "id": "following.index.link_watch_member_act",
       "en": "linking a watch to a plan is a member's own act",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1175
+      "line": 1183
     },
     {
       "id": "following.index.no_address_per_meeting",
       "en": "no address you may see is watched per meeting",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 493
+      "line": 501
     },
     {
       "id": "following.index.no_body_registered_seen",
       "en": "no body by that id is registered that you may see",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 494
+      "line": 502
     },
     {
       "id": "following.index.no_body_seen",
       "en": "no body by that id is registered that you may see",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 325
+      "line": 333
     },
     {
       "id": "following.index.no_follow_held",
       "en": "no follow by that id is held",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 346
+      "line": 354
     },
     {
       "id": "following.index.no_follow_seen_held",
       "en": "no follow by that id you may see is held",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 362
+      "line": 370
     },
     {
       "id": "following.index.no_item_marks_list",
       "en": "no item by that id is one the marks list",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1586
+      "line": 1594
     },
     {
       "id": "following.index.no_item_seen",
       "en": "no item by that id is one you may see",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1451
+      "line": 1459
     },
     {
       "id": "following.index.no_item_seen_2",
       "en": "no item by that id is one you may see",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1516
+      "line": 1524
     },
     {
       "id": "following.index.no_link_seen",
       "en": "no link of a watch you may see is held under that id",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1312
+      "line": 1320
     },
     {
       "id": "following.index.no_live_register_follow",
       "en": "no live register follow by that id is held",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 885
+      "line": 893
     },
     {
       "id": "following.index.no_open_second_look",
       "en": "the item has no open second look to clear",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1507
+      "line": 1515
     },
     {
       "id": "following.index.no_portal_follow_seen",
       "en": "no portal follow by that id you may see",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1696
+      "line": 1704
     },
     {
       "id": "following.index.no_portal_follow_seen_2",
       "en": "no portal follow by that id you may see",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1713
+      "line": 1721
     },
     {
       "id": "following.index.no_question_yours_now",
       "en": "there is no question about this watch that is yours to answer now",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1318
+      "line": 1326
     },
     {
       "id": "following.index.no_watch_of_kind_seen",
       "en": "no watch of that kind that you may see is held under that id",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1182
+      "line": 1190
     },
     {
       "id": "following.index.no_watch_of_kind_seen_2",
       "en": "no watch of that kind that you may see is held under that id",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1184
+      "line": 1192
     },
     {
       "id": "following.index.only_follower_refreshes",
       "en": "only the member who follows this register refreshes it, with their own credential",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 889
+      "line": 897
     },
     {
       "id": "following.index.period_days_named",
       "en": "a follow names the days it covers: from (a day), and until (a day not before it) or none",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 329
+      "line": 337
     },
     {
       "id": "following.index.policy_standing_watch_no_end",
       "en": "a policy's watch is the team's standing watch: it takes no end date and ends only with the policy",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 364
+      "line": 372
     },
     {
       "id": "following.index.portal_declares_key_field",
       "en": "a portal follow declares the field that keys its rows",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 476
+      "line": 484
     },
     {
       "id": "following.index.portal_public_https_locator",
       "en": "a portal is followed at a public https locator",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 473
+      "line": 481
     },
     {
       "id": "following.index.portal_public_https_locator_2",
       "en": "a portal is followed at a public https locator",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 475
+      "line": 483
     },
     {
       "id": "following.index.public_register_read_tick",
       "en": "a public register is read on the tick; a member's refresh is for one behind an account or a fee",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 887
+      "line": 895
     },
     {
       "id": "following.index.register_public_https_locator",
       "en": "a register is followed at a public https locator",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 391
+      "line": 399
     },
     {
       "id": "following.index.relied_on_not_offered",
       "en": "something else still relies on this watch, so it is not offered for keeping or stopping",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1319
+      "line": 1327
     },
     {
       "id": "following.index.render_true_or_false",
       "en": "render is true or false",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 392
+      "line": 400
     },
     {
       "id": "following.index.second_looks_names_item",
       "en": "a read of an item's second looks names the item",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1515
+      "line": 1523
     },
     {
       "id": "following.index.snapshot_over_parse_bound",
       "en": "this answer is {size} MB ({bytes} bytes), above the {bound} MB a snapshot can be compared at; the capture holds all of it",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 850
+      "line": 858
     },
     {
       "id": "following.index.snapshots_same_follow",
       "en": "both snapshots are of this follow, by their sequence numbers",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1699
+      "line": 1707
     },
     {
       "id": "following.index.this_register_charges_price_the",
       "en": "this register charges {price}; the refresh runs only once that price is accepted as shown",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 891
+      "line": 899
     },
     {
       "id": "following.index.watch_already_ended",
       "en": "that watch has already ended",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1202
+      "line": 1210
     },
     {
       "id": "following.index.watch_body_member_act",
       "en": "naming a watch's body is a member's own act",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 490
+      "line": 498
     },
     {
       "id": "following.index.watch_flag_member_acts",
       "en": "watching and flagging are a member's own acts; the machine marks nothing",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
-      "line": 1448
+      "line": 1456
     },
     {
       "id": "format-registry.formats.container_judged_from_end",
@@ -32499,126 +32499,126 @@
       "en": "a basis is what a QUESTION rests on, and only an inquiry carries one.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2557
+      "line": 2559
     },
     {
       "id": "inquiry.index.a_call_reads_the_waits",
       "en": "a call reads the waits of at most {DOCUMENT_WAITS_MAX} questions; ask the list in parts. Nothing was read.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1510
+      "line": 1512
     },
     {
       "id": "inquiry.index.a_childs_question_is_at",
       "en": "a child's question is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2088
+      "line": 2090
     },
     {
       "id": "inquiry.index.a_dated_wait_is_its",
       "en": "a dated wait is its setter's own: only the member who set it records that they looked.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1443
+      "line": 1445
     },
     {
       "id": "inquiry.index.a_division_produces_at_least",
       "en": "a division produces at least TWO questions. One child is a rename and zero is a deletion, and neither is what dividing claims about the parent.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2063
+      "line": 2065
     },
     {
       "id": "inquiry.index.a_division_records_why_the",
       "en": "a division records WHY the question was two questions. One authored reason covers the whole restructuring (DEC-29) and nothing is derived, defaulted or proposed: 'divided' with no account of why is a state change wearing a correction's clothes.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1975
+      "line": 1977
     },
     {
       "id": "inquiry.index.a_divisions_child_cannot_be",
       "en": "a division's child cannot be the parent itself: the parent is terminal and the children are what carry the question forward.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2074
+      "line": 2076
     },
     {
       "id": "inquiry.index.a_finding_that_is_a",
       "en": "a finding that is a member of a published case cannot be deferred or dismissed. AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the team quietly stopped working is indistinguishable from one that was never asked, which is why it is made visible rather than left to vanish. A published case is already out in the world and cannot stop being worked on quietly — a reader is holding it. What IS available is the route DEC-12 built: reopen it (op=reopen), and let the next edition say what changed.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1763
+      "line": 1765
     },
     {
       "id": "inquiry.index.a_grouping_is_a_partition",
       "en": "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2583
+      "line": 2585
     },
     {
       "id": "inquiry.index.a_leg_is_apportioned_by",
       "en": "a leg is apportioned by its ORDINAL in the parent's basis (0..{v1}); '{o}' names none. Ordinals rather than targets, because one document legitimately carries two legs (D4).",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2109
+      "line": 2111
     },
     {
       "id": "inquiry.index.a_look_at_a_dated",
       "en": "a look at a dated wait is the setter's own act: a member signed in, never a machine credential.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1434
+      "line": 1436
     },
     {
       "id": "inquiry.index.a_looks_note_is_text",
       "en": "a look's note is text of at most {LOOK_NOTE_MAX} characters.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1445
+      "line": 1447
     },
     {
       "id": "inquiry.index.a_published_case_cannot_be",
       "en": "a published case cannot be divided. An EDITION says the case continues; a DIVISION says the parent was malformed, and a hash somebody has already relied on cannot be retroactively declared malformed. Reopen it (op=reopen) and publish what changed as a new edition, which is the act DEC-12 built for exactly this.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2018
+      "line": 2020
     },
     {
       "id": "inquiry.index.a_published_cases_composed_strength",
       "en": "a published case's composed strength and its per-group breakdown are inside signed, ratified bytes. Re-cutting the structure underneath them would leave this document composing to something the edition on the record contradicts. Reopen it (op=reopen), restructure, and publish what changed as a new edition — the route DEC-12 built for exactly this.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2566
+      "line": 2568
     },
     {
       "id": "inquiry.index.a_reason_is_at_most",
       "en": "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1710
+      "line": 1712
     },
     {
       "id": "inquiry.index.a_reason_is_at_most_2",
       "en": "a reason is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2608
+      "line": 2610
     },
     {
       "id": "inquiry.index.an_inquirys_state_is_one",
       "en": "an inquiry's state is one of {INQUIRY_STATES}",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1699
+      "line": 1701
     },
     {
       "id": "inquiry.index.and_of_them_cut_against",
       "en": ", and {cutting} of them CUT AGAINST this inquiry",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2121
+      "line": 2123
     },
     {
       "id": "inquiry.index.basis_i_names_the_portion",
@@ -32667,7 +32667,7 @@
       "en": "basis[{raw}] is claimed by two groups. A leg belongs to exactly ONE group: a leg that is needed whatever else holds is NECESSARY, and the honest way to say so is to leave the reasons ungrouped — an ungrouped basis is read as no stronger than its weakest leg, which is the conservative reading.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2653
+      "line": 2655
     },
     {
       "id": "inquiry.index.bundleid_cannot_rest_on_itself",
@@ -32695,98 +32695,98 @@
       "en": "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a disposition with no reason would produce a record the catalog rejects.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1707
+      "line": 1709
     },
     {
       "id": "inquiry.index.disposition_moves_an_inquirys_state",
       "en": "disposition moves an inquiry's state, and this selection carries something else. The set is refused whole rather than narrowed to the inquiries in it.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1755
+      "line": 1757
     },
     {
       "id": "inquiry.index.dividing_is_a_named_members",
       "en": "dividing is a named member's judgement that the team's own question was malformed — that it was two questions — and that judgement carries a name. A machine credential may surface a question and gather what it rests on; it may not restructure the record's questions. Sign in as a member.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1970
+      "line": 1972
     },
     {
       "id": "inquiry.index.dividing_splits_a_question_and",
       "en": "dividing splits a question, and only an inquiry carries one.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1993
+      "line": 1995
     },
     {
       "id": "inquiry.index.each_child_is_a_question",
       "en": "each child is a QUESTION and its question is authored, never derived from the parent's. The whole claim a division makes is that these are two different questions, so a child that cannot state its own has not been shown to be one.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2085
+      "line": 2087
     },
     {
       "id": "inquiry.index.each_child_is_named_with",
       "en": "each child is named with a canonical INQ- id: a division produces questions, and the id grammar is what makes them addressable by everything that will cite them.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2068
+      "line": 2070
     },
     {
       "id": "inquiry.index.every_leg_gets_a_home",
       "en": "every leg gets a home. {length} leg(s) were apportioned to no child{v1}. Division RE-HOMES material and only severance REMOVES it, which is why dividing cannot do severance's work at a discount (R4): apportion them, or sever them with a reason, which is the act that takes material out of a question.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2121
+      "line": 2123
     },
     {
       "id": "inquiry.index.first_grouping_no_earlier",
       "en": "First grouping: no earlier structure to revise.\n",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2765
+      "line": 2767
     },
     {
       "id": "inquiry.index.grounds_i_is_not_an",
       "en": "grounds[{i}] is not an object",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2626
+      "line": 2628
     },
     {
       "id": "inquiry.index.grounds_i_legs_must_be",
       "en": "grounds[{i}].legs must be an array of ordinals — a group is a partition OF THE LEGS, and a group naming none asserts that nothing is enough on its own. Legs are addressed by ORDINAL (their position in basis[]) and never by target id, because one document legitimately carries two legs (D4).",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2631
+      "line": 2633
     },
     {
       "id": "inquiry.index.grounds_i_legs_names_ord",
       "en": "grounds[{i}].legs names ord {v1}, and this question has legs 0..{v2}. An ordinal that addresses no leg groups nothing.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2640
+      "line": 2642
     },
     {
       "id": "inquiry.index.grounds_i_legs_names_ord_which_cuts",
       "en": "grounds[{i}].legs names ord {raw}, which cuts against this answer. A ground says its legs carry the answer on their own, and a leg that cuts against is not a reason for it: leave it out of every ground, and it stays in the basis as it is.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2647
+      "line": 2649
     },
     {
       "id": "inquiry.index.grounds_i_statement_is_at",
       "en": "grounds[{i}].statement is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2636
+      "line": 2638
     },
     {
       "id": "inquiry.index.grouping_is_a_named_members",
       "en": "grouping is a named member's judgement that some of their reasons are enough on their own to carry their answer, and it is the one act in this record that makes a finding STRONGER. A machine credential may surface a question and gather what it rests on; it may not decide that part of the gathering was sufficient by itself. Sign in as a member.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2538
+      "line": 2540
     },
     {
       "id": "inquiry.index.it_also_names_which_was",
@@ -32800,21 +32800,21 @@
       "en": "live basis legs still rest on these questions. Dismissing one abandons it, and a claim resting on an abandoned question would go on reading at a strength nobody will ever re-examine — the downstream consequence retire already refuses on. Withdraw those legs first (sever the citation with a reason), or DEFER instead: deferring is reversible and raises the re-evaluation obligation on every dependent rather than stranding it.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1794
+      "line": 1796
     },
     {
       "id": "inquiry.index.live_basis_legs_still_rest_2",
       "en": "live basis legs still rest on this question. Dividing it declares it MALFORMED and ends it, and a claim resting on it would be left pointing at a question the record has withdrawn. Withdraw those legs first (sever the citation with a reason), or re-point them at the child that carries the half they rely on once it exists.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2056
+      "line": 2058
     },
     {
       "id": "inquiry.index.no_dated_wait_is_held",
       "en": "no dated wait is held at that position on that question.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1440
+      "line": 1442
     },
     {
       "id": "inquiry.index.no_duty_the_record_holds",
@@ -32835,21 +32835,21 @@
       "en": "### Session {when} | Divided | {who}\nTrigger: op=inquirydivide on {target}\nChanges: state {current_state} to divided (terminal).\nInto: {ids}\nReason: {why}\nApportioned: {length} leg(s), {length_2} placement(s), {length_3} cutting against.\n",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2372
+      "line": 2374
     },
     {
       "id": "inquiry.index.session_when_v1_v2_trigger",
       "en": "### Session {when} | {v1} | {v2}\nTrigger: selection {handle}\nChanges: state {current_state} to {to}. Reason: {why}.\n",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1848
+      "line": 1850
     },
     {
       "id": "inquiry.index.strength_before_not_stated",
       "en": "Strength before: not stated (no module answers it here).\n",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2766
+      "line": 2768
     },
     {
       "id": "inquiry.index.subject_entity_se_does_not",
@@ -32870,14 +32870,14 @@
       "en": "take ord {raw} out of grounds[{i}].legs",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2648
+      "line": 2650
     },
     {
       "id": "inquiry.index.target_s_children_would_be",
       "en": "{target}'s children would be new documents that must name the team that produced them; this store records none and {target_2}'s own document names none, so nothing was divided.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2133
+      "line": 2135
     },
     {
       "id": "inquiry.index.the_contradiction_candidate_candidate_is",
@@ -32898,28 +32898,28 @@
       "en": "the document this division would create for {id} would not pass the catalog, so nothing was written: the parent is untouched and no child exists. A division that landed half-applied would leave a terminal parent naming a question nobody can open.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2319
+      "line": 2321
     },
     {
       "id": "inquiry.index.the_reason_is_at_most",
       "en": "the reason is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1978
+      "line": 1980
     },
     {
       "id": "inquiry.index.the_structure_this_would_author",
       "en": "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2725
+      "line": 2727
     },
     {
       "id": "inquiry.index.these_are_not_legal_moves",
       "en": "these are not legal moves in the catalog's state table. A move to the state something is already in usually means the view was taken before someone else's disposition, so it is refused rather than treated as a no-op.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1766
+      "line": 1768
     },
     {
       "id": "inquiry.index.this_child_does_not_name",
@@ -32933,70 +32933,70 @@
       "en": "this document's basis block is not in a shape this grammar can edit in place. Nothing was written — a partial edit of a basis is worse than none.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2733
+      "line": 2735
     },
     {
       "id": "inquiry.index.this_documents_state_history_block",
       "en": "this document's state_history block is not in a shape this grammar can extend in place, and a disposition that recorded no transition would leave prior_state pointing at a history the document does not carry (C-4.2); nothing was moved",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1840
+      "line": 1842
     },
     {
       "id": "inquiry.index.this_id_already_names_a",
       "en": "this id already names a record. A division CREATES its children, so re-using an existing id would overwrite a question somebody else is working on.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2079
+      "line": 2081
     },
     {
       "id": "inquiry.index.this_inquiry_has_no_readable",
       "en": "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1834
+      "line": 1836
     },
     {
       "id": "inquiry.index.this_inquiry_has_no_readable_2",
       "en": "this inquiry has no readable bundle.md, so its state cannot be moved",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1998
+      "line": 2000
     },
     {
       "id": "inquiry.index.this_inquiry_has_no_readable_3",
       "en": "this inquiry has no readable bundle.md, so its structure cannot be authored",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2576
+      "line": 2578
     },
     {
       "id": "inquiry.index.this_inquiry_rests_on_nothing",
       "en": "this inquiry rests on nothing, so there is nothing to apportion and both children would inherit nothing. A standing objective with no legs is not two questions yet (DEC-22); it is one question nobody has gathered anything for.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2098
+      "line": 2100
     },
     {
       "id": "inquiry.index.this_is_the_structure_this",
       "en": "this is the structure this question already carries, leg for leg. Nothing was written: a revision that changes nothing would put a restructuring in the record that did not happen.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2698
+      "line": 2700
     },
     {
       "id": "inquiry.index.this_partition_names_a_leg",
       "en": "this partition names a leg that cuts against the answer, and a ground holds only legs that carry it. Nothing was written.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2649
+      "line": 2651
     },
     {
       "id": "inquiry.index.this_question_already_carries_an",
       "en": "this question already carries an authored structure, so changing it is a REVISION and records WHY. Restructuring after seeing a strength is legal and is never blocked (DEC-32) — the defence is that it is visible, which it is not without an account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping needs no reason: there is no earlier structure for it to be a revision of.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2605
+      "line": 2607
     },
     {
       "id": "inquiry.index.this_question_was_divided_and",
@@ -33010,14 +33010,14 @@
       "en": "this question's basis carries an entry that is not a leg, so the ordinals a partition addresses cannot be lined up against the document. Nothing was written.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2586
+      "line": 2588
     },
     {
       "id": "inquiry.index.this_selection_resolves_to",
       "en": "this selection resolves to no members, so there is nothing to dispose",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1716
+      "line": 1718
     },
     {
       "id": "inquiry.index.this_write_would_close_a",
@@ -33031,7 +33031,7 @@
       "en": "two children carry the same id: a leg apportioned to a child named twice has one home, not two.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2071
+      "line": 2073
     },
     {
       "id": "inquiry.index.v1_names_the_bias_statement",
@@ -33045,21 +33045,21 @@
       "en": "{v1}The division lands whole or not at all, so nothing was written: the parent is untouched and no child exists.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2410
+      "line": 2412
     },
     {
       "id": "inquiry.index.v1_the_set_moves_whole",
       "en": "{v1}The set moves whole or not at all, so nothing was moved.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1857
+      "line": 1859
     },
     {
       "id": "inquiry.index.v1_was_apportioned_no_leg",
       "en": "{v1} was apportioned no leg of the parent's basis. A child that inherits nothing is a NEW question, not a half of this one — open it as its own inquiry rather than calling it a division.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 2104
+      "line": 2106
     },
     {
       "id": "inquiry.index.whether_it_is_in_lens_could",
@@ -33087,7 +33087,7 @@
       "en": "which projects draw on these questions could not be read, so whether this shared act would move a question a project works on is not known, and nothing was moved. Try again.",
       "module": "inquiry",
       "file": "bio-plane/src/inquiry/index.mjs",
-      "line": 1816
+      "line": 1818
     },
     {
       "id": "inquiry.text.text_session_log_entry",
@@ -33101,112 +33101,112 @@
       "en": "setting: the group's declared stake in its own words, carried beside its public identity on what it sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3145
+      "line": 3149
     },
     {
       "id": "instance-setup.declared.disclosureshown",
       "en": "personal state, keyed by member: the assistant's disclosure shown to them, with its version",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3148
+      "line": 3152
     },
     {
       "id": "instance-setup.declared.groupdomainset",
       "en": "the group's claimed domain — the subject is the instance's identity, not a bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3151
+      "line": 3155
     },
     {
       "id": "instance-setup.declared.grouplanguagesset",
       "en": "setting: the languages the group works in; an administrator's act, a later one replacing it; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3154
+      "line": 3158
     },
     {
       "id": "instance-setup.declared.grouplogoset",
       "en": "setting: the group's logo, PNG or JPEG, or none; an administrator's act, a later one replacing it; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3157
+      "line": 3161
     },
     {
       "id": "instance-setup.declared.groupnameset",
       "en": "the group's public display name — the subject is the instance's identity, not a bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3160
+      "line": 3164
     },
     {
       "id": "instance-setup.declared.infolevelset",
       "en": "personal state, keyed by member: how quickly explanations open, promptly or after a longer pause; nothing is hidden",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3163
+      "line": 3167
     },
     {
       "id": "instance-setup.declared.memberlanguageset",
       "en": "personal state, keyed by member: the language the interface speaks to them",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3166
+      "line": 3170
     },
     {
       "id": "instance-setup.declared.officesseed",
       "en": "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3169
+      "line": 3173
     },
     {
       "id": "instance-setup.declared.placewanted",
       "en": "the instance's configuration: the place the group wants its profile for; an administrator's",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3172
+      "line": 3176
     },
     {
       "id": "instance-setup.declared.profilesset",
       "en": "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3175
+      "line": 3179
     },
     {
       "id": "instance-setup.declared.runtime",
       "en": "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3178
+      "line": 3182
     },
     {
       "id": "instance-setup.declared.selftest",
       "en": "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3181
+      "line": 3185
     },
     {
       "id": "instance-setup.declared.updatelater",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3184
+      "line": 3188
     },
     {
       "id": "instance-setup.declared.updateskip",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3187
+      "line": 3191
     },
     {
       "id": "instance-setup.declared.updatestart",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3190
+      "line": 3194
     },
     {
       "id": "instance-setup.livefire.confined_to_the_scratch_namespace",
@@ -33339,7 +33339,7 @@
       "en": "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2962
+      "line": 2966
     },
     {
       "id": "instance-setup.setup.every_answer_is_empty_so",
@@ -33458,14 +33458,14 @@
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3025
+      "line": 3029
     },
     {
       "id": "instance-setup.setup.probe_none_cut_off",
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. No run has been cut off yet, so the ceiling is above everything tried.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3026
+      "line": 3030
     },
     {
       "id": "instance-setup.setup.profile_made_up_for_testing",
@@ -33500,21 +33500,21 @@
       "en": "No reason was given. A release is skipped with a reason of one line of 1 to {max} characters. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2914
+      "line": 2918
     },
     {
       "id": "instance-setup.setup.skip_reason_many_lines",
       "en": "A reason of {chars} characters over more than one line is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2916
+      "line": 2920
     },
     {
       "id": "instance-setup.setup.skip_reason_too_long",
       "en": "A reason of {chars} characters is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2915
+      "line": 2919
     },
     {
       "id": "instance-setup.setup.slug_none_given",
@@ -33633,7 +33633,7 @@
       "en": "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3488
+      "line": 3492
     },
     {
       "id": "instance-setup.setup.this_store_has_recorded_its",
@@ -33752,7 +33752,7 @@
       "en": "skipping an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2906
+      "line": 2910
     },
     {
       "id": "instance-setup.setup.what_the_updates",
@@ -33920,14 +33920,14 @@
       "en": "basis[{ord}] rests on {target}, an intake interview: a member's narrative is never evidence (D20)",
       "module": "investigation",
       "file": "bio-plane/src/investigation/index.mjs",
-      "line": 1325
+      "line": 1327
     },
     {
       "id": "investigation.index.work_waits_on_on",
       "en": "\"{work}\" waits on {on}",
       "module": "investigation",
       "file": "bio-plane/src/investigation/index.mjs",
-      "line": 637
+      "line": 639
     },
     {
       "id": "journey-check.account.the_cron_triggers_of_this_script",
@@ -35824,14 +35824,14 @@
       "en": "line-directed: keyed by line; keeps it, shown withdrawn, and moves no bundle",
       "module": "lines",
       "file": "bio-plane/src/lines/index.mjs",
-      "line": 846
+      "line": 845
     },
     {
       "id": "lines.declared.recordline",
       "en": "line-directed: keyed by a new LIN- id between two entities; writes lines' rows and moves no bundle",
       "module": "lines",
       "file": "bio-plane/src/lines/index.mjs",
-      "line": 843
+      "line": 842
     },
     {
       "id": "lines.why.cache_stale",
@@ -36503,224 +36503,224 @@
       "en": "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 365
+      "line": 371
     },
     {
       "id": "machinery-producers.index.a_status_is_a_fact_2",
       "en": "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 857
+      "line": 863
     },
     {
       "id": "machinery-producers.index.a_sweeps_status_is_link",
       "en": "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 976
+      "line": 982
     },
     {
       "id": "machinery-producers.index.a_working_on_notices_state",
       "en": "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1025
+      "line": 1031
     },
     {
       "id": "machinery-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 662
+      "line": 668
     },
     {
       "id": "machinery-producers.index.cooloff_no_refusal_instant",
       "en": "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 370
+      "line": 376
     },
     {
       "id": "machinery-producers.index.eligibility_is_captures_rule",
       "en": "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 739
+      "line": 745
     },
     {
       "id": "machinery-producers.index.failing_run_no_first_failure",
       "en": "the failing run carries no first-failure instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 743
+      "line": 749
     },
     {
       "id": "machinery-producers.index.it_was_due_at_due",
       "en": "it was due at {due_at} and is checked every {round} hours; the check has not run since. Nothing about the source is claimed here.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 773
+      "line": 779
     },
     {
       "id": "machinery-producers.index.its_last_n_runs_each",
       "en": "its last {n} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 931
+      "line": 937
     },
     {
       "id": "machinery-producers.index.its_last_run_filed_n",
       "en": "its last run filed {n} against a median of {n_2} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 920
+      "line": 926
     },
     {
       "id": "machinery-producers.index.machine_writer_is_named",
       "en": "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 576
+      "line": 582
     },
     {
       "id": "machinery-producers.index.manifest_created_unreadable",
       "en": "the manifest entry carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 580
+      "line": 586
     },
     {
       "id": "machinery-producers.index.n_of_its_captures_are",
       "en": "{n} of its captures are still awaiting review, at or over its backlog limit of {n_2}. It runs again when members review or set aside enough of them.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 917
+      "line": 923
     },
     {
       "id": "machinery-producers.index.no_instance_key_was_bound",
       "en": "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1048
+      "line": 1054
     },
     {
       "id": "machinery-producers.index.no_interval_can_be_derived",
       "en": "no interval can be derived for it ({v1}), so no check is scheduled.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 774
+      "line": 780
     },
     {
       "id": "machinery-producers.index.on_its_last_run_these",
       "en": "on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 923
+      "line": 929
     },
     {
       "id": "machinery-producers.index.our_own_attempts_at",
       "en": "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 735
+      "line": 741
     },
     {
       "id": "machinery-producers.index.pacing_wait_in_words",
       "en": "Civicsmith will try {host} again in {wait}. It has been turned away {refusals} time{v1} in a row, so it is waiting before it sends more. This says nothing about whether the site is working.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 358
+      "line": 364
     },
     {
       "id": "machinery-producers.index.request_completion_unreadable",
       "en": "the request row carries a completion stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 666
+      "line": 672
     },
     {
       "id": "machinery-producers.index.request_stamp_unreadable",
       "en": "the request row carries a request stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 861
+      "line": 867
     },
     {
       "id": "machinery-producers.index.session_created_unreadable",
       "en": "the session row carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 444
+      "line": 450
     },
     {
       "id": "machinery-producers.index.sweep_status_no_instant",
       "en": "the sweep's status carries no instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 980
+      "line": 986
     },
     {
       "id": "machinery-producers.index.the_ledger_is_scratch_and",
       "en": "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 440
+      "line": 446
     },
     {
       "id": "machinery-producers.index.the_notice_has_been_dormant",
       "en": "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1058
+      "line": 1064
     },
     {
       "id": "machinery-producers.index.the_plan_is_monitorings_its",
       "en": "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 778
+      "line": 784
     },
     {
       "id": "machinery-producers.index.the_primary_document_is_captured",
       "en": "the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 433
+      "line": 439
     },
     {
       "id": "machinery-producers.index.the_to_do_is_derived",
       "en": "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1169
+      "line": 1175
     },
     {
       "id": "machinery-producers.index.unscheduled_no_instant",
       "en": "an unscheduled address has no instant it fell due",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 782
+      "line": 788
     },
     {
       "id": "machinery-producers.index.words_the_request_expired_at",
       "en": "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 848
+      "line": 854
     },
     {
       "id": "machinery-producers.index.words_the_request_is_held",
       "en": "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 849
+      "line": 855
     },
     {
       "id": "machinery-producers.index.your_teams_civicsmith_signed_the",
       "en": "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1074
+      "line": 1080
     },
     {
       "id": "member-roster.declared.adminendorse",
@@ -37623,252 +37623,252 @@
       "en": "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1439
+      "line": 1442
     },
     {
       "id": "money.declared.committedagainstpaid",
       "en": "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1437
+      "line": 1440
     },
     {
       "id": "money.declared.createset",
       "en": "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1427
+      "line": 1430
     },
     {
       "id": "money.declared.exclude",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1431
+      "line": 1434
     },
     {
       "id": "money.declared.include",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1429
+      "line": 1432
     },
     {
       "id": "money.declared.moneysets",
       "en": "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1435
+      "line": 1438
     },
     {
       "id": "money.declared.reconcile",
       "en": "read: whether two money facts are consistent, or each dimension that differs; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1433
+      "line": 1436
     },
     {
       "id": "money.declared.recordfact",
       "en": "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1425
+      "line": 1428
     },
     {
       "id": "money.index.a_balance_class_is_read",
       "en": "a balance class is read against a fund a party names, and none is named",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 406
+      "line": 409
     },
     {
       "id": "money.index.a_calculation_is_never_a",
       "en": "a calculation is never a money fact's source: its result is a calculation, and the facts it read are the sources (K1468)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 520
+      "line": 523
     },
     {
       "id": "money.index.a_calculation_is_never_a_2",
       "en": "a calculation is never a money fact's source",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1379
+      "line": 1382
     },
     {
       "id": "money.index.a_canonical_table_row_read",
       "en": "a canonical table row read through a binding a member adopted (source {table, row, binding})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 485
+      "line": 488
     },
     {
       "id": "money.index.a_chain_of_authority_is",
       "en": "a chain of authority is read for one money fact (MNY-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1203
+      "line": 1206
     },
     {
       "id": "money.index.a_code_names_one_of",
       "en": "a code names one of the active profiles' classification schemes{v1} and its code",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 389
+      "line": 392
     },
     {
       "id": "money.index.a_constant_role_is_one",
       "en": "a constant's role is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 710
+      "line": 713
     },
     {
       "id": "money.index.a_duty_is_never_named",
       "en": "a duty is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1385
+      "line": 1388
     },
     {
       "id": "money.index.a_figure_states_how_it",
       "en": "a figure states how it was read: {list}{v1}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 474
+      "line": 477
     },
     {
       "id": "money.index.a_found_tables_amount_column",
       "en": "a found table's amount column is declared and counted through calculations, never read into money facts row by row; record a figure from one passage of the table instead",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 527
+      "line": 530
     },
     {
       "id": "money.index.a_funds_type_is_list",
       "en": "a fund's type is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1294
+      "line": 1297
     },
     {
       "id": "money.index.a_funds_type_names_its",
       "en": "a fund's type names its basis: the source that states it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1295
+      "line": 1298
     },
     {
       "id": "money.index.a_hypothesis_is_never_named",
       "en": "a hypothesis is never named in a money fact ({k})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1381
+      "line": 1384
     },
     {
       "id": "money.index.a_hypothesis_is_never_named_2",
       "en": "a hypothesis is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1390
+      "line": 1393
     },
     {
       "id": "money.index.a_kind_takes_a_stage",
       "en": "a {kind} takes a stage of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 380
+      "line": 383
     },
     {
       "id": "money.index.a_machine_records_a_money",
       "en": "a machine records a money fact only with {list}; anything else is proposed to a member, never written",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 498
+      "line": 501
     },
     {
       "id": "money.index.a_machines_reading_is_one",
       "en": "a machine's reading is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 478
+      "line": 481
     },
     {
       "id": "money.index.a_money_fact_concerns_an",
       "en": "a money fact concerns an entity of kind {list}; {id} is a {k}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 437
+      "line": 440
     },
     {
       "id": "money.index.a_money_fact_concerns_events",
       "en": "a money fact concerns events, entities of kind contract, fund, program or proceeding, or lines; {id} is none of them",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 447
+      "line": 450
     },
     {
       "id": "money.index.a_money_fact_is_an",
       "en": "a money fact is an object of its fields",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 332
+      "line": 335
     },
     {
       "id": "money.index.a_money_fact_is_read",
       "en": "a money fact is read by its id (MNY-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 692
+      "line": 695
     },
     {
       "id": "money.index.a_money_fact_keeps_the",
       "en": "a money fact keeps the figure exactly as its source printed it (as_read)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 361
+      "line": 364
     },
     {
       "id": "money.index.a_money_fact_names_its",
       "en": "a money fact names its currency",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 362
+      "line": 365
     },
     {
       "id": "money.index.a_money_fact_never_concerns",
       "en": "a money fact never concerns a duty",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1389
+      "line": 1392
     },
     {
       "id": "money.index.a_money_fact_never_names",
       "en": "a money fact never names a duty; the duty names the fact it cites",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 451
+      "line": 454
     },
     {
       "id": "money.index.a_money_fact_rests_on",
       "en": "a money fact rests on exactly one source: a content extent or another money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 515
+      "line": 518
     },
     {
       "id": "money.index.a_money_fact_rests_on_2",
       "en": "a money fact rests on exactly one source",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 516
+      "line": 519
     },
     {
       "id": "money.index.a_money_fact_states_its",
       "en": "a money fact states its amount",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 350
+      "line": 353
     },
     {
       "id": "money.index.a_money_fact_states_the",
@@ -37882,189 +37882,189 @@
       "en": "a money fact's sign is explicit: + or -",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 363
+      "line": 366
     },
     {
       "id": "money.index.a_money_set_has_a",
       "en": "a money set has a label a person can read",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 936
+      "line": 939
     },
     {
       "id": "money.index.a_money_set_is_read",
       "en": "a money set is read by its id (MSR-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 991
+      "line": 994
     },
     {
       "id": "money.index.a_money_sets_purpose_is",
       "en": "a money set's purpose is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 935
+      "line": 938
     },
     {
       "id": "money.index.a_money_sets_purpose_is_2",
       "en": "a money set's purpose is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1020
+      "line": 1023
     },
     {
       "id": "money.index.a_proposal_names_the_method",
       "en": "a proposal names the method that proposed it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 977
+      "line": 980
     },
     {
       "id": "money.index.a_range_carries_its_low",
       "en": "a range carries its low and high as {low, high}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 367
+      "line": 370
     },
     {
       "id": "money.index.a_ranges_amount_is_low",
       "en": "a range's amount is {low, high}, each an exact decimal written as a string",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 355
+      "line": 358
     },
     {
       "id": "money.index.a_ranges_low_is_above",
       "en": "a range's low is above its high",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 369
+      "line": 372
     },
     {
       "id": "money.index.a_read_names_the_member",
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 807
+      "line": 810
     },
     {
       "id": "money.index.a_source_has_no_field",
       "en": "a source has no field {k}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 531
+      "line": 534
     },
     {
       "id": "money.index.a_source_ingest_is_the_key",
       "en": "a source's ingest is the key of the ingest that read a table row, a non-empty string of at most {max} characters, and only a table row source has one",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 535
+      "line": 538
     },
     {
       "id": "money.index.a_source_is_capture_sha_extent",
       "en": "a source is {capture_sha, extent}, {content_id} or {fact}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 521
+      "line": 524
     },
     {
       "id": "money.index.a_source_is_capture_sha_extent_2",
       "en": "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 538
+      "line": 541
     },
     {
       "id": "money.index.a_source_is_one_of",
       "en": "a source is one of a content extent or a money fact, never both",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 539
+      "line": 542
     },
     {
       "id": "money.index.a_table_row_source_names",
       "en": "a table row source names its table, its row and the binding it was read through",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 551
+      "line": 554
     },
     {
       "id": "money.index.a_total_is_a_calculation",
       "en": "a total is a calculation, never stored as a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1382
+      "line": 1385
     },
     {
       "id": "money.index.a_trail_concerns_one_id",
       "en": "a trail concerns one id, or none",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 944
+      "line": 947
     },
     {
       "id": "money.index.a_type_funds_classes_are",
       "en": "a {type} fund's classes are {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 408
+      "line": 411
     },
     {
       "id": "money.index.a_typed_transcription_is_a",
       "en": "a typed transcription is a member's act; a machine's reading names its method",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 476
+      "line": 479
     },
     {
       "id": "money.index.a_withdrawal_states_why",
       "en": "a withdrawal states why",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 674
+      "line": 677
     },
     {
       "id": "money.index.after_names_no_set_in",
       "en": "after names no set in this list; start again without it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1032
+      "line": 1035
     },
     {
       "id": "money.index.an_actual_amount_names_its",
       "en": "an actual amount names its stage: one of {list} for {kind}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 376
+      "line": 379
     },
     {
       "id": "money.index.an_amount_is_an_exact",
       "en": "an amount is an exact decimal written as a string of digits (thousands separators and one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 359
+      "line": 362
     },
     {
       "id": "money.index.an_attribution_set_concerns_one",
       "en": "an attribution set concerns one registered entity of kind contract",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 941
+      "line": 944
     },
     {
       "id": "money.index.an_entitys_money_is_read",
       "en": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 836
+      "line": 839
     },
     {
       "id": "money.index.an_extent_is_one_of",
       "en": "an extent is one of content's kinds ({list})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 811
+      "line": 814
     },
     {
       "id": "money.index.an_ingest_is_marked_by",
@@ -38085,133 +38085,133 @@
       "en": "basis is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 373
+      "line": 376
     },
     {
       "id": "money.index.buys_is_quantity_unit_what",
       "en": "buys is {quantity, unit, what}, the quantity an exact decimal",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 504
+      "line": 507
     },
     {
       "id": "money.index.codes_are_a_list_of",
       "en": "codes are a list of {scheme, code}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 386
+      "line": 389
     },
     {
       "id": "money.index.concerns_is_a_list_of",
       "en": "concerns is a list of ids",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 423
+      "line": 426
     },
     {
       "id": "money.index.contract_is_not_a_registered",
       "en": "{contract} is not a registered contract",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1132
+      "line": 1135
     },
     {
       "id": "money.index.each_id_concerned_is_a",
       "en": "each id concerned is a string",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 426
+      "line": 429
     },
     {
       "id": "money.index.end_as_written_is_the",
       "en": "{end}.as_written is the party's name as the source writes it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 420
+      "line": 423
     },
     {
       "id": "money.index.end_fund_names_v1_which",
       "en": "{end}.fund names {v1}, which is not registered as a fund",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 417
+      "line": 420
     },
     {
       "id": "money.index.events_is_not_wired_here_2",
       "en": "events is not wired here",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1208
+      "line": 1211
     },
     {
       "id": "money.index.fact_id_is_withdrawn_and",
       "en": "{fact_id} is withdrawn and is never counted",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 897
+      "line": 900
     },
     {
       "id": "money.index.fund_is_not_registered_as",
       "en": "{fund} is not registered as a fund",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1298
+      "line": 1301
     },
     {
       "id": "money.index.id_is_not_a_line",
       "en": "{id} is not a line the record holds that the writer can see",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 444
+      "line": 447
     },
     {
       "id": "money.index.kind_is_one_of_list",
       "en": "kind is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 371
+      "line": 374
     },
     {
       "id": "money.index.kind_is_one_of_list_2",
       "en": "kind is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 840
+      "line": 843
     },
     {
       "id": "money.index.module_s_listener_failed_on",
       "en": "{module}'s listener failed on {change} of {factId}: {String}. Nothing was written.",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 640
+      "line": 643
     },
     {
       "id": "money.index.money_sets_are_listed_by",
       "en": "money sets are listed by what they concern: name the id (moneysets&concerns=...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1018
+      "line": 1021
     },
     {
       "id": "money.index.name_the_money_facts_by",
       "en": "name the money facts by their ids",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 892
+      "line": 895
     },
     {
       "id": "money.index.no_authorising_event_is_held",
       "en": "no authorising event is held for this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1234
+      "line": 1237
     },
     {
       "id": "money.index.no_money_fact_id_could",
       "en": "no money fact id could be drawn",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 584
+      "line": 587
     },
     {
       "id": "money.index.no_money_fact_with_that",
@@ -38225,161 +38225,161 @@
       "en": "no money set {String} is held",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 960
+      "line": 963
     },
     {
       "id": "money.index.no_money_set_string_is_2",
       "en": "no money set {String} is held",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 979
+      "line": 982
     },
     {
       "id": "money.index.no_type_is_held_for",
       "en": "no type is held for the fund {fund}, so its balance-class family is not known (setFundType)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 407
+      "line": 410
     },
     {
       "id": "money.index.only_a_balance_carries_a",
       "en": "only a balance carries a balance class",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 405
+      "line": 408
     },
     {
       "id": "money.index.only_a_fact_of_precision",
       "en": "only a fact of precision range carries {low, high}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 368
+      "line": 371
     },
     {
       "id": "money.index.only_an_actual_amount_has",
       "en": "only an actual amount has a stage; this one is {phase}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 378
+      "line": 381
     },
     {
       "id": "money.index.phase_is_one_of_list",
       "en": "phase is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 372
+      "line": 375
     },
     {
       "id": "money.index.phase_is_one_of_list_2",
       "en": "phase is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 841
+      "line": 844
     },
     {
       "id": "money.index.precision_is_one_of_list",
       "en": "precision is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 365
+      "line": 368
     },
     {
       "id": "money.index.role_is_one_of_list",
       "en": "{role} is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 726
+      "line": 729
     },
     {
       "id": "money.index.the_authorising_events_held_toward",
       "en": "the authorising events held toward this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1234
+      "line": 1237
     },
     {
       "id": "money.index.the_capture_named",
       "en": "the capture named",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 567
+      "line": 570
     },
     {
       "id": "money.index.the_fact_an_adjustment_names",
       "en": "the fact an adjustment names ({String}) is not held",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 459
+      "line": 462
     },
     {
       "id": "money.index.the_party_end_is_entity",
       "en": "the party {end} is {entity?, fund?, account?, as_written}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 396
+      "line": 399
     },
     {
       "id": "money.index.the_question_string_is_not",
       "en": "the question {String} is not an inquiry held here, or not visible to the writer",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 467
+      "line": 470
     },
     {
       "id": "money.index.the_sources_extent_detail",
       "en": "the source's extent: {detail}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 570
+      "line": 573
     },
     {
       "id": "money.index.these_facts_differ_in_v1",
       "en": "these facts differ in {v1}: {fact_id} and {fact_id_2}; a sum is taken only over one kind, phase and stage, basis, currency and period",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 881
+      "line": 884
     },
     {
       "id": "money.index.to_act_a_fact_is",
       "en": "to {act} a fact is a member's act; a machine proposes (proposeInclusion)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 957
+      "line": 960
     },
     {
       "id": "money.index.to_act_a_fact_states",
       "en": "to {act} a fact states why",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 958
+      "line": 961
     },
     {
       "id": "money.index.what_is_not_held_here",
       "en": "{what} is not held here, or not visible to the writer",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 540
+      "line": 543
     },
     {
       "id": "money.index.where_has_no_field_string",
       "en": "{where} has no field {String}; a money fact holds only {list}. Nothing was written.",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 336
+      "line": 339
     },
     {
       "id": "money.index.who_recorded_from_a_passage",
       "en": "who recorded from a passage is read for one capture, by its sha256",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 808
+      "line": 811
     },
     {
       "id": "money.index.who_recorded_from_this_capture",
       "en": "who recorded from this capture could not be read: {String}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 829
+      "line": 832
     },
     {
       "id": "monitoring.checks.only_a_member_asks_for",
@@ -38421,56 +38421,56 @@
       "en": "capture-directed: the monitor tick on a captured source (metadata published in capture_acts)",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3461
+      "line": 3466
     },
     {
       "id": "monitoring.declared.monitoring",
       "en": "read: the watched addresses a viewer may see, each with its frequency, when it was last checked, when it is next due and its end date; writes nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3464
+      "line": 3469
     },
     {
       "id": "monitoring.declared.monitorpause",
       "en": "an administrator's setting over the instance's own fetching, refused NOT_AN_ADMIN to a member who is not one; not an act on an object",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3467
+      "line": 3472
     },
     {
       "id": "monitoring.declared.monitorset",
       "en": "bundle-directed: whether a captured document is watched, and how often; a member's own revision of the bundle; fetches nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3470
+      "line": 3475
     },
     {
       "id": "monitoring.declared.monitorslate",
       "en": "read: the due slate, the watched addresses, named requests and sweeps now due, as a prompt a member runs by hand; writes nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3473
+      "line": 3478
     },
     {
       "id": "monitoring.declared.namedrequests",
       "en": "read: every named request of the bundles a viewer may see, with its last attempt and when it is next due; writes nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3481
+      "line": 3486
     },
     {
       "id": "monitoring.declared.namedrequestset",
       "en": "bundle-directed: a named request in a bundle's gathering file, planted or revised by a member; fetches nothing, the daemon gathers it at its cadence",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3477
+      "line": 3482
     },
     {
       "id": "monitoring.index.a_tick_records_that_the",
       "en": "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1372
+      "line": 1377
     },
     {
       "id": "monitoring.index.authority_basis_baseline",
@@ -38512,49 +38512,49 @@
       "en": " — fetched {exportAddress}, the OpenDocument export composed from the Drive {kind} in {address}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1236
+      "line": 1241
     },
     {
       "id": "monitoring.index.frequency_when_given_must_be",
       "en": "'frequency', when given, must be one of {MONITOR_FREQ}. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2149
+      "line": 2154
     },
     {
       "id": "monitoring.index.gathered_for_the_named_request",
       "en": "Gathered for the named request {id}, carried by {bundle}'s data/gathering.json, which authorised the fetch; locator {v1} of {length} in the request's order. Collected {at}. Filed at {GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2697
+      "line": 2702
     },
     {
       "id": "monitoring.index.monitoring_set_by_member_v1",
       "en": "Monitoring set by {member}: {v1}{v2} (a member's act; nothing was fetched).",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2164
+      "line": 2169
     },
     {
       "id": "monitoring.index.moved_note",
       "en": "{note}; the address now redirects to {address}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1101
+      "line": 1106
     },
     {
       "id": "monitoring.index.removal_confirmed",
       "en": "{answered}; it first answered 404 or 410 at {since} and still does, so the removal is confirmed and may be concealment",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 973
+      "line": 978
     },
     {
       "id": "monitoring.index.removal_unconfirmed",
       "en": "{answered}; this is not yet a removal: it is confirmed only if a look 24 hours or more after {since} still answers 404 or 410",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 976
+      "line": 981
     },
     {
       "id": "monitoring.index.text_session_log_entry",
@@ -38568,98 +38568,98 @@
       "en": "the addresses the archive tick would find eligible could not be read: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3087
+      "line": 3092
     },
     {
       "id": "monitoring.index.the_capture_is_rendered_and",
       "en": "the capture is rendered and its register row names no shell digest (pair.shell.sha256), so nothing was compared; {RENDER_TICK_UNDETERMINED}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1028
+      "line": 1033
     },
     {
       "id": "monitoring.index.the_drive_export_address_answered",
       "en": "the Drive export address answered `{declaredType}`, which is the application shell",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 947
+      "line": 952
     },
     {
       "id": "monitoring.index.the_drive_export_address_served",
       "en": "the Drive export address served HTML under `{v1}`",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 998
+      "line": 1003
     },
     {
       "id": "monitoring.index.the_evidentiary_digests_were_compared",
       "en": "the evidentiary digests were compared, both normalised under {key} v{version} (certain)",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1076
+      "line": 1081
     },
     {
       "id": "monitoring.index.the_fetched_bytes_identify_as",
       "en": "the fetched bytes identify as {key} v{version} but the baseline was normalised under {handler} v{handler_version}, so the raw bytes were compared",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1069
+      "line": 1074
     },
     {
       "id": "monitoring.index.the_flagged_monitored_documents_could",
       "en": "the flagged monitored documents could not be read: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3126
+      "line": 3131
     },
     {
       "id": "monitoring.index.the_reason_must_be_one",
       "en": "the reason must be one of {keys}, or {CUSTOM_REASON} with the member's own words of 1 to {FREQUENCY_REASON_MAX} characters. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2041
+      "line": 2046
     },
     {
       "id": "monitoring.index.the_served_bytes_could_not",
       "en": "the served bytes could not be written to R2: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1164
+      "line": 1169
     },
     {
       "id": "monitoring.index.v1_its_bytes_are_file",
       "en": "{v1} Its bytes are `{file}`, exactly as served; nothing here summarises them.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2695
+      "line": 2700
     },
     {
       "id": "monitoring.index.whether_a_document_is_watched",
       "en": "whether a document is watched is asked by a named member; a machine may propose it (R33) and never sets it. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2133
+      "line": 2138
     },
     {
       "id": "monitoring.index.why_a_shape_your_teams",
       "en": "{why} A shape your team's Civicsmith cannot read is a shape it cannot promise to be watching.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 808
+      "line": 813
     },
     {
       "id": "monitoring.index.why_no_export_address_can",
       "en": "{why} No export address can be composed, so there is nothing this tick could compare but the application page.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 802
+      "line": 807
     },
     {
       "id": "monitoring.index.why_watching_it_is_the",
       "en": "{why} Watching it is the same question one step on: a tick would compare Google's listing page, whose bytes are rebuilt on every render, and report a change nobody made.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 795
+      "line": 800
     },
     {
       "id": "monitoring.named_requests.asked_by_a_named_member",
@@ -38722,21 +38722,21 @@
       "en": "{note}; the reading this copy owes could not be registered ({reason})",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1309
+      "line": 1314
     },
     {
       "id": "monitoring.note.reading_not_owed_alone",
       "en": "the reading this copy owes could not be registered ({reason})",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1310
+      "line": 1315
     },
     {
       "id": "monitoring.says.an_objective",
       "en": "an objective",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3239
+      "line": 3244
     },
     {
       "id": "network-notices.declared.noticepost",
@@ -48067,14 +48067,14 @@
       "en": "the file-safety owner offers no onFileWork",
       "module": "scheduler",
       "file": "bio-plane/src/scheduler/index.mjs",
-      "line": 884
+      "line": 883
     },
     {
       "id": "scheduler.index.the_key_key_is_one",
       "en": "the key '{key}' is one of the answer's own fields or another consumer's",
       "module": "scheduler",
       "file": "bio-plane/src/scheduler/index.mjs",
-      "line": 513
+      "line": 512
     },
     {
       "id": "screen.document.cells_held",
@@ -49957,259 +49957,259 @@
       "en": "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2879
+      "line": 2881
     },
     {
       "id": "standards.declared.lawrelate",
       "en": "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2877
+      "line": 2879
     },
     {
       "id": "standards.declared.standardadopt",
       "en": "proposal-directed: a member adopts a standard proposal, keyed by proposal id, with the adopter's own reason, now required (standards R10, through R1; DEC-88: `reasoned`) — the proposal's why is the proposer's; writes an STD- bundle naming it",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2875
+      "line": 2877
     },
     {
       "id": "standards.declared.standarddeclare",
       "en": "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one, with the declarer's reason for holding the government to it, now required (standards R1; DEC-88: `reasoned`); writes an STD- bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2873
+      "line": 2875
     },
     {
       "id": "standards.declared.standardinforce",
       "en": "read: whether one standard was in force on a date, with why; writes nothing",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2871
+      "line": 2873
     },
     {
       "id": "standards.index.a_citation_is_at_most",
       "en": "a citation is at most {CITE_MAX} characters, and this one is {length}. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2737
+      "line": 2739
     },
     {
       "id": "standards.index.a_standard_held_held_holds",
       "en": "a standard held {held} holds none of its own words, so it names no text. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 439
+      "line": 441
     },
     {
       "id": "standards.index.an_adoption_names_the_edition",
       "en": "an adoption names the edition adopted, at most {EDITION_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1895
+      "line": 1897
     },
     {
       "id": "standards.index.citation_is_not_one_of",
       "en": "{citation} is not one of this standard's text passages. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1687
+      "line": 1689
     },
     {
       "id": "standards.index.cited_by_names_where_cited",
       "en": "a standard held cited names where it is cited: cited_by {captureSha, extent}, a passage of a held capture you may see. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 447
+      "line": 449
     },
     {
       "id": "standards.index.documents_cite_it_as_stated",
       "en": "documents whose readings cite it, as the readings state their references; a document you may not see is neither answered nor counted",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1586
+      "line": 1588
     },
     {
       "id": "standards.index.force_read_from_provision_words",
       "en": "a force is read from the provision's own words and confirmed by a member; a proposal moves nothing",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1824
+      "line": 1826
     },
     {
       "id": "standards.index.no_question_your_teams_record",
       "en": "no question your team's record holds that you may see answers to that id. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 873
+      "line": 875
     },
     {
       "id": "standards.index.no_record_of_a_version",
       "en": "no record of a version known in force through a date answers to that id here. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2214
+      "line": 2216
     },
     {
       "id": "standards.index.no_source_matches_citation",
       "en": "the citation matches the citation form of no source the active jurisdiction profiles list; the standard is held all the same, and where it comes from is undetermined",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 302
+      "line": 304
     },
     {
       "id": "standards.index.no_standard_answers_to_the",
       "en": "no standard answers to the id this one is said to supersede. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 393
+      "line": 395
     },
     {
       "id": "standards.index.only_an_owner_of_the",
       "en": "only an owner of the project its source material is filed in may release it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1844
+      "line": 1846
     },
     {
       "id": "standards.index.period_starts_after_captures",
       "en": "the period starts after the earlier capture and on or before the later one: it rests on the captures, never on an enactment date",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 741
+      "line": 743
     },
     {
       "id": "standards.index.proposal_stored_no_text",
       "en": " It is stored with no captured text, and cannot be adopted until a member names the captured passages that hold the standard's words (R9).",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2433
+      "line": 2435
     },
     {
       "id": "standards.index.proposed_force_moves_no_answer",
       "en": "this is a proposed force and not a force: it moves no answer until a member confirms it naming this proposal",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1764
+      "line": 1766
     },
     {
       "id": "standards.index.read_names_the_member_reading",
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2252
+      "line": 2254
     },
     {
       "id": "standards.index.sid_is_held_held_without",
       "en": "{sid} is held {held}, without its text, so nothing is read from its words. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2666
+      "line": 2668
     },
     {
       "id": "standards.index.sid_is_v1_seen_by",
       "en": "{sid} is {v1}seen by every member of your team. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1838
+      "line": 1840
     },
     {
       "id": "standards.index.side_is_held_passage",
       "en": "'s {side} is a held passage {passage: content id} or an enactment event {event: EVT-…, edge: start or end}",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 968
+      "line": 970
     },
     {
       "id": "standards.index.sources_disagree_none_chosen",
       "en": "the citation matches sources of different active jurisdiction profiles that disagree about it, and none is chosen between them, so where it comes from is undetermined",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 307
+      "line": 309
     },
     {
       "id": "standards.index.the_act_a_proposal_names",
       "en": "the act a proposal names is an id of at most {ACT_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2422
+      "line": 2424
     },
     {
       "id": "standards.index.the_source_was_last_retrieved",
       "en": "the source was last retrieved on {checkedDay}, and {through} is after it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2181
+      "line": 2183
     },
     {
       "id": "steps.index.basis_ord_rests_on_target",
       "en": "basis[{ord}] rests on {target}, a step: a step is never evidence (D33)",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 1428
+      "line": 1430
     },
     {
       "id": "steps.index.by_when_shape",
       "en": "a date is {date: YYYY-MM-DD, basis: {bases}, source?}",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 585
+      "line": 587
     },
     {
       "id": "steps.index.cost_shape",
       "en": "a cost is {kind: {kinds}, amount: an exact decimal string, currency: a three-letter code, what}",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 1116
+      "line": 1118
     },
     {
       "id": "steps.index.machine_no_outcome",
       "en": "the system records neither an outcome nor a learned line (D33)",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 737
+      "line": 739
     },
     {
       "id": "steps.index.outcome_per_question",
       "en": "a step on questions records an outcome per question: {<question>: outcome}",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 703
+      "line": 705
     },
     {
       "id": "steps.index.place_exactly_one_kind",
       "en": "a step's place is exactly one of {questions}, {project} or {group: true}, and never a step (R21)",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 562
+      "line": 564
     },
     {
       "id": "steps.index.place_names_its_place",
       "en": "a step names its place: {questions}, {project} or {group: true}",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 559
+      "line": 561
     },
     {
       "id": "steps.index.team_place_fixed",
       "en": "a team step is the team's, and its place is fixed at creation",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 846
+      "line": 848
     },
     {
       "id": "steps.index.team_place_is_group",
       "en": "a team step's place is {group: true}",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 564
+      "line": 566
     },
     {
       "id": "steps.index.wait_shape",
       "en": "a wait is on one of {step}, {arrival: {kind, id}} or {date}",
       "module": "steps",
       "file": "bio-plane/src/steps/index.mjs",
-      "line": 995
+      "line": 997
     },
     {
       "id": "stewards.config.account_not_pinned",

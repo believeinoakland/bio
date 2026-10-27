@@ -47,7 +47,7 @@ import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, BOUNDS } from "../connection-grammar/index.mjs";
 import { relate } from "../calc-grammar/index.mjs";
-import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { combine as combineProfiles, governingZone } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal, reasonWords } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
@@ -209,7 +209,14 @@ export class Duties {
     const c = combineProfiles(ids);
     return c && c.ok ? c.view : {};
   }
-  #zone(view = this.view()) { return view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC"; }
+  /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles'), else the view's. */
+  #zone(view = this.view()) {
+    try {
+      const g = governingZone(this.record.getSetting("jurisdiction_profiles"), this.record.getSetting("team_time_zone"));
+      if (g) return g;
+    } catch { /* read the view below */ }
+    return view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC";
+  }
 
   /* A date-time as civil-time takes it: a `YYYY-MM-DD` day in the view's zone, an instant, or a date-time object. */
   #dt(v, zone = this.#zone()) {
