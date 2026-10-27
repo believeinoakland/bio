@@ -11,9 +11,9 @@
   "handle": 7,
   "ai": 175,
   "date": 14,
-  "queue": 501,
+  "queue": 505,
   "transcribe": 19,
-  "capture": 96,
+  "capture": 97,
   "document": 79,
   "question": 82,
   "connection": 34,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 8079,
+  "screen": 8084,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -239,7 +239,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19807,
+  "total": 19817,
   "protected": 1181
  },
  "words": [
@@ -85730,6 +85730,76 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-485: adminproposalcancel (K5566)"
+  },
+  {
+   "key": "screen.capture.person.refused",
+   "en": "The site asked for a person, not a program, so nothing was captured. A Queue item lets you bring the page in yourself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: add: the fetch met a challenge or CAPTCHA page (K5574 (1)); never filed as the document"
+  },
+  {
+   "key": "screen.capture.person.refused.following",
+   "en": "The site asked for a person, not a program, so nothing was captured. The members following this address have a Queue item to bring the page in themselves.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: add, or the address's page: a request no member asked, such as a scheduled re-fetch (K5575)"
+  },
+  {
+   "key": "screen.capture.person.never",
+   "en": "Civicsmith never passes the check for you and never carries your pass to its own server: the page comes from your browser.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: add and queue: the rule beneath K5574 (2), K3656"
+  },
+  {
+   "key": "queue.kind.capture-person",
+   "en": "Pages that asked for a person",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: queue: the kind (K5575)"
+  },
+  {
+   "key": "queue.capture.person.item",
+   "en": "{site} asked for a person before handing over {address}. Open it in your own browser, pass the check, save the file, then add it here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: queue: the item to the member who asked, or to those following (K5575)"
+  },
+  {
+   "key": "queue.capture.person.open",
+   "en": "Open the page in your browser",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: queue: the link, opened in a new tab of the member's own browser"
+  },
+  {
+   "key": "queue.capture.person.add",
+   "en": "Add the file you saved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: queue: to Add, the request waiting"
+  },
+  {
+   "key": "screen.capture.person.matched",
+   "en": "Matched to the request for {address}. Recorded as brought in by you from that address, on {date}, after the site asked for a person.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: add: after the file is matched by its address (K5575)"
+  },
+  {
+   "key": "capture.basis.person",
+   "en": "{member} brought it in from {address} on {date}, after the site asked for a person. It rests on {member}'s word, as any file a member hands in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: the record's line under the document (K5575)"
+  },
+  {
+   "key": "screen.capture.person.summary",
+   "en": "If the site asks for a person",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-486: add: the fold"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

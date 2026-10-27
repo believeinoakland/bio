@@ -8736,6 +8736,20 @@ w485('refusal.NO_WAITING_PROPOSAL', 'There is no waiting proposal to cancel: it 
 w485('refusal.NOT_YOUR_PROPOSAL', "Only the team's founder or the member who proposed it can cancel this proposal. Nothing was changed.", 'adminproposalcancel (K5566)')
 REWRITE.update({'screen.members.remove.reason': "Why remove their administrator's powers? (everyone on the team will see this)"})
 
+def w486(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-486: ' + note))
+# Bob's K5574 and K5575 (B4, option A): a page that asks for a person comes in through the member's own browser
+w486('screen.capture.person.refused', 'The site asked for a person, not a program, so nothing was captured. A Queue item lets you bring the page in yourself.', 'add: the fetch met a challenge or CAPTCHA page (K5574 (1)); never filed as the document')
+w486('screen.capture.person.refused.following', 'The site asked for a person, not a program, so nothing was captured. The members following this address have a Queue item to bring the page in themselves.', "add, or the address's page: a request no member asked, such as a scheduled re-fetch (K5575)")
+w486('screen.capture.person.never', 'Civicsmith never passes the check for you and never carries your pass to its own server: the page comes from your browser.', 'add and queue: the rule beneath K5574 (2), K3656')
+w486('queue.kind.capture-person', 'Pages that asked for a person', 'queue: the kind (K5575)')
+w486('queue.capture.person.item', '{site} asked for a person before handing over {address}. Open it in your own browser, pass the check, save the file, then add it here.', 'queue: the item to the member who asked, or to those following (K5575)')
+w486('queue.capture.person.open', 'Open the page in your browser', "queue: the link, opened in a new tab of the member's own browser")
+w486('queue.capture.person.add', 'Add the file you saved', 'queue: to Add, the request waiting')
+w486('screen.capture.person.matched', 'Matched to the request for {address}. Recorded as brought in by you from that address, on {date}, after the site asked for a person.', 'add: after the file is matched by its address (K5575)')
+w486('capture.basis.person', "{member} brought it in from {address} on {date}, after the site asked for a person. It rests on {member}'s word, as any file a member hands in.", "the record's line under the document (K5575)")
+w486('screen.capture.person.summary', 'If the site asks for a person', 'add: the fold')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
