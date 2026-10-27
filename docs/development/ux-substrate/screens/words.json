@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7964,
+  "screen": 7979,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -103,7 +103,7 @@
   "time": 4,
   "size": 4,
   "reference": 1,
-  "form": 5,
+  "form": 8,
   "unavailable": 2,
   "page": 2,
   "person": 1,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19604,
+  "total": 19622,
   "protected": 1167
  },
  "words": [
@@ -84454,6 +84454,132 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-471: aiproviders: the administrator clears the stop (K5478; owed op aicreditsclear)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.head",
+   "en": "Revoke your signing key?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: account: the question before revoking one's own signing key (R-1)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.body",
+   "en": "Cases you already signed keep their signatures, marked as withdrawn from today. You can't sign again until you make a new key.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: account: what revoking does (R-1)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.go",
+   "en": "Revoke it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: account: the button that revokes (act signerrevokeown) (R-1)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.keep",
+   "en": "Keep it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: account and members: the button that keeps the key (R-1)"
+  },
+  {
+   "key": "screen.members.keywithdraw.confirm.head",
+   "en": "Withdraw {member}'s signing key?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: members: the question before an administrator withdraws a signing key (R-2)"
+  },
+  {
+   "key": "screen.members.keywithdraw.confirm.body",
+   "en": "Cases {member} already signed keep their signatures, marked as withdrawn from today. {member} can't sign again until they make a new key.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: members: what withdrawing does (R-2)"
+  },
+  {
+   "key": "screen.members.keywithdraw.confirm.go",
+   "en": "Withdraw it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: members: the button that withdraws (act signerset) (R-2)"
+  },
+  {
+   "key": "screen.notes.deleted",
+   "en": "Your note was deleted: {title}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: notes: the line after a note is deleted (R-3)"
+  },
+  {
+   "key": "screen.group.copy.done",
+   "en": "Your copy is ready to download. It's on the list below with the time and the counts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: group: the line after a copy of the record is taken (R-4)"
+  },
+  {
+   "key": "screen.security.usual.none",
+   "en": "none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: security: a usual of zero in the totals table (R-5)"
+  },
+  {
+   "key": "screen.security.usual.floor",
+   "en": "When your team usually has none of something, up to {floor} in a day still counts as near your usual; more is marked above it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: security: how a usual of zero is read, under the totals table (R-5)"
+  },
+  {
+   "key": "screen.security.tip.hour_usual_none",
+   "en": "Usual for an hour: none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: security: an hour square whose usual is zero (R-5)"
+  },
+  {
+   "key": "screen.ai.notready.here",
+   "en": "The assistant can help here once an administrator turns on an AI account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: question: where the assistant would be offered and no account is on (R-6)"
+  },
+  {
+   "key": "screen.front.signedin",
+   "en": "You're signed in as {name}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: front: the team's page seen by a signed-in member (R-7)"
+  },
+  {
+   "key": "screen.front.home",
+   "en": "Go to Home",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: front: the link to Home for a signed-in member (R-7)"
+  },
+  {
+   "key": "form.choose.widen.documents",
+   "en": "Show documents from your other projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: the document picker: widens the list beyond this document's project (DEC-463)"
+  },
+  {
+   "key": "form.choose.inproject",
+   "en": "in {project}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: the document picker: the project a widened row belongs to (DEC-463)"
+  },
+  {
+   "key": "form.choose.noproject",
+   "en": "in no project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-472: the document picker: a widened row in no project (DEC-463)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
