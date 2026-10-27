@@ -186,8 +186,8 @@ test("R3: authored is the testimony path's alone; every refusal named, asked bef
   const prov = JSON.parse(live("data/provenance.json"));
   const revise = (provText) => w.promotion.promote({ bundleId: t.bundle_id, base: head.bundleSha, snapKey: `r${Math.random()}`,
     author: V("sam"), meta: { object_type: "information" },
-    files: [{ path: "bundle.md", text: live("bundle.md") }, { path: t.file, text: live(t.file) },
-            { path: "data/provenance.json", text: provText }] });
+    files: [{ path: "bundle.md", text: live("bundle.md") }, { path: "data/dataset.json", text: live("data/dataset.json") },
+            { path: t.file, text: live(t.file) }, { path: "data/provenance.json", text: provText }] });
   const dropped = revise(JSON.stringify({ documents: [{ ...prov.documents[0], authored: false }] }));
   assert.equal(dropped.reason, "TESTIMONY_AUTHORED_DROPPED");
   assert.equal(dropped.check, "C-53.9");

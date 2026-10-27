@@ -93,7 +93,8 @@ test("R3: a revision of an authored bundle that drops data/provenance.json, decl
   const s0 = w.snapshot();
   const gone = w.promotion.promote({ bundleId: t.bundle_id, base: head.bundleSha, snapKey: "drop", author: V("ruth"),
     meta: { object_type: "information" }, drop: ["data/provenance.json"],
-    files: [{ path: "bundle.md", text: live("bundle.md") }, { path: t.file, text: live(t.file) }] });
+    files: [{ path: "bundle.md", text: live("bundle.md") }, { path: "data/dataset.json", text: live("data/dataset.json") },
+            { path: t.file, text: live(t.file) }] });
   assert.deepEqual(refused(gone), row("TESTIMONY_AUTHORED_DROPPED"));
   assert.deepEqual(w.snapshot(), s0, "nothing written");
   assert.equal(w.head(t.bundle_id).bundleSha, head.bundleSha);
@@ -109,7 +110,7 @@ test("R42: the whole catalogue (record-grammar's checkBundle with every grammar 
   for (const t of runs) {
     assert.equal(t.ok, true, JSON.stringify(t));
     const files = image(w, t.bundle_id);
-    assert.deepEqual([...files.keys()].sort(), ["bundle.md", "data/provenance.json", t.file].sort(), "the whole bundle");
+    assert.deepEqual([...files.keys()].sort(), ["bundle.md", "data/dataset.json", "data/provenance.json", t.file].sort(), "the whole bundle");
     const { findings: cat } = await checkBundle({ folderName: t.bundle_id, files,
       sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
       sha512: async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b)),
@@ -148,7 +149,7 @@ test("R28: no file of an observation holds the member's id, handle or cover; the
   const ref = observerRef(t.bundle_id);
   assert.equal(ref, `observer:${t.bundle_id}`);
   const files = image(w, t.bundle_id);
-  assert.deepEqual([...files.keys()].sort(), ["bundle.md", "data/provenance.json", t.file].sort(), "the corpus is the bundle");
+  assert.deepEqual([...files.keys()].sort(), ["bundle.md", "data/dataset.json", "data/provenance.json", t.file].sort(), "the corpus is the bundle");
   const hits = Object.fromEntries(Object.entries(needles).map(([k, n]) => [k, [...files].filter(([, v]) => v.includes(n)).map(([p]) => p)]));
   assert.deepEqual(hits, { member_id: [], handle: [], cover: [] });
   /* data/provenance.json: its author and every hop of every document's chain name the reference. */

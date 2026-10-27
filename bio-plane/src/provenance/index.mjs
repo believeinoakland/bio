@@ -38,6 +38,9 @@ import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./registe
 import { REGISTER_ENTRY_CHECKS, TESTIMONY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf } from "../read-bounds.mjs";
+import { releasableBundle } from "./releasable.mjs";
+
+export { releasableBundle } from "./releasable.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
@@ -1997,11 +2000,11 @@ class Provenance {
         origin: { kind: "member" },
         attestation_attempts: [],
       };
-      const provText = JSON.stringify({ documents: [doc] }, null, 2);
-      const enc = (t) => {
-        const b = new TextEncoder().encode(t);
-        return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
-      };
+      /* R81: the one helper composes the bundle's files (its `content_hash`, `data/dataset.json` and the chain) so `release` does not
+         refuse it `ENTRY_REQUIREMENTS`; the words' file is the snapshot. */
+      const filed = releasableBundle({ md, doc, locator,
+        snapshots: [{ path: file, text: fileText, bytes: fileBytes.length, sha256: sha }] });
+      if (!filed.ok) return filed;
       /* The words' later work (the passage index, the content row over them and the extraction look) is not this
          module's: it is R52's testimony slot, which `extraction`, `content` and `observation-log` register on and the
          composition root runs inside this same transaction (control-plane's promotion step since T19, its R42, where
@@ -2010,8 +2013,7 @@ class Provenance {
       const promoted = this.#promotion.promote({
           bundleId: id, base: null, snapKey: `${recorded.replace(/[-:]/g, "")}_${rand(4)}`,
           author: who,
-          files: [{ path: "bundle.md", ...enc(md) }, { path: "data/provenance.json", ...enc(provText) },
-                  { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }],
+          files: filed.files,
           meta: { object_type: "information", title: heading,
                   current_state: "collected", prior_state: null, created: recorded, last_updated: recorded,
                   criticality: "supporting" },

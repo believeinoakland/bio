@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19393 design words, 1162 protected; SHA-256
-   94ba00d9e0f2a262bd58778e3c2fa9eaeb9ea820e0d89db4a59716b69c3fe9e2) followed by 7511 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   94ba00d9e0f2a262bd58778e3c2fa9eaeb9ea820e0d89db4a59716b69c3fe9e2) followed by 7515 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25360,6 +25360,10 @@ export const WORD_ROWS = Object.freeze([
   ["provenance.index.register_part_without_whole","register[{index}] ({sha}, path {path}) is a part of a capture whose whole the list does not name: a part is registered under its whole, which the list names. Nothing was written",null,null,false,"code"],
   ["provenance.index.say_how_you_know_or","say how you know, or what you tried, in at most 2000 characters",null,null,false,"code"],
   ["provenance.index.who_is_a_machine_credential","'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",null,null,false,"code"],
+  ["provenance.releasable.no_chain","this document carries no provenance chain, so the bundle cannot be released.",null,null,false,"code"],
+  ["provenance.releasable.no_digest","this document has no SHA-256 digest, so a dataset naming it cannot be written and the bundle cannot be released.",null,null,false,"code"],
+  ["provenance.releasable.no_front_matter","this bundle's document has no front matter to carry its content hash.",null,null,false,"code"],
+  ["provenance.releasable.no_snapshot","this bundle holds no file under snapshots/, so it cannot be released.",null,null,false,"code"],
   ["public-read.casefile.a_finding_id_a_material","a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path",null,null,false,"code"],
   ["public-read.casefile.a_finding_s_published_bytes","a finding's published bytes are not in the published object store at their hash",null,null,false,"code"],
   ["public-read.casefile.signed_document_text_does_not","the signed case document's text does not hash to its digest",null,null,false,"code"],

@@ -41648,70 +41648,98 @@
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1962
+      "line": 1965
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 2039
+      "line": 2041
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1501
+      "line": 1504
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1464
+      "line": 1467
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1485
+      "line": 1488
     },
     {
       "id": "provenance.index.register_part_bytes",
       "en": "register[{index}] part {part} ({sha}) {said}: a part states its size as a whole number of bytes at least 0. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 626
+      "line": 629
     },
     {
       "id": "provenance.index.register_part_digest",
       "en": "register[{index}] part {part} names {digest}: a part is named by its SHA-256, 64 lowercase hex characters. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 632
+      "line": 635
     },
     {
       "id": "provenance.index.register_part_without_whole",
       "en": "register[{index}] ({sha}, path {path}) is a part of a capture whose whole the list does not name: a part is registered under its whole, which the list names. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 636
+      "line": 639
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1483
+      "line": 1486
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1462
+      "line": 1465
+    },
+    {
+      "id": "provenance.releasable.no_chain",
+      "en": "this document carries no provenance chain, so the bundle cannot be released.",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/releasable.mjs",
+      "line": 50
+    },
+    {
+      "id": "provenance.releasable.no_digest",
+      "en": "this document has no SHA-256 digest, so a dataset naming it cannot be written and the bundle cannot be released.",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/releasable.mjs",
+      "line": 47
+    },
+    {
+      "id": "provenance.releasable.no_front_matter",
+      "en": "this bundle's document has no front matter to carry its content hash.",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/releasable.mjs",
+      "line": 61
+    },
+    {
+      "id": "provenance.releasable.no_snapshot",
+      "en": "this bundle holds no file under snapshots/, so it cannot be released.",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/releasable.mjs",
+      "line": 54
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",
