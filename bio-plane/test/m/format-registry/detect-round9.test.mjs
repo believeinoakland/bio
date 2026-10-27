@@ -37,6 +37,9 @@ function source(bytes) {
 
 const CSV = enc("name,qty,price\nbolts,10,0.5\nnuts,20,0.25\nwashers,30,0.1\n");
 const TSV = enc("name\tqty\tprice\nbolts\t10\t0.5\nnuts\t20\t0.25\nwashers\t30\t0.1\n");
+// csv-reader's R27: declared plain text (text/plain, or a .txt name) is a table only with at least 5 records
+const CSV5 = enc("name,qty,price\nbolts,10,0.5\nnuts,20,0.25\nwashers,30,0.1\nscrews,40,0.2\nrivets,50,0.15\n");
+const TSV5 = enc("name\tqty\tprice\nbolts\t10\t0.5\nnuts\t20\t0.25\nwashers\t30\t0.1\nscrews\t40\t0.2\nrivets\t50\t0.15\n");
 const NOTE = enc("A note to the clerk: please confirm the agenda is posted by Friday. Thanks.\n");
 
 const JPEG_SIG = [0xff, 0xd8, 0xff];
@@ -86,7 +89,7 @@ test("R9: the name is the third argument, provided only as a non-empty string; b
 
 test("R31: SHEET C32 C33 C23 C24 — a delimited text declared ms-excel, octet-stream or text/plain, named .csv .tsv .tab .txt, is read as a sheet", () => {
   for (const ct of ["application/vnd.ms-excel", "application/octet-stream", "text/plain", "TEXT/PLAIN", "Application/Octet-Stream"]) {
-    for (const [name, bytes] of [["budget.csv", CSV], ["BUDGET.CSV", CSV], ["rows.tsv", TSV], ["rows.tab", TSV], ["rows.txt", CSV], ["rows.TXT", TSV]]) {
+    for (const [name, bytes] of [["budget.csv", CSV], ["BUDGET.CSV", CSV], ["rows.tsv", TSV], ["rows.tab", TSV5], ["rows.txt", CSV5], ["rows.TXT", TSV5]]) {
       const r = detectFormat(bytes, ct, name);
       isHit(r, "csv", "likely");
       assert.deepEqual(Object.keys(r), ["format", "confidence", "signals"]);
