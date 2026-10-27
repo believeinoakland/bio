@@ -38,3 +38,6 @@ K5448 placement carried (CC4 now points to A4; module placement; Level 1 row; jo
 
 ### F8 · 2026-10-27
 PROBE-SPEC-L1-L2.md written (READING-PIPELINE's first Stage 1 job, then plat-s1). C21 (interpretation for non-sheet files) noted: BOB's recommendation is names found at reading stay reading, for search; nothing for FILES unless Bob rules otherwise.
+
+### F9 · 2026-10-27
+MOVE-COPY.md written (ranged streaming default; CopyObject if the eu rehearsal allows; Super Slurper alternative; parts until the GAP-1.5 migration). Sent to BOB.
