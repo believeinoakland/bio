@@ -52162,182 +52162,196 @@
       "en": "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1147
+      "line": 1179
     },
     {
       "id": "text-chain.textchain.a_page_extent_names_which_page",
       "en": "a page extent names which page (0-based)",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1199
+      "line": 1231
     },
     {
       "id": "text-chain.textchain.a_region_confidence_is_either",
       "en": "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1067
+      "line": 1099
     },
     {
       "id": "text-chain.textchain.a_region_extent_names_the",
       "en": "a region extent names the region that was checked: {detail}",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1203
+      "line": 1235
     },
     {
       "id": "text-chain.textchain.a_transcription_must_name_at",
       "en": "a transcription must name at least one step that produced it; {v1} was given, and text with no stated provenance is indistinguishable from text a publisher typed",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 601
+      "line": 608
     },
     {
       "id": "text-chain.textchain.an_attestation_carries_the_date",
       "en": "an attestation carries the date it was made",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1193
+      "line": 1225
     },
     {
       "id": "text-chain.textchain.an_attestation_is_scoped_to",
       "en": "an attestation is scoped to what was actually checked — one of {keys}. An unscoped attestation would be read as covering the whole document, which is the generous reading of a claim nobody made",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1197
+      "line": 1229
     },
     {
       "id": "text-chain.textchain.an_attestation_names_no_member",
       "en": "an attestation names no member. Nobody said this, and unattributed is not the same as attested",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1191
+      "line": 1223
     },
     {
       "id": "text-chain.textchain.confidence_basis_v1_is_not",
       "en": "confidence basis '{v1}' is not {keys}. A number a model reported about itself is not a calibrated confidence and may not be thresholded as one — it costs nothing to produce, which is exactly what makes it worthless as evidence",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1070
+      "line": 1102
     },
     {
       "id": "text-chain.textchain.decoded_glyphs_held",
       "en": "{count} decoded glyph(s)",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1992
+      "line": 2036
     },
     {
       "id": "text-chain.textchain.part_ref",
       "en": "part {ref}",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1679
+      "line": 1723
     },
     {
       "id": "text-chain.textchain.reported_characters_no_text_read",
       "en": "{reported} character(s) its producer counted and no text this merge can read",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1991
+      "line": 2035
     },
     {
       "id": "text-chain.textchain.step_i_is_not_an",
       "en": "step {i} is not an object",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 604
+      "line": 611
     },
     {
       "id": "text-chain.textchain.step_i_is_v1_which",
       "en": "step {i} is '{v1}', which is not one of {keys}. A step nobody classified is neither a derivation nor a verification, and this record will not guess which",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 607
+      "line": 614
     },
     {
       "id": "text-chain.textchain.step_i_names_a_calibration",
       "en": "step {i} names a calibration that is not a readable identifier ({stringify}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 632
+      "line": 639
     },
     {
       "id": "text-chain.textchain.string_is_a_machine_credential",
       "en": "'{String}' is a machine credential. Attesting is a person saying they checked this text against the image — an act with a name behind it. A machine cannot perform it, and recording one would put a claim on the record that nobody holds",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1188
+      "line": 1220
     },
     {
       "id": "text-chain.textchain.text_a_machine_read_off",
       "en": "Text a machine read off an image has to say WHERE on the page it came from, so anyone can look at that part of the scan and see for themselves. Without it the reading cannot be checked against the document at all.",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 508
+      "line": 515
     },
     {
       "id": "text-chain.textchain.text_source_is_chain_a",
       "en": "text_source is '{chain}', a single label. A transcription's provenance is a CHAIN — each step naming what performed it — because 'ocr' does not say which engine, and an engine is what a re-run and a calibration are OF",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 598
+      "line": 605
     },
     {
       "id": "text-chain.textchain.the_anchor_names_kind_string",
       "en": "the anchor names kind '{String}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1150
+      "line": 1182
     },
     {
       "id": "text-chain.textchain.the_anchor_names_no_page",
       "en": "the anchor names no page (0-based integer required)",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1152
+      "line": 1184
     },
     {
       "id": "text-chain.textchain.the_anchor_names_no_rect",
       "en": "the anchor names no rect; a page alone is not a region a reader can be pointed at",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1156
+      "line": 1188
     },
     {
       "id": "text-chain.textchain.the_step_step_claims_fidelity",
       "en": "the {step} step claims fidelity {stringify} and names no calibration. A {step_2} step's cap is UNDETERMINED until a measurement of it exists, and a letter written here without one would be the record claiming a fidelity nobody measured",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 641
+      "line": 648
     },
     {
       "id": "text-chain.textchain.the_step_step_claims_fidelity_2",
       "en": "the {step} step claims fidelity {stringify}. What a member typed is UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself would be the typist grading their own work",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 648
+      "line": 655
     },
     {
       "id": "text-chain.textchain.the_step_step_does_not",
       "en": "the {step} step does not name its {unnamed}. Who performed a derivation, and what it produced, are the facts the chain exists to carry — a calibration is OF a named producer and format, and neither can be recovered from the word '{step_2}'",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 620
+      "line": 627
     },
     {
       "id": "text-chain.textchain.the_step_step_names_no",
       "en": "the {step} step names no engine. What performed a derivation is the fact the chain exists to carry — a calibration is OF an engine and a version, and neither can be recovered from the word '{step_2}'",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 613
+      "line": 620
     },
     {
       "id": "text-chain.textchain.this_step_step_claims_fidelity",
       "en": "this {step} step claims fidelity {cap}, stronger than the {have} the chain already carries. A derivation can only weaken what it received: text that was cleaned is more READABLE, not more RELIABLE, and the hazard of this whole capability is output that looks better than its input",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 704
+      "line": 711
+    },
+    {
+      "id": "text-chain.textchain.typed_by_typist_checked_by",
+      "en": "Typed by {typist}, checked by {checkers}; a second member's check raises it one step, never to the standing of text a machine read.",
+      "module": "text-chain",
+      "file": "bio-plane/src/textchain.mjs",
+      "line": 1313
+    },
+    {
+      "id": "text-chain.textchain.typed_by_typist_not_checked",
+      "en": "Typed by {typist}; no other member has checked it, so it stands on the typist's word.",
+      "module": "text-chain",
+      "file": "bio-plane/src/textchain.mjs",
+      "line": 1310
     },
     {
       "id": "translations.declared.interfacewords",

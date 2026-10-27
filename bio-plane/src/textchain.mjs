@@ -210,8 +210,9 @@ export const STEP_KINDS = {
      classification of convenience: there is no machine text the member is
      checking — they PRODUCED the text, so it is authored with the provenance of an
      authored act, and rule 2 governs it like any other step that produced text.
-     What RAISES it is a SECOND member's attestation (`gradeCeiling`, unchanged),
-     never the transcriber's own — the store refuses that by name (C-52).
+     What RAISES it is a SECOND member's attestation (`gradeCeiling`, R107: one step, to
+     `TYPED_CHECKED_GRADE`, never to `EARNED_CAPTURE_CEILING`), never the transcriber's own — the
+     store refuses that by name (C-52), and `gradeCeiling` ignores it.
 
      `typed(member)` is carried as `{ step: "typed", member: <handle>,
      text_sha256: <digest of the typed text> }`. The digest binds the step to the
@@ -270,6 +271,12 @@ export const CONFIDENCE_BASES = { engine: 1, none: 1 };
 /** The extent kinds an attestation may be scoped to, narrowest first. Internal (N416): `checkAttestation` (R51) and
  *  `extentCovers` (R55) read it, and no other module does. */
 const EXTENT_KINDS = { region: 1, page: 1, document: 1 };
+
+/** R107 (DEC-464) — THE TWO GRADES OF A TYPED PASSAGE, both derived from `BASIS_GRADES`, never typed: the
+ *  last letter (the typist's word alone) and the one a rank stronger (a second member has checked it),
+ *  which stays strictly weaker than `EARNED_CAPTURE_CEILING`. */
+export const TYPED_UNCHECKED_GRADE = BASIS_GRADES[BASIS_GRADES.length - 1];
+export const TYPED_CHECKED_GRADE = BASIS_GRADES[BASIS_GRADES.length - 2];
 
 /* ===================================================================== *
  * D-252 — A DERIVATION HAS AN EXTENT TOO, AND IT IS THE MIRROR OF THE ONE
@@ -1000,6 +1007,17 @@ export const CHAIN_KIND_MIXED = "mixed";
  *  page no derivation step covers, or any step whose extent this module cannot read (R30's rule: it
  *  could be a part covering this page). `terminalStep` is unchanged and stays document-level. */
 export function chainKindFor(chain, target) {
+  const steps = coveringSteps(chain, target);
+  if (!steps) return null;
+  const kinds = new Set(steps.map((s) => s.step));
+  return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
+}
+
+/** The last derivation step of each part covering a page, the last-appended part first, as `chainKindFor`
+ *  (D-723) and `typedStepOf` (R108) read them: one reading of "which steps made this page". `target` is
+ *  `{page}` or a 0-based page number. `null` for a malformed chain, a target with no page, a page no
+ *  derivation step covers, or any step whose extent this module cannot read (R30's rule). */
+function coveringSteps(chain, target) {
   if (checkChain(chain)) return null;
   const want = Number.isInteger(target) ? target : target && target.page;
   if (!Number.isInteger(want) || want < 0) return null;
@@ -1009,15 +1027,29 @@ export function chainKindFor(chain, target) {
   for (let i = derivations.length - 1; i >= 0; i--) {
     const ext = extentOf(derivations[i]);
     if (ext === "all") {
-      if (!byPart.size) return derivations[i].step;
+      if (!byPart.size) return [derivations[i]];
       break;
     }
     const key = partKeyOf(derivations[i]);
-    if (ext.includes(want) && !byPart.has(key)) byPart.set(key, derivations[i].step);
+    if (ext.includes(want) && !byPart.has(key)) byPart.set(key, derivations[i]);
   }
-  if (!byPart.size) return null;
-  const kinds = new Set(byPart.values());
-  return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
+  return byPart.size ? [...byPart.values()] : null;
+}
+
+/** R108 — IS THIS PASSAGE A MEMBER'S TYPING? The `typed` step that decides a passage's grade: with a
+ *  `target` (`{page}` or a page number) the last of the parts covering it, as `chainKindFor` reads them;
+ *  without one the chain's last derivation step. `null` when that step is not of kind `typed`, and for a
+ *  malformed, empty or absent chain or a target no step covers. One copy, for `gradeCeiling` (R107) and
+ *  every module that must tell a typed passage. */
+export function typedStepOf(chain, target) {
+  let step;
+  if (target === undefined || target === null) {
+    if (checkChain(chain)) return null;
+    step = chain.findLast((s) => STEP_KINDS[s.step].role === "derivation");
+  } else {
+    step = coveringSteps(chain, target)?.[0];
+  }
+  return step && step.step === "typed" ? step : null;
 }
 
 /** A one-line human sentence for the whole chain. Composed FROM the chain, so
@@ -1268,6 +1300,18 @@ const sameSpace = (a, b) => { const x = rectSpace(a); return x !== null && x ===
 export function gradeCeiling(chain, target, attestations = []) {
   const covering = (Array.isArray(attestations) ? attestations : [])
     .filter((a) => !checkAttestation(a) && extentCovers(a.extent, target));
+  /* R107 (DEC-464): a member's typing has two grades and no more. The typist's own attestation is
+     ignored; one member other than the typist raises it one step, and more raise nothing. */
+  const typed = typedStepOf(chain, target);
+  if (typed) {
+    const checkers = [...new Set(covering.map((a) => a.member).filter((m) => m !== typed.member))].sort();
+    if (!checkers.length) {
+      return { ceiling: TYPED_UNCHECKED_GRADE, determinant: "typist", by: [typed.member],
+               why: localize("text-chain.textchain.typed_by_typist_not_checked", "Typed by {typist}; no other member has checked it, so it stands on the typist's word.", { typist: String(typed.member) }) };
+    }
+    return { ceiling: TYPED_CHECKED_GRADE, determinant: "second_member", by: checkers,
+             why: localize("text-chain.textchain.typed_by_typist_checked_by", "Typed by {typist}, checked by {checkers}; a second member's check raises it one step, never to the standing of text a machine read.", { typist: String(typed.member), checkers: String(checkers.join(", ")) }) };
+  }
   if (covering.length) {
     return { ceiling: EARNED_CAPTURE_CEILING, determinant: "attestation",
              by: covering.map((a) => a.member),

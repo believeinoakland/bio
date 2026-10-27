@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7518 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7520 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -27238,6 +27238,8 @@ export const WORD_ROWS = Object.freeze([
   ["text-chain.textchain.the_step_step_does_not","the {step} step does not name its {unnamed}. Who performed a derivation, and what it produced, are the facts the chain exists to carry — a calibration is OF a named producer and format, and neither can be recovered from the word '{step_2}'",null,null,false,"code"],
   ["text-chain.textchain.the_step_step_names_no","the {step} step names no engine. What performed a derivation is the fact the chain exists to carry — a calibration is OF an engine and a version, and neither can be recovered from the word '{step_2}'",null,null,false,"code"],
   ["text-chain.textchain.this_step_step_claims_fidelity","this {step} step claims fidelity {cap}, stronger than the {have} the chain already carries. A derivation can only weaken what it received: text that was cleaned is more READABLE, not more RELIABLE, and the hazard of this whole capability is output that looks better than its input",null,null,false,"code"],
+  ["text-chain.textchain.typed_by_typist_checked_by","Typed by {typist}, checked by {checkers}; a second member's check raises it one step, never to the standing of text a machine read.",null,null,false,"code"],
+  ["text-chain.textchain.typed_by_typist_not_checked","Typed by {typist}; no other member has checked it, so it stands on the typist's word.",null,null,false,"code"],
   ["translations.declared.interfacewords","read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing",null,null,false,"code"],
   ["translations.declared.translationgrant","setting: a named member's grant for one language, an administrator's act; moves no bundle",null,null,false,"code"],
   ["translations.index.a_draft_carries_no_project","a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",null,null,false,"code"],
