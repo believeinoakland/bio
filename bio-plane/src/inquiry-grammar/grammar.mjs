@@ -880,7 +880,8 @@ function checkGrounds(fm, legs, findings) {
     if (leg.role === 'cuts_against') {
       if (g !== undefined && g !== null && g !== '') {
         findings.push(f('C-2.8', 'error', localize("inquiry-grammar.grammar.basis_i_cuts_against_ground_p", "basis leg {i} cuts against the conclusion, so it is not a reason for it and belongs to no ground, but it names the ground '{ground}'", { i: String(i), ground: String(typeof g === 'string' ? g.slice(0, 60) : g) }),
-          [localize("inquiry-grammar.grammar.remove_the_ground_from_the_leg_p", "remove the ground from basis leg {i}: a ground groups the legs that support the conclusion", { i: String(i) })]));
+          [localize("inquiry-grammar.grammar.take_the_passage_out_of_its_ground_first", "take basis leg {i} out of its ground first: a ground groups only the passages that support the conclusion. Then put the passage on the side that cuts against it", { i: String(i) })],
+          'CUTTING_LEG_IN_GROUND'));   // R70 (T52-20; K5332): its own code, so a screen maps it by the code and never by the English
       }
       return;
     }
