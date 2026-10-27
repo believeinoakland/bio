@@ -57,3 +57,5 @@
 **P-14 · 2026-10-27** · CAPABILITIES C12's load item (one acquisition `member` job row per archive entry and attachment, bounded by `UNPACK_DAILY_ENTRIES`) added to `load-test-draft.md` §3. Still waiting on Bob's install and the invitation link.
 
 **P-15 · 2026-10-27** · CONSISTENCY rows 14, 16, 19 applied in `time-budgets-draft.md`: classes AI act and Gate 1 run (longer ceilings are classes, never overrides; the figures 60 s and 30 min are mine, to be confirmed by AI-DESIGN's first measuring run), Follow and Explore (the time lives in the class row; `CHAIN_LIMITS` stay counts), and PL8: N1260's 2-second journey is a PL5 walk judged by each screen's class.
+
+**P-16 · 2026-10-27** · `plat-s1` is installed (0.87.0), I am enrolled as administrator and my member too (credentials and recovery codes in my session's scratchpad only). S1 step 1a measured on the empty team: `study/s1-results.md`. Every screen drawn within 2.2 s raw and about 0.6 s net; the hop (`do-session`) is 50-57 ms against 108-135 ms on biosmoke8: placement near the team about halves it. Next: 1b seed A.
