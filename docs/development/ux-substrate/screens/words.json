@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 499,
+  "queue": 500,
   "transcribe": 19,
   "capture": 96,
   "document": 79,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7944,
+  "screen": 7957,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19580,
+  "total": 19594,
   "protected": 1166
  },
  "words": [
@@ -78311,7 +78311,7 @@
   },
   {
    "key": "screen.aiproviders.bud.note",
-   "en": "Each cost sums everyone's use and names no member. A member sees their own cost on Your AI.",
+   "en": "Each cost sums everyone's use. A member sees their own cost on Your AI.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aiproviders: bud note"
@@ -79396,7 +79396,7 @@
   },
   {
    "key": "screen.aimine.use.note",
-   "en": "Only you see this: your own use across every account that served you.",
+   "en": "Your own use across every account that served you.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aimine: use note"
@@ -84300,6 +84300,104 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-467: Document, an encrypted file (K4831 (6))"
+  },
+  {
+   "key": "screen.aiproviders.bymember.head",
+   "en": "Use by member, this month",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: aiproviders, Limits and alerts: the heading of a team-paid account's by-member table (K5459)"
+  },
+  {
+   "key": "screen.aiproviders.bymember.note",
+   "en": "Your team pays for this account, so its administrators see each member's use. A member's own subscription isn't shown here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: aiproviders: the line under the by-member table (K5459)"
+  },
+  {
+   "key": "screen.aiproviders.bymember.th.member",
+   "en": "Member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: aiproviders and aiproject: the by-member table, the member column (K5459)"
+  },
+  {
+   "key": "screen.aiproviders.bymember.th.runs",
+   "en": "Runs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: aiproviders and aiproject: the by-member table, the runs column (K5459)"
+  },
+  {
+   "key": "screen.aiproject.bymember.note",
+   "en": "This project pays for this account, so its owners see each member's use on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: aiproject: the line under the by-member table (K5459)"
+  },
+  {
+   "key": "screen.aimine.seenby",
+   "en": "Your use on accounts your team or a project pays for is shown to their administrators. Your own subscription's use is yours alone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: aimine, Your use and cost (K5459)"
+  },
+  {
+   "key": "screen.layers.head",
+   "en": "The rules each place brings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: places: the heading of the layers, each with its information mark (K5450, DEC-404)"
+  },
+  {
+   "key": "screen.layers.info.label",
+   "en": "How current this is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: places: the information mark's name for assistive technology (K5450)"
+  },
+  {
+   "key": "screen.layers.info.entry",
+   "en": "Read from {source} on {date}. Its calendars reach {reach}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: places: the information mark beside a layer; {source} {date} {reach} (K5450)"
+  },
+  {
+   "key": "screen.layers.info.past",
+   "en": "After {reach}, not known.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: places: the information mark beside a layer, a count past the calendars is never guessed; {reach} (K5450)"
+  },
+  {
+   "key": "screen.layers.info.promise",
+   "en": "Civicsmith promises the date it read this, not that the law hasn't changed since. Not legal advice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: places: the information mark beside a layer (K5450)"
+  },
+  {
+   "key": "screen.layers.info.page",
+   "en": "This page's rules come with each Civicsmith update. The newest was read on {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: places: the information mark by the page title; {date} (K5450)"
+  },
+  {
+   "key": "queue.kind.rules-changed",
+   "en": "Rules that changed in this update",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: queue: the kind, for an administrator (K5450; the style of queue.kind.*)"
+  },
+  {
+   "key": "screen.queue.ruleschanged",
+   "en": "{n} rules your team uses changed in this update: {list}. You're told once.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-468: queue: an administrator item after an update (K5450); {n} {list}"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
