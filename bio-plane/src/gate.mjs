@@ -1173,7 +1173,17 @@ import { localize } from "./setup-words/index.mjs";
    GATES RUN, no row line moving: none a job record names. This module adds no row (R59 is a field of a read). The
    census no longer leaves out `civicos-ui/` scripts, the directory being deleted (T51-126, K3838, N1246).
    ROW_CENSUS (R50) re-pinned to this tree: 1923 rows. Rows a T52 job adds or changes are T53's stamp. */
-export const CATALOG_VERSION = "1.79.0";
+/* 1.80.0 (PROMOTION #1, T52-8, 2026-10-27; K5339): MINOR. The stamp of every row the jobs after 1.79.0's tree added or
+   changed (modules after layer 2, merged after PROMOTION #51's stamp; no job record named them `awaiting stamp`), read by
+   diffing R50's census lines of this tree against 1.79.0's own (`test/fixtures/row-census-1.79.0.jsonl`: 1923 rows,
+   c5885eaf...): 48 new rows, 12 changed, none retired. THE CAUSE of T51's red `row-census`: the pin was stamped once
+   and rows moved after it with no stamp, which the suite refuses by name; this is the layer-2 stamp it waits for.
+   ARRIVED (48): C-102.34-.39, C-103.8-.12, C-107.5, C-113.45, C-118.11, C-124.66, C-130.17-.22, C-136.9, C-138.18-.19,
+   C-140.44-.45, C-154.1, C-155.1, C-18.22-.24, C-33.55-.64, C-87.18, C-91.10-.11, C-93.40-.42, C-96.55.
+   CHANGED (12), code and number unmoved: C-113.32, C-140.4, C-140.7, C-146.25, C-146.6, C-146.7, C-33.54, C-87.1,
+   C-94.5, C-94.6, C-96.17, C-96.39. THE FAMILIES THAT ARRIVED: none. This module adds no row.
+   ROW_CENSUS (R50) re-pinned to this tree: 1971 rows. Rows a T52 job adds or changes are T53's stamp. */
+export const CATALOG_VERSION = "1.80.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1265,8 +1275,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1923,
-  digest: "c5885eafaf5dbb471372fe8077398100993b6b49cae2be0c44d77d5f4e0a5d46" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1971,
+  digest: "17406b472cd7001dfef7d6028e0746b51ef7df322d42ad9fff1f2e1af16a5609" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
