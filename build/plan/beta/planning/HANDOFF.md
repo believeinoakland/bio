@@ -1,18 +1,17 @@
 # PLANNING: handoff
 
-**Writer** · PLANNING #4 (prefix L), Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #324; hands over at L54 to PLANNING #5 (started by BOB #325, `session_018BhcecBSZLi4sT4avTJwuA`). PLANNING #1 L1-L5, #2 L6-L15, #3 L16-L35, archived. Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
+**Writer** · PLANNING #5 (prefix L), Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, session `session_018BhcefTwpymZ6ZLNMR9SQR`, started 2026-10-27 by BOB #325 (`session_018BhcecBSZLi4sT4avTJwuA`); took over at L55 from PLANNING #4 (L36-L54, archived). PLANNING #1 L1-L5, #2 L6-L15, #3 L16-L35, archived. Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
 
 ## 0. State now and next steps
 
-**State.** PLANNING #4 hands over at L54 (context 43 %). T53's plan is drafted and folded: `plan-T53-draft.md` (48 KB, at its cap: everything new goes in a detail file beside it) points by module to its detail files, each module's START carrying its rows verbatim (K5564, L37 R1): `plan-T53-capabilities.md` (CAPABILITIES), `plan-T53-journeys.md` (JOURNEYS' defects; J1-J7 all answered), `plan-T53-ai.md` (layer 6's AI modules), `plan-T53-design-rows.md` (DEC-479 to DEC-485's owed; U512-U518 merge in Before R1 (10)), `plan-T53-tests-english.md` (K5565: a conversion entry per module, 165 rows; 58 conversion-only jobs, 16 haiku-5-5, 42 sonnet-5-5), `plan-T53-platform-rows.md` (P-22: the Add door, the `heldcaptures` picker, kept counts; P-22's 2.8-4.8 s the before bar), `plan-T53-reds.md` (22 reds in 8 modules, count confirmed by BOB; struck where TESTS-SWEEP's sweep fixes one). PLANNING's lines, all decided and READY: `lines-A*`, `lines-K5501-*`, `lines-K5513-*`, `lines-K5527-*`, `lines-K5532-*`, `lines-K5562-K5563-founder.md` (K5566; K5568 every removal shown with reasons; words DEC-484, DEC-485). `reading-sets-T53.md`: R1-R7 decided (K5564), every job under 600 KB (screens-inquiry 595, screens-settings about 550 nearest). Measurements (K5567): at once alongside R1 unless they measure R1's code; no R3. Before R1 (1)-(10) listed in the plan, including the splits (`screens-document`, `screens-ai`) and file-safety before doorbell. Nothing is open with Bob or BOB.
+**State.** PLANNING #5 took over at L55: tranche/T53 merged into `lane/planning`, every lane's section 0 read (the same on tranche/T53 and each lane branch), every file pointer in the plan and its detail files checked on disk (all resolve; `tests-sweep/*` exist on `lane/tests-sweep`, reaching the tranche with Before R1 (1); `build/plan/measure-N824-email-export.md` is M1's output, not yet written). T53's plan is drafted and folded: `plan-T53-draft.md` (48 KB, at its cap: everything new goes in a detail file beside it with one pointer line) points by module to `plan-T53-capabilities.md`, `plan-T53-journeys.md`, `plan-T53-ai.md`, `plan-T53-design-rows.md`, `plan-T53-tests-english.md`, `plan-T53-platform-rows.md`, `plan-T53-reds.md`; PLANNING's `lines-*` files all decided and READY; `reading-sets-T53.md` R1-R7 decided (K5564), every job under 600 KB. Nothing is open with Bob or BOB.
 
 **Next steps, in order.**
-1. (PLANNING #5) Takeover; merge tranche/T53 in; read MAP.md and every lane's section 0.
-2. Fold PLATFORM when BOB relays it READY: `service-levels-draft.md` (PL20-PL29: the install's level choice, outgrowing at 70 % / 90 %; per-level bounds as rows of runtime-limits' one table, CONSISTENCY §2.8), `whole-record-move-draft.md` (PL50-PL57: corpus-export and the installer's import; its `[owed: READY]` marks in the plan's corpus-export and screens-settings/installer entries), the Levels 2-3 study's result, R119's interpretation ceiling per level (K5535, PL44-PL45). Into a detail file (`plan-T53-platform-rows.md`), one pointer line or an edit of an existing line in the plan.
-3. Fold anything BOB relays meanwhile into a detail file; check every pointer on disk first.
-4. Then: re-measure any job the fold grows (`reading-sets-T53.md` §5's method; the scratch script is not kept: re-derive from §1); `proc sizes`; mark the plan and its detail files READY for BOB.
+1. Fold PLATFORM when BOB relays it READY (on `lane/platform` at 481829c4 both are still DRAFT): `service-levels-draft.md` (PL20-PL29: the install's level choice, outgrowing at 70 % / 90 %; per-level bounds as rows of runtime-limits' one table, CONSISTENCY §2.8), `whole-record-move-draft.md` (PL50-PL57: corpus-export and the installer's import; the `[owed: READY]` marks in the plan's corpus-export and screens-settings/installer entries), the Levels 2-3 study's result, R119's interpretation ceiling per level (K5535, PL44-PL45). Into `plan-T53-platform-rows.md`, with one pointer line or an edit of an existing line in the plan.
+2. Fold anything BOB relays meanwhile into a detail file; check every pointer on disk first.
+3. Then: re-measure any job the fold grows (`reading-sets-T53.md` §5's method; re-derive the script from §1); `proc sizes`; mark the plan and its detail files READY for BOB.
 
-**Waiting on.** PLATFORM only (service levels, whole-record move: still DRAFT).
+**Waiting on.** PLATFORM only (service levels, whole-record move: still DRAFT; its study S1 is at step 1b, P-22).
 
 Entries L1-L35 are in `build/plan/archive/planning/` (`HANDOFF-L1-L15.md`, `HANDOFF-L16-L35.md`).
 
@@ -91,3 +90,7 @@ BOB sorted handoff step 2 (`build/plan/beta/reds-T53.md`): 22 reds listed in 8 m
 ## L54 · 2026-10-27 · hand-over to PLANNING #5
 
 BOB #325 took over from #324 and asked for the hand-over (context 43 %). L16-L35 moved whole to the archive (HANDOFF was over its cap); section 0 and `NEXT-SESSION-PROMPT.md` rewritten.
+
+## L55 · 2026-10-27 · takeover by PLANNING #5; pointers checked; K5567's wording
+
+PLANNING #5 took over (#4 archived), merged tranche/T53 in and read the takeover set and every lane's section 0. Checked every `.md` pointer in the plan and its detail files on disk: all resolve (the tests-sweep files on `lane/tests-sweep`; M1's output file still to be written). Four places still spoke of a later round "R2", which K5567 removed: the plan's load-check entry, `plan-T53-capabilities.md`'s N824 P3 and M-R3 notes, and CONSISTENCY §3's load test; each now names the plan's Measurements (at once, or after the code it measures). PLATFORM's two drafts are still DRAFT: waiting.

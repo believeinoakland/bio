@@ -286,7 +286,7 @@
 **installer**, **journey-check**, **notice-producers**, **queue**, **op-*** , **store-assembly**, **control-plane**, **instance-setup**, **stewards**, **site**, **screens-*** (CAPABILITIES) · N1265's check and gate (installer R86-R93, replacing T52-92's probe and T52-94's steps; journey-check R39-R41), installer R2 one line for every scope ask `[owed: BOB settles the count]`, register notices and kinds, the registers screen (screens-investigate, rec.), mail's ops and door, stewards' decline record (K5530: B2 stewards' own mail, B3 closed `RULE_PARTS`), N1272's Interpreted row (DEC-476, DEC-478) · `planning/plan-T53-capabilities.md` §A Layer 11
 
 **load-check** (new)
-- T53 · N1274 · `runProfile`, `seedCopy`, `report` on a scratch copy only (PL40-PL43), run in R2 · `platform/load-test-draft.md` §5
+- T53 · N1274 · `runProfile`, `seedCopy`, `report` on a scratch copy only (PL40-PL43), run after layer 11's deploy (Measurements, K5567) · `platform/load-test-draft.md` §5
 
 **The design rows of DEC-474 to DEC-478** (merged, ec02fce0bc; each module's job reads its DEC row at START)
 - T53 · DEC-474 (DEC-461's drawing) · interface-shell: a `ceiling` scale beside `capture` in `cs.grade` and the chip tooltip, the capture icon until one is drawn; screens-document, screens-intake, screens-investigate: chips on a document or source drawn on `ceiling` (Document head and revisions, Held, money, timeline, person, calculation), the fold's choice label `screen.question.leggrade.choice`; ratification and case-authoring: the signing list and the edition's statement as A5 (`planning/lines-A5-A6-signing.md`) in DEC-474 (4)'s words; screens-publish draws `screen.published.ungraded` with its "Which passages" fold

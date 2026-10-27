@@ -47,4 +47,4 @@
 - jurisdictions R99-R108 and the four defects before the layer split and its migration test (N1257 §G); the split in the same job (layer 1).
 - The new readers and the container (layer 1) before acquisition, file-safety and capture (layer 3), reading-pipeline (layer 4): R1's layer order gives it.
 - PLATFORM's throwaway test T-a (a BOB act, K5434 (1)) before R1's layer 11 START, so op-declarations, admission, store-door and plane jobs start with its figures (T52-42's "first: BOB's throwaway test figures").
-- The load test after R1 (R2, measure), with a short "before" run on the alpha's design first (PLATFORM §6).
+- The load test after load-check and layer 11's deploy (the plan's Measurements, K5567), with a short "before" run on the alpha's design first (PLATFORM §6).
