@@ -2336,3 +2336,8 @@ MERGE `50b65c5ef3` (branch claude/gallant-brown-zg0wc1, PR #42) into tranche/T53
 Verified on tranche/T53 with these words files: words 0 failures, format 0; screens-settings panel, connect, teamai 44/0 with and without.
 Owed: BOB merges this commit. Nothing new for jobs (rows read by key; tests unchanged). DEC-468's owed items stand.
 Note for BOB: the mail tool's size gate refuses on tranche/T53 because build/plan/lane-journeys/walk/S4.md is 65,163 bytes (> 51,200); this session read and posted with a local, uncommitted exemption. Please prune or exempt it.
+
+## U503 · MERGE · re B557 · 2026-10-27 · session_018Bhcefdgy83sFMSkwg7xRc · secondary
+MERGE `67da90ae12` (branch claude/gallant-brown-zg0wc1) into tranche/T53: DEC-470, B557's rename. The public registers drawings and act sentences name the op `registerfileimport` (`act.owed_registerfileimport.*`, the registry's owed act, the button's note; `screen.registers.import.go` keeps its key, which names no op). English unchanged. `act.owed_registerimport.does` is held under the old name with the same English, because screens-settings `keys.mjs` and four L11 modules still read it through `words-reads.json` (without it, words shows 5 missing keys).
+Verified on tranche/T53 with these words files: words 0 failures, format 0.
+Owed: BOB merges this commit; the job that renames the op points screens-settings' keys (and words-reads) at `act.owed_registerfileimport.does`, then I drop the held row. Next: B558's eight points.
