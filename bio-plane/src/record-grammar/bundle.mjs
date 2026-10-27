@@ -567,6 +567,22 @@ function snapshotCopyPath(name, key) {
   return dot === -1 ? `_history/${dir}${base}_${key}` : `_history/${dir}${base.slice(0, dot)}_${key}${base.slice(dot)}`;
 }
 
+/* R65 (T52-2): a history file belongs to the manifest entry whose listed key ends its name's stem, whatever the key's
+   form (a stamp with or without milliseconds; an infix a writer adds: `_links_`, `_bar`, `_plan`, `_close`, `takeup_`,
+   `resolve_`). The key follows a `_` in the file's name and is followed by the extension's dot or the name's end;
+   a key holding a dot (a stamp with milliseconds) is tried at each dot. History already written is never rewritten. */
+function listedKeyOf(p, keys) {
+  const base = p.slice(p.lastIndexOf('/') + 1);
+  for (let i = base.indexOf('_'); i !== -1; i = base.indexOf('_', i + 1)) {
+    const rest = base.slice(i + 1);
+    if (keys.has(rest)) return rest;
+    for (let d = rest.indexOf('.'); d !== -1; d = rest.indexOf('.', d + 1)) {
+      if (keys.has(rest.slice(0, d))) return rest.slice(0, d);
+    }
+  }
+  return null;
+}
+
 /** C-12: history manifest coherence and snapshot accounting. */
 function checkHistoryCoherence(ctx, findings) {
   const histFiles = [...ctx.files.keys()].filter(p => p.startsWith('_history/'));
@@ -664,7 +680,7 @@ function checkHistoryCoherence(ctx, findings) {
     /* The key is followed by the extension's dot, or ends the name when the copy's name has none (G59). */
     const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})(?:\.|$)/.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
     const key = m ? m[1] : null;
-    if (!key || !keys.has(key)) {
+    if ((!key || !keys.has(key)) && !listedKeyOf(p, keys)) {
       findings.push(f('C-12.2', 'error', localize('record-grammar.bundle.history_file_p_maps_to', 'history file \'{p}\' maps to no manifest entry', { p: String(p) }), [localize('record-grammar.bundle.rebuild_manifest_entry_from_surviving_files', 'rebuild manifest entry from surviving files')]));
     }
   }

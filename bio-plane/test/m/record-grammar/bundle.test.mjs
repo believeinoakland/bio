@@ -377,3 +377,37 @@ test("R40 G59 C-12.2: a snapshot of a dotless name, one in a subfolder and one i
   const wrong = `_history/${UPLOAD.slice(0, -1)}_${SNAP_KEY}${UPLOAD.slice(-1)}`;
   assert.ok((await c122(historyBundle(names, [...copies, wrong]))).length > 0);
 });
+
+/* R65 (T52-2): the key forms the `snapKey:` writers produce, built the way each writer builds it (connections `_links_`,
+   strength `_bar`, investigation `_plan`/`_close`, contradiction `takeup_`/`resolve_`, and the plain stamp_hex). */
+const WRITER_KEYS = (() => {
+  const at = "2026-10-27T12:34:56.789Z";
+  const plain = at.replace(/[-:]/g, "");
+  const noMs = at.replace(/[-:.]/g, "");
+  return {
+    plain: `${plain}_0a1b2c3d`,
+    connections: `${noMs}_links_0a1b2c3d`,
+    strength: `${noMs}_barx7`,
+    "investigation plan": `${plain}_planPRP-1`,
+    "investigation close": `${plain}_close`,
+    "contradiction takeup": `takeup_${noMs}_0a1b2c3d`,
+    "contradiction resolve": `resolve_${noMs}_0a1b2c3d`,
+  };
+})();
+const keyedBundle = (key, copies) => {
+  const base = fixtures()["clean information"];
+  const files = new Map(base.files);
+  files.set("_history/manifest.json", JSON.stringify({ entries: [{ key, kind: "edit", created: "2026-10-27T12:34:56Z", files: [], snapshotted: ["bundle.md", "data/x.json"] }] }));
+  for (const p of copies) files.set(p, "x");
+  return { ...base, files };
+};
+for (const [writer, key] of Object.entries(WRITER_KEYS)) {
+  test(`R65 C-12.2: a history key written by ${writer} is read from the manifest, so its copies raise no finding; an unlisted key still does`, async () => {
+    const copies = [`_history/bundle_${key}.md`, `_history/data/x_${key}.json`];
+    assert.deepEqual(await c122(keyedBundle(key, copies)), []);
+    const stray = `_history/data/y_${key}z.json`;
+    const found = await c122(keyedBundle(key, [...copies, stray]));
+    assert.equal(found.length, 1);
+    assert.ok(found[0].message.includes(stray));
+  });
+}
