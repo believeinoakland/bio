@@ -8,11 +8,13 @@ import {
   captureSubresources, normalizeAddress, normalizeCitation, originOf, linkWrapper, LINK_TYPES,
   SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET,
 } from "../../../src/subresources.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const BASE = "https://example.org/docs/page.html";
 const ORIGIN = "https://example.org";
 const enc = (s) => new TextEncoder().encode(s);
 const hex = (b) => createHash("sha256").update(b).digest("hex");
+const BANNER = word("subresources.subresources.derived_banner", { primarySha: "p".repeat(64), when: "2026-09-26T12:00:00Z" });
 const isPublic = (u) => /^https:\/\//.test(u) && !/^https:\/\/(localhost|10\.|127\.|192\.168\.)/.test(u);
 
 const FAILED = ["SOURCE_REFUSED", "FETCH_FAILED", "TOO_LARGE"];
@@ -317,9 +319,10 @@ test("R14: the render companion strips executables, rewrites every reference, an
   assert.ok(c.includes(`url("about:capture#unavailable")`), "a reference whose bytes are not held");
   assert.match(c, /<img src="about:capture#unavailable">/);
   const after = c.slice(c.indexOf("<head>") + "<head>".length);
-  assert.match(after, /^\n<!-- DERIVED ARTIFACT[\s\S]*?p{64}[\s\S]*?at 2026-09-26T12:00:00Z[\s\S]*?-->\n<meta http-equiv="Content-Security-Policy"/);
+  assert.ok(after.startsWith("\n" + BANNER + '<meta http-equiv="Content-Security-Policy"'), "the banner opens the head, before the CSP");
   const bare = await run(`<p><img src="/i.png"></p>`);
-  assert.match(bare.out.companionText, /^<!-- DERIVED ARTIFACT[\s\S]*?-->\n<meta http-equiv="Content-Security-Policy"[^>]*>\n<p>/);
+  assert.equal(bare.out.companionText.slice(0, BANNER.length), BANNER);
+  assert.match(bare.out.companionText.slice(BANNER.length), /^<meta http-equiv="Content-Security-Policy"[^>]*>\n<p>/);
 });
 
 test("R15: every link is classified anchor, intra, deferred or refused, recorded once per citation, and wrapped", async () => {
@@ -564,7 +567,7 @@ test("R29: the companion is a separate artifact declaring its derivation and una
   for (const d of ["default-src 'none'", "script-src 'none'", "frame-src 'none'", "object-src 'none'", "base-uri 'none'"])
     assert.ok(csp.includes(d), d);
   assert.ok(!/https?:/.test(csp));
-  assert.match(out.companionText, /DERIVED ARTIFACT, not evidence[\s\S]*p{64}/);
+  assert.ok(out.companionText.includes(BANNER), "the banner names the artifact and its primary sha");
 });
 
 test("R30: isPublic fences every reference at every depth", async () => {
