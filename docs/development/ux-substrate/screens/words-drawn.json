@@ -39536,13 +39536,13 @@
   },
   {
    "key": "screen.aichecks.origin.name",
-   "en": "Not made by an organization based in China",
+   "en": "Not developed by a Chinese organization",
    "protected": false,
    "note": "DEC-420: B488 aichecks: origin name"
   },
   {
    "key": "screen.aichecks.origin.line",
-   "en": "The organization that makes the AI is not based in China.",
+   "en": "Judged by who developed the model, whichever company serves it.",
    "protected": false,
    "note": "DEC-420: B488 aichecks: origin line"
   },
@@ -39947,12 +39947,6 @@
    "en": "Not offered as the team's account: its terms bar use by a team for work like this. A member may still use it for their own work.",
    "protected": false,
    "note": "DEC-420: B488 aiproviders: refused personal"
-  },
-  {
-   "key": "screen.aiproviders.refused.origin",
-   "en": "Not offered while the team requires the check “Not made by an organization based in China”.",
-   "protected": false,
-   "note": "DEC-420: B488 aiproviders: refused origin"
   },
   {
    "key": "screen.aiproviders.held.head",
@@ -40412,7 +40406,7 @@
   },
   {
    "key": "screen.aiconnect.s3.why",
-   "en": "Four ways. Choose one.",
+   "en": "Five ways. Choose one.",
    "protected": false,
    "note": "DEC-420: B488 aiconnect: s3 why"
   },
@@ -44671,78 +44665,6 @@
    "note": "DEC-454: Add, an upload refused TOO_LARGE, with its figures (in place of the bare 'size · bound', capture.mjs:1436); {size} {bound} in MB"
   },
   {
-   "key": "screen.document.unsupported.rtf",
-   "en": "Files in the Rich Text format (.rtf) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_rtf sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.email",
-   "en": "Email files (.eml, .msg) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_email sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.legacy_excel",
-   "en": "Files in the old Excel format (.xls) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_excel sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.legacy_powerpoint",
-   "en": "Files in the old PowerPoint format (.ppt) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_powerpoint sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.legacy_office",
-   "en": "This file is in an old Office format that isn't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_office sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.tiff",
-   "en": "TIFF pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_tiff sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.gif",
-   "en": "GIF pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_gif sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.webp",
-   "en": "WebP pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_webp sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.heic",
-   "en": "HEIC pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_heic sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.avif",
-   "en": "AVIF pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_avif sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.bmp",
-   "en": "BMP pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_bmp sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.jp2",
-   "en": "JPEG 2000 pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_jp2 sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
    "key": "screen.document.unsupported.ico",
    "en": "Icon files (.ico) aren't read yet. The file is kept and you can open it.",
    "protected": false,
@@ -44957,6 +44879,312 @@
    "en": "Sending was canceled. Nothing was kept.",
    "protected": false,
    "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
+  },
+  {
+   "key": "screen.aiproviders.origin.notoffered",
+   "en": "Not offered while your team requires the origin check.",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)"
+  },
+  {
+   "key": "screen.aiproviders.optin",
+   "en": "Projects and members may add this account to their own lists",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the owner opt-in on a team account row, off by default"
+  },
+  {
+   "key": "screen.aiproviders.optin.note",
+   "en": "Off until an administrator turns it on. Work never moves to it from another list otherwise.",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the opt-in note"
+  },
+  {
+   "key": "screen.aimine.optin",
+   "en": "My projects may add this account to their lists",
+   "protected": false,
+   "note": "DEC-465: aimine: the opt-in on a member's own API-key account, off by default"
+  },
+  {
+   "key": "screen.aimine.subscription.ownlist",
+   "en": "A personal subscription is only ever on your own list, never on your team's or a project's.",
+   "protected": false,
+   "note": "DEC-465: aimine: the line on a member's personal subscription row"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed",
+   "en": "Keep it sealed in your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the fifth way a key is held"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed.line",
+   "en": "Your team's Civicsmith keeps the key sealed, readable only by its own programs, until you remove it.",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the sealed way, its line"
+  },
+  {
+   "key": "screen.aimoments.checksapply",
+   "en": "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.",
+   "protected": false,
+   "note": "DEC-465: aimoments: whose checks apply; {project}"
+  },
+  {
+   "key": "screen.aiconnect.s3.sealgo",
+   "en": "Keep it sealed",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the sealed way, its button"
+  },
+  {
+   "key": "screen.aimoments.mock.i",
+   "en": "whose checks apply",
+   "protected": false,
+   "note": "DEC-465: aimoments: the mock choice for the new moment"
+  },
+  {
+   "key": "screen.aimoments.continued.crossowner",
+   "en": "It went on with your team's second account, which your administrators let projects use.",
+   "protected": false,
+   "note": "DEC-465: aimoments a: the continued account belongs to another owner"
+  },
+  {
+   "key": "screen.machine.draft.ai",
+   "en": "Draft · the assistant's ({ai})",
+   "protected": false,
+   "note": "DEC-466: machine label: a draft by the assistant, with the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.draft.asked.ai",
+   "en": "Draft · the assistant's ({ai}), asked by {handle}",
+   "protected": false,
+   "note": "DEC-466: machine label: a draft, the AI named, who asked (U1)"
+  },
+  {
+   "key": "screen.machine.proposed.ai",
+   "en": "Proposed by the assistant ({ai})",
+   "protected": false,
+   "note": "DEC-466: machine label: a proposal, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.date.ai",
+   "en": "Suggested by the assistant ({ai}), {date} · not yet weighed",
+   "protected": false,
+   "note": "DEC-466: machine label: a suggested version, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.plan.ai",
+   "en": "Suggested by the assistant ({ai}) · for a fixing project · not yet in the plan",
+   "protected": false,
+   "note": "DEC-466: machine label: a suggested plan option, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.judgment.ai",
+   "en": "The assistant's judgment ({ai}), not a finding: a conflict in the world",
+   "protected": false,
+   "note": "DEC-466: machine label: the contradiction judgment, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.proposes.tier.ai",
+   "en": "The assistant ({ai}) proposes tier 1 · file freely",
+   "protected": false,
+   "note": "DEC-466: machine label: a proposed risk tier, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.ai.tip",
+   "en": "Which AI did this work. On a long job the AI can change; the run's record lists each part.",
+   "protected": false,
+   "note": "DEC-466: tooltip on every machine label that names an AI (U1)"
+  },
+  {
+   "key": "screen.run.parts.head",
+   "en": "How this run went",
+   "protected": false,
+   "note": "DEC-466: a finished run: the parts list head (U2)"
+  },
+  {
+   "key": "screen.run.part",
+   "en": "Part {n} · {ai} on {account} · {from} to {to}",
+   "protected": false,
+   "note": "DEC-466: a finished run: one part (U2)"
+  },
+  {
+   "key": "screen.run.switch",
+   "en": "Went on to {ai} on {account}, because {reason}",
+   "protected": false,
+   "note": "DEC-466: a finished run: the change of AI between parts (U2)"
+  },
+  {
+   "key": "screen.run.declined",
+   "en": "{member} declined to go on with another AI; the run stopped.",
+   "protected": false,
+   "note": "DEC-466: a run that stopped because the member declined the change (U2)"
+  },
+  {
+   "key": "screen.ai.ready",
+   "en": "The assistant is ready: {n} accounts on.",
+   "protected": false,
+   "note": "DEC-466: setup and AI providers: the ready state (U3)"
+  },
+  {
+   "key": "screen.ai.ready.one",
+   "en": "The assistant is ready: one account on.",
+   "protected": false,
+   "note": "DEC-466: setup: the ready state, one account (U3)"
+  },
+  {
+   "key": "screen.ai.notready",
+   "en": "The assistant isn't ready: no account is on yet. Add one in AI providers.",
+   "protected": false,
+   "note": "DEC-466: AI providers: not ready (U3)"
+  },
+  {
+   "key": "screen.ai.projectonly",
+   "en": "Your team has no account of its own. The assistant works in {project} only, on that project's account.",
+   "protected": false,
+   "note": "DEC-466: AI providers: a project-only account (U3, interface-shell R20)"
+  },
+  {
+   "key": "screen.aiproviders.mock.e",
+   "en": "no account of the team's own, one project's only",
+   "protected": false,
+   "note": "DEC-466: aiproviders: the mock choice for the project-only state (U3)"
+  },
+  {
+   "key": "installer.cf.asks.gateway",
+   "en": "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them.",
+   "protected": false,
+   "note": "DEC-466: installer: the Cloudflare ask for the gateway (U5, AIR45)"
+  },
+  {
+   "key": "screen.document.held.kind",
+   "en": "{kind}: kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind.",
+   "protected": false,
+   "note": "DEC-467: Document and Add, a file of a kind not read yet (K5436); {kind} a plain name, such as \"A Visio drawing\""
+  },
+  {
+   "key": "screen.capture.refused.type",
+   "en": "{kind} files aren't kept: {reason}. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
+  },
+  {
+   "key": "screen.capture.refused.type.rar",
+   "en": "they can't be unpacked safely here",
+   "protected": false,
+   "note": "DEC-467: the {reason} for a RAR file"
+  },
+  {
+   "key": "screen.capture.refused.type.program",
+   "en": "they can run on a device",
+   "protected": false,
+   "note": "DEC-467: the {reason} for a program, installer or disk image"
+  },
+  {
+   "key": "screen.document.macros",
+   "en": "This file contains macros. Its text is read; the macros were never run.",
+   "protected": false,
+   "note": "DEC-467: Document, a .docm, .xlsm or .pptm (K5435)"
+  },
+  {
+   "key": "screen.capture.types.head",
+   "en": "What can be added",
+   "protected": false,
+   "note": "DEC-467: Add, the fold before choosing a file (K5435-K5437)"
+  },
+  {
+   "key": "screen.capture.types.read",
+   "en": "Read: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types read, each with its size limit; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.held",
+   "en": "Kept, not read yet: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types kept whole and named; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.refused",
+   "en": "Not kept: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types not kept; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.size",
+   "en": "Each kind's size limit is shown beside it.",
+   "protected": false,
+   "note": "DEC-467: Add, under the list of types"
+  },
+  {
+   "key": "screen.capture.refused.limit",
+   "en": "This {kind} is {size}, over the {limit} allowed for {kind} files, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file over its kind's size limit (K5439); {kind} {size} {limit}"
+  },
+  {
+   "key": "screen.capture.refused.limit.count",
+   "en": "This {kind} holds {n} {units}, over the {limit} allowed, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file over a count limit, such as a mailbox's messages (K5439); {kind} {n} {units} {limit}"
+  },
+  {
+   "key": "screen.photo.taken",
+   "en": "Taken {date}, near {place}.",
+   "protected": false,
+   "note": "DEC-467: open-file, a photo's carried data beside the safe picture (DEC-460)"
+  },
+  {
+   "key": "screen.photo.taken.noplace",
+   "en": "Taken {date}. The photo holds no place.",
+   "protected": false,
+   "note": "DEC-467: a photo with a date and no place"
+  },
+  {
+   "key": "screen.photo.none",
+   "en": "This photo holds no date or place.",
+   "protected": false,
+   "note": "DEC-467: a photo with neither"
+  },
+  {
+   "key": "screen.photo.beside",
+   "en": "Shown beside the safe picture, read from the original; not carried in the picture.",
+   "protected": false,
+   "note": "DEC-467: the line saying where the data is read from"
+  },
+  {
+   "key": "screen.photo.dropped",
+   "en": "Left out of the safe picture: {what}.",
+   "protected": false,
+   "note": "DEC-467: what was dropped for safety; {what}"
+  },
+  {
+   "key": "screen.archive.mailbox.count",
+   "en": "{n} messages: {read} read, {held} kept but not read yet, {refused} not kept.",
+   "protected": false,
+   "note": "DEC-467: Archive, a mailbox opened (K5437); {n} {read} {held} {refused}"
+  },
+  {
+   "key": "screen.archive.from",
+   "en": "From {parent}",
+   "protected": false,
+   "note": "DEC-467: Document, a member of an archive or mailbox: its parent"
+  },
+  {
+   "key": "screen.document.cite.page",
+   "en": "Page {n} of {m}, {file}",
+   "protected": false,
+   "note": "DEC-467: Document, the citation line of a multi-page file"
+  },
+  {
+   "key": "screen.document.converted",
+   "en": "Read from a converted copy of {file}; the original is kept.",
+   "protected": false,
+   "note": "DEC-467: Document, a file read from a converted copy"
+  },
+  {
+   "key": "screen.document.encrypted",
+   "en": "Needs a password. Civicsmith never asks for it or keeps it.",
+   "protected": false,
+   "note": "DEC-467: Document, an encrypted file (K4831 (6))"
   }
  ],
  "rewrite": {
