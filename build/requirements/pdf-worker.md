@@ -77,6 +77,7 @@ the build actually serving rather than the build that was meant to (D-108).
 - **R38** No place is named in this module's code (`src/index.mjs`) or in any refusal text; it holds no jurisdiction data
   (grepped 2026-09-25: none outside one comment citing an Oakland measurement as evidence).
 - **R41** Pure per call: the same bytes and options always answer the same way; no clock, no randomness,
+  no state carried between requests.
 - **R44** (fix round 9, G124; K4835 (1)) No numeric literal in this module's code is a ceiling it keeps (`MAX_PDF_BYTES`): it is read from `READ_BOUNDS`, and a test reads `src/index.mjs` and finds none.
 
 ### Satisfies
