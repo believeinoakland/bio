@@ -1176,11 +1176,26 @@ SCR.capture = c => { const st = CAPTURE_TAB[c.act || (c.wizard && c.wizard.act)]
   </div></div>
   <div class="st st-b"><div style="display:grid;gap:16px">
    <div class="mk-drop">${I('camera')} Take a photo, or choose a file <span class="muted mk-small">· on a phone, the camera opens</span></div>
+   <details class="mk-details"><summary>What can be added</summary><div style="display:grid;gap:6px">
+    <p class="mk-small">Read: <span class="mk-data">documents (PDF, Word, PowerPoint, OpenDocument, RTF), up to 100 MB or 5,000 pages</span></p>
+    <p class="mk-small">Read: <span class="mk-data">text (plain text, Markdown, logs, JSON, XML, HTML, calendars, contacts, captions, SVG, map layers), up to 100 MB</span></p>
+    <p class="mk-small">Read: <span class="mk-data">spreadsheets (Excel, OpenDocument, CSV), up to 50 MB or about 1,000,000 rows</span></p>
+    <p class="mk-small">Read: <span class="mk-data">pictures and photos (JPEG, PNG, TIFF, HEIC, GIF, WebP, BMP, AVIF, JPEG 2000), up to 50 MB each</span></p>
+    <p class="mk-small">Read: <span class="mk-data">email and archives (email files, ZIP, TAR, 7z, single compressed files, mailboxes), up to 500 MB, or 2 GB unpacked; a mailbox up to 100,000 messages</span></p>
+    <p class="mk-small">Kept, not read yet: <span class="mk-data">Outlook mailboxes, Access and SQLite databases, Visio, Publisher and OneNote files, CAD drawings, audio, video, icons, and any other kind not listed</span></p>
+    <p class="mk-small">Not kept: <span class="mk-data">RAR archives, programs, installers and disk images</span></p>
+    <p class="mk-small">Each kind's size limit is shown beside it.</p>
+   </div></details>
    ${PHOTO_REMINDER}
    ${sheet(row(I('camera'), '<b>Seminary Ave at 60th.jpg</b><span class="meta">photo · 3.1 MB · taken October 4, 2026, 9:12 AM, by the phone that took it · location in the photo: 6012 Seminary Ave</span>', '<span class="muted">chosen</span>'))}
    ${sheet(row(I('document'), '<b class="mk-data">Public Works work orders, FY2025.csv</b><span class="meta">CSV · 48 MB · preview</span>', '') + `<div class="mk-data" style="padding:8px 14px;overflow-x:auto"><table class="mk-table"><tbody><tr><td>1</td><td>WO-10001</td><td>Pothole, Seminary Ave</td><td>Closed</td></tr><tr><td>2</td><td>WO-10002</td><td>Pothole, 60th St</td><td>Open</td></tr><tr><td>200</td><td>WO-10200</td><td>Pothole, Foothill Blvd</td><td>Closed</td></tr></tbody></table></div>` + row(I('clock'), 'Showing rows 1 to 200 of 4,812.', btn('owed:previewmore DEC-455', 'Show more rows')))}
    ${sheet(row(I('clock'), '<b class="mk-data">Council packet, 2026.pdf</b><span class="meta">PDF · 212 MB</span><br>Sending part 3 of 8.', btn('captureuploadabort', 'Cancel sending')))}
    ${sheet(row(I('refused'), '<b class="mk-data">Council packet, 2026.pdf</b><br>Sending was canceled. Nothing was kept.', ''))}
+   ${sheet(row(I('accepted'), '<b class="mk-data">Culvert plan.vsdx</b><br>A Visio drawing: kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">Old minutes.rar</b><br>RAR files aren\'t kept: they can\'t be unpacked safely here. Nothing was kept.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">Update.exe</b><br>Program files aren\'t kept: they can run on a device. Nothing was kept.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">Scans, 2019.tif</b><br>This image is 74 MB, over the 50 MB allowed for image files, so it wasn\'t added. Nothing was kept.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">City clerk mail.mbox</b><br>This mailbox holds 140,000 messages, over the 100,000 allowed, so it wasn\'t added. Nothing was kept.', ''))}
    ${checks('How you got it', [['I made it myself: a photo, a recording, my notes', true], ['I was handed it: a printed agenda, a letter', false], ['Someone sent it to me', false], ['I downloaded it from a website', false]], { radio: true })}
    <p class="mk-small muted" style="margin:-8px 0 0">Downloaded from a website? Capture it from its address instead: a copy your team's Civicsmith fetches itself holds up better.</p>
    ${field('mk-fwhen', 'Where and when', '6012 Seminary Ave · October 4, 2026, 9:12 AM', { help: "Required. Write the place, then the date and time, such as “6012 Seminary Ave, October 4, 2026, 9:12 AM”; the time can't be later than now. Where the photo records them they are filled in; correct them if wrong." })}
@@ -1222,7 +1237,7 @@ SCR.held = c => ({ rail: 'add', title: 'Held captures', crumbs: ['Add', 'Held ca
 const AZ = 'Agenda packet, City Council, May 14, 2024';
 const zrow = (name, meta, st, pick) => row(pick === false ? '<input type="checkbox" disabled aria-label="not filed">' : `<input type="checkbox"${pick ? ' checked' : ''} aria-label="pick">`, `<span class="id mk-data">${name}</span><span class="meta">${meta}</span>`, st);
 SCR.archive = c => { const st = c.v === 'refused' ? 'b' : 'a'; return { rail: 'add', title: 'Archive', st, main: `
-  <div class="mk-mockctl"><label for="mk-zst">In this mockup, show</label> <select id="mk-zst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${st === 'a' ? ' selected' : ''}>an archive that opened</option><option value="b"${st === 'b' ? ' selected' : ''}>an archive that could not be opened</option></select></div>
+  <div class="mk-mockctl"><label for="mk-zst">In this mockup, show</label> <select id="mk-zst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${st === 'a' ? ' selected' : ''}>an archive that opened</option><option value="b"${st === 'b' ? ' selected' : ''}>an archive that could not be opened</option><option value="c">a mailbox that opened</option></select></div>
   ${h1(`<span class="rec">${AZ} (ZIP)</span>`, 'Captured by Ana from the city\'s meeting site, October 2, 2026 · Sewer fund transfers')}
   <div class="row">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?')}<span class="id">fingerprint 91c4…7e02 · 41 entries · 182 MB</span></div>
   <div class="st st-a"><div style="display:grid;gap:20px">
@@ -1245,18 +1260,27 @@ SCR.archive = c => { const st = c.v === 'refused' ? 'b' : 'a'; return { rail: 'a
    ${gapm('refused', '<b>Could not open this archive, because two of its entries claim the same bytes.</b> Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.')}
    ${note('A damaged or tampered archive is refused whole rather than filed in part. If the city has a clean copy, capture it again from its address; it lands beside this one.')}
    ${acts(btn('archivelist', 'See what it lists'))}
+  </div></div>
+  <div class="st st-c"><div style="display:grid;gap:14px">
+   ${h1('<span class="rec">City clerk mail, 2026 (mailbox)</span>', 'Captured by Ana from the clerk\'s office, October 2, 2026 · Sewer fund transfers')}
+   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b>4 messages: 2 read, 1 kept but not read yet, 1 not kept.</b></div>
+   ${sec('Messages in it', sheet(
+     zrow('Re: Sewer fund transfer, draft', 'Read · filed · held for review · capture B', '', true) +
+     zrow('Agenda packet attached', 'Read · filed · held for review · capture B', '', true) +
+     zrow('Culvert plan.vsdx', 'A Visio drawing: kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', '', false) +
+     zrow('Update.exe', gapm('refused', 'Program files aren\'t kept: they can run on a device. Nothing was kept.'), '', false))) }
   </div></div>` }; };
 
 /* K1888, K1890, K1892, K1928, K1929 (Bob), drawn by DEC-168: before a file opens. Low risk opens the original (scanned
    first if not scanned in the week); high risk opens in the safe view, a derived copy, the original one click away after a
    deeper check; a finding holds the original until two members or a second, different engine release it. Nothing records
    who opened what (K1892). */
-const OPEN_ST = { low: 'a', high: 'b', held: 'c', yours: 'd' };
+const OPEN_ST = { low: 'a', high: 'b', held: 'c', yours: 'd', photo: 'e' };
 /* DEC-289 (the walk's D5 and the member walk's M-D3, B244, B246): a file a member added is high risk by doctrine (file-safety
    R6, R8; K3480); the page says so to its author plainly, with what to do next. */
 const vnote = (tool, engine, ver, res, at) => row(I('accepted'), `<b>${tool}</b> · ${engine}<span class="meta">${ver} · ${at}</span>`, `<span class="cs-due"${res === 'Found' ? ' data-due="overdue"' : res === 'Clean' ? ' data-due="met"' : ''}>${esc(res)}</span>`);
 SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: 'Opening a file', st, main: `
-  <div class="mk-mockctl"><label for="mk-ost">In this mockup, show</label> <select id="mk-ost" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>a low-risk file</option><option value="b"${sel('b')}>a high-risk file</option><option value="c"${sel('c')}>a file held after a finding</option><option value="d"${sel('d')}>a file you added yourself</option></select></div>
+  <div class="mk-mockctl"><label for="mk-ost">In this mockup, show</label> <select id="mk-ost" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>a low-risk file</option><option value="b"${sel('b')}>a high-risk file</option><option value="c"${sel('c')}>a file held after a finding</option><option value="d"${sel('d')}>a file you added yourself</option><option value="e"${sel('e')}>a photo</option></select></div>
   <div class="st st-a"><div style="display:grid;gap:18px">
    ${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'PDF · captured by Dev from the city\'s site, October 2')}
    <div class="row" style="gap:10px"><span class="cs-risk" tabindex="0" data-tip="<b>Low risk</b>: your team\'s Civicsmith fetched it itself, and it holds nothing that acts on its own. It opens as it is.">Low risk</span><span class="mk-small">Fetched by your team's Civicsmith; nothing in it acts on its own.</span></div>
@@ -1289,6 +1313,11 @@ SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v ===
    <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b>The safe view</b><span class="mk-small">This shows the first 500 of the document's 812 pages.</span><span class="mk-small">A copy made by your team's Civicsmith: each page as a picture, nothing in it can run. ${origin('machine', 'Derived · a safe copy of the original')} Cite the original, never the safe copy; a citation always points at the original.</span></div>
    <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><span class="mk-small">Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.</span><pre class="mk-data" style="white-space:pre-wrap;overflow-wrap:anywhere;margin:0">Walked Lakeshore Ave, 9 Oct: 4 open potholes between 2nd and 5th.</pre><span class="mk-small muted">The file is longer than this view shows; the rest is in the original file.</span></div>
   ${sec('Checks', note('Not checked yet: its first check is waiting. The original never opens before a check.'))}
+  </div></div>
+  <div class="st st-e"><div style="display:grid;gap:18px">
+   ${h1('<span class="rec">Seminary Ave at 60th.jpg</span>', 'Added by you, October 9 · Pothole repairs')}
+   <div class="mk-drop">${I('camera')} Safe picture</div>
+   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b class="mk-small">Taken October 4, 2026, near 6012 Seminary Ave.</b><span class="mk-small">Taken October 4, 2026. The photo holds no place.</span><span class="mk-small">This photo holds no date or place.</span><span class="mk-small">Shown beside the safe picture, read from the original; not carried in the picture.</span><span class="mk-small">Left out of the safe picture: the camera's make and serial number, and the photo's thumbnail.</span></div>
   </div></div>` }; };
 
 /* DEC-432 (B517 R13a): the Document page's document picker, for the connect and contradict folds. The same documents are offered
@@ -1325,6 +1354,9 @@ SCR.document = c => { const st = c.v === 'compare' ? 'b' : 'a'; const held = c.v
      <p>4. Where a repair would close a traffic lane, the work is scheduled with the Department of Transportation.</p>
      <p class="mk-data">5. Repairs are recorded as closed when the crew reports the work complete and a supervisor confirms it.</p>
     </div>
+    <details class="mk-details"><summary>A held file</summary>${sheet(row(I('accepted'), 'A Visio drawing: kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', ''))}</details>
+    <details class="mk-details"><summary>Macros and passwords</summary><div style="display:grid;gap:6px">${note('This file contains macros. Its text is read; the macros were never run.')}${note('Needs a password. Civicsmith never asks for it or keeps it.')}${note('Read from a converted copy of Old budget.xls; the original is kept.')}</div></details>
+    <details class="mk-details"><summary>Pages and parents</summary><div style="display:grid;gap:6px">${note('Page 2 of 14, Fax cover.tif')}${note('From <span class="mk-data">City clerk mail, 2026</span>')}</div></details>
     <details class="mk-details"><summary>When the document is a single picture</summary>${note('This is a picture, and Civicsmith\'s own reading couldn\'t make out text in it. Read it yourself, or transcribe it.')}</details>${note('This table was read as plain text, so its rows and columns may be out of order. Check each figure against the original before you rely on it.')}${note('Pages 7 to 9 are pictures of text that Civicsmith\'s own reading couldn\'t make out, so their words can\'t be found or cited yet. The page images are kept as they are.')}
     <details class="mk-details"><summary>When the document is a spreadsheet</summary>${note('Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.')}${note('Cells read as figures and dates for rows 2 to 140.')}${note('No cells read as figures and dates yet.')}</details>
     ${c.ai ? acts(btn('pagetranscribe', 'Have the assistant read pages 7–9')) : ''}

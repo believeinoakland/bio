@@ -44665,78 +44665,6 @@
    "note": "DEC-454: Add, an upload refused TOO_LARGE, with its figures (in place of the bare 'size · bound', capture.mjs:1436); {size} {bound} in MB"
   },
   {
-   "key": "screen.document.unsupported.rtf",
-   "en": "Files in the Rich Text format (.rtf) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_rtf sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.email",
-   "en": "Email files (.eml, .msg) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_email sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.legacy_excel",
-   "en": "Files in the old Excel format (.xls) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_excel sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.legacy_powerpoint",
-   "en": "Files in the old PowerPoint format (.ppt) aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_powerpoint sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.legacy_office",
-   "en": "This file is in an old Office format that isn't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_office sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.tiff",
-   "en": "TIFF pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_tiff sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.gif",
-   "en": "GIF pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_gif sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.webp",
-   "en": "WebP pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_webp sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.heic",
-   "en": "HEIC pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_heic sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.avif",
-   "en": "AVIF pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_avif sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.bmp",
-   "en": "BMP pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_bmp sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
-   "key": "screen.document.unsupported.jp2",
-   "en": "JPEG 2000 pictures aren't read yet. The file is kept and you can open it.",
-   "protected": false,
-   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_jp2 sentence (stored in the reading's basis, so its English stays)"
-  },
-  {
    "key": "screen.document.unsupported.ico",
    "en": "Icon files (.ico) aren't read yet. The file is kept and you can open it.",
    "protected": false,
@@ -45125,6 +45053,138 @@
    "en": "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them.",
    "protected": false,
    "note": "DEC-466: installer: the Cloudflare ask for the gateway (U5, AIR45)"
+  },
+  {
+   "key": "screen.document.held.kind",
+   "en": "{kind}: kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind.",
+   "protected": false,
+   "note": "DEC-467: Document and Add, a file of a kind not read yet (K5436); {kind} a plain name, such as \"A Visio drawing\""
+  },
+  {
+   "key": "screen.capture.refused.type",
+   "en": "{kind} files aren't kept: {reason}. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
+  },
+  {
+   "key": "screen.capture.refused.type.rar",
+   "en": "they can't be unpacked safely here",
+   "protected": false,
+   "note": "DEC-467: the {reason} for a RAR file"
+  },
+  {
+   "key": "screen.capture.refused.type.program",
+   "en": "they can run on a device",
+   "protected": false,
+   "note": "DEC-467: the {reason} for a program, installer or disk image"
+  },
+  {
+   "key": "screen.document.macros",
+   "en": "This file contains macros. Its text is read; the macros were never run.",
+   "protected": false,
+   "note": "DEC-467: Document, a .docm, .xlsm or .pptm (K5435)"
+  },
+  {
+   "key": "screen.capture.types.head",
+   "en": "What can be added",
+   "protected": false,
+   "note": "DEC-467: Add, the fold before choosing a file (K5435-K5437)"
+  },
+  {
+   "key": "screen.capture.types.read",
+   "en": "Read: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types read, each with its size limit; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.held",
+   "en": "Kept, not read yet: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types kept whole and named; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.refused",
+   "en": "Not kept: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types not kept; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.size",
+   "en": "Each kind's size limit is shown beside it.",
+   "protected": false,
+   "note": "DEC-467: Add, under the list of types"
+  },
+  {
+   "key": "screen.capture.refused.limit",
+   "en": "This {kind} is {size}, over the {limit} allowed for {kind} files, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file over its kind's size limit (K5439); {kind} {size} {limit}"
+  },
+  {
+   "key": "screen.capture.refused.limit.count",
+   "en": "This {kind} holds {n} {units}, over the {limit} allowed, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file over a count limit, such as a mailbox's messages (K5439); {kind} {n} {units} {limit}"
+  },
+  {
+   "key": "screen.photo.taken",
+   "en": "Taken {date}, near {place}.",
+   "protected": false,
+   "note": "DEC-467: open-file, a photo's carried data beside the safe picture (DEC-460)"
+  },
+  {
+   "key": "screen.photo.taken.noplace",
+   "en": "Taken {date}. The photo holds no place.",
+   "protected": false,
+   "note": "DEC-467: a photo with a date and no place"
+  },
+  {
+   "key": "screen.photo.none",
+   "en": "This photo holds no date or place.",
+   "protected": false,
+   "note": "DEC-467: a photo with neither"
+  },
+  {
+   "key": "screen.photo.beside",
+   "en": "Shown beside the safe picture, read from the original; not carried in the picture.",
+   "protected": false,
+   "note": "DEC-467: the line saying where the data is read from"
+  },
+  {
+   "key": "screen.photo.dropped",
+   "en": "Left out of the safe picture: {what}.",
+   "protected": false,
+   "note": "DEC-467: what was dropped for safety; {what}"
+  },
+  {
+   "key": "screen.archive.mailbox.count",
+   "en": "{n} messages: {read} read, {held} kept but not read yet, {refused} not kept.",
+   "protected": false,
+   "note": "DEC-467: Archive, a mailbox opened (K5437); {n} {read} {held} {refused}"
+  },
+  {
+   "key": "screen.archive.from",
+   "en": "From {parent}",
+   "protected": false,
+   "note": "DEC-467: Document, a member of an archive or mailbox: its parent"
+  },
+  {
+   "key": "screen.document.cite.page",
+   "en": "Page {n} of {m}, {file}",
+   "protected": false,
+   "note": "DEC-467: Document, the citation line of a multi-page file"
+  },
+  {
+   "key": "screen.document.converted",
+   "en": "Read from a converted copy of {file}; the original is kept.",
+   "protected": false,
+   "note": "DEC-467: Document, a file read from a converted copy"
+  },
+  {
+   "key": "screen.document.encrypted",
+   "en": "Needs a password. Civicsmith never asks for it or keeps it.",
+   "protected": false,
+   "note": "DEC-467: Document, an encrypted file (K4831 (6))"
   }
  ],
  "rewrite": {

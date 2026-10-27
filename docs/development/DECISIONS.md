@@ -7130,3 +7130,15 @@ the design: U1: each label on the assistant's work names the AI, in parentheses 
 verified: the page's checks (walk, drawn words, library against tranche/T53) pass.
 reasoning recorded in: this entry; `screens/mock-kit.js`, `mock-screens.js`, `words-drawn.src.py` (DEC-466 block).
 owed: BOB: merge this commit (MERGE). AI-DESIGN and PLANNING: the run record's parts (N1219), the ready state's read (interface-shell R20), the installer's gateway permission matched to K4464's grant; U6's dashboard labels at live test L1.
+
+### DEC-467 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (B555: FILES' `build/plan/beta/files/UX-NEEDS.md`, for the types Bob ruled today, K5435-K5437; limits K5439; DEC-460)
+for: design (T53, the beta)
+question: What Add, Document, the archive and the safe view say about the beta's file types: a type kept but not read, a type refused, a file over a limit, macros, the list of what can be added, a photo's carried data, a mailbox's messages, pages and converted files, a locked file.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: `screen.document.held.kind` "{kind}: kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind." (K5436, on Document and as Add's result); refused types "{kind} files aren't kept: {reason}. Nothing was kept." (RAR: "they can't be unpacked safely here"; programs: "they can run on a device"); over a limit, by size or by count (a mailbox's messages, K5439); "This file contains macros. Its text is read; the macros were never run." (K5435); Add's folded "What can be added" (read, kept not read yet, not kept, each kind's limit, from `SIZES-N1267.md` and K5439); a photo's safe picture with "Taken {date}, near {place}.", its no-place and none forms, "Shown beside the safe picture, read from the original; not carried in the picture." and "Left out of the safe picture: {what}." (DEC-460); the archive screen's mailbox state ("{n} messages: {read} read, {held} kept but not read yet, {refused} not kept.") and "From {parent}"; "Page {n} of {m}, {file}"; "Read from a converted copy of {file}; the original is kept."; "Needs a password. Civicsmith never asks for it or keeps it." Withdrawn: DEC-454's twelve `screen.document.unsupported.<kind>` rows for kinds the beta reads (rtf, email, legacy Excel, PowerPoint and Office, TIFF, GIF, WebP, HEIC, AVIF, BMP, JPEG 2000); `ico` stays.
+verified: the page's checks pass; on tranche/T53 with these words files, words 0 (format's one failure is the tranche's own, the same without them).
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py` (DEC-467 block; w454 lines removed).
+owed: BOB: merge this commit (MERGE). FILES and PLANNING: the plain kind names ({kind}) and the per-kind limits as one table the screens read; DEC-460's list of photo data kept and dropped (the design fills {what} from it).
