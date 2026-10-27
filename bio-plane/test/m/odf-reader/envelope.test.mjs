@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odtEntry, odsEntry, odpEntry } from "../../../src/odf.mjs";
 import { linkWrapper } from "../../../src/subresources.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { buildZip, members, pkg, withCd, metaXml, manifestXml, sha256, enc, OVER_BOUND } from "./pkg.mjs";
 
 const ENTRIES = { odt: odtEntry, ods: odsEntry, odp: odpEntry };
@@ -34,7 +35,7 @@ test("R28 every part outside content.xml that is not read is stated in evidentia
     // the manifest unreadable or unparseable: stated, and notes say intra was not looked for
     const mcrc = await e.structure(buildZip(withCd(members(f), "META-INF/manifest.xml", { crc: 1 })));
     assert.deepEqual(stated(mcrc, "META-INF/manifest.xml"), [{ part: "META-INF/manifest.xml", why: "crc_mismatch" }]);
-    assert.ok(mcrc.notes.some((n) => /manifest\.xml could not be read \(crc_mismatch\)/.test(n) && /not looked for/.test(n)));
+    assert.ok(mcrc.notes.includes(word("odf-reader.odf.no_intra_link_odf_manifest", { ODF_MANIFEST_PART: "META-INF/manifest.xml", manifestWhy: "crc_mismatch" })));
     const mjunk = await e.structure(pkg(f, { manifest: "<nothing/>" }));
     assert.deepEqual(stated(mjunk, "META-INF/manifest.xml"), [{ part: "META-INF/manifest.xml", why: "manifest_unparseable" }]);
     assert.ok(mjunk.notes.some((n) => /manifest_unparseable/.test(n)));
@@ -110,7 +111,7 @@ test("R29 the manifest's embedded members become sha256 intra links; images, fon
     ]);
     assert.equal(s.counts.intra, 6);
     assert.equal(s.counts.undetermined, 2);
-    assert.ok(!s.notes.some((n) => /no intra link/.test(n)));
+    assert.ok(!s.notes.includes(word("odf-reader.odf.no_intra_link_odf_manifest_2", { ODF_MANIFEST_PART: "META-INF/manifest.xml" })));
     // an embedded member that will not inflate is a stated link, never a hash of bad bytes
     const bad = await ENTRIES[f].structure(buildZip(withCd(members(f, { manifestEntries: ["blob.bin"], extra: [{ name: "blob.bin", data: "x" }] }), "blob.bin", { crc: 3 })));
     assert.deepEqual(bad.links, [undet("embedding_unreadable:crc_mismatch", "blob.bin")]);
@@ -122,7 +123,7 @@ test("R29 the manifest's embedded members become sha256 intra links; images, fon
     // a manifest listing nothing embedded: the empty partition is explained
     const plain = await ENTRIES[f].structure(pkg(f, { manifestEntries: ["Pictures/p.png", "styles.xml"], extra: [{ name: "Pictures/p.png", data: "p" }] }));
     assert.equal(plain.counts.intra, 0);
-    assert.ok(plain.notes.includes("no intra link: META-INF/manifest.xml lists no embedded member"));
+    assert.ok(plain.notes.includes(word("odf-reader.odf.no_intra_link_odf_manifest_2", { ODF_MANIFEST_PART: "META-INF/manifest.xml" })));
   }
 });
 

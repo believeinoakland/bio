@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import * as M from "../../../src/odf.mjs";
 import { CONTAINER_FLAVOURS, sizeGuard } from "../../../src/ooxml.mjs";
 import { docParaRef, docTableRef } from "../../../src/docx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { sheetCellRef, usedSheetRange } from "../../../src/formats-xlsx.mjs";
 import { slideShapeRef } from "../../../src/pptx.mjs";
 import { buildZip, members, pkg, withCd, TYPES, contentXml, enc, prng, sha256Hex, OVER_BOUND, metaXml } from "./pkg.mjs";
@@ -353,7 +354,7 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
     const plain = await e.structure(pkg(f));
     assert.ok(plain.evidentiary.undetermined.some((u) => u.part === "meta.xml" && u.why === "part_absent"));
     assert.equal(plain.counts.intra, 0);
-    assert.ok(plain.notes.some((n) => /no intra link/.test(n)));
+    assert.ok(plain.notes.includes(word("odf-reader.odf.no_intra_link_odf_manifest_2", { ODF_MANIFEST_PART: "META-INF/manifest.xml" })));
   }
 });
 
@@ -361,7 +362,7 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
 
 test("R43 the module owns no check: it exports readers and constants only, and every element reference it emits is office-readers' own", async () => {
   assert.deepEqual(Object.keys(M).sort(), [
-    "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS", "ODF_REPEAT_EXPANSION_MAX",
+    "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_NORMALISE", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS", "ODF_REPEAT_EXPANSION_MAX",
     "ODP_CONTENT_TYPE", "ODP_ROW", "ODS_CONTENT_TYPE", "ODS_ROW", "ODT_CONTENT_TYPE", "ODT_ROW",
     "isOdfTextPart", "odfEvidentiaryDigest", "odpEntry", "odsEntry", "odtEntry", "odtNormalisedContentXml",
   ]);

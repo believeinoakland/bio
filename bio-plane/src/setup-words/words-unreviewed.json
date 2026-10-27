@@ -39719,32 +39719,11 @@
       "line": 2754
     },
     {
-      "id": "odf-reader.odf.content_xml_could_not_be",
-      "en": "content.xml could not be read whole ({why})",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2883
-    },
-    {
-      "id": "odf-reader.odf.content_xml_is_not_valid",
-      "en": "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2890
-    },
-    {
       "id": "odf-reader.odf.content_xml_is_not_valid_2",
       "en": "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
       "line": 2897
-    },
-    {
-      "id": "odf-reader.odf.content_xml_is_over_the",
-      "en": "content.xml is over the declared-uncompressed text bound ({v1}), so it was not inflated and no digest was taken",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2881
     },
     {
       "id": "odf-reader.odf.content_xml_not_read_its",
@@ -39761,39 +39740,11 @@
       "line": 1289
     },
     {
-      "id": "odf-reader.odf.content_xml_references_length_package",
-      "en": "content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2894
-    },
-    {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
       "line": 2876
-    },
-    {
-      "id": "odf-reader.odf.no_intra_link_odf_manifest",
-      "en": "no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 1268
-    },
-    {
-      "id": "odf-reader.odf.no_intra_link_odf_manifest_2",
-      "en": "no intra link: {ODF_MANIFEST_PART} lists no embedded member",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 1270
-    },
-    {
-      "id": "odf-reader.odf.no_odp_export_has_been",
-      "en": "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2758
     },
     {
       "id": "odf-reader.odf.part_odf_mimetype_part_is",
@@ -39803,25 +39754,11 @@
       "line": 825
     },
     {
-      "id": "odf-reader.odf.the_bytes_are_not_an",
-      "en": "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2872
-    },
-    {
       "id": "odf-reader.odf.the_packages_central_directory_could",
       "en": "the package's central directory could not be read ({why})",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
       "line": 2878
-    },
-    {
-      "id": "odf-reader.odf.the_sha256_of_the_flavour",
-      "en": "the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2901
     },
     {
       "id": "odf-reader.odf.this_package_carries_no_meta",
