@@ -141,7 +141,7 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **op-grades**
 - T52-37 · R46 *(not yet met: T52)* · `expertisewithdraw` (DEC-386) has the entry Reasoned, source the kit; the totality names it.
-- T52-38 · `resolve` weight: with entities' entry (K5314), whichever side the job settles.
+- T52-38 · `resolve` weight: settled by ENTITIES #1 (K5392): `reasoned` stands with no `reason` field, so op-grades changes nothing here; its job confirms its table agrees and closes the entry.
 
 **affordances**
 - T52-39 · DEC-443 · reads `act.leggrade.does`, `act.signerknown.does`, `act.factconfirm.does` and the five `act.standard*.does` by key (ACT_HELP words move; three tests re-pinned); DEC-444's two ACT_HELP sentences (`counselpacketread`, `counselpacketexport`).
