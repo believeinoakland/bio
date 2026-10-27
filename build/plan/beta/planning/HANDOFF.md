@@ -1,6 +1,6 @@
 # PLANNING: handoff
 
-**Writer** · PLANNING #3 (prefix L), session in `build/plan/beta/LANES.md` §3, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #322 (PLANNING #1 L1-L5 and #2 `session_018Bhceg7ptZUBDjGtWWSVz4` L6-L15, both archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
+**Writer** · PLANNING #3 (prefix L), session in `build/plan/beta/LANES.md` §3, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #322 (BOB now #323 `session_018BhcefwigYo6VB6PEac3TJ`; PLANNING #1 L1-L5 and #2 `session_018Bhceg7ptZUBDjGtWWSVz4` L6-L15, both archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
 
 ## 0. State now and next steps
 
@@ -9,10 +9,10 @@
 **Next steps, in order.**
 1. (done, K5502) K5501's lines READY for BOB.
 2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
-3. On Bob's answers (L1-L26, J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
+3. On Bob's answers (L6-L26 (L1-L5 applied, L18), J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** Bob: C22's reading of K5498 (credentials R29); L1-L26, J1-J7, N1257 D3, L18, the published-place default. Lanes: as step 2.
+**Waiting on.** BOB: `lines-K5513-daily-follow.md`'s three points. Bob: L6-L26, J1-J7, N1257 D3. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -81,3 +81,7 @@ PLANNING #3 took over (reading set as the prompt names; tranche/T53 merged in), 
 ## L17 · 2026-10-27 · K5502; DEC-473 merged; C22 noted
 
 BOB #322 decided K5501's five points as recommended (K5502): `lines-K5501-role-change.md` READY for BOB, the plan's entry unbracketed. DEC-473 merged into tranche/T53 (U506); its plan wait dropped. CAPABILITIES C22: credentials R29 is amended if Bob accepts the follow-as-asked reading of K5498; a waiting entry under credentials. BOB #323 takes over from #322.
+
+## L18 · 2026-10-27 · L1-L5 applied; K5503-K5514 in the plan; K5513's line
+
+BOB #323 relayed K5515-K5519 (Bob, L1-L5, all as recommended): their seven brackets in the A1, A7, A2, A3 drafts now read decided, the plan's waits on them dropped. K5503-K5512 (CAPABILITIES C11-C20) noted on the plan's owed N1259, N824, N1110, N858 entries; K5514 (F4) clears the photo's published-place wait. K5513 (C22): the words "never one a daemon uses" are acquisition R36's, not credentials R29's; `lines-K5513-daily-follow.md` amends R36 (a daemon fetches only for the daily check of a followed case), R29 unchanged; three technical points for BOB. DECISIONS gains K5503-K5519.

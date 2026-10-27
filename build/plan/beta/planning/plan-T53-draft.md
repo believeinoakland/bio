@@ -1,6 +1,6 @@
 # Plan T53 round R1 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L16 (K5495-K5501, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L18 (K5495-K5519, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -18,7 +18,7 @@
 - T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
 - `[owed: K5458's lines: every module that stores a rule, list or office name stores its layer (K5462: old records resolve on their own date)]`
 - T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `[owed: CAPABILITIES' lines]`
-- T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18, L3 (Bob)]`
+- T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18 (Bob)]` (L3 decided, K5517: a disputed year still groups, shown disputed)
 
 **civil-time**
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
@@ -85,26 +85,27 @@
 - T53 · K5501 · a member removed from a project (`projectRemove`) or revoked from the team loses her placements of shared accounts on its list in the same act, each a change, the project's owners told once; who placed an entry recorded (`placed_by`) (ai-accounts R77, R27 amended) · `planning/lines-K5501-role-change.md` (its five technical points decided as recommended, K5502)
 
 **credentials**
-- T53 · CAPABILITIES C22 · R29 ("never one a daemon uses") amended if Bob accepts the follow-as-asked reading of K5498 (the state API read only when a member asks) `[waits: Bob]`
 - T53 · K5457 · R27, R32, R48, R63, R66, R73 amended, R72 retired (the sealed key; `aicredential` on `AI_GRANT_OPS`) · `lane-ai-design/draft-ai-accounts.md` (credentials delta)
 
 ## Layer 3
 
 **sources**
-- T53 · A3 (DEC-459) · `sourceLinksFor`: the source only for a listed viewer; `handed_in` for any viewer who may see the capture · `planning/lines-A3-A4-source-picture.md` (sources, need) `[owed: BOB writes from sources read whole; L2-4]`
+- T53 · A3 (DEC-459) · `sourceLinksFor`: the source only for a listed viewer; `handed_in` for any viewer who may see the capture · `planning/lines-A3-A4-source-picture.md` (sources, need) `[owed: BOB writes from sources read whole]` (L4 decided, K5518: the source's existence confidential too)
 
 **doorbell**
-- T53 · A3 · a pulled knock carries the knocker's file name as the knocker's word · `planning/lines-A3-A4-source-picture.md` (doorbell R29) `[owed: L2-5]`
+- T53 · A3 · a pulled knock carries the knocker's file name as the knocker's word · `planning/lines-A3-A4-source-picture.md` (doorbell R29) (L5 decided, K5519)
 
 **file-safety**
-- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name read into the record, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures `[waits: the published-place default, on Bob's page; L21, L22]`
+- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name read into the record, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures `[waits: L21, L22]` (the published place decided, K5514: shown in an edition only where the author turns it on, per photo, off by default)
 - T53 · DEC-454 · the partial-scan reason in plain words · `docs/development/DECISIONS.md` DEC-454
 - T53 · N1266 (K5436) · a held-and-named file safe-graded like any other · `files/REQ-format-registry-beta.md` RF10
 
 **acquisition**, **capture**
+- T53 · K5513 (C22) · acquisition R36: a daemon fetches on the team's key only for the daily check of a court case a member follows, stopping at the last unfollow; else `NOT_PERMITTED` (credentials R29 unchanged: the words are R36's) · `planning/lines-K5513-daily-follow.md`
 - T53 · N1266, N1267 · held-and-named filed whole with an owed reading (RF10), refused not filed (RF11), the refusal before any read (CC6) · `files/REQ-format-registry-beta.md` RF10-RF11
 - T53 · DEC-455 · capture: an op reading a preview's next rows from `next_row` (`previewmore`, name BOB's) · DEC-455
-- `[owed: CAPABILITIES N824 email intake; N1259 registers (C8-C10 answered: K5498 California's own sources, the state API by the team's key read only when a member asks, the bulk file brought in, never OpenCorporates, paid sources by a member's own account only; K5499 only a home address's street lines removed from donor lists; K5500 the donor-use guard federal only, 11 CFR 104.15)]`
+- `[owed: CAPABILITIES N824 email intake (C12-C14 answered: K5504 a forwarding address on the team's own domain, upload beside it; K5505 a private address per member; K5506 forwarded mail waits in her private list until she states where it came from)]` `[owed: N1110 (K5507: the directory the hand-kept list on civicsmith.org; declined listings and applications recorded now)]` `[owed: N858 (K5508-K5512: a guide needs a template's writer, sources, a professional's review and another approver, a team of one may opt out, recorded; texts for the records request and Oakland's lower-stakes actions, never court petitions; the reviewer named with organisation and credential, re-reviewed at each release touching its kind or a changed source; a machine may draft, declared, never review or approve)]`
+- `[owed: N1259 registers (C8-C11, C22 answered: K5503 a seventh reason for naming a person, "named in the public filing the case cites"; K5513 a followed case polled daily on the team's key; K5498 California's own sources, the state API by the team's key read only when a member asks, the bulk file brought in, never OpenCorporates, paid sources by a member's own account only; K5499 only a home address's street lines removed from donor lists; K5500 the donor-use guard federal only, 11 CFR 104.15)]`
 
 ## Layer 4
 
@@ -146,7 +147,7 @@
 - T53 · N1257 · procedure guides side by side, one per layer, unranked (R17) · `capabilities/N1257-requirements-modules.md`
 
 **inquiry**
-- T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) `[owed: L2-1]`
+- T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) (L1 decided, K5515: offices too)
 
 **leg-earning**
 - T53 · A8 · a typed passage's ceiling at its own grain; a leg on it graded by the record · `planning/lines-A8-typed-page.md` §4
@@ -253,7 +254,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 
 **interface-shell**
 - C T52-49 to T52-53 · T53 · one `screenread` per screen open (PL16, PL17) · `platform/combined-read-and-fold-draft.md` §3
-- T53 · A7 · one document-picker element with two scopes (A7-R1), cited by screens-inquiry R137, screens-investigate R34 and R52, screens-publish R8 · `planning/lines-A1-A7-subject-pickers.md` `[owed: L2]`
+- T53 · A7 · one document-picker element with two scopes (A7-R1), cited by screens-inquiry R137, screens-investigate R34 and R52, screens-publish R8 · `planning/lines-A1-A7-subject-pickers.md` (L2 decided, K5516: every document the member may see, labeled by project)
 
 **screens-inquiry**
 - C T52-66 to T52-73 · T53 · N1260 ("Follow from here" on Document), A1, A7, A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows; its twelve `unsupported.<kind>` rows withdrawn by DEC-467, `ico` kept), DEC-467 (held, refused, macros, pages, converted, password; the photo's "Taken … near …" and "Left out of the safe picture: {what}" from A4's table, A4-R2, A4-R3) · the named `planning/lines-*` files and DEC-454
