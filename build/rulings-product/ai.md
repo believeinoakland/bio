@@ -21,3 +21,4 @@
 - A shared team account on projects (Bob, K5486, on AI11: "B"): any project the member has joined, once the owner allows sharing.
 - Catching a changed or retiring AI (Bob, K5487, on AI12: "as recommended"): exact versions; re-tests, retirement dates, a different model answering and drifting team results watched; teams' opt-in counts, never content; listed, watch, lapsed, retired.
 - What a team sees about cost (Bob, K5488, on AI13: "as recommended"): an estimate before, the actual after, "not measurable in money" for plans reporting none; spend against limits, owner-set alerts, a move's added cost.
+- A provider down (Bob, K5489, on AI14: "A, but allow the member the option of choosing whether to wait before switching."): the waiting member is told at once and chooses wait, switch, continue without AI, or wait a set time then switch; unattended work pauses and resumes.
