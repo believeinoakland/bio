@@ -11,8 +11,8 @@
 - `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; throwaway tests first; two technical points BOB's.
 - `load-test-draft.md` **READY**: PL40-PL43, proposed module `load-check`; the scratch deployment is BOB's (K5120, K5434): say when and on what.
 - `record-placement-draft.md` **READY** for placement and the picker (P2 K5440, P3 K5441 folded; Cloudflare's pages re-read 2026-10-27 and quoted in §2, which changed the design: a jurisdiction covers only where the room runs and stores; Workers reach it from anywhere, so the words promise storage, and the R2 bucket needs its own jurisdiction at creation, PL34). The split (§4) waits on N1271's study.
-- `service-levels-draft.md` **DRAFT**: PL20-PL28; names read Team / Institution / Enterprise = Levels 1 / 2 / 3 (BOB to confirm); figures estimates until measured; waits on P4 and on load figures from FILES and CAPABILITIES.
-- `DECISIONS.md`: ten decisions of Bob's (K5438, K5440, K5441 added).
+- `service-levels-draft.md` **DRAFT**: PL20-PL28; names Team / Institution / Enterprise = Levels 1 / 2 / 3 (confirmed, K5442; 70 %/90 % thresholds stand); figures estimates until measured; waits on P4 and on load figures from FILES and CAPABILITIES.
+- `DECISIONS.md`: eleven decisions (K5438, K5440, K5441, K5442 added).
 
 **Open with Bob:** P4 (which levels' figures teams see).
 
