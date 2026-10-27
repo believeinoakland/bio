@@ -288,6 +288,7 @@ fieldset.mk-checks label > span { flex: 1 1 0; min-width: 0; }  /* DEC-316: a ch
 .mk-ev b { font-weight: 600; }
 .mk-date { font: 600 var(--t-xs) var(--f-sans); color: var(--c-muted); }
 .mk-lanes.small .mk-ev { font-size: var(--t-xs); }
+.cs-grade[data-scale="ceiling"] { color: var(--c-capture); background: var(--c-capture-tint); }
 .mk-passage { margin: 0; padding: 10px 14px; border-left: 3px solid var(--c-capture); background: var(--c-surface); font-size: var(--t-lg); line-height: 1.5; }
 /* DEC-233: a sub-heading inside a section */
 /* DEC-236 (B204 (1)): what the shell needs and the mockup did not draw, as design classes: an account menu under the avatar, an act with
@@ -313,6 +314,10 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .cs-hold.mk-hold { box-shadow: none; }
 .mk-thumb { float: left; width: 64px; height: 48px; margin: 2px 12px 2px 0; border: 1px solid var(--c-rule-strong); border-radius: 2px; overflow: hidden; cursor: pointer; } .mk-thumb svg { display: block; width: 64px; height: 48px; }
 .mk-page .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.mk-pagetext p.mk-interp-this { border-left: 2px solid var(--c-capture); padding-left: 10px; } .mk-pagetext p.mk-interp-other { border-left: 2px dashed var(--c-muted); padding-left: 10px; }
+.mk-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 6px 0 0; font-size: var(--t-sm); color: var(--c-ink-2); } .mk-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.mk-interp-sw { display: inline-block; width: 0; height: 14px; } .mk-interp-sw.this { border-left: 2px solid var(--c-capture); } .mk-interp-sw.other { border-left: 2px dashed var(--c-muted); }
+.mk-quote { margin: 0; padding-left: 10px; border-left: 2px solid var(--c-muted); font-size: var(--t-sm); }
 .mk-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; background: var(--c-surface); border: var(--hair); }
 .mk-facts > div { padding: 10px 14px; display: grid; gap: 6px; align-content: start; border-right: var(--hair); }
 .mk-facts > div:last-child { border-right: 0; }
@@ -817,7 +822,8 @@ const REG = {{REG}};
 /* DEC-159 (DEC-129 rule 4; DEC-82's disclosure): every mark explains itself on hover, focus or tap; names open a card. */
 (function () {
   var G = {
-    scale: { capture: ['Capture', 'how easily someone else could check that this copy is what its source published, unaltered'],
+    scale: { capture: ['Copy', 'your team\'s grade for the copy: how well the copy your team holds shows the passage it cites, never above how well it could be captured'],
+             ceiling: ['How well it could be captured', 'how easily someone else could check this copy against what its source published, set by how it was obtained; your team\'s grade for a passage never goes above it'],
              connection: ['Connection', 'how easily someone else could check this link: that this payment, vote, office or person is the one meant'],
              testimony: ['Testimony', 'how easily someone else could check what a witness says'],
              subject: ['Subject match', 'how easily someone else could check that this record is about this person or thing'] },
