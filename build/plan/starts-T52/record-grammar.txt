@@ -1,0 +1,6 @@
+Round R1, layer 1, module record-grammar, tranche T52. Your depth: 2. BOB: BOB #318 (session_018BhcecvoXTMTpRGK9c3KwB).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module record-grammar`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-2 · W1 · D-K1 · BLOCKER · C-12.2 accepts every history key the manifest lists (connections writes `<stamp with ms>_links_<hex>`), so a case resting on a capture whose page links to a held document signs; history is never rewritten (BOB's ruling of the placement, PLB BQ1). Add the C-12.2 test over every `snapKey:` writer (connections `_links_`, strength `_bar`, investigation `_plan`/`_close`, contradiction `takeup_`/`resolve_`). `case-checker/program.mjs` is regenerated, never hand-edited. PL1 W1.
