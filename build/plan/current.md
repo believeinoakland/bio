@@ -67,14 +67,14 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 ## Layer 5
 
 **entities**
-- T52-14 · W6 · C-K24 · MINOR (parked, K5303) · a free-prose memo naming followed entities yields names the resolver can match; `resolutions.unresolved` also lists the unmatched names; `resolvetestify` no longer requires `ref` for a document with no recognised reference (C-M7). Joins this round; BOB writes the requirement first (his act 1). PL1 W6.
+- T52-14 · W6 · C-K24 · MINOR (parked, K5303) · a free-prose memo naming followed entities yields names the resolver can match; `resolutions.unresolved` also lists the unmatched names; `resolvetestify` no longer requires `ref` for a document with no recognised reference (C-M7). Joins this round: entities R67 (K5387). PL1 W6.
 - T52-15 · `resolve` declared `weight: reasoned` but takes no `reason` field; the act works (K5314). First: settle which side is wrong, the op's fields or its grade, with op-grades' entry.
 
 **events**
-- T52-16 · W7 · E-K4 · MAJOR · every `IN (...)` in events (`#datedLane`, `#eventsCiting`, `#governingMany`, `:656`, `:674`, `:734`, `events/owner.mjs:65`) binds under 100 parameters (a Durable Object's SQLite allows 100; the standard's page asks for 200 captures and today throws `STORE_DID_NOT_ANSWER` on every load). First: settle at the real shape (K4428 (4)): `op=timeline&captures=` with 90, 120, 200 shas on the shipped store. C-K10: each timeline item carries its event's relations (kind, other end, withdrawn); W30 draws them. PL1 W7.
+- T52-16 · W7 · E-K4 · MAJOR · every `IN (...)` in events (`#datedLane`, `#eventsCiting`, `#governingMany`, `:656`, `:674`, `:734`, `events/owner.mjs:65`) binds under 100 parameters (a Durable Object's SQLite allows 100; the standard's page asks for 200 captures and today throws `STORE_DID_NOT_ANSWER` on every load). First: settle at the real shape (K4428 (4)): `op=timeline&captures=` with 90, 120, 200 shas on the shipped store. C-K10: each timeline item carries its event's relations (kind, other end, withdrawn); W30 draws them. events R56, R57 (K5387). PL1 W7.
 
 **money**
-- T52-17 · W8 · C-K6 · MAJOR · the refusal sentence never prints `*` for a body (a fiscal year sent alone). [waits: where a team states its fiscal year (Bob's ruling), so the sentence's pointer and whether the screen offers "Or its fiscal year"]. C-K7: `neighbours` answers a set id (`MSR-…`): the payer, the payee and the source document by title, for facts whose payer and payee are entities or funds. [waits: facts recorded with names as written: a node for the written name, or the screen asks for entities (Bob's ruling)]. PL1 W8.
+- T52-17 · W8 · C-K6 · MAJOR · the refusal sentence never prints `*` for a body (a fiscal year sent alone). [waits: where a team states its fiscal year (Bob's ruling), so the sentence's pointer and whether the screen offers "Or its fiscal year"]. C-K7: `neighbours` answers a set id (`MSR-…`): the payer, the payee and the source document by title, for facts whose payer and payee are entities or funds. [waits: facts recorded with names as written: a node for the written name, or the screen asks for entities (Bob's ruling)]. money R34, R35 (K5387). PL1 W8.
 
 **explore**
 - T52-18 · W9 · C-K22 label · MINOR · an event node is named in the Timeline's words (`screen.timeline.kind`), not "award · undated". W30 draws the grade word and the source link. PL1 W9.
