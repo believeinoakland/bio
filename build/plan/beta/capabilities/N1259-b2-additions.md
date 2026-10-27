@@ -18,3 +18,17 @@ Part (b)'s file is within bytes of its 45,000 limit; prose goes here.
 2. R12: `importTick(now, budget, host)` takes `host` as a parameter; nothing is imported from `monitoring`.
 3. R24: `budget_ms` above 10,000 is refused with the new code `SEARCH_BAD_BUDGET` (grep of the whole checkout found no other use); Test in R24 (10,001 refused, 10,000 served, nothing written).
 4. R30: `rowExpunge` takes a REQUIRED `reason`; a blank one is refused `ROW_EXPUNGE_NO_REASON` (new, unique by grep), which joins `JUSTIFICATION_REFUSALS` (op-grades R55 in part (c)). The tombstone is unchanged (`record-core` R79 holds no reason); where the reason is kept is `record-core`'s to say at numbering.
+
+## Review summary moved from part (b)
+
+Checked against requirements, code, tests, `modules.json`, `layers.md` and `measures-T52-DEC406.md`: 41 corrections (a 26, b 15) made in the lines, evidence there unless given here; 5 more are flagged `(UNVERIFIED: why)` or for BOB. Prose was shortened to stay under 45,000 bytes; some tests now point to part (d) (R62-R71).
+
+**Parts (a) and (b)**: the per-line review items moved to `N1259-b2-additions.md` (size).
+
+**Names taken elsewhere** (`refusal.<CODE>` rows): `MACHINE_CANNOT_IMPORT` (case-import), `MACHINE_CANNOT_CITE` (citation), `NO_SUCH_IMPORT` (case-import.md), `NO_SUCH_ROW` (calculations), `BAD_LIMIT` (money-checks, 1 to 500) -> `..._REGISTER`, `..._ROW`, `NO_SUCH_REGISTER_IMPORT`, `NO_SUCH_REGISTER_ROW`, `SEARCH_BAD_LIMIT`; `QUERY_NOT_NUMBER` -> `QUERY_NOT_NAMED` (c R37).
+
+**Unverifiable.** DEC-406's I1-I9, G1-G5 are the table of `draft-T52-DEC406.md` §1 (cited there as `T52-DEC406 §1`); M-R3, M-R7 are in `draft-T52-plan.md` (lines 14-16), M-R10 in N1259-e §3.
+
+## Added for K5498 and K5530 (C32)
+
+Registers R46 (company officers' two doors) is new; R3 and R5 point to it. The keyed service for it and the `officers-lookup` purpose are `credentials`/`acquisition` additions (part (a) R84, R130), and the profile's template for the officers lookup is `jurisdictions` R130's to carry (N1257 file, not edited here).
