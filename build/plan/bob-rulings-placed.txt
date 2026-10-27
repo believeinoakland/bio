@@ -16,3 +16,4 @@ K5344 · done: the manifest's PROCESS-REDESIGN line
 K5345 · done: process repository PR #14; Bob's merge owed
 K5346 · rulings-active.md §2
 K5348 · rulings-product/scope.md, next.md
+K5349 · done: the cut, in progress
