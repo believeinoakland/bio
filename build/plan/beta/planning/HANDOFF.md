@@ -4,15 +4,15 @@
 
 ## 0. State now and next steps
 
-**State.** PLANNING #4 took over at L36. Folded into `plan-T53-draft.md` by layer (43 KB): the seven A drafts with every Bob answer (no bracket on a Bob question remains in `lines-A*.md`); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (detail in `plan-T53-capabilities.md`); JOURNEYS in `plan-T53-journeys.md` (J1-J6 answered and applied, only J7 waits on Bob); PLANNING's own lines, all decided (`lines-K5501-*`, `lines-K5513-*`, `lines-K5527-*`, `lines-K5532-*`). K5555 (A4-R8's bounding) applied. `CONSISTENCY.md` rows 1-20 decided.
+**State.** PLANNING #4 took over at L36. Folded into `plan-T53-draft.md` by layer (43 KB): the seven A drafts with every Bob answer (no bracket on a Bob question remains in `lines-A*.md`); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (detail in `plan-T53-capabilities.md`); JOURNEYS in `plan-T53-journeys.md` (J1-J7 answered and applied; nothing waits on Bob); PLANNING's own lines, all decided (`lines-K5501-*`, `lines-K5513-*`, `lines-K5527-*`, `lines-K5532-*`). K5555 (A4-R8's bounding) applied. `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
-1. On Bob's J7 (an outside reader's acknowledgement public by name; recommended B, only if she ticks): unbracket `plan-T53-journeys.md` §A's two R-107 lines and the plan's JOURNEYS wait.
+1. (done L38: J7.)
 2. Fold as BOB relays: DEC-474 to DEC-477 once merged (screens-inquiry R141-R147 and screens-daily R111 wait on DEC-476: unbracket in `plan-T53-capabilities.md` and the plan's Before R1 (8)); PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); TESTS-SWEEP's fixtures findings needing a module's judgment (K5425 (b)), as entries.
 3. BOB's word on `reading-sets-T53.md` R1-R7 (L37: detail rows into each START; many-module drafts read by section; DEC rows by id; screens-inquiry split by screen and the AI screens as `screens-ai`, K617; the other modules past 4,000 lines; drafts named by file); then apply them to the plan and re-measure.
 4. When every lane is folded: the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
 
-**Waiting on.** Bob: J7. BOB: L37's R1-R7; the DEC-474..477 merge (after his suite run). Lanes: PLATFORM (service levels, whole-record move still DRAFT), TESTS-SWEEP (fixtures list).
+**Waiting on.** Bob: nothing. BOB: L37's R1-R7; the DEC-474..477 merge (after his suite run). Lanes: PLATFORM (service levels, whole-record move still DRAFT), TESTS-SWEEP (fixtures list).
 
 Entries L1-L15 are in `build/plan/archive/planning/HANDOFF-L1-L15.md` (moved at L35).
 
@@ -103,3 +103,7 @@ PLANNING #4 took over (reading set as the prompt names; tranche/T53 merged in), 
 ## L37 · 2026-10-27 · reading sets measured (`reading-sets-T53.md`)
 
 Each job's set measured by a scratch script over the plan and its two detail files: requirements, every draft named (keys resolved, each counted whole), the three shared detail files, own code without tests and generated files over 1 MB (`reading-sets.py`'s figures for installer, case-checker, setup-words, court-doctypes and agent-worker count generated files, fixtures or tests). Over 600 KB even with the detail rows moved into the START: screens-inquiry 935 (its code alone 656 KB, 7,236 lines), acquisition 713, op-declarations 646, op-grades 640, jurisdictions 613, capture 613. K617 (a module past about 4,000 lines split before its next job; BOB's) reaches sixteen modules with T53 entries. One plan pointer names `docs/development/DECISIONS.md` (1.2 MB). Seven proposals R1-R7 for BOB, each recommended: rows into START; sections of many-module drafts; DEC rows by id; split screens-inquiry by screen (`screens-document`); the AI screens as `screens-ai`; the rest by K617's second clause unless still over; each entry naming its drafts by file.
+
+## L38 · 2026-10-27 · J7 applied; K5561
+
+Bob answered J7 B as recommended (K5560): the two R-107 lines of `plan-T53-journeys.md` §A unbracketed; the plan's JOURNEYS entry no longer waits. BOB recorded JOURNEYS' four lane-recommended points as K5561 (already applied as K5474). Nothing waits on Bob in this lane's scope. DECISIONS gains K5560.

@@ -78,3 +78,4 @@
 - K5557 · 2026-10-27 · on QUESTIONS.html J4: "as recommended" (What can a person's page record? A · Add membership and credential) · `build/rulings.md`
 - K5558 · 2026-10-27 · on QUESTIONS.html J5: "as recommended" (Who files a correction, a withdrawal or a court order on a case's docket? A · The project's owner, from the docket page) · `build/rulings.md`
 - K5559 · 2026-10-27 · on QUESTIONS.html J6: "as recommended" (When a new edition of a case is published, is that recorded on its docket? A · Automatically, with the edition's "what changed" text) · `build/rulings.md`
+- K5560 · 2026-10-27 · on QUESTIONS.html J7: "as recommended" (Is an outside reader's acknowledgement shown publicly by name? B · Shown by name only if they tick that it may be) · `build/rulings.md`
