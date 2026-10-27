@@ -155,3 +155,7 @@ K5568 (Bob's B3 = A): every removal shows the team who removed and why; `lines-K
 ## L50 · 2026-10-27 · PLATFORM's measurements split (K5567)
 
 BOB #324 relayed PLATFORM's split: at once, the S1 Level 1 baseline and soak, per-table bytes and plane-only measuring ops, P-M17 and FILES' L1-L6 on the alpha's reader, today's budget walks, the S2 prototypes and T-a, the Enterprise quote; after code (a)-(e), each run as its module merges. Folded into the plan's "Measurements" (N1272's densities and ceiling were already there with extraction and investigation).
+
+## L51 · 2026-10-27 · DEC-485
+
+UX-DESIGN's U518 (DEC-485) draws every Members word owed for K5562, K5563, K5568 and L48; cited in the screens-settings entry and the lines file; Before R1 (10) merges U512-U518 together.
