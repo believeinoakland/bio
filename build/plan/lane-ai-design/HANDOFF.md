@@ -23,7 +23,9 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **Also answered and folded by #3 after hand-over:** AI2 A (K5485; the screens draft's rows already follow it; AD50), AI11 B (K5486: a shared account may go on any project the member has joined; `draft-ai-accounts-dec465.md` R49 changed; AD51).
 
-**Open with Bob** · AI12–AI16 (on the page).
+AI12 A (K5487) and AI13 A (K5488): the drafts already follow them (AD52, AD53). AI14 (K5489, AD54) adds "wait a set time, then switch": `draft-run-record.md` ai-runs R105, `op=aiwaitswitch`, and a screens §4 row.
+
+**Open with Bob** · AI15, AI16 (on the page).
 
 **Next steps, in order**
 1. Fold AI8 (K5482):
@@ -32,7 +34,7 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
    - `draft-ai-issuer.md`: retention, sealed records kept while active, and for a listed AI while listed plus a year.
    - Also the screens' `airesults` note, and AD50 in `DECISIONS.md`.
 2. Fold AI9 (K5483): the catalogue's staleness lines are already A (stale after `stale_after_days`); mark them decided; AD51.
-3. As Bob answers AI12–AI16, fold each answer: clear its "pending" marks and add an AD line.
+3. As Bob answers AI15 and AI16, fold each answer: clear its "pending" marks and add an AD line.
 4. Answer PLANNING's and BOB's questions; keep each file under its cap (`proc sizes`); hand over at 40%.
 
 ## A42 · 2026-10-27 · Bob's AI decisions as K-ruling lines (READY); the lane's files brought up to date

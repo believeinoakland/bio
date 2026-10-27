@@ -69,6 +69,7 @@ Rungs from `op-grades` R1 (`reversible`, `reasoned`, `terminal`, `attested`, `ir
 | `aitestrun` | ai-gate (in the team's test container) | ground `observational` | **Gate 1 run** (progress per part) | suite |
 | `airesultsend` | ai-gate (to the issuer) | **irreversible** (a sent bundle cannot be recalled) | write act | bundle manifest |
 | `airesultsdecline` | ai-gate | reversible | shell act | — |
+| `aiwaitswitch` | ai-runs (`draft-run-record.md` R105; K5489) | reversible | shell act | the run, accounts |
 | `airetestset` | ai-use | reversible | shell act | retest switch, caps |
 | `airesultsread` | ai-catalogue (library rows) | none (read) | read act | library |
 | `aioptinset`, `aitermswithdraw` | ai-accounts (added by this lane, in DEC-420's manner: no listed op covers a cross-owner opt-in or withdrawing a free-tier acceptance; DEC-465 draws `aioptinset` as the team account's `share_with_lists` and a member's `share_with_projects`, `draft-ai-accounts-dec465.md` R49) | reversible | shell act | accounts |

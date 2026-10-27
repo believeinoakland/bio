@@ -60,6 +60,9 @@ One line per decision (LANES.md §1): id · date · his words, quoted, never rew
 - AD49 · 2026-10-27 · "as recommended" (AI7 B: a standing rule lets Civicsmith mark an AI watch, lapsed or retired on a stated trigger, telling Bob each time; adding or restoring stays his) · AQ7 · K5481
 - AD50 · 2026-10-27 · "as recommended" (AI2 A: every built part, plus the intake interview, the case's account and the charge-or-rule answer; investigating, extracting and exploring stay behind their bars and switch on per AI as it clears them) · AQ2 · K5485
 - AD51 · 2026-10-27 · "B" (AI11: a shared account may go on any project the member has joined, not only ones they lead) · AQ11 · K5486
+- AD52 · 2026-10-27 · "as recommended" (AI12 A: several signals, and an AI's status moves listed, watch, lapsed, retired) · AI12 · K5487
+- AD53 · 2026-10-27 · "as recommended" (AI13 A: an estimate before, the actual after, "not measurable in money" where a plan reports none) · AI13 · K5488
+- AD54 · 2026-10-27 · "A, but allow the member the option of choosing whether to wait before switching." (AI14: a provider down) · AI14 · K5489
 
 ## Costs
 - AD43 · 2026-10-27 · "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." (option A of UX-DESIGN's cost-visibility question; personal subscriptions stay private) · BOB #321's relay · K5459
