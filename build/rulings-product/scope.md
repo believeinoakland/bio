@@ -19,3 +19,4 @@
 - The group directory (Bob, K5507, on C15: "as recommended"): the hand-kept list on civicsmith.org; the record of a declined listing and a group's application built now, a listing desk later.
 - Procedure guides (Bob, K5508, on C16: "B, but a member should be able to opt-out of the review if they're the only member of the team."): what a template needs; a team's only member may opt out of the review (recorded, the guide marked not reviewed).
 - Kinds with texts in the beta (Bob, K5509, on C17: "B"): the records request plus Oakland's other lower-stakes kinds (civil grand jury complaint, State Controller referral, public comment, media outreach); never court petitions.
+- The professional reviewer (Bob, K5510, on C18: "as recommended"): a named volunteer lawyer or a paid firm, whichever Bob finds; name, organisation and credential recorded and shown; a changed text is reviewed again.
