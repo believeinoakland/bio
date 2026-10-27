@@ -141,6 +141,8 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 ## Layer 11
 
+Every screen job of this layer also draws DEC-445's rows and DEC-446's layout that touch its screens (merged `fb5f9dc2a9`, K5394): the singulars (`screen.finder.named.one`, `screen.findin.searched.one`, `document.unread.page`), `screen.finder.shown`, `screen.timeline.dated.meta.nograde`, `screen.find-in.notread.which`, `refusal.SUBJECT_IN_ACTIVE_PLAN.named`, the Document page's display rows (`screen.document.basis.*`, `screen.document.reading.*`), and DEC-446's DS2, DS4, DS5, DS10, DS13, DS18, DS20, DS32, DS35 as the mockup shows.
+
 **wizard-scripts**
 - T52-35 · W19 · A-K16 · MINOR · the shipped wizards' approver is a member-facing name in the data, not "BOB"; the draw stays. [waits: the approver's word, the design's]. PL2 W19.
 - T52-36 · DEC-443 (U486, `2892f29ccb`; K5315) · re-take the registry: the four acts (`factconfirm` on setup, `leggrade` on question, `resolve` on document, `signerknown` on queue); regenerate its data. interface-shell R134's re-points retire in their own entry.
