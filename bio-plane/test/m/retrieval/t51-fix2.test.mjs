@@ -19,10 +19,10 @@ test("R92: a question hit's excerpt is drawn from its title and conclusion: no m
   const hit = w.retrieval.search({ q: "sewer", viewer: V("vera") }).hits[0];
   assert.equal(hit.bundle_id, "INQ-SEWER");
   assert.equal(hit.snippet_from, "text");
-  assert.match(hit.snippet, /\[sewer\]/i);
+  assert.match(hit.snippet, new RegExp(`${MARK_OPEN}sewer${MARK_CLOSE}`, "i"));
   assert.doesNotMatch(hit.snippet, /##|INQ-|sha256|[0-9a-f]{16}|session log|opened by/i);
   const source = "Who pays for the sewer repair? The city pays for the sewer repair from the general fund.";
-  for (const word of hit.snippet.replace(/[\[\]…]/g, "").split(/\s+/).filter(Boolean))
+  for (const word of hit.snippet.replace(new RegExp(`[${MARK_OPEN}${MARK_CLOSE}…]`, "g"), "").split(/\s+/).filter(Boolean))
     assert.ok(source.includes(word), `${word} is in the title or the conclusion`);
 });
 
@@ -31,7 +31,7 @@ test("R92: a question without a conclusion has its title as the excerpt; a concl
   question(w, "INQ-OPEN");
   const hit = w.retrieval.search({ q: "repair", viewer: V("vera") }).hits[0];
   assert.equal(hit.bundle_id, "INQ-OPEN");
-  assert.match(hit.snippet, /\[repair\]/);
+  assert.match(hit.snippet, new RegExp(`${MARK_OPEN}repair${MARK_CLOSE}`));
   assert.doesNotMatch(hit.snippet, /##|INQ-|sha256|session log/i);
 });
 
