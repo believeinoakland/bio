@@ -44141,6 +44141,96 @@
    "en": "Not searched: {documents}",
    "protected": false,
    "note": "DEC-445: DS34: beneath screen.find-in.notread, the documents named, each linked"
+  },
+  {
+   "key": "screen.action.ended.pick",
+   "en": "Pick the closest word.",
+   "protected": false,
+   "note": "DEC-446: DS35: help of the outcome choice (How it ended)"
+  },
+  {
+   "key": "screen.action.ended.shown",
+   "en": "It is shown with the action.",
+   "protected": false,
+   "note": "DEC-446: DS35: help of the outcome choice"
+  },
+  {
+   "key": "screen.action.ended.own.help",
+   "en": "Say how it ended in your own words, if none of the five fits or to add what they leave out.",
+   "protected": false,
+   "note": "DEC-446: DS35: help of the optional field In your own words"
+  },
+  {
+   "key": "screen.capture.filing-later.a",
+   "en": "A document added here can be filed into a project later.",
+   "protected": false,
+   "note": "DEC-446: DS10: note on Add"
+  },
+  {
+   "key": "screen.capture.filing-later.b",
+   "en": "Add opened from a project files it there directly.",
+   "protected": false,
+   "note": "DEC-446: DS10: note on Add"
+  },
+  {
+   "key": "screen.ceremony.plain.head",
+   "en": "What you are signing, in plain words",
+   "protected": false,
+   "note": "DEC-446: DS20: fold beside the raw signed lines"
+  },
+  {
+   "key": "screen.ceremony.plain.1",
+   "en": "You are saying that this edition of The Coliseum lease, its 2 findings and the 5 pieces of evidence they rest on are what you read.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 1"
+  },
+  {
+   "key": "screen.ceremony.plain.2",
+   "en": "Your signature is tied to their exact text, so a reader can check that nothing was changed afterward.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 2"
+  },
+  {
+   "key": "screen.ceremony.plain.3",
+   "en": "Once it is public, a mistake can be corrected by a new edition, never removed.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 3"
+  },
+  {
+   "key": "screen.ceremony.plain.4",
+   "en": "Nothing is signed until you confirm on your device.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 4"
+  },
+  {
+   "key": "screen.plan.tier.row",
+   "en": "tier 2, file with caution",
+   "protected": false,
+   "note": "DEC-446: DS13: the legal option's tier shown in its row"
+  },
+  {
+   "key": "screen.plan.nosuggestions",
+   "en": "No options are suggested yet: none of this project's matters has a route to suggest from.",
+   "protected": false,
+   "note": "DEC-446: DS13: why no suggestions are offered"
+  },
+  {
+   "key": "screen.queue.item.weight",
+   "en": "weight: Reasoned, asks for a reason",
+   "protected": false,
+   "note": "DEC-446: DS4: the item's weight, after its rung, in its meta line"
+  },
+  {
+   "key": "screen.wizards.getarecord.what",
+   "en": "Walks you through asking an office for a record, from the request to the reply.",
+   "protected": false,
+   "note": "DEC-446: DS5: what the Get a record wizard does"
+  },
+  {
+   "key": "screen.wizards.checklist.what",
+   "en": "Walks you through what the team checks before and after a council meeting.",
+   "protected": false,
+   "note": "DEC-446: DS5: what the council-meeting checklist wizard does"
   }
  ],
  "rewrite": {

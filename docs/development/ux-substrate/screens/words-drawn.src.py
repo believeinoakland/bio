@@ -8226,6 +8226,25 @@ w445('screen.timeline.dated.meta.nograde', '{precision} · a dated fact, from {d
 w445('document.unread.page', 'Page {pages} is a picture of text that Civicsmith\'s own reading couldn\'t make out, so its words can\'t be found or cited yet. The page image is kept as it is.', 'DS15: the singular of document.unread.pages')
 w445('screen.find-in.notread.which', 'Not searched: {documents}', 'DS34: beneath screen.find-in.notread, the documents named, each linked')
 
+# DEC-446: B541 (the 0.87.0 live walk): layout and flow items
+def w446(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-446: ' + note))
+w446('screen.action.ended.pick', 'Pick the closest word.', 'DS35: help of the outcome choice (How it ended)')
+w446('screen.action.ended.shown', 'It is shown with the action.', 'DS35: help of the outcome choice')
+w446('screen.action.ended.own.help', 'Say how it ended in your own words, if none of the five fits or to add what they leave out.', 'DS35: help of the optional field In your own words')
+w446('screen.capture.filing-later.a', 'A document added here can be filed into a project later.', 'DS10: note on Add')
+w446('screen.capture.filing-later.b', 'Add opened from a project files it there directly.', 'DS10: note on Add')
+w446('screen.ceremony.plain.head', 'What you are signing, in plain words', 'DS20: fold beside the raw signed lines')
+w446('screen.ceremony.plain.1', 'You are saying that this edition of The Coliseum lease, its 2 findings and the 5 pieces of evidence they rest on are what you read.', 'DS20: plain reading, line 1')
+w446('screen.ceremony.plain.2', 'Your signature is tied to their exact text, so a reader can check that nothing was changed afterward.', 'DS20: plain reading, line 2')
+w446('screen.ceremony.plain.3', 'Once it is public, a mistake can be corrected by a new edition, never removed.', 'DS20: plain reading, line 3')
+w446('screen.ceremony.plain.4', 'Nothing is signed until you confirm on your device.', 'DS20: plain reading, line 4')
+w446('screen.plan.tier.row', 'tier 2, file with caution', "DS13: the legal option's tier shown in its row")
+w446('screen.plan.nosuggestions', "No options are suggested yet: none of this project's matters has a route to suggest from.", 'DS13: why no suggestions are offered')
+w446('screen.queue.item.weight', 'weight: Reasoned, asks for a reason', "DS4: the item's weight, after its rung, in its meta line")
+w446('screen.wizards.getarecord.what', 'Walks you through asking an office for a record, from the request to the reply.', 'DS5: what the Get a record wizard does')
+w446('screen.wizards.checklist.what', 'Walks you through what the team checks before and after a council meeting.', 'DS5: what the council-meeting checklist wizard does')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
