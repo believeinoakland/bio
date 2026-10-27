@@ -1183,7 +1183,9 @@ export class Members {
                        /* R105: how each came in and their invitation, for an administrator's roster only. */
                        door: door ?? "administrator", approvedBy: approved_by ?? null,
                        expires: r.status === "proposed" ? null : invite_expires ?? null,
-                       invitation: Members.#invitationState(r, invite_expires, invite_withdrawn, this.#nowMs()) } : {}) }));
+                       invitation: Members.#invitationState(r, invite_expires, invite_withdrawn, this.#nowMs()),
+                       /* R83 (T52): a proposed administrator's endorsements, as R3 answers them; no other row has the key. */
+                       ...(r.status === "proposed" && r.role === "admin" ? { endorsements: this.#endorsements(r.member_id) } : {}) } : {}) }));
     /* R147 (T50; N1119, K3369; amends R17, R86): once the instance is claimed (R94) the founder is listed, first, as R86
        orders her. She has no members row, so the row is built here: her id `admin` is `member_id` only, her `handle` the
        one she holds (R144) or null, `founder: true` on her row alone; never a cover, a door or an invitation. */
@@ -1862,6 +1864,14 @@ export class Members {
     const rows = found.slice(0, Members.OWED_LIMIT);
     Object.defineProperty(rows, "truncated", { value: found.length > Members.OWED_LIMIT, enumerable: false });
     return rows;
+  }
+
+  /** R83: `{have, awaiting}` of a proposed administrator, the active administrators (sorted) who have and have not endorsed. */
+  #endorsements(memberId) {
+    const admins = this.activeAdmins();
+    const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
+      .map((v) => v.voter).filter((v) => admins.includes(v)).sort();
+    return { have, awaiting: admins.filter((a) => !have.includes(a)).sort() };
   }
 
   /** R77: each `proposed` member `by` may endorse and has not (an active administrator's list, R23), oldest proposal
