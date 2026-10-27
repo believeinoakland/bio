@@ -17,3 +17,4 @@ K5345 · done: process repository PR #14; Bob's merge owed
 K5346 · rulings-active.md §2
 K5348 · rulings-product/scope.md, next.md
 K5349 · done: the cut, in progress
+K5350 · done: 0.87.0 released; follow-ups in next.md

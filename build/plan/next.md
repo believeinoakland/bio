@@ -68,6 +68,10 @@
 ## The alpha's live walk, after the release, installer and site (Bob, K5348; P19 (1): after the release, by Bob's order)
 - One complete walk of 0.87.0 on biosmoke8 (`deploy-and-walk.md`): re-walk 11's open rows (S-1 setup "Still loading", A's setup zone row, E's adoption row, C's money rows and C-M8, E-AP2/N2, E-C2a, the plan's date checks), every screen as administrator and member (K3052, the dead-end census K4164); each defect an entry of T52.
 
+## After 0.87.0 (K5350; P19 (1): after the release, by Bob's order K5343)
+- R33 `newgroup/test/realsize.test.mjs`: four reds (the install and update memory cases at real size) red on the tranche tip with 0.86.0 too; traced to the test's fake Cloudflare refusing the upload ("this release's description of its program can't be read"), its child build not yet read; the installer itself reads 0.87.0's statements cleanly.
+- `deploy-test.yml` cannot start a fresh copy (members deploy before the plane; a script copy holds no store or secrets), and on the shared test account a copy's member run re-points the one `agent-worker` (K5350): a fresh copy goes through the installer, or the workflow refuses a copy without a store.
+
 ## Tests assert the word key, never the English: first after the alpha's deployment (Bob, K5313; P19 (1): after the release, by Bob's order)
 - Reds left uncompared at the zone pass (K5343; deferred by Bob until the alpha, installer and site are out): ratification 2, installer 13, store-assembly 1, screens-inquiry 5 (with `fr28-document.test.mjs` reaching 12.6 GB and killed by the container's memory limit, an old defect), plane 4, control-plane (no result); each measured on the tranche tip, then traced to its cause.
 - The sweep (K5313): every finding and refusal carries its code, word key and values; every test and saved expected output asserts those, never a sentence or a fragment; the words check refuses sentence fragments in tests; one mechanical pass (§5.10), a module needing judgment its own job.
