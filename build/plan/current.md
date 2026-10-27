@@ -80,7 +80,7 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 - T52-18 · W9 · C-K22 label · MINOR · an event node is named in the Timeline's words (`screen.timeline.kind`), not "award · undated". W30 draws the grade word and the source link. PL1 W9.
 
 **retrieval**
-- T52-101 · query-language R35 (K5389) · test-only · retrieval's tests that assert a snippet's match in brackets (`passage-arm.test.mjs`'s R11/R15/R54 and R79 tests, `t51-round9.test.mjs` R95, `t51-fix2.test.mjs`) read `MARK_OPEN` and `MARK_CLOSE` (imported from query-language, never copied); after query-language merges (K5393).
+- T52-101 · query-language R35 (K5389) · test-only · retrieval's tests that assert a snippet's match in brackets (`passage-arm.test.mjs`'s R11/R15/R54 and R79 tests, `t51-round9.test.mjs` R95, `t51-fix2.test.mjs`) read `MARK_OPEN` and `MARK_CLOSE` (imported from query-language, never copied); after query-language merges (K5393). Widened (K5401): retrieval's own `#questionExcerpt` marks its match with the same two marks, so `t51-fix2.test.mjs` R92 reads them too; R92's sentence folded from the job's report.
 
 **query-language**
 - T52-19 · W10 · B-K5 marker · MAJOR · the match marker in a snippet is one the stored text cannot contain (or offsets), so a literal "[placed nowhere]" or "[object Object]" is not eaten; W28 adapts the drawer. PL1 W10.
