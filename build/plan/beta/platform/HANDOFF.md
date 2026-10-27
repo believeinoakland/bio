@@ -1,20 +1,27 @@
 # PLATFORM: handoff
 
-**Status** · PLATFORM #1 (Sonnet), lane `lane/platform`, started 2026-10-27 by BOB #320 (now BOB #321, `session_018BhcefWqhwJGg3zA2NE2PZ`). Entries are numbered `P-n`; section 0 is rewritten whole after every entry.
+**Status** · PLATFORM #1 (Sonnet), lane `lane/platform`, started 2026-10-27 by BOB #320; BOB now #321 (`session_018BhcefWqhwJGg3zA2NE2PZ`; T53's Status line still names #320). Entries `P-n`; section 0 is rewritten whole after every entry.
 
 ## 0. State now and next steps
 
-**State.** Reading done (CLAUDE.md, LANES.md, MAP.md, the old PERFORMANCE lane's CHARTER, STATE, BASELINE, `service-levels.html`, K4354, K4599, K4635, K4746, K4747, N1264, N1271, N1273, N1274, `runtime-limits` R27-R28, `plane` R95, `installer` R83). A Sonnet worker is digesting the archive of P1-P26 into the session scratchpad; nothing is drafted yet. `DECISIONS.md` carries Bob's seven decisions. Already in the alpha: the founder-region hint for a new room (G83, K4747); not yet: the region shown on the install screen and the picker (N1273), the combined read (K4599), the admission fold (N1264), the load test (N1274), the record split (N1271).
+**Drafts (this folder).**
+- `time-budgets-draft.md` **READY**: nine classes with a time ceiling and a hop ceiling (K4354 kept), PL1-PL6; Bob's choice of bar (A keep, B 1 s in-app) in §5.
+- `combined-read-and-fold-draft.md` **READY**: the fold (N1264) and the combined read (K4599), PL10-PL17; throwaway tests T-a/T-b first; two points BOB's (§5).
+- `load-test-draft.md` **READY**: ramped per-level test on a scratch copy, new module `load-check` (proposed), PL40-PL43; the scratch deployment is BOB's act.
+- `service-levels-draft.md` **DRAFT**: structure complete (PL20-PL25); figures are estimates until measured; Level 2-3 wait on N1271's study; needs load figures from CAPABILITIES and FILES.
+- `record-placement-draft.md` **DRAFT**: PL30-PL33, the split's needs for N1271; waits on Bob (what the picker promises: hint vs jurisdiction; region after install; the split's unit).
+- `DECISIONS.md`: seven decisions of Bob's carried.
 
-**Next steps, in order.**
-1. Draft `service-levels-draft.md`: Levels 1-3 (K4746), each with record size, members at once, upload size, design stage, Cloudflare plan, and the measurement that confirms each figure.
-2. Draft `time-budgets-draft.md`: a time budget per screen and op against K4354's 2 s and 15 s, from BASELINE and P23-P26.
-3. Draft `combined-read-and-fold-draft.md` (K4599 (a), N1264): the one-call op, its answer shape, the modules touched.
-4. Draft `record-placement-draft.md` (K4746 (2), N1271, N1273) and `load-test-draft.md` (N1274).
-5. Collect other lanes' load figures (MAP.md §2: CAPABILITIES and FILES owe record size and load per level), then mark each draft READY.
+**Open with Bob (through BOB, each in its draft):** (1) the beta's bar: A keep 2 s / B add 1 s in-app and read acts / C 1 s all; recommend A (time-budgets §5). (2) What the region picker promises: near-me hint only / hint plus a jurisdiction for legal needs / silent; recommend hint plus jurisdiction, in honest words (placement §4). (3) Whether a team may change region after install (placement §4). (4) Show Level 1 figures only (recommend) or all three (service-levels §5).
 
-**Waiting on.** Nothing from Bob. From other lanes: the record size and load each capability adds at each level.
+**Needs from others.** CAPABILITIES, FILES: per capability and file type, the rows, bytes and load added, and each new screen's budget class and reads (MAP.md §2). FILES: the reading rate floor. AI-DESIGN: the assistant's declared reads. BOB: the scratch deployment (load test), and the first re-time of biosmoke8's re-created room (the hop).
+
+**Next steps.**
+1. On BOB's answers, fold Bob's rulings into the drafts and `DECISIONS.md`; mark `record-placement-draft.md` READY.
+2. Read the other lanes' section 0 as they appear on `tranche/T53`; fold their figures into `service-levels-draft.md`; mark it READY when the load figures are in.
+3. Check Cloudflare's current Durable Object and R2 jurisdiction and limits pages (the figures are of 2026-10-23) before any figure is final.
+4. Answer any need BOB relays; hand over at 40 % context.
 
 ## Entries
 
-None yet.
+**P-1 · 2026-10-27** · Five drafts opened from the P1-P26 digest and the requirements already in force (`runtime-limits` R27-R35, `plane` R95, `installer` R83, `admission`). Nothing measured by this lane (it changes no code and has not touched a copy). Not confirmed: that biosmoke8's room was re-created and the hop fell.
