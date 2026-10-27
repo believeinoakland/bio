@@ -4,15 +4,13 @@
 
 ## 0. State now and next steps
 
-**State.** BOB #321 (`session_018BhcefWqhwJGg3zA2NE2PZ`) reviewed the five A drafts (verdicts in L4); every item is answered. The A drafts are now eight files, all in BOB's house form (draft ids such as `A1-R1`, the prefix `(T53; DEC-…; amends …)`, `*(not yet met: T53)*`, a Test; how-statements in Suggestions; lines that rest on an open question bracketed on it): `lines-A1-A7-subject-pickers.md`, `lines-A2-fiscal-year.md` (on N1257's team layer, fallback kept), `lines-A3-A4-source-picture.md`, `lines-A5-A6-signing.md`, `lines-A6-queue-acts.md`, `lines-A8-typed-page.md`, `lines-A5-A8-case-modules.md` (the seven layer-8 modules). Questions for Bob: L1-L12 already on his page; twenty new ones indexed in `QUESTIONS-L4.md`. `plan-T53-draft.md` and `CONSISTENCY.md` (L3 rows decided, K5448) hold the plan's shape. Context about 36 % at L4: the successor should be started soon (40 %).
+**State.** BOB #321 (`session_018BhcefWqhwJGg3zA2NE2PZ`) reviewed the five A drafts (verdicts in L4); every item is answered. The A drafts are now eight files, all in BOB's house form (draft ids such as `A1-R1`, the prefix `(T53; DEC-…; amends …)`, `*(not yet met: T53)*`, a Test; how-statements in Suggestions; lines that rest on an open question bracketed on it): `lines-A1-A7-subject-pickers.md`, `lines-A2-fiscal-year.md` (on N1257's team layer, fallback kept), `lines-A3-A4-source-picture.md`, `lines-A5-A6-signing.md`, `lines-A6-queue-acts.md`, `lines-A8-typed-page.md`, `lines-A5-A8-case-modules.md` (the seven layer-8 modules). Questions for Bob: L1-L12 already on his page; twenty new ones indexed in `QUESTIONS-L4.md`. `plan-T53-draft.md` and `CONSISTENCY.md` (L3 rows decided, K5448) hold the plan's shape. PLANNING #1 hands over at L5 (context 37 %, the next fold would pass 40 %).
 
 **Next steps, in order.**
-1. Ask BOB to start PLANNING #2 if context passes 40 % (it will: L5 is the hand-over).
-2. Bob's answers to L1-L12 and QUESTIONS-L4: unbracket or change the lines each decides; then mark each A draft READY.
-3. Fold the A drafts' new lines into `plan-T53-draft.md` (A6's queue/screens-daily entries, A5/A8's seven layer-8 modules, A7's interface-shell element, A1's leg-earning line) and add to CONSISTENCY the collisions BOB named (X1: money R36-R38 with N1260-a, screens-inquiry R140 with N1260-b, content R63-R64 with N1259-a).
-4. At each check, MAP.md and every lane's section 0: fold each new READY draft (not yet READY: AI-DESIGN; PLATFORM service levels and record placement; CAPABILITIES N1259, N1260, N824, N858, N1110, N1265 and N1257's companions; JOURNEYS; TESTS-SWEEP's judgment list).
-5. Owed to others through BOB: FILES's CC4 points to A4-R1 to A4-R6 (K5448); screens-intake R36 and R5 amended for the safe picture (A4-R10); UX-DESIGN needs from A6 (the key sentence) and A4 (the "file says" lines).
-6. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB), the plan under 51,200 bytes, READY.
+1. (PLANNING #2) Takeover; then Bob's answers to L1-L12 and QUESTIONS-L4: unbracket or change the lines each decides; then mark each A draft READY.
+3. At each check, MAP.md and every lane's section 0: fold each new READY draft (not yet READY: AI-DESIGN; PLATFORM service levels and record placement; CAPABILITIES N1259, N1260, N824, N858, N1110, N1265 and N1257's companions; JOURNEYS; TESTS-SWEEP's judgment list).
+4. Owed to others through BOB: FILES's CC4 points to A4-R1 to A4-R6 (K5448); screens-intake R36 and R5 amended for the safe picture (A4-R10); UX-DESIGN needs from A6 (the key sentence) and A4 (the "file says" lines).
+5. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB), the plan under 51,200 bytes, READY.
 
 **Waiting on.** Bob: L1-L12 and the twenty L4 questions. BOB: placing them; Q-A58-2's id check. Lanes: their READY drafts.
 
@@ -31,3 +29,7 @@ Read whole: FILES's READY drafts (REQ-readers-beta, REQ-format-registry-beta, SI
 ## L4 · 2026-10-27 · BOB #321's review of the A drafts answered; the owed lines drafted
 
 BOB's review (A1-A7, A2, A5-A6, A8 fit with fixes; A3-A4 not fit as written; cross-cutting X1 id collisions, X2 house prefix, X3 how-statements to Suggestions). Four Sonnet workers fixed the five files against it, each told the review verbatim, Bob's decisions verbatim and the L questions; three more drafted the owed lines (A6: queue and screens-daily; A5 and A8: case-grammar, case-catalogue, publication, public-read, case-import, case-disclosures, basis-versions). PLANNING checked each result's form and placed the house prefix where missing. Main changes: limits not in Bob's words are now questions (A1 five, A3-A4 five, A2 two, A5 two, A6 two, A8 two, A58 two); A2 rides N1257's team layer; A3's `sourceLinksFor` is a sources line without administrators; A4's security review is a corpus test, its process moved to Suggestions; A7 is one interface-shell picker element cited by three screens modules; A8's record-graded typed leg is now a doctrine question (Q-A8-1). CONSISTENCY's L3 rows decided by BOB (K5448); K5438-K5447 into the plan's draft.
+
+## L5 · 2026-10-27 · hand-over to PLANNING #2
+
+The A drafts' new lines folded into `plan-T53-draft.md` (layer-8 `/10` format, case-disclosures and basis-versions, queue and screens-daily, the interface-shell picker, leg-earning A1-R6); BOB's X1 collisions added to CONSISTENCY §1. Section 0 and `NEXT-SESSION-PROMPT.md` rewritten for the successor. Asked BOB to start PLANNING #2.
