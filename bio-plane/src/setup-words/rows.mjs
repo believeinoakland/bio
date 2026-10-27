@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19604 design words, 1167 protected; SHA-256
-   b8e4ae4468c76707aebc4272c4138f2cac87680b6a78d01d0c0ce9c8239f9b0d) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19622 design words, 1167 protected; SHA-256
+   ed8892f385f561c5dd77a4514e584cf0997d20b925719bb8c4f6e186d72d2f44) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "b8e4ae4468";
+export const WORDS_COMMIT = "ed8892f385";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -12140,6 +12140,24 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aiproviders.mock.f","an account stopped after a charge to Cloudflare's credits","DEC-471: aiproviders: the mock option (K5478)",null,false,"design"],
   ["screen.aiproviders.stands.credits","{account}'s answer at {time} was charged to Cloudflare's own credits instead of your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.","DEC-471: aiproviders: the stopped account, also the administrators' Queue item (K5478)",null,false,"design"],
   ["screen.aiproviders.credits.clear","Clear it and turn the account back on","DEC-471: aiproviders: the administrator clears the stop (K5478; owed op aicreditsclear)",null,false,"design"],
+  ["screen.account.revoke.confirm.head","Revoke your signing key?","DEC-472: account: the question before revoking one's own signing key (R-1)",null,false,"design"],
+  ["screen.account.revoke.confirm.body","Cases you already signed keep their signatures, marked as withdrawn from today. You can't sign again until you make a new key.","DEC-472: account: what revoking does (R-1)",null,false,"design"],
+  ["screen.account.revoke.confirm.go","Revoke it","DEC-472: account: the button that revokes (act signerrevokeown) (R-1)",null,false,"design"],
+  ["screen.account.revoke.confirm.keep","Keep it","DEC-472: account and members: the button that keeps the key (R-1)",null,false,"design"],
+  ["screen.members.keywithdraw.confirm.head","Withdraw {member}'s signing key?","DEC-472: members: the question before an administrator withdraws a signing key (R-2)",null,false,"design"],
+  ["screen.members.keywithdraw.confirm.body","Cases {member} already signed keep their signatures, marked as withdrawn from today. {member} can't sign again until they make a new key.","DEC-472: members: what withdrawing does (R-2)",null,false,"design"],
+  ["screen.members.keywithdraw.confirm.go","Withdraw it","DEC-472: members: the button that withdraws (act signerset) (R-2)",null,false,"design"],
+  ["screen.notes.deleted","Your note was deleted: {title}","DEC-472: notes: the line after a note is deleted (R-3)",null,false,"design"],
+  ["screen.group.copy.done","Your copy is ready to download. It's on the list below with the time and the counts.","DEC-472: group: the line after a copy of the record is taken (R-4)",null,false,"design"],
+  ["screen.security.usual.none","none","DEC-472: security: a usual of zero in the totals table (R-5)",null,false,"design"],
+  ["screen.security.usual.floor","When your team usually has none of something, up to {floor} in a day still counts as near your usual; more is marked above it.","DEC-472: security: how a usual of zero is read, under the totals table (R-5)",null,false,"design"],
+  ["screen.security.tip.hour_usual_none","Usual for an hour: none","DEC-472: security: an hour square whose usual is zero (R-5)",null,false,"design"],
+  ["screen.ai.notready.here","The assistant can help here once an administrator turns on an AI account.","DEC-472: question: where the assistant would be offered and no account is on (R-6)",null,false,"design"],
+  ["screen.front.signedin","You're signed in as {name}.","DEC-472: front: the team's page seen by a signed-in member (R-7)",null,false,"design"],
+  ["screen.front.home","Go to Home","DEC-472: front: the link to Home for a signed-in member (R-7)",null,false,"design"],
+  ["form.choose.widen.documents","Show documents from your other projects","DEC-472: the document picker: widens the list beyond this document's project (DEC-463)",null,false,"design"],
+  ["form.choose.inproject","in {project}","DEC-472: the document picker: the project a widened row belongs to (DEC-463)",null,false,"design"],
+  ["form.choose.noproject","in no project","DEC-472: the document picker: a widened row in no project (DEC-463)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
