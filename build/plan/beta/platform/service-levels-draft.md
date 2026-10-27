@@ -57,6 +57,8 @@ Per level, on a scratch copy at that design stage, never biosmoke8: record bound
 
 Bob (K5444, as BOB relayed it): a newsroom should be able to start a copy at the Institution level, set up from the start for the demand it will get on day one; if a study of how to support Levels 2 and 3 is needed, start it now. So: a copy **chooses** Team, Institution or Enterprise at install and can still move up later; until a level is built and measured its figures show as "not yet measured" (PL21); the study starts now (`levels-2-3-study-plan.md`).
 
+**Enterprise (K5454):** quoted from Cloudflare and marked not yet measured; listed at install as "not yet available" until a team wants an enterprise-scale copy; Team and Institution are the beta's levels.
+
 **Left, technical (BOB's):** a level that is not built cannot be created, so the install lists all three but a level is *selectable* only once built (PL29); recommend that, over letting a team pick a level whose design does not yet exist. **A question for BOB, not Bob:** whether a team may also move *down* (no: rooms do not merge; the only move is an export and an import, PL50-PL57).
 
 ## 6. What I need from other lanes

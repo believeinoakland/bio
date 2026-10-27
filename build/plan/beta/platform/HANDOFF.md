@@ -45,3 +45,5 @@
 **P-8 · 2026-10-27** · S0 done: `study/table-inventory.md` (and TSV): 616 tables, about 106 project-scoped, 293 team-wide, 217 mixed; `study/s0-options-for-the-split.md`: a room per project is a re-architecture of whole-store `transact`, not a routing change; changes my recommendation to **B (bulk and indexes out) plus C (cached shared reads)** first, A only as paper. Plan's S1 and S2 revised. Prototype spec next.
 
 **P-9 · 2026-10-27** · `study/s1-steps.md`: the S1 seeding and run steps for `plat-s1` (BOB: tranche/T53 14b73ea14e, deploy-test workflow, Level 1, dry run first). Needs from BOB: a team on the copy (administrator and member by `PLATS1_*` variables) and, later, one redeploy from `proto/levels-2-3` for the throwaway measuring ops.
+
+**P-10 · 2026-10-27** · P5 answered (K5454): no Enterprise account now; S3 quotes Cloudflare, Enterprise "not yet available" at install. Waiting on BOB for `plat-s1`'s URL and team (S1 steps 1a-1c).
