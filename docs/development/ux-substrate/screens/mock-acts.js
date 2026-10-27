@@ -516,6 +516,7 @@ const ACT_HELP = {
   importwatch: 'Watches the other team\'s docket for corrections to the case.',
   docketfile: 'Files a docket entry: a correction, withdrawal or court order about a published case.',
   docketpost: 'Posts the entry to the public docket, where readers see it beside the case.',
+  owed_inboxview: 'Shows what was handed in on this page, the way the safe view shows a document: each page as a picture, or a spreadsheet\'s figures as data. Nothing in it can run, and looking moves nothing into the record.',
   inboxpull: 'Moves material handed in at the doorbell into the record, where it can be vouched for.',
   inboxresolve: 'Discards material handed in, with a reason.',
   sourcelink: 'Records what is known about who handed this in, without exposing them.',

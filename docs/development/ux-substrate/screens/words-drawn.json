@@ -33770,9 +33770,9 @@
   },
   {
    "key": "screen.doorbell.after.head",
-   "en": "After you hand it over",
+   "en": "What to keep",
    "protected": false,
-   "note": "DEC-384: B411 I-20"
+   "note": "DEC-384: B411 I-20; DEC-479: heads the receipt, the reference first, then fingerprint, size, pseudonym and phrase"
   },
   {
    "key": "screen.document.cite.option",
@@ -46121,6 +46121,48 @@
    "en": "A source this text rests on changed on {date}. It is waiting to be reviewed again, and is still offered.",
    "protected": false,
    "note": "DEC-478: a reviewed text the link check flagged (B564, K5512, K5529)"
+  },
+  {
+   "key": "screen.doorbell.preview.head",
+   "en": "What you get back",
+   "protected": false,
+   "note": "DEC-479: doorbell: the sample receipt shown before sending, folded (25)"
+  },
+  {
+   "key": "screen.inbox.view.nokind",
+   "en": "This kind of file has no safe view yet. Its name and type are above: move it into the record, or discard it with a reason.",
+   "protected": false,
+   "note": "DEC-479: inbox: inboxview refused, the kind has no safe view (45)"
+  },
+  {
+   "key": "screen.inbox.view.changed",
+   "en": "What is stored no longer matches what was handed in, so it is not shown. Nothing was changed; tell an administrator.",
+   "protected": false,
+   "note": "DEC-479: inbox: inboxview refused, the bytes do not match the knock's digest (45)"
+  },
+  {
+   "key": "screen.inbox.view.refused.summary",
+   "en": "When it cannot be shown safely",
+   "protected": false,
+   "note": "DEC-479: inbox: the folded list of why a safe view is not shown (45)"
+  },
+  {
+   "key": "screen.document.text.unsure",
+   "en": "{unsure} of them were hard to make out and are marked on the page. Check a marked word against the original before you cite it.",
+   "protected": false,
+   "note": "DEC-479: document: after the reading line, only when the reader measured how clearly each character resolved; never a model's own opinion of itself (51)"
+  },
+  {
+   "key": "screen.document.text.unsure.tip",
+   "en": "hard to make out",
+   "protected": false,
+   "note": "DEC-479: document: a marked word, its card title (51)"
+  },
+  {
+   "key": "screen.document.text.unsure.tip_why",
+   "en": "The reader could not make this word out clearly. Check it against the original.",
+   "protected": false,
+   "note": "DEC-479: document: a marked word, its card (51)"
   }
  ],
  "rewrite": {
@@ -46351,6 +46393,7 @@
   "filings.floors_capture_connection": "Floors: copy {capture}, connection {connection}. {detail}",
   "standard.source.capture": "could be captured: {capture}, {extent}",
   "standard.source.capture.whole": "could be captured: {capture}",
-  "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}"
+  "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}",
+  "screen.doorbell.happens.court": "A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them."
  }
 }

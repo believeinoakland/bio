@@ -379,7 +379,6 @@ const SCREEN_REFS = {
     ["this team's own Civicsmith",null,"<b>The team's own Civicsmith</b> · runs on the team's own hosting account · no other team sees it","Only this team's members can open what you send."],
     ["A member reads them",null,"<b>A member</b> · one of the team's members · may use your material, or set it aside with a reason kept on the team's record","Nothing is published as it arrives: a member decides first, and anything used is checked like any other document."],
     ["a secret phrase",null,"<b>A secret phrase</b> · any words you choose · a later delivery with the same phrase is marked as from the same sender · it never names you","Worth adding if you may send more: the team can weigh new material by how your earlier material held up."],
-    ["beyond a court's reach",null,"<b>A court's reach</b> · a court can order the team to hand over what it holds, including what you send and when it arrived","Think about what your files and note could reveal about you before you send them."]
   ]
 };
 for (const [k, v] of Object.entries(SCREEN_REFS)) REFS[k] = (REFS[k] || []).concat(v);

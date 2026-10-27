@@ -6261,7 +6261,7 @@ w411('screen.capture.address.working', "Fetching the page. This can take up to 2
 w411('screen.capture.address.untitled', 'A {kind} from {site}', 'I-03: a capture is named by its title, or failing that by its site and kind; never the file part of its address')
 w411('screen.capture.address.existed.open', 'Open it', 'I-04: the door to the document already held')
 w411('screen.doorbell.reference', 'Your reference: {reference}', 'I-20: the receipt gives something to keep')
-w411('screen.doorbell.after.head', 'After you hand it over', 'I-20')
+w411('screen.doorbell.after.head', 'What to keep', 'I-20; DEC-479: heads the receipt, the reference first, then fingerprint, size, pseudonym and phrase')
 w411('screen.document.cite.option', '{question} ({project})', 'I-11, A6: a question in the list is told apart by its project')
 w411('screen.document.cite.choose', 'Choose a question', 'I-11, A6: the list never starts blank')
 w411('screen.document.unwatched.head', "If this address isn't being watched", 'I-35')
@@ -8662,6 +8662,18 @@ w478('part.paragraphs', 'paragraphs {from} to {to}', 'a part: a text\'s paragrap
 w478('part.slides', 'slides {from} to {to}', 'a part: a presentation\'s slide range (B563 4)')
 w478('part.section', 'the section “{heading}”', 'a part: a headed section (B563 4)')
 w478('text.sourcechanged', 'A source this text rests on changed on {date}. It is waiting to be reviewed again, and is still offered.', 'a reviewed text the link check flagged (B564, K5512, K5529)')
+
+def w479(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-479: ' + note))
+# the later-ux triage's B items 25, 45, 51 (DEC-479)
+w479('screen.doorbell.preview.head', 'What you get back', 'doorbell: the sample receipt shown before sending, folded (25)')
+w479('screen.inbox.view.nokind', 'This kind of file has no safe view yet. Its name and type are above: move it into the record, or discard it with a reason.', 'inbox: inboxview refused, the kind has no safe view (45)')
+w479('screen.inbox.view.changed', 'What is stored no longer matches what was handed in, so it is not shown. Nothing was changed; tell an administrator.', 'inbox: inboxview refused, the bytes do not match the knock\'s digest (45)')
+w479('screen.inbox.view.refused.summary', 'When it cannot be shown safely', 'inbox: the folded list of why a safe view is not shown (45)')
+w479('screen.document.text.unsure', '{unsure} of them were hard to make out and are marked on the page. Check a marked word against the original before you cite it.', 'document: after the reading line, only when the reader measured how clearly each character resolved; never a model\'s own opinion of itself (51)')
+w479('screen.document.text.unsure.tip', 'hard to make out', 'document: a marked word, its card title (51)')
+w479('screen.document.text.unsure.tip_why', 'The reader could not make this word out clearly. Check it against the original.', 'document: a marked word, its card (51)')
+REWRITE.update({'screen.doorbell.happens.court': 'A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them.'})
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

@@ -183,7 +183,7 @@ screen('docket-public', 'A case\'s docket, from outside', 'published', 'A publis
 
 # --- outside the team
 screen('inbox', 'Inbox', 'working', 'Material handed in through the doorbell.',
-  [('inboxpull','Move into the record'),('inboxresolve','Discard with a reason'),('sourcelink','Record what is known of the source'),('knocksof','See this knocker\'s other material')], [20])
+  [('owed:inboxview DEC-479','Show it safely'),('inboxpull','Move into the record'),('inboxresolve','Discard with a reason'),('sourcelink','Record what is known of the source'),('knocksof','See this knocker\'s other material')], [20])
 screen('doorbell', 'Hand material to the team', 'public', 'The doorbell page for someone outside, with no account.',
   [('knock','Hand it over'),('knockerconsent','Send my answer')], [20])
 # DEC-375 intake: B398 C17 to C19, C56
