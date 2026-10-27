@@ -245,7 +245,7 @@ test("R7 with no kind, reach is OUTSIDE_REACH below every floor, INSIDE at or ab
     assert.equal(r.reach, "UNDETERMINED");
     assert.match(r.says, /ordinance 12274/);
     assert.match(r.says, /resolution 75950/);
-    assert.match(r.says, /inside the reach for some kinds and outside it for others/);
+    assert.match(r.says, sentenceRx("id-spaces.idspaces.inside_reach_some_kinds", { n: String(n), named: FLOORS }));
   }
   for (const n of [1, 12273]) assert.match(reach(H, n).says, sentenceRx("idspaces.says.kind_coverage_floor", { named: FLOORS }));
   assert.match(reach(H, 80000).says, sentenceRx("idspaces.says.kind_coverage_floor_record", { named: FLOORS }));
@@ -334,12 +334,12 @@ test("R11 otherwise RETIRED only when the lineage records the key: earliest roll
 test("R12 otherwise UNDETERMINED, between retired-before-the-lineage and never-a-parcel, naming the vintages searched", () => {
   const none = parcelStanding("33-2130-35-0", { current: new Set(), lineage, vintages: ["current layer", "lineage 2005..2026"] });
   assert.deepEqual([none.standing, none.vintages_searched], ["UNDETERMINED", ["current layer", "lineage 2005..2026"]]);
-  assert.match(none.says, /in none of the 2 published vintage\(s\) searched/);
-  assert.match(none.says, /retired before the earliest published lineage and never a parcel/);
+  assert.match(none.says, sentenceRx("id-spaces.idspaces.v1_undetermined_between_retired_before",
+    { v1: word("id-spaces.idspaces.in_none_of_the_published", { count: "2" }) }));
   const held = parcelStanding("33-2130-35-0");
   assert.equal(held.standing, "UNDETERMINED");
   assert.deepEqual(held.vintages_searched, []);
-  assert.match(held.says, /no published vintage .* is held, so none was searched/);
+  assert.match(held.says, sentenceRx("id-spaces.idspaces.no_published_vintage_of"));
   for (const r of [none, held]) assert.doesNotMatch(r.says, /no such parcel|does not exist|not found/i);
   for (const ev of [undefined, null, 5, "x", [], { current: 3, lineage: "x", vintages: {} }, { lineage: new Map([["k", 3]]) }])
     for (const key of [undefined, null, "k", 3, {}]) assert.equal(parcelStanding(key, ev).standing, "UNDETERMINED", "never throws");
@@ -433,21 +433,21 @@ test("R17 different forms are FORMS_UNJOINED unless the view supplies a crosswal
     ["C329142", "P329142", "C#####", "P#####"]]) {
     const r = judgePair(H, "project", end(H, "project", a, A.budget), end(H, "project", b, A.legis), "agrees");
     assert.deepEqual([r.verdict, r.counts], ["FORMS_UNJOINED", false], `${a} ${b}`);
-    assert.match(r.says, /unmade join, not a mismatch/);
-    assert.match(r.says, /none is captured/);
+    assert.match(r.says, sentenceRx("id-spaces.idspaces.the_values_are_in_different", { label: PROJECT, form: fa, form_2: fb }));
   }
   const la = (v, addr) => end(L, "project", v, addr);
   const C = "https://clerk.lakeshore.test/1", F = "https://finance.lakeshore.test/1";
   const joined = judgePair(L, "project", la("W-10001", C), la("07-001", F), "agrees");
   assert.deepEqual([joined.verdict, joined.counts], ["SHARED", true]);
-  assert.match(joined.says, /joined through the crosswalk a{64}/);
+  assert.match(joined.says, sentenceRx("id-spaces.idspaces.the_forms_joined_through_the", { sources: "a".repeat(64) }));
   const rev = judgePair(L, "project", la("07-002", C), la("W-10002", F));
   assert.equal(rev.verdict, "REFERENT_UNREAD", "the crosswalk joins in either order; the referent still decides");
   const other = judgePair(L, "project", la("W-10001", C), la("07-002", F), "agrees");
   assert.deepEqual([other.verdict, other.near_miss], ["VALUES_DIFFER", false]);
   const unlisted = judgePair(L, "project", la("W-19999", C), la("07-001", F), "agrees");
   assert.equal(unlisted.verdict, "FORMS_UNJOINED");
-  assert.match(unlisted.says, /lists no partner for W-19999/);
+  assert.match(unlisted.says, sentenceRx("id-spaces.idspaces.the_values_are_in_different_2",
+    { label: "works number", form: "W-#####", form_2: "##-###", sources: "a".repeat(64), normal: "W-19999" }));
   const sameSys = judgePair(L, "project", la("W-10001", C), la("07-001", C), "agrees");
   assert.equal(sameSys.verdict, "SAME_SYSTEM", "a crosswalk joins values, never systems");
 });
@@ -455,7 +455,7 @@ test("R17 different forms are FORMS_UNJOINED unless the view supplies a crosswal
 test("R18 different values are VALUES_DIFFER; a difference only in leading zeros is a near miss, never counted", () => {
   const near = judgePair(H, "enactment", end(H, "enactment", "9917 H.C.", A.www), end(H, "enactment", "09917", A.legis), "agrees");
   assert.deepEqual([near.verdict, near.counts, near.near_miss], ["VALUES_DIFFER", false, true]);
-  assert.match(near.says, /near miss/);
+  assert.match(near.says, sentenceRx("id-spaces.idspaces.the_values_differ_only_by", { normal: "9917", normal_2: "09917" }));
   const far = judgePair(H, "enactment", end(H, "enactment", "9917", A.legis), end(H, "enactment", "9918", A.budget), "agrees");
   assert.deepEqual([far.verdict, far.counts, far.near_miss], ["VALUES_DIFFER", false, false]);
   const same = judgePair(H, "enactment", end(H, "enactment", "H.C. 87551", A.budget), end(H, "enactment", "87551 HC", A.legis), "agrees");
@@ -466,15 +466,16 @@ test("R19 an end with no known system is SYSTEM_UNDETERMINED; both ends in one s
   for (const addr of [A.www, A.otherclient, "not a url", "https://nowhere.test/"]) {
     const r = judgePair(H, "project", end(H, "project", "C329142", addr), end(H, "project", "C329142", A.legis), "agrees");
     assert.deepEqual([r.verdict, r.counts], ["SYSTEM_UNDETERMINED", false], addr);
-    assert.match(r.says, /first end is undetermined/);
+    assert.match(r.says, sentenceRx("id-spaces.idspaces.which_system_published_the_which", { which: "first", v1: ` (${systemOf(H, [addr]).why})` }));
   }
   const second = judgePair(H, "project", end(H, "project", "C329142", A.legis), { rec: recognise(H, "project", "C329142"), system: systemOf(H, [A.legis, A.budget]) });
-  assert.match(second.says, /second end is undetermined \(different systems/);
+  assert.match(second.says, sentenceRx("id-spaces.idspaces.which_system_published_the_which",
+    { which: "second", v1: ` (${systemOf(H, [A.legis, A.budget]).why})` }));
   const noSystem = judgePair(H, "project", { rec: recognise(H, "project", "C329142") }, end(H, "project", "C329142", A.legis));
   assert.equal(noSystem.verdict, "SYSTEM_UNDETERMINED");
   const same = judgePair(H, "project", end(H, "project", "C329142", A.budget), end(H, "project", "C329142", A.budget2), "agrees");
   assert.deepEqual([same.verdict, same.counts], ["SAME_SYSTEM", false]);
-  assert.match(same.says, /one system \(harbor\.budget\)/);
+  assert.match(same.says, sentenceRx("id-spaces.idspaces.both_ends_are_publications_of", { origin: "harbor.budget" }));
 });
 
 test("R20 a fund with an end naming no fund is FUND_NAME_ABSENT; names equal after normalising are SHARED by comparison", () => {
@@ -504,7 +505,7 @@ test("R21 otherwise the referent: unread, disagrees, or SHARED on the caller's r
   const ok = judgePair(H, "project", ...e(), "agrees");
   assert.deepEqual([ok.verdict, ok.counts, ok.referent.agrees], ["SHARED", true, true]);
   assert.equal(ok.referent.by, word("idspaces.by.caller_reading"));
-  assert.match(ok.says, /caller's reading — a reading this module did not make and cannot check/);
+  assert.match(ok.says, sentenceRx("id-spaces.idspaces.one_value_via_two_independent_2", { via: "", origin: "harbor.budget", origin_2: "harbor.legis" }));
   const fund = judgePair(H, "fund", end(H, "fund", "3100", A.legis, "Sewer Fund"), end(H, "fund", "3100", A.budget, "Rate Fund"), "agrees");
   assert.deepEqual([fund.verdict, fund.referent.by.startsWith(word("idspaces.by.caller_reading"))], ["SHARED", true]);
 });
@@ -584,7 +585,7 @@ test("R24 no place is named in the module: every service answers from the view a
   const knownElsewhere = ["https://webapi.legistar.com/v1/oakland/matters/1", "https://oakland.legistar.com/x", "https://data.oaklandca.gov/resource/vmzx-e5fe.csv",
     "https://www.oaklandca.gov/documents/x.pdf", ...Object.values(A)];
   for (const a of knownElsewhere) assert.equal(systemOf(EMPTY, [a]).origin, null, a);
-  assert.match(systemOf(EMPTY, ["https://www.oaklandca.gov/x"]).why, /no system in the active profiles matches/, "no mixed host is built in");
+  assert.match(systemOf(EMPTY, ["https://www.oaklandca.gov/x"]).why, sentenceRx("idspaces.why.system_active_profiles", { host: "www.oaklandca.gov" }), "no mixed host is built in");
   /* a second jurisdiction's profile alone gives its own answers, and none of the first's */
   assert.equal(recognise(L, "enactment", "87551"), null);
   assert.equal(recognise(L, "enactment", "LS-42").normal, "LS-42");
@@ -615,14 +616,21 @@ test("R25 every no says which kind of no, and absence is never reported as non-e
     judgePair(H, "project", end(H, "project", "C329142", A.budget), end(H, "project", "C329142", A.legis)),
     judgePair(H, "project", end(H, "project", "C329142", A.budget), end(H, "project", "C329142", A.legis), "disagrees"),
   ];
-  const kinds = { FORMS_UNJOINED: /unjoined|unmade join/, VALUES_DIFFER: /different values|near miss/, SYSTEM_UNDETERMINED: /undetermined/,
-                  SAME_SYSTEM: /one system/, FUND_NAME_ABSENT: /names no fund/, REFERENT_UNREAD: /not been read|reading nobody/,
-                  REFERENT_DISAGREES: /different things/ };
-  assert.deepEqual(nos.map((r) => r.verdict), Object.keys(kinds));
-  for (const r of nos) {
+  const wording = [
+    sentenceRx("id-spaces.idspaces.the_values_are_in_different", { label: "project or capital improvement number", form: "C#####", form_2: "100xxxx" }),
+    sentenceRx("id-spaces.idspaces.different_values_normal_normal_2", { normal: "C329142", normal_2: "C329143" }),
+    sentenceRx("id-spaces.idspaces.which_system_published_the_which", { which: "first", v1: ` (${systemOf(H, [A.www]).why})` }),
+    sentenceRx("id-spaces.idspaces.both_ends_are_publications_of", { origin: "harbor.budget" }),
+    sentenceRx("id-spaces.idspaces.a_fund_code_counts_only", { v1: "first" }),
+    sentenceRx("id-spaces.idspaces.one_value_via_in_two", { via: "" }),
+    sentenceRx("id-spaces.idspaces.same_value_names_different"),
+  ];
+  assert.deepEqual(nos.map((r) => r.verdict),
+    ["FORMS_UNJOINED", "VALUES_DIFFER", "SYSTEM_UNDETERMINED", "SAME_SYSTEM", "FUND_NAME_ABSENT", "REFERENT_UNREAD", "REFERENT_DISAGREES"]);
+  nos.forEach((r, i) => {
     assert.equal(r.counts, false);
-    assert.match(r.says, kinds[r.verdict]);
-  }
+    assert.match(r.says, wording[i]);
+  });
   const reaches = [reach(H, 1, "ordinance"), reach(H, 13035), reach(viewOf(HARBOR, DISSENT), 5, "ordinance"), reach(H, 5, "bylaw")];
   assert.deepEqual(reaches.map((r) => r.reach), ["OUTSIDE_REACH", "UNDETERMINED", "UNDETERMINED", "UNDETERMINED"]);
   const standings = [parcelStanding("x"), parcelStanding("x", { vintages: ["a"] })];
@@ -719,15 +727,14 @@ test("R27 with no reporters passed, every spelling court-citations holds is reco
 test("R28 with no reporter data the answer is undetermined, never 'cites nothing'; an unnamed reporter is listed, never dropped or guessed", () => {
   /* court-citations is built, so its data is held; data passed in neither of its shapes holds none for that reading */
   const text = "Compare 347 Rep. 483, 12 Zz. Ct. 5 and 9 ABC 10, and 347 U.S. 483.";
+  const noReporterData = sentenceRx("id-spaces.idspaces.why_no_citation_can_be", { why: word("id-spaces.idspaces.no_reporter_data_held_for") });
   for (const bad of [{}, { VARIANTS: {} }, { REPORTERS: [] }, 5, "x", [], { VARIANTS: { "A.": 3 } }]) {
     const r = recogniseCitations(text, bad);
     assert.deepEqual(r.citations, [], JSON.stringify(bad));
-    assert.match(r.undetermined.why, /no reporter data is held/);
-    assert.match(r.undetermined.why, /neither of court-citations' shapes/);
-    assert.match(r.undetermined.why, /finding none says nothing about what the text cites/);
+    assert.match(r.undetermined.why, noReporterData);
     assert.deepEqual(r.undetermined.unrecognised.map((u) => [u.text, text.slice(u.start, u.end)]),
       [["347 Rep. 483", "347 Rep. 483"], ["12 Zz. Ct. 5", "12 Zz. Ct. 5"], ["9 ABC 10", "9 ABC 10"], ["347 U.S. 483", "347 U.S. 483"]]);
-    assert.match(recogniseCitations("no citation here", bad).undetermined.why, /no reporter data is held/, "even with nothing shaped like one");
+    assert.match(recogniseCitations("no citation here", bad).undetermined.why, noReporterData, "even with nothing shaped like one");
   }
   for (const none of [undefined, null]) assert.equal(recogniseCitations("347 U.S. 483", none).citations[0].reporter, "U.S.",
     "with none passed, the held data is read");
