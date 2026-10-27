@@ -25,7 +25,7 @@
 **Open with Bob / BOB.** Nothing open with Bob. BOB: K5470 (auto mode refused setting `CIVICSMITH_TEST_INSTANCE` on plat-s1 via the API: not needed by my tools; say so if a journey-check walk is wanted). Needs from others: FILES' L1-L6 and P-M17 (BOB places); AI-DESIGN to confirm the AI-act and Gate 1 budgets.
 
 **Next steps.**
-1. Get a fresh administrator invitation from Bob via BOB (the one sent twice, ending ...1663162c1, is dead: "This link no longer works"); enrol at once; invite a member. Credentials file: scratchpad `creds.env` (handles plat2-admin, plat2-member), unused.
+1. Done (P-21): signed in as plat-s1-admin via Bob's reset link; member plat2-member enrolled. A successor needs a new reset or invitation from Bob; credentials are session-local.
 2. Solve filing a document into a project; seed (1b) and re-time; then 1c.
 3. Build the throwaway measuring ops and the plane-only patch on `proto/levels-2-3` (workers), ask BOB to deploy; run 1d.
 4. After S1, S2 (prototypes B and C by workers on `proto/levels-2-3`), S3 (Enterprise quoted), S4 (the report to Bob, plain words, through BOB onto QUESTIONS.html).
@@ -72,3 +72,6 @@
 **P-19 · 2026-10-27** · PLATFORM #2 took over (#1 archived). The invitation link given twice is dead; asked BOB for a fresh one. Bob's K5535 (C32) folded: PL44-PL45 (interpretation ceiling per level, from measured densities; method only, no figure) in `load-test-draft.md`, L4 and a request to CAPABILITIES in `time-budgets-draft.md`.
 
 **P-20 · 2026-10-27** · CAPABILITIES' counts (via BOB #323) for `interpretationOf`, `partsOf`, `proposeParts` graded in `time-budgets-draft.md` §3 (read act 1 s; full-load share with slicing and a kept answer; Explore, never first wave) and tied to the combined read (K4599, T-a to time Document with and without them) and to PL45. All proposed, none measured.
+
+**P-21 · 2026-10-27** · S1 unblocked. The invitation link was never live: plat-s1 already had two administrators, so a third (Admin3) is a proposal that issues no invitation until all endorse it (member-roster 4.7), and the Members screen kept showing a stale link (BOB #324 routes the defect to the plan). Bob instead sent a reset link for `plat-s1-admin`; used; I am signed in as administrator, and invited and enrolled `plat2-member` (member role). Credentials in the session scratchpad only (0600); the member's recovery codes were not saved (shown once), so a lost member password needs a reset by the admin. Admin3 left as it is (do not endorse). Seed A grown by 380 generated files (about 193 MB) through the project's Add door, 3 workers; screens to be re-timed when it ends.
+
