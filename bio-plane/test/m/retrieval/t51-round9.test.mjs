@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { PART_KINDS } from "../../../src/retrieval/index.mjs";
 import { progressOf } from "../extraction/fixtures.mjs";
+import { MARK_OPEN, MARK_CLOSE } from "../../../src/query.mjs";
 
 const hitsOf = (w, q, viewer = V("vera")) => w.retrieval.search({ q, viewer }).hits;
 const rowsOf = (w, q, viewer = V("vera")) => w.retrieval.meaningRows({ q, rows: "passage", viewer });
@@ -82,7 +83,7 @@ test("R95: a hit names the unit its snippet is cut from — the first matching u
   w.unit(c.sha, "INFO-DOCX", 9, "a comment on culverts", para(9), "comment");
   const [hit] = hitsOf(w, "passage:culverts");
   assert.deepEqual([hit.kind, hit.extent_kind, JSON.parse(hit.extent), hit.capture_sha], ["footnote", "doc-para", para(2), c.sha]);
-  assert.match(hit.snippet, /footnote on \[culverts\]/, "the snippet is cut from the same unit");
+  assert.match(hit.snippet, new RegExp(`footnote on ${MARK_OPEN}culverts${MARK_CLOSE}`), "the snippet is cut from the same unit");
 });
 
 test("R95, R29: the kind and the extent of a hit are read only for a document the viewer may see — a passage in a project the viewer is not in changes no byte of any answer, and the participant sees its kind", () => {
