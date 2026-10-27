@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19373 design words, 1160 protected; SHA-256
-   9b2db1930060d528cae69e5cd4d28b817513dd0eeefc489923c40807c69c1d1b) followed by 7508 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19393 design words, 1162 protected; SHA-256
+   94ba00d9e0f2a262bd58778e3c2fa9eaeb9ea820e0d89db4a59716b69c3fe9e2) followed by 7508 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "9b2db19300";
+export const WORDS_COMMIT = "94ba00d9e0";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -11922,6 +11922,22 @@ export const WORD_ROWS = Object.freeze([
   ["screen.setup.zone.how.help","Required. For example: read it on a government website for your area, or asked a public office.","DEC-443: B538 (2), at setup, where no place is chosen yet (screen.group.timezone.how.help names the city's website)",null,false,"design"],
   ["screen.document.people.none.summary","When it finds no name","DEC-443: the mockup fold over screen.document.people.none",null,false,"design"],
   ["control-plane.reading.not_registered","The file is kept, but its reading could not be started, so it is not being read. Ask again.","DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)",null,false,"design"],
+  ["screen.case-editor.published.sub","Published: Edition {n}, {date}, signed by {who}","DEC-444: D-K9: the editor of a case whose newest edition is published, in place of \"Draft · prepared by\"; no draft lines, no ladder",null,false,"design"],
+  ["screen.case-editor.published.note","Edition {n} is published and is never changed. Its scope, what it leaves out, its findings and the declared bias it was signed under are fixed in it as published. A correction, or anything new, goes in the next edition.","DEC-444: D-K9: replaces the stale bias line and draft fields once published",null,false,"design"],
+  ["screen.case-editor.published.reach","read by anyone with its address","DEC-444: D-K9: the edition row, after its date and findings count",null,false,"design"],
+  ["screen.case-editor.published.read","Read Edition {n} as published","DEC-444: D-K9: link to the published case",null,false,"design"],
+  ["screen.case-editor.next.lead","A next edition starts from Docket, where your team keeps everything the case has filed and received. It starts as a draft and is published like any case.","DEC-444: D-K9: above the link to Docket's \"Start the next edition\" (casedraft with the case, R52, DEC-374)",null,false,"design"],
+  ["screen.counsel.made.head","Packets made for this action","DEC-444: E-K7 (filings R11, R13): the versions made, newest first",null,false,"design"],
+  ["screen.counsel.made.lead","Each time a member assembles the packet, a new version is made from the record as it stands then. Earlier versions stay readable, exactly as they were made. Only a member who may see this action and every project the packet draws on can read or save one.","DEC-444: E-K7: filings R11 (who may read), R13 (the versions listed)",null,false,"design"],
+  ["screen.counsel.made.by","Made by {who}, {date}, for {counsel}, {organization}","DEC-444: E-K7: a version's made line beside its id and version; {counsel} the counsel named and {organization} theirs (screen.counsel.made.by.noorg without one); then the reason quoted",null,false,"design"],
+  ["screen.counsel.made.by.noorg","Made by {who}, {date}, for {counsel}","DEC-444: E-K7: the made line when no organization is named",null,false,"design"],
+  ["screen.counsel.made.changed","The record changed since version {n}: {what}","DEC-444: E-K7: basis_changed, in plain words; absent when nothing changed",null,false,"design"],
+  ["screen.counsel.made.exported","Saved as a file once: by {who}, {date}, for {counsel}.","DEC-444: E-K7: the export record (counselPacketExport); one row per export",null,false,"design"],
+  ["screen.counsel.section.matters","The matters, each as the record stands","DEC-444: E-K7: a section of the packet, with its count",null,false,"design"],
+  ["screen.counsel.section.exhibits","Exhibits, with their fingerprints and grades","DEC-444: E-K7: a section of the packet",null,false,"design"],
+  ["screen.counsel.section.standards","Standards, candidate theories and remedies","DEC-444: E-K7: a section of the packet",null,false,"design"],
+  ["screen.counsel.sections.marking","Every section, and every file saved from it, carries the marking: prepared for review by {counsel}; not legal advice; not for filing.","DEC-444: E-K7: under the sections, the marking R11 keeps",null,false,"design"],
+  ["screen.counsel.export.note","Saving a version as a file records who saved it, when, and for which lawyer. The file keeps the marking on every page.","DEC-444: E-K7: counselPacketExport records who, which version, when, which counsel",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -18338,6 +18354,8 @@ export const WORD_ROWS = Object.freeze([
   ["act.holdnoticesent.label.holdnotice","Record that I sent it",null,"Records that you sent the litigation hold notice, with a copy or your account of how. It records no recipient and nothing about any member.",true,"design"],
   ["act.writinghelp.label.holdnotice","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true,"design"],
   ["act.counselpacket.label.counsel","Assemble the packet, with a reason",null,"Assembles what the record holds on this action as one packet for your team's lawyer, as it stands today, with your reason kept beside it. It is never published and never filed.",true,"design"],
+  ["act.counselpacketread.label.counsel","Read this version",null,"Shows this version of the packet exactly as it was made, with its sections and its marking. Changes nothing.",true,"design"],
+  ["act.counselpacketexport.label.counsel","Save as a file",null,"Saves this version of the packet as a file for your team's lawyer, with its marking on every page. The record keeps who saved which version, when, and for which lawyer.",true,"design"],
   ["act.ruledraft.label.grouprules","Draft the rule",null,"Drafts a rule of your team's own, a deadline or a legal fact, from the captured document that states it. It applies only after another member confirms it.",true,"design"],
   ["act.ruleconfirm.label.grouprules","Confirm this rule",null,"Confirms a rule another member drafted, after checking it against its source. For a Tier 2 or Tier 3 matter you state your professional qualification.",true,"design"],
   ["act.rulewithdraw.label.grouprules","Withdraw this rule, with a reason",null,"Withdraws one of your team's own rules, with your reason. It is kept, and no longer applied.",true,"design"],
@@ -18955,6 +18973,8 @@ export const WORD_ROWS = Object.freeze([
   ["act.actionpressure.does","Marks a reply as pressure (a threat, a demand to stop), kept on the record.",null,null,false,"design"],
   ["act.actionhold.does","Records a litigation hold with your reason. While it lasts, what it covers is not purged, a scheduled publication of it does not go out, and the doorbell clears nothing. Any member who can see the action or the case may place one.",null,null,false,"design"],
   ["act.holdnoticeprepare.does","Assembles a plain notice from the record: the place the hold is for, your reason, the date and the kinds of material to keep. Nothing is sent.",null,null,false,"design"],
+  ["act.counselpacketread.does","Shows this version of the packet exactly as it was made, with its sections and its marking. Changes nothing.",null,null,false,"design"],
+  ["act.counselpacketexport.does","Saves this version of the packet as a file for your team's lawyer, with its marking on every page. The record keeps who saved which version, when, and for which lawyer.",null,null,false,"design"],
   ["act.counselpacket.does","Assembles what the record holds on this action as one packet for your team's lawyer, as it stands today, with your reason kept beside it. It is never published and never filed.",null,null,false,"design"],
   ["act.escalationopen.does","Opens an escalation: taking the matter to a higher body, with the reason.",null,null,false,"design"],
   ["act.escalationadvance.does","Moves the escalation to its next level, with what happened.",null,null,false,"design"],
