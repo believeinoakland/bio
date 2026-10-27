@@ -1,0 +1,9 @@
+# T53 R1 · op-capabilities · rows
+
+## plan-T53-capabilities.md
+
+**op-grades**, **op-capabilities**, **answer-envelope**, **op-declarations**
+- T53 · K4168 · grades from owners' declarations; `rowexpunge` reasoned and irreversible; machine refused on every register write; `needsRows()` unchanged; `registers`' check table in the family list; the twelve registers ops above; registerdelta, registersearch, registercompare take the Explore budget class (2.0 s), not Read act (PL2 forbids upward override) · N1259-c R55, R4, R19 (c R19 compare key, date, filer, `sealing`: UNVERIFIED, recommended; c R55 `rowexpunge` tables UNVERIFIED)
+- T53 · N824 · `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete`, declared by `mail-door`'s own `DECLARED_OPS`; grade and budget class not stated `[owed: grades, classes]` (recommended: `mailbringin` like `captureupload`, the reads in the lightest read class; PLATFORM gives the `email()` entry a class)
+- T53 · N858 · the all-doors test: five profiles (four each lacking writer, sources, professional review, second approver; one complete) through `templatesFor`, `templateRead`, `offeredVersion`, `templateByHandle`, `unofferedFor`, `templatesForAction`, `procedureGuidesFor`; an unclassified op in the three owners' declarations fails; plus the K5508-K5512 fixtures · N858 R84
+- T53 · N1272 · ops `interpretmark` (named), `proposeParts`, `acceptProposals`, `interpretationOf`, `interpretedFor`, `interpretationWithdraw`, `limitsByKind`: grades and budget classes unstated (recommended: read grade; the 5,000-page reads take PLATFORM's long class); N1257 modules adds `layerentrydraft`, `layerentryconfirm`, `layerentrywithdraw`, `layerreport`, `layerreports`, `layerreportcarry`, `layersset`, `federaloffices`. `guideOptOut`: recommended an ordinary member write.
