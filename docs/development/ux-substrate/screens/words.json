@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 8042,
+  "screen": 8051,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 67,
-  "act": 1322,
+  "act": 1326,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -239,8 +239,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19762,
-  "protected": 1177
+  "total": 19775,
+  "protected": 1180
  },
  "words": [
   {
@@ -85459,6 +85459,69 @@
    "note": "DEC-479: document: a marked word, its card (51)"
   },
   {
+   "key": "screen.ceremony.emails.head",
+   "en": "Emails in this case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: the section, after Photos in this case"
+  },
+  {
+   "key": "screen.ceremony.emails.by",
+   "en": "forwarded by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: an email row, who brought it in and when"
+  },
+  {
+   "key": "screen.ceremony.emails.counts",
+   "en": "{count} names: {shown} shown, {withheld} withheld",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: an email row, its names counted"
+  },
+  {
+   "key": "screen.ceremony.emails.withheld",
+   "en": "withheld",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony and the published copy: what an unshown name reads (K5534)"
+  },
+  {
+   "key": "screen.ceremony.emails.shown",
+   "en": "shown: {reason}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: a shown name, with the reason it is material"
+  },
+  {
+   "key": "screen.ceremony.emails.preview",
+   "en": "As it will be published",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: the folded preview of the published copy"
+  },
+  {
+   "key": "screen.ceremony.emails.note",
+   "en": "Each person's name in an email is withheld unless you show it, with the reason it is material to the case. The published copy carries the text, the attachments, and From, To, Cc, Date and Subject; never an email address, and never the technical headers that came with the message. A home address or phone in the text is removed, as from every published document.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: what the published copy carries (K5534, DEC-408)"
+  },
+  {
+   "key": "screen.ceremony.emails.why",
+   "en": "Why this name is material",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: the reason asked before a name is shown"
+  },
+  {
+   "key": "screen.ceremony.emails.after",
+   "en": "If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-480: ceremony: as for a photo mark"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -127937,6 +128000,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_mailnameshow.label.ceremony",
+   "en": "Show a name, with why it is material",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_mailnamewithhold.label.ceremony",
+   "en": "Withhold a name again",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.signerregisterown.label.ceremony",
    "en": "Register a signing key in this browser",
    "protected": true,
@@ -130731,6 +130806,18 @@
   {
    "key": "act.handlecheck.does",
    "en": "Checks, as you type, whether this handle can be used in the team: free, already taken, or using characters a handle can't have. It never says who has a handle.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_mailnameshow.does",
+   "en": "Shows one person's name in the published copy of an email, with your reason it is material to the case. Every other name reads “withheld”.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_mailnamewithhold.does",
+   "en": "Withholds a name you showed. The published copy reads “withheld” in its place.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

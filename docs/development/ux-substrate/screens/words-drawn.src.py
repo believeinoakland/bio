@@ -8675,6 +8675,19 @@ w479('screen.document.text.unsure.tip', 'hard to make out', 'document: a marked 
 w479('screen.document.text.unsure.tip_why', 'The reader could not make this word out clearly. Check it against the original.', 'document: a marked word, its card (51)')
 REWRITE.update({'screen.doorbell.happens.court': 'A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them.'})
 
+def w480(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-480: ' + note))
+# B565: CAPABILITIES C32, K5534 (a forwarded email in a published case: names shown one by one, the rest withheld)
+w480('screen.ceremony.emails.head', 'Emails in this case', 'ceremony: the section, after Photos in this case')
+w480('screen.ceremony.emails.by', 'forwarded by {member}, {date}', 'ceremony: an email row, who brought it in and when')
+w480('screen.ceremony.emails.counts', '{count} names: {shown} shown, {withheld} withheld', 'ceremony: an email row, its names counted')
+w480('screen.ceremony.emails.withheld', 'withheld', 'ceremony and the published copy: what an unshown name reads (K5534)')
+w480('screen.ceremony.emails.shown', 'shown: {reason}', 'ceremony: a shown name, with the reason it is material')
+w480('screen.ceremony.emails.preview', 'As it will be published', 'ceremony: the folded preview of the published copy')
+W.append(dict(key='screen.ceremony.emails.note', protected=True, note='DEC-480: ceremony: what the published copy carries (K5534, DEC-408)', en="Each person's name in an email is withheld unless you show it, with the reason it is material to the case. The published copy carries the text, the attachments, and From, To, Cc, Date and Subject; never an email address, and never the technical headers that came with the message. A home address or phone in the text is removed, as from every published document."))
+w480('screen.ceremony.emails.why', 'Why this name is material', 'ceremony: the reason asked before a name is shown')
+w480('screen.ceremony.emails.after', 'If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.', 'ceremony: as for a photo mark')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

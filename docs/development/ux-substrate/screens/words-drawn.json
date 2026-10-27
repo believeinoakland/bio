@@ -46163,6 +46163,60 @@
    "en": "The reader could not make this word out clearly. Check it against the original.",
    "protected": false,
    "note": "DEC-479: document: a marked word, its card (51)"
+  },
+  {
+   "key": "screen.ceremony.emails.head",
+   "en": "Emails in this case",
+   "protected": false,
+   "note": "DEC-480: ceremony: the section, after Photos in this case"
+  },
+  {
+   "key": "screen.ceremony.emails.by",
+   "en": "forwarded by {member}, {date}",
+   "protected": false,
+   "note": "DEC-480: ceremony: an email row, who brought it in and when"
+  },
+  {
+   "key": "screen.ceremony.emails.counts",
+   "en": "{count} names: {shown} shown, {withheld} withheld",
+   "protected": false,
+   "note": "DEC-480: ceremony: an email row, its names counted"
+  },
+  {
+   "key": "screen.ceremony.emails.withheld",
+   "en": "withheld",
+   "protected": false,
+   "note": "DEC-480: ceremony and the published copy: what an unshown name reads (K5534)"
+  },
+  {
+   "key": "screen.ceremony.emails.shown",
+   "en": "shown: {reason}",
+   "protected": false,
+   "note": "DEC-480: ceremony: a shown name, with the reason it is material"
+  },
+  {
+   "key": "screen.ceremony.emails.preview",
+   "en": "As it will be published",
+   "protected": false,
+   "note": "DEC-480: ceremony: the folded preview of the published copy"
+  },
+  {
+   "key": "screen.ceremony.emails.note",
+   "protected": true,
+   "note": "DEC-480: ceremony: what the published copy carries (K5534, DEC-408)",
+   "en": "Each person's name in an email is withheld unless you show it, with the reason it is material to the case. The published copy carries the text, the attachments, and From, To, Cc, Date and Subject; never an email address, and never the technical headers that came with the message. A home address or phone in the text is removed, as from every published document."
+  },
+  {
+   "key": "screen.ceremony.emails.why",
+   "en": "Why this name is material",
+   "protected": false,
+   "note": "DEC-480: ceremony: the reason asked before a name is shown"
+  },
+  {
+   "key": "screen.ceremony.emails.after",
+   "en": "If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.",
+   "protected": false,
+   "note": "DEC-480: ceremony: as for a photo mark"
   }
  ],
  "rewrite": {
