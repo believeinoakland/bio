@@ -281,9 +281,13 @@ export class Money {
     if (!zone) return badPeriod(localize("money.index.the_period_states_no_zone", "the period states no zone and the active profiles give no time zone"));
     if (p.fiscal !== undefined) {
       if (!filled(p.fiscal)) return badPeriod(localize("money.index.a_fiscal_key_is_a", "a fiscal key is a non-empty string, such as the profile's label for a fiscal year"));
-      const body = filled(p.body) ? p.body : "*";
+      const named = filled(p.body);
+      const body = named ? p.body : "*";
       const fy = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
       const entry = fy.find((f) => f && f.body === body) || fy.find((f) => f && f.body === "*");
+      /* R34 (T52): the stand-in `*` is a lookup key, never printed; a fiscal year sent with no body says no body was named. */
+      if (!named && (!entry || typeof entry.start !== "string"))
+        return badPeriod(localize("money.index.no_body_named_for_fiscal", "no body was named for the fiscal year {fiscal}, and the active profiles hold no fiscal year that applies to every body, so it cannot be mapped", { fiscal: String(p.fiscal) }));
       if (!entry || typeof entry.start !== "string")
         return badPeriod(localize("money.index.the_active_profiles_hold_no", "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
       const years = [...p.fiscal.matchAll(/\d{4}/g)].map((m) => Number(m[0]));
@@ -295,7 +299,9 @@ export class Money {
           return r.ok === false ? r : { ...r, key: p.fiscal, body };
         }
       }
-      return badPeriod(localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }));
+      return named
+        ? badPeriod(localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }))
+        : badPeriod(localize("money.index.no_body_named_no_period", "no body was named, and the profiles' fiscal year names no period {fiscal}", { fiscal: String(p.fiscal) }));
     }
     return this.#range({ from: p.from, to: p.to ?? null, precision: p.precision || "day", zone });
   }
@@ -1249,10 +1255,71 @@ export class Money {
   }
   static CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: CONNECTION_WORD, class: "evidentiary" })]);
 
+  /* One fact as its R16 edge, or null when it is out of the date asked. */
+  #edge(r, at) {
+    const valid = { from: r.period_from, to: r.period_to, precision: r.period_precision, zone: r.period_zone };
+    let v;
+    try { v = validAt({ valid }, at); } catch (e) { v = { undetermined: true, why: String(e && e.message ? e.message : e) }; }
+    if (v === "out" || (v && v.refused)) return null;
+    const capture = this.#rootCapture(r);
+    const ends = [this.#partyGrade(capture, r.from_entity ?? r.from_fund), this.#partyGrade(capture, r.to_entity ?? r.to_fund)];
+    return {
+      id: r.fact_id, from: r.from_entity ?? r.from_fund, to: r.to_entity ?? r.to_fund, kind: CONNECTION_KIND, owner: "money",
+      valid, evidence: [r.source_fact ? { source: r.source_fact } : { source: r.source_capture_sha, ...(r.source_table ? { table: r.source_table, row: r.source_row } : { extent: JSON.parse(r.source_extent) }) }],
+      grade: { assertion: r.grade_reading ?? LOWEST_GRADE, ends: ends.map((x) => x ?? LOWEST_GRADE) },
+      derived: null,
+      money: { kind: r.kind, phase: r.phase, ...(r.stage ? { stage: r.stage } : {}), fund: r.from_fund ?? r.to_fund ?? null,
+               period: valid, grades_stated: { reading: r.grade_reading, ends } },
+      ...(v === "in" ? {} : { undetermined: { why: v.why } }),
+      ...this.#partial(r),
+    };
+  }
+
+  /* R35 (T52): a money set's neighbours. For each fact the set includes whose payer and payee are both entities or funds:
+     the fact's edge (R16), the payer and the payee as nodes, and the source document as a node named by its title with
+     one edge from the set to it. A fact whose parties are names as written adds no node; a set of such facts, an absent
+     set or one the viewer may not see answers no items and no refusal. */
+  #setNeighbours({ node, kinds, at, page, viewer }) {
+    const none = { items: [], nodes: [] };
+    const set = this.#one(`SELECT * FROM money_sets WHERE set_id=?`, node);
+    if (!set) return none;
+    if (filled(set.concerns) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, set.concerns)
+        && !this.#visibleBundle(set.concerns, viewer)) return none;
+    const items = [], nodes = new Map(), docs = new Map();
+    for (const inc of this.#setState(node, viewer).inclusions) {
+      const r = this.#factRow(inc.fact_id, viewer);
+      if (!r || r.withdrawn_at) continue;
+      const from = r.from_entity ?? r.from_fund, to = r.to_entity ?? r.to_fund;
+      if (!from || !to) continue;
+      const edge = this.#edge(r, at);
+      if (!edge) continue;
+      items.push(edge);
+      for (const id of [from, to]) if (!nodes.has(id)) nodes.set(id, { id, role: "party" });
+      const capture = this.#rootCapture(r);
+      const doc = capture ? this.#one(`SELECT b.bundle_id, b.title FROM register g JOIN bundles b ON b.bundle_id = g.bundle_id WHERE g.capture_sha=?`, capture) : null;
+      if (doc && this.#visibleBundle(doc.bundle_id, viewer) && !docs.has(doc.bundle_id))
+        docs.set(doc.bundle_id, { id: doc.bundle_id, role: "source_document", title: doc.title, capture_sha: capture });
+    }
+    if (!items.length) return none;
+    for (const d of docs.values()) {
+      nodes.set(d.id, d);
+      items.push({ id: `${node}>${d.id}`, from: node, to: d.id, kind: CONNECTION_KIND, owner: "money", valid: { from: null, to: null, precision: "day", zone: items[0].valid.zone },
+        evidence: [{ source: d.capture_sha }], grade: { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] }, derived: null });
+    }
+    const asked = Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND) ? [] : items;
+    const after = isObj(page) && typeof page.after === "string" ? page.after : null;
+    const start = after ? asked.findIndex((i) => i.id > after) : 0;
+    const from = start === -1 ? asked.length : start;
+    const slice = asked.slice(from, from + BOUNDS.fanout);
+    const more = from + BOUNDS.fanout < asked.length;
+    return { items: slice, nodes: [...nodes.values()], ...(more ? { next: { after: slice[slice.length - 1].id } } : {}) };
+  }
+
   /** R16: each fact as one edge from payer to payee (entity, else fund), valid over its period, as of `at`. */
   neighbours({ node, kinds, at, page, viewer } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: localize("money.index.a_read_names_the_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
+    if (filled(node) && node.startsWith("MSR-")) return this.#setNeighbours({ node, kinds, at, page, viewer });
     if (Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND)) return { items: [] };
     if (!filled(node)) return { items: [] };
     const g = this.#gate("f.sight_bundle", viewer);
@@ -1263,25 +1330,7 @@ export class Money {
         AND (${g.sql}) ORDER BY f.fact_id`, node, node, node, node, ...g.args);
     if (rows.length > BOUNDS.hub) return { items: [], hub: { set_size: rows.length, why: word("money.why.money_facts_name", { hub: String(BOUNDS.hub) }) } };
     const items = [];
-    for (const r of rows) {
-      const valid = { from: r.period_from, to: r.period_to, precision: r.period_precision, zone: r.period_zone };
-      let v;
-      try { v = validAt({ valid }, at); } catch (e) { v = { undetermined: true, why: String(e && e.message ? e.message : e) }; }
-      if (v === "out") continue;
-      if (v && v.refused) continue;
-      const capture = this.#rootCapture(r);
-      const ends = [this.#partyGrade(capture, r.from_entity ?? r.from_fund), this.#partyGrade(capture, r.to_entity ?? r.to_fund)];
-      items.push({
-        id: r.fact_id, from: r.from_entity ?? r.from_fund, to: r.to_entity ?? r.to_fund, kind: CONNECTION_KIND, owner: "money",
-        valid, evidence: [r.source_fact ? { source: r.source_fact } : { source: r.source_capture_sha, ...(r.source_table ? { table: r.source_table, row: r.source_row } : { extent: JSON.parse(r.source_extent) }) }],
-        grade: { assertion: r.grade_reading ?? LOWEST_GRADE, ends: ends.map((x) => x ?? LOWEST_GRADE) },
-        derived: null,
-        money: { kind: r.kind, phase: r.phase, ...(r.stage ? { stage: r.stage } : {}), fund: r.from_fund ?? r.to_fund ?? null,
-                 period: valid, grades_stated: { reading: r.grade_reading, ends } },
-        ...(v === "in" ? {} : { undetermined: { why: v.why } }),
-        ...this.#partial(r),
-      });
-    }
+    for (const r of rows) { const i = this.#edge(r, at); if (i) items.push(i); }
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
     const start = after ? items.findIndex((i) => i.id > after) : 0;
     const from = start === -1 ? items.length : start;

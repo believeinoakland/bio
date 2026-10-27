@@ -23917,672 +23917,672 @@
       "en": "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2225
+      "line": 2258
     },
     {
       "id": "entities.declared.entityalias",
       "en": "registry write, keyed by entity",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2223
+      "line": 2256
     },
     {
       "id": "entities.declared.entitybyalias",
       "en": "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2242
+      "line": 2275
     },
     {
       "id": "entities.declared.entitycreate",
       "en": "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2221
+      "line": 2254
     },
     {
       "id": "entities.declared.relationdeclare",
       "en": "registry write, keyed by entity pair",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2227
+      "line": 2260
     },
     {
       "id": "entities.declared.resolutiondefect",
       "en": "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2233
+      "line": 2266
     },
     {
       "id": "entities.declared.resolutions",
       "en": "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2246
+      "line": 2279
     },
     {
       "id": "entities.declared.resolve",
       "en": "recogniser write, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2229
+      "line": 2262
     },
     {
       "id": "entities.declared.resolvetestify",
       "en": "recogniser testimony, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2231
+      "line": 2264
     },
     {
       "id": "entities.index.a_declared_relation_carries_a",
       "en": "a declared relation carries a justification, like a pattern statement (safeguard 4)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 695
+      "line": 700
     },
     {
       "id": "entities.index.a_declared_relation_carries_a_2",
       "en": "a declared relation carries a citation, like a pattern statement (safeguard 4)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 696
+      "line": 701
     },
     {
       "id": "entities.index.a_declared_relation_is_one",
       "en": "a declared relation is one of {RELATION_KINDS} (safeguard 4). A connection grade is NOT a relation kind: a declared relation is constitutive, not evidentiary, and carries no grade (D-83).",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 688
+      "line": 693
     },
     {
       "id": "entities.index.a_defect_report_names",
       "en": "a defect report names the resolution's raw reference (kind:key)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1649
+      "line": 1682
     },
     {
       "id": "entities.index.a_defect_report_says_why",
       "en": "a defect report says why the match is wrong; it is kept beside the resolution for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1654
+      "line": 1687
     },
     {
       "id": "entities.index.a_forum_kind_is_held",
       "en": "a forum kind is held only by an entity of kind {FORUM_ENTITY_KINDS}; a {kind} carries none. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 225
+      "line": 230
     },
     {
       "id": "entities.index.a_forum_kind_is_one",
       "en": "a forum kind is one of {FORUM_KINDS}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 227
+      "line": 232
     },
     {
       "id": "entities.index.a_kind_is_named_one",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 760
+      "line": 765
     },
     {
       "id": "entities.index.a_kind_is_named_one_2",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 834
+      "line": 839
     },
     {
       "id": "entities.index.a_kind_is_named_one_3",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1967
+      "line": 2000
     },
     {
       "id": "entities.index.a_kind_is_named_one_4",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1970
+      "line": 2003
     },
     {
       "id": "entities.index.a_machine_holds_an_identifier",
       "en": "a machine holds an identifier only from a system rule: basis {system, row}, the system one that issues or lists the scheme ({systems}), the row its own (K1443)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1164
+      "line": 1169
     },
     {
       "id": "entities.index.a_near_match_is_looked",
       "en": "a near match is looked for by a name, and the one given folds to nothing (it is empty, or only whitespace). Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 963
+      "line": 968
     },
     {
       "id": "entities.index.a_proceeding_is_registered_facet",
       "en": "a proceeding is registered with its facet {forum, kind, number}, and it names no {field}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1265
+      "line": 1270
     },
     {
       "id": "entities.index.a_proceedings_kind_is_one",
       "en": "a proceeding's kind is one your team's active jurisdiction profiles name{v1}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1272
+      "line": 1277
     },
     {
       "id": "entities.index.a_relation_is_between_two",
       "en": "a relation is between two distinct entities",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 691
+      "line": 696
     },
     {
       "id": "entities.index.a_relation_is_withdrawn_by",
       "en": "a relation is withdrawn by its id",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1071
+      "line": 1076
     },
     {
       "id": "entities.index.a_relation_names_two_entities",
       "en": "a relation names two entities by id: fromEntity and toEntity",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 690
+      "line": 695
     },
     {
       "id": "entities.index.a_sector_is_held_only",
       "en": "a sector is held only by an organisation ({ORGANISATION_KINDS}); a {kind} carries none. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 219
+      "line": 224
     },
     {
       "id": "entities.index.a_sector_is_one_of",
       "en": "a sector is one of {SECTORS}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 221
+      "line": 226
     },
     {
       "id": "entities.index.a_sector_is_set_with",
       "en": "a sector is set with a note saying why; it is kept beside the value for as long as the record lasts. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1103
+      "line": 1108
     },
     {
       "id": "entities.index.a_subject_is_looked_for",
       "en": "a subject is looked for by words of its name, and the query given folds to none. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 913
+      "line": 918
     },
     {
       "id": "entities.index.a_withdrawal_says_why_the",
       "en": "a withdrawal says why the name was wrong; it is kept beside the name for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1048
+      "line": 1053
     },
     {
       "id": "entities.index.a_withdrawal_says_why_the_2",
       "en": "a withdrawal says why the relation was wrong; it is kept beside it for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1074
+      "line": 1079
     },
     {
       "id": "entities.index.a_withdrawal_says_why_the_3",
       "en": "a withdrawal says why the identifier was wrong; it is kept beside it for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1198
+      "line": 1203
     },
     {
       "id": "entities.index.an_alias_needs_a_name",
       "en": "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 670
+      "line": 675
     },
     {
       "id": "entities.index.an_entity_needs_a_canonical",
       "en": "an entity needs a canonical label, such as 'City Clerk'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 563
+      "line": 568
     },
     {
       "id": "entities.index.an_entity_needs_a_kind",
       "en": "an entity needs a kind: one of {ENTITY_KINDS}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 551
+      "line": 556
     },
     {
       "id": "entities.index.an_entity_needs_a_note",
       "en": "an entity needs a note in the declarer's own words saying who or what it is and why it is registered",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 571
+      "line": 576
     },
     {
       "id": "entities.index.an_identifier_is_held_in",
       "en": "an identifier is held in a scheme your team's active jurisdiction profiles name{v1}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1139
+      "line": 1144
     },
     {
       "id": "entities.index.an_identifier_is_held_on",
       "en": "an identifier is held on its cited source or a system's own row",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1168
+      "line": 1173
     },
     {
       "id": "entities.index.at_most_naming_in_captures",
       "en": "at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1981
+      "line": 2014
     },
     {
       "id": "entities.index.bad_nothing_was_written",
       "en": "{bad}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1147
+      "line": 1152
     },
     {
       "id": "entities.index.correspondence_the_references_name_label",
       "en": "correspondence -- the reference's name '{label}' matched an entity alias by name; plausible, never established, flagged for a member to confirm",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1512
+      "line": 1517
     },
     {
       "id": "entities.index.documents_are_counted_for_at",
       "en": "documents are counted for at most {ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 885
+      "line": 890
     },
     {
       "id": "entities.index.explain_query_plan_sql",
       "en": "EXPLAIN QUERY PLAN {sql}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2052
+      "line": 2085
     },
     {
       "id": "entities.index.grade_d_is_recorded",
       "en": "grade D is recorded testimony: it carries the member's stated basis, with an author and a date",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1609
+      "line": 1637
     },
     {
       "id": "entities.index.holder_already_holds_scheme_normal",
       "en": "{holder} already holds {scheme} {normal} with a validity that overlaps or is unstated. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 267
+      "line": 272
     },
     {
       "id": "entities.index.its_validity_then_is_undetermined",
       "en": "; its validity then is undetermined ({why})",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1489
+      "line": 1494
     },
     {
       "id": "entities.index.labels_are_read_for_at",
       "en": "labels are read for at most {LABELS_IDS_MAX} entity ids at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 857
+      "line": 862
     },
     {
       "id": "entities.index.labels_are_read_for_entity",
       "en": "labels are read for entity ids, a list of them",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 854
+      "line": 859
     },
     {
       "id": "entities.index.no_captured_document_the_record",
       "en": "no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1312
+      "line": 1317
     },
     {
       "id": "entities.index.no_resolution_of_that",
       "en": "no resolution of that reference of that captured document to that entity is held",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1661
+      "line": 1694
     },
     {
       "id": "entities.index.resolve_a_single_reference",
       "en": "resolve a single reference by its raw kind:key, or omit ref to resolve all",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1562
+      "line": 1567
     },
     {
       "id": "entities.index.resolving_this_document_would_record",
       "en": "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1943
+      "line": 1976
     },
     {
       "id": "entities.index.scheme_identifier_the_reference_v1",
       "en": "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1489
+      "line": 1494
     },
     {
       "id": "entities.index.source_identifier_in_content_the",
       "en": "source identifier in content -- the reference's key '{ref_key}' matched a registered identifier of the entity exactly at both ends",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1509
+      "line": 1514
     },
     {
       "id": "entities.index.source_identifier_the_references_composite",
       "en": "source identifier -- the reference's composite key '{ref}' matched a registered identifier of the entity exactly; the source names this subject by this key, both ends captured",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1506
+      "line": 1511
     },
     {
       "id": "entities.index.space_must_be_one_of",
       "en": "space must be one of {map}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2136
+      "line": 2169
     },
     {
       "id": "entities.index.testimony_asserted_by_v1_on",
       "en": "testimony -- asserted by {v1} on the member's stated basis, with no captured document (framework 8.1 grade D)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1615
+      "line": 1648
     },
     {
       "id": "entities.index.testimony_names_the_raw",
       "en": "testimony names the raw reference (kind:key) the document carries",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1605
+      "line": 1633
     },
     {
       "id": "entities.index.testimony_withheld",
       "en": "testimony -- asserted by a member on the member's stated basis, with no captured document (framework 8.1 grade D); who testified is withheld, because the document sits where you cannot see",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1718
+      "line": 1751
     },
     {
       "id": "entities.index.that_name_reaches",
       "en": "; that name reaches {reaches} of the {corpus} references this reader can see at this source",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1945
+      "line": 1978
     },
     {
       "id": "entities.index.the_documents_naming_a_subject",
       "en": "the documents naming a subject only by an identifier are counted for entity ids, a list of them",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 882
+      "line": 887
     },
     {
       "id": "entities.index.the_field_has_the_shape",
       "en": "the {field} has the shape of no form of the {v1} space{v2}{v3}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 263
+      "line": 268
     },
     {
       "id": "entities.index.the_identifier_matches_nothing",
       "en": "the identifier matches nothing new; resolutions already made through it are kept",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1213
+      "line": 1218
     },
     {
       "id": "entities.index.the_identifiers_could_not_be",
       "en": "the identifiers could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1223
+      "line": 1228
     },
     {
       "id": "entities.index.the_name_lookup_is_over",
       "en": "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1862
+      "line": 1895
     },
     {
       "id": "entities.index.the_name_matches_nothing_new",
       "en": "the name matches nothing new and no longer finds this entity; resolutions already made through it are kept and marked as resting on a withdrawn name, so a member can re-resolve them",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1065
+      "line": 1070
     },
     {
       "id": "entities.index.the_number_number_as_forum",
       "en": "the number {number} as {forum_label} writes it",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 652
+      "line": 657
     },
     {
       "id": "entities.index.the_registry_could_not_be",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 792
+      "line": 797
     },
     {
       "id": "entities.index.the_registry_could_not_be_2",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 827
+      "line": 832
     },
     {
       "id": "entities.index.the_registry_could_not_be_3",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 868
+      "line": 873
     },
     {
       "id": "entities.index.the_registry_could_not_be_4",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 948
+      "line": 953
     },
     {
       "id": "entities.index.the_registry_could_not_be_5",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 994
+      "line": 999
     },
     {
       "id": "entities.index.the_report_is_kept",
       "en": "the report is kept beside the resolution; the grade, the resolution and every connection are unchanged",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1683
+      "line": 1716
     },
     {
       "id": "entities.index.the_resolutions_could_not_be",
       "en": "the resolutions could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 896
+      "line": 901
     },
     {
       "id": "entities.index.the_scheme_names_form",
       "en": " the scheme names ({form})",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 263
+      "line": 268
     },
     {
       "id": "entities.index.the_scheme_scheme_identifies_v1",
       "en": "the scheme {scheme} identifies {v1}, not a {kind}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1142
+      "line": 1147
     },
     {
       "id": "entities.index.the_subject_registry_admits_a",
       "en": "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the framework's entity axis): one of {ENTITY_KINDS}. Introducing a new kind is a doctrine change, not a write.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 554
+      "line": 559
     },
     {
       "id": "entities.index.the_subject_registry_admits_a_2",
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 763
+      "line": 768
     },
     {
       "id": "entities.index.the_subject_registry_admits_a_3",
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 842
+      "line": 847
     },
     {
       "id": "entities.index.the_subject_registry_admits_a_4",
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1973
+      "line": 2006
     },
     {
       "id": "entities.index.these_are_candidates_not_resolutions",
       "en": "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name — as the reference the source assigned, as that reference's key, or as the name the reading recorded — offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists.{v1}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1893
+      "line": 1926
     },
     {
       "id": "entities.index.these_are_candidates_not_resolutions_2",
       "en": "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the named captured documents you can see; each is what the name lookup for that one subject would offer were these documents all there is, and nothing is established or graded by asking{v1}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2032
+      "line": 2065
     },
     {
       "id": "entities.index.this_captured_document_s_reading",
       "en": "this captured document's reading carries no such reference (nothing to resolve)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1566
+      "line": 1571
     },
     {
       "id": "entities.index.this_captured_document_s_reading_2",
       "en": "this captured document's reading carries no such reference to testify about",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1612
+      "line": 1645
     },
     {
       "id": "entities.index.this_document_s_reading_carries",
       "en": "this document's reading {where} '{srcText}', which carries every word of this subject's name '{alias}'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1941
+      "line": 1974
     },
     {
       "id": "entities.index.this_document_s_reading_is",
       "en": "this document's reading {where} '{srcText}', which is this subject's name '{alias}'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1940
+      "line": 1973
     },
     {
       "id": "entities.index.this_entity_held_that_identifier",
       "en": "this entity held that identifier and it was withdrawn; it stays on the record as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1179
+      "line": 1184
     },
     {
       "id": "entities.index.this_entity_held_that_name",
       "en": "this entity held that name and it was withdrawn; a withdrawn name stays on the record as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 675
+      "line": 680
     },
     {
       "id": "entities.index.this_entity_holds_no_such",
       "en": "this entity holds no such name, so there is nothing to withdraw",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1053
+      "line": 1058
     },
     {
       "id": "entities.index.this_entity_holds_no_such_2",
       "en": "this entity holds no such identifier, so there is nothing to withdraw",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1206
+      "line": 1211
     },
     {
       "id": "entities.index.this_is_the_first_list_floor",
       "en": " THIS IS THE FIRST {cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1893
+      "line": 1926
     },
     {
       "id": "entities.index.this_is_the_first_namingin_floor",
       "en": ". THIS IS THE FIRST {cap} AND NOT ALL OF THEM, so a count taken from it is a floor.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2032
+      "line": 2065
     },
     {
       "id": "entities.index.v1_has_the_shape_of",
       "en": "{v1} has the shape of no form of the {label}{v2}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2144
+      "line": 2177
     },
     {
       "id": "entities.index.v1_names_no_captured_document",
       "en": "{v1} names no captured document this record holds that you can see",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2156
+      "line": 2189
     },
     {
       "id": "escalation.checks.reading_what_the_government_answered",
@@ -24729,28 +24729,28 @@
       "en": "event-directed: keyed by (event, entity, role); writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1523
+      "line": 1527
     },
     {
       "id": "events.declared.createevent",
       "en": "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1521
+      "line": 1525
     },
     {
       "id": "events.declared.recorddatedfact",
       "en": "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1519
+      "line": 1523
     },
     {
       "id": "events.declared.relate",
       "en": "event-directed: keyed by the two events; writes a cited relation and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1525
+      "line": 1529
     },
     {
       "id": "events.follow.a_register_import_reads_one",
@@ -24953,7 +24953,7 @@
       "en": "a proceeding's status is read by its entity id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1370
+      "line": 1374
     },
     {
       "id": "events.index.a_relation_is_between_two",
@@ -25023,7 +25023,7 @@
       "en": "a status is read as of a date",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1385
+      "line": 1389
     },
     {
       "id": "events.index.a_timeline_is_of_an",
@@ -25261,14 +25261,14 @@
       "en": "statements are read for one registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1360
+      "line": 1364
     },
     {
       "id": "events.index.status_as_of_a_date",
       "en": "status as of a date is read of an entity of kind proceeding",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1376
+      "line": 1380
     },
     {
       "id": "events.index.testimony_carries_the_member_s",
@@ -25366,14 +25366,14 @@
       "en": "who was sent something is read of a communication, an issuance or a meeting",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1350
+      "line": 1354
     },
     {
       "id": "events.owner.this_node_has_v1_connections",
       "en": "this node has {v1} connections of the kind {v2}, more than that kind's bound of {hubBoundOf}; it is named, never expanded",
       "module": "events",
       "file": "bio-plane/src/events/owner.mjs",
-      "line": 126
+      "line": 128
     },
     {
       "id": "events.recorded.a_read_names_the_member",
@@ -25702,14 +25702,7 @@
       "en": "{kind} · {date}",
       "module": "explore",
       "file": "bio-plane/src/explore/labels.mjs",
-      "line": 55
-    },
-    {
-      "id": "explore.label.event_undated",
-      "en": "{kind} · undated",
-      "module": "explore",
-      "file": "bio-plane/src/explore/labels.mjs",
-      "line": 55
+      "line": 57
     },
     {
       "id": "explore.ops.a_preset_is_one_of",
@@ -37609,252 +37602,252 @@
       "en": "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1442
+      "line": 1491
     },
     {
       "id": "money.declared.committedagainstpaid",
       "en": "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1440
+      "line": 1489
     },
     {
       "id": "money.declared.createset",
       "en": "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1430
+      "line": 1479
     },
     {
       "id": "money.declared.exclude",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1434
+      "line": 1483
     },
     {
       "id": "money.declared.include",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1432
+      "line": 1481
     },
     {
       "id": "money.declared.moneysets",
       "en": "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1438
+      "line": 1487
     },
     {
       "id": "money.declared.reconcile",
       "en": "read: whether two money facts are consistent, or each dimension that differs; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1436
+      "line": 1485
     },
     {
       "id": "money.declared.recordfact",
       "en": "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1428
+      "line": 1477
     },
     {
       "id": "money.index.a_balance_class_is_read",
       "en": "a balance class is read against a fund a party names, and none is named",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 409
+      "line": 415
     },
     {
       "id": "money.index.a_calculation_is_never_a",
       "en": "a calculation is never a money fact's source: its result is a calculation, and the facts it read are the sources (K1468)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 523
+      "line": 529
     },
     {
       "id": "money.index.a_calculation_is_never_a_2",
       "en": "a calculation is never a money fact's source",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1382
+      "line": 1431
     },
     {
       "id": "money.index.a_canonical_table_row_read",
       "en": "a canonical table row read through a binding a member adopted (source {table, row, binding})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 488
+      "line": 494
     },
     {
       "id": "money.index.a_chain_of_authority_is",
       "en": "a chain of authority is read for one money fact (MNY-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1206
+      "line": 1212
     },
     {
       "id": "money.index.a_code_names_one_of",
       "en": "a code names one of the active profiles' classification schemes{v1} and its code",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 392
+      "line": 398
     },
     {
       "id": "money.index.a_constant_role_is_one",
       "en": "a constant's role is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 713
+      "line": 719
     },
     {
       "id": "money.index.a_duty_is_never_named",
       "en": "a duty is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1388
+      "line": 1437
     },
     {
       "id": "money.index.a_figure_states_how_it",
       "en": "a figure states how it was read: {list}{v1}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 477
+      "line": 483
     },
     {
       "id": "money.index.a_found_tables_amount_column",
       "en": "a found table's amount column is declared and counted through calculations, never read into money facts row by row; record a figure from one passage of the table instead",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 530
+      "line": 536
     },
     {
       "id": "money.index.a_funds_type_is_list",
       "en": "a fund's type is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1297
+      "line": 1346
     },
     {
       "id": "money.index.a_funds_type_names_its",
       "en": "a fund's type names its basis: the source that states it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1298
+      "line": 1347
     },
     {
       "id": "money.index.a_hypothesis_is_never_named",
       "en": "a hypothesis is never named in a money fact ({k})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1384
+      "line": 1433
     },
     {
       "id": "money.index.a_hypothesis_is_never_named_2",
       "en": "a hypothesis is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1393
+      "line": 1442
     },
     {
       "id": "money.index.a_kind_takes_a_stage",
       "en": "a {kind} takes a stage of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 383
+      "line": 389
     },
     {
       "id": "money.index.a_machine_records_a_money",
       "en": "a machine records a money fact only with {list}; anything else is proposed to a member, never written",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 501
+      "line": 507
     },
     {
       "id": "money.index.a_machines_reading_is_one",
       "en": "a machine's reading is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 481
+      "line": 487
     },
     {
       "id": "money.index.a_money_fact_concerns_an",
       "en": "a money fact concerns an entity of kind {list}; {id} is a {k}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 440
+      "line": 446
     },
     {
       "id": "money.index.a_money_fact_concerns_events",
       "en": "a money fact concerns events, entities of kind contract, fund, program or proceeding, or lines; {id} is none of them",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 450
+      "line": 456
     },
     {
       "id": "money.index.a_money_fact_is_an",
       "en": "a money fact is an object of its fields",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 335
+      "line": 341
     },
     {
       "id": "money.index.a_money_fact_is_read",
       "en": "a money fact is read by its id (MNY-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 695
+      "line": 701
     },
     {
       "id": "money.index.a_money_fact_keeps_the",
       "en": "a money fact keeps the figure exactly as its source printed it (as_read)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 364
+      "line": 370
     },
     {
       "id": "money.index.a_money_fact_names_its",
       "en": "a money fact names its currency",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 365
+      "line": 371
     },
     {
       "id": "money.index.a_money_fact_never_concerns",
       "en": "a money fact never concerns a duty",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1392
+      "line": 1441
     },
     {
       "id": "money.index.a_money_fact_never_names",
       "en": "a money fact never names a duty; the duty names the fact it cites",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 454
+      "line": 460
     },
     {
       "id": "money.index.a_money_fact_rests_on",
       "en": "a money fact rests on exactly one source: a content extent or another money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 518
+      "line": 524
     },
     {
       "id": "money.index.a_money_fact_rests_on_2",
       "en": "a money fact rests on exactly one source",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 519
+      "line": 525
     },
     {
       "id": "money.index.a_money_fact_states_its",
       "en": "a money fact states its amount",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 353
+      "line": 359
     },
     {
       "id": "money.index.a_money_fact_states_the",
@@ -37868,189 +37861,189 @@
       "en": "a money fact's sign is explicit: + or -",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 366
+      "line": 372
     },
     {
       "id": "money.index.a_money_set_has_a",
       "en": "a money set has a label a person can read",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 939
+      "line": 945
     },
     {
       "id": "money.index.a_money_set_is_read",
       "en": "a money set is read by its id (MSR-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 994
+      "line": 1000
     },
     {
       "id": "money.index.a_money_sets_purpose_is",
       "en": "a money set's purpose is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 938
+      "line": 944
     },
     {
       "id": "money.index.a_money_sets_purpose_is_2",
       "en": "a money set's purpose is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1023
+      "line": 1029
     },
     {
       "id": "money.index.a_proposal_names_the_method",
       "en": "a proposal names the method that proposed it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 980
+      "line": 986
     },
     {
       "id": "money.index.a_range_carries_its_low",
       "en": "a range carries its low and high as {low, high}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 370
+      "line": 376
     },
     {
       "id": "money.index.a_ranges_amount_is_low",
       "en": "a range's amount is {low, high}, each an exact decimal written as a string",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 358
+      "line": 364
     },
     {
       "id": "money.index.a_ranges_low_is_above",
       "en": "a range's low is above its high",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 372
+      "line": 378
     },
     {
       "id": "money.index.a_read_names_the_member",
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 810
+      "line": 816
     },
     {
       "id": "money.index.a_source_has_no_field",
       "en": "a source has no field {k}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 534
+      "line": 540
     },
     {
       "id": "money.index.a_source_ingest_is_the_key",
       "en": "a source's ingest is the key of the ingest that read a table row, a non-empty string of at most {max} characters, and only a table row source has one",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 538
+      "line": 544
     },
     {
       "id": "money.index.a_source_is_capture_sha_extent",
       "en": "a source is {capture_sha, extent}, {content_id} or {fact}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 524
+      "line": 530
     },
     {
       "id": "money.index.a_source_is_capture_sha_extent_2",
       "en": "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 541
+      "line": 547
     },
     {
       "id": "money.index.a_source_is_one_of",
       "en": "a source is one of a content extent or a money fact, never both",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 542
+      "line": 548
     },
     {
       "id": "money.index.a_table_row_source_names",
       "en": "a table row source names its table, its row and the binding it was read through",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 554
+      "line": 560
     },
     {
       "id": "money.index.a_total_is_a_calculation",
       "en": "a total is a calculation, never stored as a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1385
+      "line": 1434
     },
     {
       "id": "money.index.a_trail_concerns_one_id",
       "en": "a trail concerns one id, or none",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 947
+      "line": 953
     },
     {
       "id": "money.index.a_type_funds_classes_are",
       "en": "a {type} fund's classes are {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 411
+      "line": 417
     },
     {
       "id": "money.index.a_typed_transcription_is_a",
       "en": "a typed transcription is a member's act; a machine's reading names its method",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 479
+      "line": 485
     },
     {
       "id": "money.index.a_withdrawal_states_why",
       "en": "a withdrawal states why",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 677
+      "line": 683
     },
     {
       "id": "money.index.after_names_no_set_in",
       "en": "after names no set in this list; start again without it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1035
+      "line": 1041
     },
     {
       "id": "money.index.an_actual_amount_names_its",
       "en": "an actual amount names its stage: one of {list} for {kind}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 379
+      "line": 385
     },
     {
       "id": "money.index.an_amount_is_an_exact",
       "en": "an amount is an exact decimal written as a string of digits (thousands separators and one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 362
+      "line": 368
     },
     {
       "id": "money.index.an_attribution_set_concerns_one",
       "en": "an attribution set concerns one registered entity of kind contract",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 944
+      "line": 950
     },
     {
       "id": "money.index.an_entitys_money_is_read",
       "en": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 839
+      "line": 845
     },
     {
       "id": "money.index.an_extent_is_one_of",
       "en": "an extent is one of content's kinds ({list})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 814
+      "line": 820
     },
     {
       "id": "money.index.an_ingest_is_marked_by",
@@ -38071,133 +38064,147 @@
       "en": "basis is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 376
+      "line": 382
     },
     {
       "id": "money.index.buys_is_quantity_unit_what",
       "en": "buys is {quantity, unit, what}, the quantity an exact decimal",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 507
+      "line": 513
     },
     {
       "id": "money.index.codes_are_a_list_of",
       "en": "codes are a list of {scheme, code}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 389
+      "line": 395
     },
     {
       "id": "money.index.concerns_is_a_list_of",
       "en": "concerns is a list of ids",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 426
+      "line": 432
     },
     {
       "id": "money.index.contract_is_not_a_registered",
       "en": "{contract} is not a registered contract",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1135
+      "line": 1141
     },
     {
       "id": "money.index.each_id_concerned_is_a",
       "en": "each id concerned is a string",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 429
+      "line": 435
     },
     {
       "id": "money.index.end_as_written_is_the",
       "en": "{end}.as_written is the party's name as the source writes it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 423
+      "line": 429
     },
     {
       "id": "money.index.end_fund_names_v1_which",
       "en": "{end}.fund names {v1}, which is not registered as a fund",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 420
+      "line": 426
     },
     {
       "id": "money.index.events_is_not_wired_here_2",
       "en": "events is not wired here",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1211
+      "line": 1217
     },
     {
       "id": "money.index.fact_id_is_withdrawn_and",
       "en": "{fact_id} is withdrawn and is never counted",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 900
+      "line": 906
     },
     {
       "id": "money.index.fund_is_not_registered_as",
       "en": "{fund} is not registered as a fund",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1301
+      "line": 1350
     },
     {
       "id": "money.index.id_is_not_a_line",
       "en": "{id} is not a line the record holds that the writer can see",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 447
+      "line": 453
     },
     {
       "id": "money.index.kind_is_one_of_list",
       "en": "kind is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 374
+      "line": 380
     },
     {
       "id": "money.index.kind_is_one_of_list_2",
       "en": "kind is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 843
+      "line": 849
     },
     {
       "id": "money.index.module_s_listener_failed_on",
       "en": "{module}'s listener failed on {change} of {factId}: {String}. Nothing was written.",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 643
+      "line": 649
     },
     {
       "id": "money.index.money_sets_are_listed_by",
       "en": "money sets are listed by what they concern: name the id (moneysets&concerns=...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1021
+      "line": 1027
     },
     {
       "id": "money.index.name_the_money_facts_by",
       "en": "name the money facts by their ids",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 895
+      "line": 901
     },
     {
       "id": "money.index.no_authorising_event_is_held",
       "en": "no authorising event is held for this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1237
+      "line": 1243
+    },
+    {
+      "id": "money.index.no_body_named_for_fiscal",
+      "en": "no body was named for the fiscal year {fiscal}, and the active profiles hold no fiscal year that applies to every body, so it cannot be mapped",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 290
+    },
+    {
+      "id": "money.index.no_body_named_no_period",
+      "en": "no body was named, and the profiles' fiscal year names no period {fiscal}",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 304
     },
     {
       "id": "money.index.no_money_fact_id_could",
       "en": "no money fact id could be drawn",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 587
+      "line": 593
     },
     {
       "id": "money.index.no_money_fact_with_that",
@@ -38211,161 +38218,161 @@
       "en": "no money set {String} is held",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 963
+      "line": 969
     },
     {
       "id": "money.index.no_money_set_string_is_2",
       "en": "no money set {String} is held",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 982
+      "line": 988
     },
     {
       "id": "money.index.no_type_is_held_for",
       "en": "no type is held for the fund {fund}, so its balance-class family is not known (setFundType)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 410
+      "line": 416
     },
     {
       "id": "money.index.only_a_balance_carries_a",
       "en": "only a balance carries a balance class",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 408
+      "line": 414
     },
     {
       "id": "money.index.only_a_fact_of_precision",
       "en": "only a fact of precision range carries {low, high}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 371
+      "line": 377
     },
     {
       "id": "money.index.only_an_actual_amount_has",
       "en": "only an actual amount has a stage; this one is {phase}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 381
+      "line": 387
     },
     {
       "id": "money.index.phase_is_one_of_list",
       "en": "phase is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 375
+      "line": 381
     },
     {
       "id": "money.index.phase_is_one_of_list_2",
       "en": "phase is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 844
+      "line": 850
     },
     {
       "id": "money.index.precision_is_one_of_list",
       "en": "precision is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 368
+      "line": 374
     },
     {
       "id": "money.index.role_is_one_of_list",
       "en": "{role} is one of {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 729
+      "line": 735
     },
     {
       "id": "money.index.the_authorising_events_held_toward",
       "en": "the authorising events held toward this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1237
+      "line": 1243
     },
     {
       "id": "money.index.the_capture_named",
       "en": "the capture named",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 570
+      "line": 576
     },
     {
       "id": "money.index.the_fact_an_adjustment_names",
       "en": "the fact an adjustment names ({String}) is not held",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 462
+      "line": 468
     },
     {
       "id": "money.index.the_party_end_is_entity",
       "en": "the party {end} is {entity?, fund?, account?, as_written}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 399
+      "line": 405
     },
     {
       "id": "money.index.the_question_string_is_not",
       "en": "the question {String} is not an inquiry held here, or not visible to the writer",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 470
+      "line": 476
     },
     {
       "id": "money.index.the_sources_extent_detail",
       "en": "the source's extent: {detail}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 573
+      "line": 579
     },
     {
       "id": "money.index.these_facts_differ_in_v1",
       "en": "these facts differ in {v1}: {fact_id} and {fact_id_2}; a sum is taken only over one kind, phase and stage, basis, currency and period",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 884
+      "line": 890
     },
     {
       "id": "money.index.to_act_a_fact_is",
       "en": "to {act} a fact is a member's act; a machine proposes (proposeInclusion)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 960
+      "line": 966
     },
     {
       "id": "money.index.to_act_a_fact_states",
       "en": "to {act} a fact states why",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 961
+      "line": 967
     },
     {
       "id": "money.index.what_is_not_held_here",
       "en": "{what} is not held here, or not visible to the writer",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 543
+      "line": 549
     },
     {
       "id": "money.index.where_has_no_field_string",
       "en": "{where} has no field {String}; a money fact holds only {list}. Nothing was written.",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 339
+      "line": 345
     },
     {
       "id": "money.index.who_recorded_from_a_passage",
       "en": "who recorded from a passage is read for one capture, by its sha256",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 811
+      "line": 817
     },
     {
       "id": "money.index.who_recorded_from_this_capture",
       "en": "who recorded from this capture could not be read: {String}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 832
+      "line": 838
     },
     {
       "id": "monitoring.checks.only_a_member_asks_for",
@@ -42481,35 +42488,35 @@
       "en": "{arm}: {stringify} compares a full-text field; {arm_2}: matches text and does not order it",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1676
+      "line": 1689
     },
     {
       "id": "query-language.query.arm_stringify_compares_subname_against",
       "en": "{arm}: {stringify} compares {subName} against nothing",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1612
+      "line": 1625
     },
     {
       "id": "query-language.query.arm_stringify_has_no_word",
       "en": "{arm}: {stringify} has no word in it to match",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1715
+      "line": 1728
     },
     {
       "id": "query-language.query.arm_stringify_is_both_claims",
       "en": "{arm}: {stringify} is both {claims}; say {map}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1644
+      "line": 1657
     },
     {
       "id": "query-language.query.arm_unknown_sub_field_stringify",
       "en": "{arm}: unknown sub-field {stringify}; known: {keys}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1629
+      "line": 1642
     },
     {
       "id": "query-language.query.capture_letter_bounded",
@@ -42523,21 +42530,21 @@
       "en": "({col} IS NULL) ASC, {col_2} {sortDir}, b.bundle_id ASC",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2471
+      "line": 2484
     },
     {
       "id": "query-language.query.compiling_it_drops_v1_so",
       "en": "compiling it drops {v1}, so what would be saved is not what would run",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 3007
+      "line": 3020
     },
     {
       "id": "query-language.query.facets_stringify_can_hold_many",
       "en": "facets: {stringify} can hold many values per record; not a facet",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2554
+      "line": 2567
     },
     {
       "id": "query-language.query.field_this_is_the_value",
@@ -42551,35 +42558,35 @@
       "en": "fields: {stringify} is not a field; ignored",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2030
+      "line": 2043
     },
     {
       "id": "query-language.query.fields_stringify_is_not_a_2",
       "en": "fields: {stringify} is not a table, a key and a column; read as before",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2034
+      "line": 2047
     },
     {
       "id": "query-language.query.fm_path_stringify_is_not",
       "en": "fm: path {stringify} is not a frontmatter path",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1506
+      "line": 1519
     },
     {
       "id": "query-language.query.from_scope_s_rowjoin_join",
       "en": "FROM scope s {rowJoin}\n JOIN {table} m ON m.{key} = b.bundle_id{ftsJoin}{joined}\nWHERE {sql}{refSql}{ftsWhere}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2811
+      "line": 2824
     },
     {
       "id": "query-language.query.has_unknown_field_stringify",
       "en": "has: unknown field {stringify}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1489
+      "line": 1502
     },
     {
       "id": "query-language.query.how_the_unit_was_read",
@@ -42593,91 +42600,91 @@
       "en": "{name}: {stringify} ends before it starts; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1831
+      "line": 1844
     },
     {
       "id": "query-language.query.name_stringify_is_not_a",
       "en": "{name}: {stringify} is not a calendar date; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1805
+      "line": 1818
     },
     {
       "id": "query-language.query.name_stringify_is_not_one",
       "en": "{name}: {stringify} is not one of money's {words} ({words_2}); dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1769
+      "line": 1782
     },
     {
       "id": "query-language.query.name_stringify_names_a_local",
       "en": "{name}: {stringify} names a local day and no time zone is given; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1812
+      "line": 1825
     },
     {
       "id": "query-language.query.name_stringify_why_dropped",
       "en": "{name}: {stringify}: {why}; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1818
+      "line": 1831
     },
     {
       "id": "query-language.query.select_name_as_field_fieldref",
       "en": "SELECT '{name}' AS field, {fieldRef} AS value, count(*) AS n\n  FROM scope s {rowJoin}\n  WHERE {sql} AND {fieldRef_2} IS NOT NULL GROUP BY {fieldRef_3}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2574
+      "line": 2587
     },
     {
       "id": "query-language.query.sort_stringify_can_hold_many",
       "en": "sort: {stringify} can hold many values per record; not a sort",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1854
+      "line": 1867
     },
     {
       "id": "query-language.query.sort_stringify_is_not_a",
       "en": "sort: {stringify} is not a sort key",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 3001
+      "line": 3014
     },
     {
       "id": "query-language.query.sort_unknown_field_stringify",
       "en": "sort: unknown field {stringify}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1855
+      "line": 1868
     },
     {
       "id": "query-language.query.sql_select_r_capture_sha",
       "en": "{sql}\nSELECT r.capture_sha AS capture_sha, r.registered AS registered,\n       ex.state AS extract_state, ex.condition AS extract_condition,\n       ex.detail AS extract_detail,\n       ix.state AS index_state, ix.bound AS index_bound,\n       ix.detail AS index_detail,\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha) AS has_reading\nFROM scope s {rowJoin}\n JOIN register r ON r.bundle_id = b.bundle_id\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'extract' AND subject = r.capture_sha)\n LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'derive' AND subject = r.capture_sha)\nWHERE {sql_2}\nORDER BY r.capture_sha ASC LIMIT ?",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2761
+      "line": 2774
     },
     {
       "id": "query-language.query.stringify_is_not_available_here",
       "en": "{stringify} is not available here; read as nothing",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1758
+      "line": 1771
     },
     {
       "id": "query-language.query.tf_i_fid_tf_as",
       "en": "tf{i}(fid, tf) AS (SELECT fid, {map} FROM (SELECT rowid AS fid, {hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1967
+      "line": 1980
     },
     {
       "id": "query-language.query.unknown_field_stringify_read_as",
       "en": "unknown field {stringify}; read as free text",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1523
+      "line": 1536
     },
     {
       "id": "queue-producers.index.a_bounded_number_of_shared",

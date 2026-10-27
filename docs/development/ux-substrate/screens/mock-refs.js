@@ -431,7 +431,7 @@ const SCREEN_HELP = {
   forgot: 'How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.',
   group: 'Administrators only: your team\'s name, website, languages, what a court can reach, who holds the hosting account, and its bar.',
   settings: 'Every setting in one list: yours first, then the team\'s.',
-  more: 'The places the tabs below do not hold: projects, people and settings.',
+  more: 'The places the tabs do not hold: projects, people and settings.',
   theme: 'The team\'s themes: lenses that gather documents and passages, never evidence.',
   projects: 'Every project you can see: its stage, who works on it, how busy it is, and when it last changed.',
   'dash-action': 'The Action area as a dashboard: clocks and whose move it is first, then what needs you, then every action.',

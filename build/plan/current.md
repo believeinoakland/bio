@@ -1,7 +1,7 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 5 OPEN · layer 6 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T52 · the beta (K5257)
 **Status** · OPEN · BOB #319 · session_018Bhced5gpDxaidQNabEbp6 · depth 1
-**Jobs** · entities: ENTITIES #1 session_018BhcecQhnVK36CsiRUDvsz; events: EVENTS #1 session_018BhcefVAkEW3F8ikST3nS6; money: MONEY #1 session_018Bhcef9ixS7sA7mnPM5bZx; explore: EXPLORE #1 session_018BhcefeUbMPbsVYnH7PqGj; query-language: QUERY-LANGUAGE #1 session_018Bhced7XwxHM61Lrxj2vxC
+**Jobs** · entities: ENTITIES #1 session_018BhcecQhnVK36CsiRUDvsz; events: EVENTS #1 session_018BhcefVAkEW3F8ikST3nS6; money: MONEY #1 session_018Bhcef9ixS7sA7mnPM5bZx; explore: EXPLORE #1 session_018BhcefeUbMPbsVYnH7PqGj; query-language: QUERY-LANGUAGE #1 session_018Bhced7XwxHM61Lrxj2vxC; retrieval: RETRIEVAL #1 session_018BhcedyRp1uFhsb5WwxYio
 **Owed** · none
 
 T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are written from `next.md` and the 0.87.0 walk's placement (K5354); R14 (civicos-process PR #13) is adopted before its first test run (K5351).
@@ -79,6 +79,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 **explore**
 - T52-18 · W9 · C-K22 label · MINOR · an event node is named in the Timeline's words (`screen.timeline.kind`), not "award · undated". W30 draws the grade word and the source link. PL1 W9.
 
+**retrieval**
+- T52-101 · query-language R35 (K5389) · test-only · retrieval's tests that assert a snippet's match in brackets (`passage-arm.test.mjs`'s R11/R15/R54 and R79 tests, `t51-round9.test.mjs` R95, `t51-fix2.test.mjs`) read `MARK_OPEN` and `MARK_CLOSE` (imported from query-language, never copied); after query-language merges (K5393). Widened (K5401): retrieval's own `#questionExcerpt` marks its match with the same two marks, so `t51-fix2.test.mjs` R92 reads them too; R92's sentence folded from the job's report.
+
 **query-language**
 - T52-19 · W10 · B-K5 marker · MAJOR · the match marker in a snippet is one the stored text cannot contain (or offsets), so a literal "[placed nowhere]" or "[object Object]" is not eaten; W28 adapts the drawer. PL1 W10.
 
@@ -92,6 +95,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **contradiction**
 - T52-22 · `candidatesFor` publishes a member-flagged candidate (`flagged_by`) in its answer, so screens-inquiry's `t51-fix11-b89.test.mjs` `answer(c)` takes it and R138's flags list can be drawn (SCREENS-INQUIRY #34 J64; K5282).
+
+**agent-worker**
+- T52-102 · `requirements.test.mjs` red in a batch run of query-language's users (`proc tests --users`), green alone (QUERY-LANGUAGE #1, K5393): first: settle the cause (shared state, ordering or memory; R14's memory watch), then fix it; "flake" is not a cause.
 
 ## Layer 8
 
@@ -135,13 +141,15 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 ## Layer 11
 
+Every screen job of this layer also draws DEC-445's rows and DEC-446's layout that touch its screens (merged `fb5f9dc2a9`, K5394): the singulars (`screen.finder.named.one`, `screen.findin.searched.one`, `document.unread.page`), `screen.finder.shown`, `screen.timeline.dated.meta.nograde`, `screen.find-in.notread.which`, `refusal.SUBJECT_IN_ACTIVE_PLAN.named`, the Document page's display rows (`screen.document.basis.*`, `screen.document.reading.*`), and DEC-446's DS2, DS4, DS5, DS10, DS13, DS18, DS20, DS32, DS35 as the mockup shows.
+
 **wizard-scripts**
 - T52-35 · W19 · A-K16 · MINOR · the shipped wizards' approver is a member-facing name in the data, not "BOB"; the draw stays. [waits: the approver's word, the design's]. PL2 W19.
 - T52-36 · DEC-443 (U486, `2892f29ccb`; K5315) · re-take the registry: the four acts (`factconfirm` on setup, `leggrade` on question, `resolve` on document, `signerknown` on queue); regenerate its data. interface-shell R134's re-points retire in their own entry.
 
 **op-grades**
 - T52-37 · R46 *(not yet met: T52)* · `expertisewithdraw` (DEC-386) has the entry Reasoned, source the kit; the totality names it.
-- T52-38 · `resolve` weight: with entities' entry (K5314), whichever side the job settles.
+- T52-38 · `resolve` weight: settled by ENTITIES #1 (K5392): `reasoned` stands with no `reason` field, so op-grades changes nothing here; its job confirms its table agrees and closes the entry.
 
 **affordances**
 - T52-39 · DEC-443 · reads `act.leggrade.does`, `act.signerknown.does`, `act.factconfirm.does` and the five `act.standard*.does` by key (ACT_HELP words move; three tests re-pinned); DEC-444's two ACT_HELP sentences (`counselpacketread`, `counselpacketexport`).
@@ -194,6 +202,7 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **screens-daily**
 - T52-62 · W28 · A-K2 offer (after W20), A-K4, A-K5, A-K11 Queue half (after W23), B-K5 display half (after W10), B-K11, B-K12 · MAJOR · Forward offers only members who can see the item and never the viewer; "Choose several" Forward moves what one-by-one Forward moves, or each row says why, and names the ask as the Queue does; no "Done: act.taskdecide.label.queue" (a sweep over every act that sets `ui.done` finds its words row); the Queue line counts as the masthead does ("1 item waits on you" owed); a record's snippet shows words, no `##` or session log; the passage count says passages and documents truthfully ("{n} passages in 1 document" row owed, DS11); the widen button is not labelled "Search". PL2 W28.
+- T52-104 · `browse.test.mjs` R46 ("a passage's matched words", line 212) red on the tranche before and after query-language R35 (RETRIEVAL #1, K5402): first: settle the cause with W28's marks (R35), then fix it.
 - T52-63 · N1263 · reads `screen.queue.vouchband.apart` (bell and sidebar count queue items only, the band its own number).
 - T52-64 · U1 · LA-7 · first: settle m1's `op=memberlist` and Home's `data.members` state; guard "Yours: ." until the list is known (certain either way). Also LB-18: the `cs.call` start and settle order for "Still loading" at 1.5 s on `council NOT zzzqqq …`.
 - T52-65 · K4599 (a) · Home and Queue read one combined read.
@@ -252,6 +261,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 - T52-98 · a knock, pull and vouch step and a testimony vouched (W5's gap: `journeys.mjs` has none; provenance R81 files both, K5381), and the walk of N1265's three installer steps.
 
 ## Completion round (P10: modules whose layer has closed)
+
+**file-safety** (layer 3)
+- T52-103 · DEC-449 (UX-DESIGN U493, `cf94163859`, B544) · test-only · `STAND_INS` drops `SIGNATURES_RUN_UNDER_WAY` now that `refusal.SIGNATURES_RUN_UNDER_WAY` has its row; R24 (`rows.test.mjs`) green. Done instead by BOB as a §5.10 mechanical pass at layer 5's close (no job running), with DEC-449 and DEC-450 (U494, `2ac5195725`) merged in the same step, so R24 is never red on the tranche (K5397).
 
 **file-scanner** (layer 1)
 - T52-100 · U5 (T52-13 settled by FILE-SAFETY #1, K5384) · MAJOR · the pinned LibreOffice 7.4.7.2 cannot load a streamed docx (data-descriptor flag 0x8, 28-byte extras; corpus docgen `alpha-B-6`); `renderer.mjs`'s `plainPackage` already converts it, but a render failed before stays failed because `renderer_version` holds only package versions (`handler.mjs:27`): file-scanner R36 (parked in `req-ahead-T52.md` until this round's START). Test with the streamed docx: refused by the old version, rendered once the version moves. After T52's redeploy (BOB's act 7) the live image is checked to carry `plainPackage` and capture `9dce360a…` renders.

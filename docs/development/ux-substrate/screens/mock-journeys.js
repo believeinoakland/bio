@@ -145,7 +145,7 @@ const J = [
    { s: 'setup', act: 'groupkeyset', only: 'ai', say: 'He gives the team\'s Claude key, so members can ask the assistant without an account of their own.' },
    { s: 'home', v: 'newgroup', act: null, say: 'Home says nothing is here yet, and where to begin.' },
    { s: 'security', v: 'ordinary', act: null, say: 'He looks at Security once. In one sentence it says nothing is unusual and there is nothing for him to do, and that files are checked.' },
-   { s: 'projects', v: 'empty', act: 'promote', say: 'Projects has none yet. He starts one, “Pothole repairs”, and becomes its owner.' },
+   { s: 'projects', v: 'empty', act: 'promote', say: 'Projects has none yet. He starts one by saying what it is about, “Pothole repairs”, and becomes its owner.' },
    { s: 'project', v: 'empty', act: 'promote', say: 'On the new project he writes his first question, “How many pothole reports did the city close late in 2025?”, and opens it.' },
    { s: 'question', v: 'new', act: 'airunopen', only: 'ai', say: 'The question has nothing cited yet. He asks the assistant to look through what the team holds.' },
    { s: 'question', v: 'running', act: null, only: 'ai', say: 'The assistant is at work; he can leave, and what it proposes will wait for him.' },

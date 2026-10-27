@@ -11,6 +11,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0 } from "./fixture.mjs";
+import { MARK_OPEN, MARK_CLOSE } from "../../../src/query.mjs";
+
+const marked = (word) => new RegExp(`${MARK_OPEN}${word}${MARK_CLOSE}`);
 
 /* One observation of a capture at the content level: `extract` for its extraction, `derive` for its index. */
 const ex = (w, c, bundle, state = "PRESENT") => w.observe({ level: "content", subject_kind: "capture", subject: c.sha,
@@ -71,7 +74,7 @@ test("R11, R15, R54: rows=passage answers only the units that matched — one of
   assert.deepEqual([one.rows[0].bundle_id, JSON.parse(one.rows[0].extent), one.rows[0].extent_kind, one.rows[0].ref,
                     one.rows[0].seq, one.rows[0].chain_kind, one.rows[0].truncated, one.rows[0].content_id],
     ["INFO-PKT", { kind: "pdf-page", page: 1 }, "pdf-page", "page 2", 1, "ocr", 0, null]);
-  assert.match(one.rows[0].snippet, /\[reserve\]/);
+  assert.match(one.rows[0].snippet, marked("reserve"));
   assert.equal(one.levels.content.matched, true, "the rows matched a term");
   const h = rowsOf(w, "passage:hydrostatic");
   assert.deepEqual([h.count, h.total], [3, 3]);
@@ -79,7 +82,7 @@ test("R11, R15, R54: rows=passage answers only the units that matched — one of
   assert.deepEqual(Object.keys(by).sort(), ["INFO-BIG/0", "INFO-BIG/1", "INFO-PKT/0"]);
   assert.deepEqual([by["INFO-BIG/0"].truncated, by["INFO-BIG/1"].truncated], [1, 0], "the flag is per unit");
   assert.deepEqual([by["INFO-PKT/0"].content_id, by["INFO-BIG/0"].content_id, by["INFO-BIG/1"].content_id], ["C-live", null, null]);
-  assert.ok(h.rows.every((r) => /\[hydrostatic\]/.test(r.snippet)), "every snippet centres on the term");
+  assert.ok(h.rows.every((r) => marked("hydrostatic").test(r.snippet)), "every snippet centres on the term");
   /* Paging stays at the unit grain. */
   const p1 = w.retrieval.meaningRows({ q: "passage:hydrostatic", rows: "passage", viewer: V("vera"), limit: 2 });
   const p2 = w.retrieval.meaningRows({ q: "passage:hydrostatic", rows: "passage", viewer: V("vera"), limit: 2, offset: 2 });
@@ -207,7 +210,7 @@ test("R79: op=meaningrows with snippet=64 answers a passage row's snippet longer
   unitAs(w, pkt.sha, "INFO-PKT", 0, `${words} hydrostatic ${words}`);
   const snip = (extra) => w.retrieval.meaningRows({ q: "passage:hydrostatic", rows: "passage", viewer: V("vera"), ...extra }).rows[0].snippet;
   const none = snip({}), long = snip({ snippetChars: 64 }), short = snip({ snippetChars: 4 }), twelve = snip({ snippetChars: 12 });
-  assert.match(long, /\[hydrostatic\]/);
+  assert.match(long, marked("hydrostatic"));
   assert.ok(long.length > none.length, "snippet=64 is longer than the default");
   assert.ok(short.length < none.length, "snippet=4 is shorter than the default");
   assert.equal(none, twelve, "no snippet is R12's default of 12");
