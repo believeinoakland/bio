@@ -2407,3 +2407,8 @@ Folded: DECISIONS.md DEC-481; screens (published, question). Owed (its owed: lin
 MERGE 9213d2aba8 (DEC-482), answering BOB #324's message on K5546 and K5555: `screen.photo.dropped.profile` now reads "a color profile that failed its safety check", so "Left out of the safe picture: {what}." names a profile only when the structural check refused it; a sound profile is kept and not mentioned. No other row speaks of color profiles. Docs only; no test reads the phrase. `bio-plane/src/case-checker/program.mjs` embeds the rows: regenerate it with the words.
 
 Folded: DECISIONS.md DEC-482; words-drawn.src.py (DEC-473's row in place). Owed (its owed: line): the case-checker bundle regenerated.
+
+## U516 · MERGE · 2026-10-27 · session_018BhceeRn5Di4Q4kwmEsXF9 · secondary
+MERGE d5d7513628 (DEC-483), answering BOB #324's message (the stale invitation link on plat-s1). When `memberadd` answers CONSENSUS_REQUIRED, Members holds no link where the link is shown and says: `screen.members.invite.nolink` "No invitation link exists yet. It appears here once {names} have endorsed." ({names}: `awaiting`, by member name, joined with "and"). Any link shown before is cleared, never left on screen. `refusal.CONSENSUS_REQUIRED` stays as the act's answer. It sits on U512-U515's commits, so it merges with them.
+
+Folded: DECISIONS.md DEC-483; screens (Members). Owed (its owed: line): screens-settings `members.mjs` clears the held link on CONSENSUS_REQUIRED and draws the row.
