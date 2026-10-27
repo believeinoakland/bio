@@ -39,3 +39,5 @@
 **P-5 · 2026-10-27** · P4 answered (K5444): `service-levels-draft.md` §5 and PL29 (the install's level choice) revised; `levels-2-3-study-plan.md` written; S0's table inventory started.
 
 **P-6 · 2026-10-27** · FILES F5 (`LOAD-PER-TYPE.md`) read: record grows by extracted text (about 1.4-1.5 x), not file bytes; folded into `service-levels-draft.md` §2 (the record bound is database bytes and R2 bytes separately), `load-test-draft.md` §3 (text-heavy and scan-heavy seeds; P-M17 and L1-L6 in S1's cycle), `time-budgets-draft.md` PL7 (background work yields the room; one batch at most 100 ms). R2-to-R2 answered from Cloudflare's pages (`whole-record-move-draft.md` §5). Factor on real unit rows not confirmed: needs S1.
+
+**P-7 · 2026-10-27** · K5448 folded: prototype by this lane's workers on `proto/levels-2-3` (never merged; `load-check` is R1's); CONSISTENCY (5)-(8) applied (one bounds table in runtime-limits for PL1 and PL20; `load-check` uses op-declarations, runtime-limits, test-support only; PL3 first an op-declarations test). Study plan re-timed: about 5-6 days, waiting only on deploys. The table inventory (S0) is still being written.

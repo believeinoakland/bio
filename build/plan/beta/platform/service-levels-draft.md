@@ -28,7 +28,7 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 ## 3. Requirement lines (draft)
 
 **runtime-limits** (layer 1)
-- **PL20** `SERVICE_LEVELS` is a frozen map `level -> {name, design_stage, cf_plan, record_bytes, members_at_once, upload_bytes, measured}` for the three levels, where `measured` is `null` until a load-test row is recorded in `PLATFORM.md` (`source` `PLATFORM.md P-M<n>`, as `PLATFORM_FIGURES`, R34); `levelOf(copy)` answers 1, 2 or 3 from the copy's design stage and the plan it declares, never from a guess. Test: each level, an undeclared copy answering 1, `measured` null for every level until a row is recorded.
+- **PL20** The three levels are rows of `runtime-limits`' one bounds table (kind `level`, never a second table, K5448 (8)), each `{name, design_stage, cf_plan, record_bytes (database and R2 separately), members_at_once, upload_bytes, measured}`, where `measured` is `null` until a load-test row is recorded in `PLATFORM.md` (`source` `PLATFORM.md P-M<n>`, as `PLATFORM_FIGURES`, R34); `levelOf(copy)` answers 1, 2 or 3 from the copy's design stage and the plan it declares, never from a guess. Test: each level, an undeclared copy answering 1, `measured` null for every level until a row is recorded.
 - **PL21** A figure with `measured: null` is never given to any caller that renders words for a team: `levelFigures(level)` throws a `TypeError` naming the level while it is unmeasured. Test: the throw for an unmeasured level, the figures for a measured one.
 
 **screens-settings** (layer 11; owns the gauge, G42) and **installer** (needs, to UX-DESIGN through BOB, as needs not designs)

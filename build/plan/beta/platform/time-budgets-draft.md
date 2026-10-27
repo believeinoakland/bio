@@ -39,11 +39,11 @@ Every registry screen (`docs/development/ux-substrate/`) and every op (`op-decla
 ## 4. Requirement lines (draft; module owners proposed, PLANNING places them)
 
 **runtime-limits** (layer 1; keeps `PLATFORM_FIGURES`, R34)
-- **PL1** `TIME_BUDGETS` is a frozen map `class -> {ceiling_ms, p90_factor, hops}` for the nine classes of §2, with `source` naming the ruling (K4354) or `PLATFORM.md` row; `budgetOf(class)` answers a row and throws an `Error` naming the class when none exists. Test: each class by `budgetOf`, an unknown class, the map deeply frozen.
+- **PL1** The nine classes of §2 are rows of `runtime-limits`' one bounds table (`READ_BOUNDS`' family, R29-R31; kind `time`, never a second table, K5448 (8)), each `{ceiling_ms, p90_factor, hops}`, with `source` naming the ruling (K4354) or `PLATFORM.md` row; `budgetOf(class)` answers that row and throws an `Error` naming the class when none exists. Test: each class by `budgetOf`, an unknown class, the map deeply frozen.
 - **PL2** A per-screen or per-op row names its class and may override `ceiling_ms` downward (a faster promise); an override above its class's ceiling is refused. Test: an override above the class refused, below accepted.
 
 **op-declarations** (layer 11; owns each op's and screen's declaration)
-- **PL3** Every op spec and every screen declares its `budget_class`; a declaration with none is a check finding (`proc check`). Test: a spec with none is reported by the check, one with an unknown class refused.
+- **PL3** Every op spec and every screen declares its `budget_class`; a declaration with none is a check finding (`proc check`). Test (first an `op-declarations` test, K5448 (7)): a spec with none is reported by the check, one with an unknown class refused.
 - **PL4** A screen's declaration lists its reads by name and wave (the combined read's input, `combined-read-and-fold-draft.md` PL10); its hop count is derived (one for the session, one per wave), never typed. Test: the derived count equals the declared waves plus one.
 
 **journey-check** (layer 11; the deployed copy's walker) and a measuring tool (§6)

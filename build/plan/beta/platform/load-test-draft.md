@@ -30,7 +30,7 @@ Per op and per screen: net median, p90, p99; hops; requests; repeats. Per step: 
 
 ## 5. Requirement lines (draft; a new module is proposed)
 
-**load-check** (new module, layer 11, proposed; `uses` `op-declarations`, `runtime-limits`, `journey-check`, `test-support`)
+**load-check** (new module, layer 11, proposed, built in R1 (K5448); `uses` `op-declarations`, `runtime-limits` and `test-support` only; until it is built the study measures with the prototype's scripts on `proto/levels-2-3`)
 - **PL40** `runProfile(copy, profile, ramp)` drives the declared reads and acts as seeded members against a copy named by the caller, steps up by `ramp`, and stops at the first step that breaks a budget at p90 or fails over 1 % of ops, returning per-step figures; it refuses a copy whose account is not the permitted one and any copy the caller marks as the shared test copy, before any request. Test: a copy fixture of a wrong account refused with no request made; the shared copy refused; a fixture whose latency rises with members stops at the step that crosses the budget.
 - **PL41** The driver is bounded by what one scratch copy should take (a member count cap and a request-rate cap it will not exceed whatever the caller asks), never loads a copy it did not seed, and prints no credential. Test: a request beyond the cap is clipped; a copy with another team's seed refused.
 - **PL42** `seedCopy(copy, size)` builds a record of the named size through the product's own acts and returns the measured bytes, documents and rows. Test: the sizes reached are within 10 % of the request and equal what the gauge reports.
