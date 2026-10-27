@@ -71,7 +71,7 @@
 - T53 · K5457 · the seed payload and shipped provider data, data only · same, R39, R48 `[waits: BOB's key ceremony and seed signing; Bob's pass marks, K5475]`
 
 **ai-accounts**
-- T53 · N1220 (K5457) · the account model (owner, provider, plan, means gateway/sealed/reference/issued/none, ordered entries); plan scope and the personal-subscription rule from the catalogue; the hop; disclosure per provider and host; checks P1-P7; free-tier acceptance; the gateway payer check · `lane-ai-design/draft-ai-accounts.md` R1-R64 `[waits: AI3-AI5]`
+- T53 · N1220 (K5457) · the account model (owner, provider, plan, means gateway/sealed/reference/issued/none, ordered entries); plan scope and the personal-subscription rule from the catalogue; the hop; disclosure per provider and host; checks P1-P7; free-tier acceptance; the gateway payer check · `lane-ai-design/draft-ai-accounts.md` R1-R64 (AI3-AI5 answered A, K5477-K5479)
 - T53 · K5457 · R8, R12, R13, R18, R35 and twelve old ops retired, nineteen new declared, every user re-pointed in this tranche, no aliases (FOLD-AI §2 lists the sixteen modules) · same, Part 1, R36, R38, R61
 - T53 · DEC-465, DEC-466, K5471 · `aikeyseal` (R69), a member's own list order (R70), declared ops (R71), a share flag turned off (R72), `GATEWAY_UNAVAILABLE` naming who can grant it (R73), the readiness summary (R74); a member clears the payer flag on her own account (R68) · `lane-ai-design/draft-ai-accounts-dec465.md` `[waits: AQ11 on Bob's page, "my projects" owned or joined, drafted "owns"]`
 - T53 · K5457 · migration: apikey to the Anthropic API plan (sealed), signin to subscription (issued), project sign-in accounts ended and told once · same, R59
@@ -153,7 +153,7 @@
 - T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37), per AI and naming it (A48) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) (AI1 answered B, K5475)
 
 **ai-runs**
-- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI3, AI10]` (AI1 answered, K5475)
+- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI10]` (AI1, AI3 answered, K5475, K5477)
 - T53 · N1219, DEC-466 · `read` and `disagree` passed through (R99), `op=airunlog` (R100), segments as parts, hops and refusals recorded (R101, R102), `op=airunparts` "How this run went" (R103), the label names the AI, never the account (R104) · `lane-ai-design/draft-run-record.md`
 
 **observation-log** (layer 5)
@@ -164,7 +164,7 @@
 
 **agent-model** (position 90, FOLD-AI §2.9)
 - T53 · K5457 · first: the interface (`turn`, `converse`, `capabilities`, `estimate`, `health`) with the Anthropic adapter behind it, today's tests passing through `turn` (N1205's landing place) · `lane-ai-design/draft-agent-model.md` R1-R36, R43, R44, R54, R55
-- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI4 (R47), AI10; live checks L2, L3]`
+- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI10; live checks L2, L3]` (AI4 answered, K5478)
 
 **agent-runner**
 - T53 · K5457 · the Claude Code route retired in one change (R35, R42; RUNNER and REMOTE bindings off) · `lane-ai-design/draft-agent-runner.md` R13 `first: N1205's split`
