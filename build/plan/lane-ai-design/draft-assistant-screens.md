@@ -1,6 +1,6 @@
 # The assistant on every screen and journey, for the beta (draft)
 
-**Status** · READY for PLANNING, AI-DESIGN #3, 2026-10-27; §6 is AQ1 and AQ2 of `QUESTIONS-FOR-BOB.md`, its rows follow the recommendation until Bob answers. Source of the facts: `INVENTORY.md` (worker report, cited ids there); DEC-420 (U456, `bf152ef3f3`); `DESIGN-BRIEF.md`. Owner modules use the brief's packaging (BOB's to confirm). No design here: what a screen needs goes to UX-DESIGN through BOB. Names reconciled across the lane's drafts, 2026-10-27.
+**Status** · READY for PLANNING, AI-DESIGN #3, 2026-10-27, revised after PLANNING's fold (§4 rows and grades, §8 and §9 new); §6 is AQ1 and AQ2 of `QUESTIONS-FOR-BOB.md`, its rows follow the recommendation until Bob answers. Source of the facts: `INVENTORY.md` (worker report, cited ids there); DEC-420 (U456, `bf152ef3f3`); `DESIGN-BRIEF.md`. Owner modules use the brief's packaging (BOB's to confirm). No design here: what a screen needs goes to UX-DESIGN through BOB. Names reconciled across the lane's drafts, 2026-10-27.
 
 ## 1. The parts of the assistant (what Gate 1 judges, what a member sees named)
 
@@ -45,9 +45,9 @@ These six ids are the catalogue's part list (`ai-catalogue` R14); `ai-accounts` 
 - **G-remote** (`agent-worker` R110, `ASSISTANT_REMOTE_NOT_READY`) is **retired**: the beta's path never needs a remote Claude Code session (`draft-agent-runner.md`). In its place, "AI path ready" for an act is: an account chosen by the cascade and order, its entry listed and offered under the checks in force, and the entry passed for the part, with `health` not `open`, `auth_failed`, `payer_unverified` or `retired`. Each failure is the matching `aimoments` moment.
 - **G-bar** (`run-rules` R19, R29: an AI part reaches members only after Civicsmith's frozen set of real matters; N829: the set has no matters) would keep every part off members' copies in the beta. This is Bob's (§6 Q1).
 
-## 4. DEC-420's 41 ops and two added (`aioptinset`, `aitermswithdraw`): owner, rung, budget class [rec, BOB's]
+## 4. DEC-420's 41 ops and the lane's additions (`aioptinset`, `aitermswithdraw`, `aiusebymember`, `aipayerclear`, `aipathready`; three Worker-only ops): owner, rung, budget class [rec, BOB's]
 
-Rungs from `op-grades` R1 (`reversible`, `reasoned`, `terminal`, `attested`, `irreversible`) or an absence ground (R2). Every op below is **refused to a machine** (a run never changes which AI serves it, its checks or limits). Budget classes are PLATFORM's (`time-budgets-draft.md` §2), with one new class asked for (§5 P1). Reads are what the op or screen reads, for PLATFORM's combined read (PL4).
+Rungs from `op-grades` R1 (`reversible`, `reasoned`, `terminal`, `attested`, `irreversible`) or an absence ground (R2). Every member op below is **refused to a machine** (a run never changes which AI serves it, its checks or limits); the three Worker-only ops are the exception and are served to the Worker's principal alone. Budget classes are PLATFORM's (`time-budgets-draft.md` §2), with two new classes PLATFORM proposed (P-15, §5 P1): **AI act** (acknowledged within `AI_ACT_ACK`, completes within `AI_ACT_DONE`, longer goes to the background) and **Gate 1 run** (acknowledged within `GATE1_ACK`, at most `GATE1_PER_PART_MAX` per (entry, part), never in the member-facing room's thread). The figures are proposed by PLATFORM; AI-DESIGN to confirm after the first measuring run. The long Gate 1 run needs its own class because PL2 allows overrides only downward, so no override of the AI act class can lengthen it. The ask and the draft (the assistant's `/ask` and `/draft` paths) are class AI act too. Reads are what the op or screen reads, for PLATFORM's combined read (PL4).
 
 | op | owner | rung or ground | class | reads |
 |---|---|---|---|---|
@@ -58,28 +58,32 @@ Rungs from `op-grades` R1 (`reversible`, `reasoned`, `terminal`, `attested`, `ir
 | `aibudgetset`, `aiprojectbudget` | ai-use (limits and alert thresholds) | reversible | shell act | limits, use |
 | `aikeyenter` | ai-accounts (to the team's Cloudflare store) | ground `credential` | write act | — |
 | `aikeycloudflare`, `aikeyreference`, `aisignin` | ai-accounts | ground `credential` | write act | — |
-| `aitermsaccept`, `aipersonalchoose` | ai-accounts | reasoned (acceptance recorded with name, date, terms version) | shell act | plan terms |
-| `aiconnecttest` | ai-gate (`connectCheck`, T0 only, through `agent-model`; no team material) | ground `observational` | **AI act** (§5 P1) | entry |
+| `aitermsaccept`, `aipersonalchoose` | ai-accounts | reversible (acceptance recorded with name, date, terms version; no reason is asked) | shell act | plan terms |
+| `aiconnecttest` | ai-gate (`connectCheck`, T0 only, through `agent-model`; no team material) | ground `observational` | **AI act** | entry |
 | `aiaccountadd`, `aiownadd` | ai-accounts | reversible | write act | catalogue, accounts |
 | `aicontinue`, `aistop`, `aisend`, `aisendrefuse`, `aiwait`, `aiwithout`, `aiswitchaccount`, `aimodelchoose`, `aichooseother`, `aiaccountpick` | ai-runs (the run's or ask's own record) | reversible | shell act | the run, accounts |
 | `aiaskadmin` | notice-producers | reversible | shell act | — |
-| `airunstart` | ai-runs | as `airunopen` today | AI act | estimate |
+| `airunstart` | ai-runs | as `airunopen` today | **AI act** | estimate |
 | `aitestsetup` | ai-gate | ground `credential` | write act | — |
-| `aitestrun` | ai-gate (in the team's test container) | ground `observational` | AI act, long (progress per part) | suite |
+| `aitestrun` | ai-gate (in the team's test container) | ground `observational` | **Gate 1 run** (progress per part) | suite |
 | `airesultsend` | ai-gate (to the issuer) | **irreversible** (a sent bundle cannot be recalled) | write act | bundle manifest |
 | `airesultsdecline` | ai-gate | reversible | shell act | — |
 | `airesultsread` | ai-catalogue (library rows) | none (read) | read act | library |
 | `aioptinset`, `aitermswithdraw` | ai-accounts (added by this lane, in DEC-420's manner: no listed op covers a cross-owner opt-in or withdrawing a free-tier acceptance) | reversible | shell act | accounts |
+| `aiusebymember` (U7, K5459) | ai-use (`accountUseByMember`) | none (read) | read act | per-member use of a team or project account (to its owners) |
+| `aipayerclear` | ai-accounts (an administrator clears a payer-mismatch flag after a gateway call the team's own key did not pay; refusal `PAYER_NOT_VERIFIED`, key `ai.refused.payernotverified`) | reasoned (the administrator's reason recorded) | shell act | accounts, the flag |
+| `aicredential`, `aigatewayserved`, `aicredentialfailed` | ai-accounts; **Worker principal only, not a member op**, never a model tool, never logged | ground `credential` for `aicredential`; `observational` for the other two | Worker call | the act's own account |
+| `aipathready` | ai-runs, served by agent-worker (the plane asks the Worker for `agent-model` `health(account, entry)` for an act's head account and entry; answers `ready` or the not-ready reason) | none (read) | read act | health of the head account and entry |
 
 Words: op names keep DEC-420's spellings; "limit", never "budget", in words people read (DEC-421).
 
 ## 5. Needs from other lanes (to BOB for `MAP.md`)
 
-- **P1 · PLATFORM:** a budget class for an **AI act** (an ask, a draft, a run start, a connect test). Proposed: first progress event within 2 s; a checked answer within the entry's characterized turn latency times the part's turn budget, shown as a stated wait. Today's classes have none.
+- **P1 · PLATFORM (met by PLATFORM P-15):** two budget classes, **AI act** (an ask, a draft, a run start, a connect test: `aiconnecttest`, `airunstart`; acknowledged within `AI_ACT_ACK`, completes within `AI_ACT_DONE`, longer goes to the background) and **Gate 1 run** (`aitestrun`: acknowledged within `GATE1_ACK`, at most `GATE1_PER_PART_MAX` per (entry, part), never in the member-facing room's thread). Figures proposed by PLATFORM (`AI_ACT_ACK` 2 s, `AI_ACT_DONE` 60 s, `GATE1_ACK` 2 s, `GATE1_PER_PART_MAX` 30 min); AI-DESIGN to confirm after the first measuring run.
 - **P2 · PLATFORM:** the assistant's declared reads (its "need" in their HANDOFF): the §4 reads column, plus per act `accountFor` + `checksInForce` + `entryOf` (one combined read, cached per session); the catalogue's size per copy (about 100 entries × 2 KB = 0.2 MB, an estimate to measure) and the gateway's log (held in the team's Cloudflare account, not the record).
 - **U1 · UX-DESIGN:** the AI's name in every existing machine label ("Draft · the assistant's ({ai}), asked by {handle}"), on rows 1–17.
 - **U2 · UX-DESIGN:** a hop and the AI that served each segment, in the run log (row 3–4; N1219).
-- **U3 · UX-DESIGN:** "AI path ready" states in place of the alpha's last-check steps (setup, Settings), and the reachable rule (`interface-shell` R20) for a project-only account.
+- **U3 · UX-DESIGN:** "AI path ready" states in place of the alpha's last-check steps (setup, Settings); the reachable rule for a project-only account is §8.
 - **U4 · UX-DESIGN:** the charge-or-rule answer (N1258) when its tranche opens.
 - **U5 · UX-DESIGN:** the installer's ask for a Cloudflare credential able to create a gateway and store keys (AIR45), with why, in plain words.
 - **U7 · UX-DESIGN (K5459):** `aiproviders`' "Limits and alerts" and `aiproject` show per-member use and cost on accounts the team or project pays for (`op=aiusebymember`, owner `ai-use`, rung none (read), class read act); DEC-420's "names no member" no longer holds there. `aimine` unchanged (a member's own use, private).
@@ -126,7 +130,8 @@ The canonical set, one owner each; a caller uses the owner's spelling. Brief §2
 | `accountFor({member, act})` | ai-accounts | the account serving an act: `account_id`, `level`, `owner`, `provider`, `plan`, `means`, `entry_id`, `entries`, `personal`, `disclosed` |
 | `hopFor({member, act, from, reason, at_step_boundary})` | ai-accounts | the next pair down the owner's list; reasons `limit`, `unavailable`, `lapsed`, `capability`, `auth`, `member_switch`; `payer_change` is `{from_owner, to_owner}` or null |
 | `checksInForce({project, member, act})` | ai-accounts | the checks binding a piece of work (team locks, project ticks, member's own) |
-| `gatewayServedCheck`; flag | ai-accounts | the payer check per gateway call; a mismatch keeps the answer, flags the account, refuses later calls until an administrator clears it (pending Bob, `QUESTIONS-FOR-BOB.md`) |
+| `gatewayServedCheck`; flag | ai-accounts | the payer check per gateway call, reached by the Worker as `op=aigatewayserved`; a mismatch keeps the answer, flags the account, refuses later calls `PAYER_NOT_VERIFIED` until an administrator clears it with `op=aipayerclear` (pending Bob, `QUESTIONS-FOR-BOB.md`); an auth failure is `op=aicredentialfailed`, the credential `op=aicredential` |
+| `aipathready` | ai-runs, agent-worker | the plane's read of `agent-model` `health(account, entry)`; `ready` or the not-ready reason |
 | `GROUP_NEEDS`, `gateRecord`, `partAdmittedOn` | ai-gate (`partAdmittedOn` run-rules) | groups each part needs; the verdict record (`verdict` `passes`, `passes_with_limits`, `not_suitable`, `not_yet_rated`; `limits` `{kind, value}`; `suiteVersions`); admission of a part for an entry |
 | limit kinds | ai-gate | `context_depth`, `no_image_input`, `no_streaming`, `no_parallel_tools`, `output_cap` |
 | `connectCheck`, `selectItems`, `scanForSecrets` | ai-gate | T0 connect probe; items from a challenge's `selection_seed`; secret scan with the host profile's `key_shapes` |
@@ -134,4 +139,35 @@ The canonical set, one owner each; a caller uses the owner's spelling. Brief §2
 | challenge; `receipt_id` | ai-issuer | `{challenge_id, nonce, bank_version, selection_seed, issued_at, expires_at}`, unsigned; a bundle's receipt |
 | refusal codes | the minting module | upper snake; one site each (K231); `IMAGE_DIGEST_MISMATCH` (issuer) is apart from `DIGEST_MISMATCH` (catalogue payload) |
 | word keys | the screens | `ai.refused.<code, lower case, no underscores>`; `ai.catalogue.state.<state>`; `ai.choice.*`; `gate.*` (the suite's own); `gate.runner.refused.<CODE>` (the container) |
-| ops | draft-assistant-screens §4 | DEC-420's spellings (`aiaccountadd`, `aiownadd`, `aiorderset`, `aicheckset`, `aikeyenter`, `aitermsaccept`, `aisend`, `aicontinue`, `aistop`, ...); `aioptinset` and `aitermswithdraw` added |
+| ops | draft-assistant-screens §4 | DEC-420's spellings (`aiaccountadd`, `aiownadd`, `aiorderset`, `aicheckset`, `aikeyenter`, `aitermsaccept`, `aisend`, `aicontinue`, `aistop`, ...); `aioptinset`, `aitermswithdraw`, `aiusebymember`, `aipayerclear`, `aipathready` added |
+
+## 8. interface-shell R20 (AMEND)
+
+- **R20** (T53; DEC-420; AIR5; U3; amends R20) The assistant is **reachable** for a member when `op=assistantstate` answers `on: true` and `op=aipathready` answers `ready` for some act of hers on any account the cascade can choose for it: her own, a project's she has joined, or the team's, a project-only account included (the plane resolves each act's head account and entry with `ai-accounts.accountFor` and asks the agent Worker for `agent-model`'s `health(account, entry)`; one combined read, cached per session). While reachable, the masthead's assistant button opens the dock with the panel `screens-inquiry` registers, beside the screen it serves; while not, no assistant control is drawn anywhere (absent, not greyed). Each read that does not answer is taken as not reachable. The alpha's three reads (`op=accountreference`, `op=subscriptionsignin` `{step: "state"}`, `op=groupkeystate`) are no longer asked, and the answer names no other member's account. Test: a member whose only account is a joined project's, with a ready path, is shown the button; a member with the team's account only, likewise; control: the same member when every path answers a not-ready reason (for example `auth_failed`), or when `on` is false, or whose only account is another member's personal subscription, is shown no assistant control anywhere; an unanswered read draws none.
+
+## 9. Retired: the alpha's AI ops and screens
+
+One list. Each is removed with no alias in the round that re-points its callers (`ai-accounts` For BOB 6); `[rec]` mappings are design's to confirm.
+
+| retired | what it was | replacement |
+|---|---|---|
+| screen `connect` | the member's own connect screen | `aimine`, with `aiconnect` for the connect steps (DEC-420) |
+| screen `teamai` | the team's AI key screen | `aiproviders` (DEC-420) |
+| screen `projectai` | the project's AI key screen | `aiproject` (DEC-420) |
+| `groupkeyset` | `ai-accounts` R35: the team enters its key | `aiaccountadd` (team), `aikeyenter` for a gateway key |
+| `groupkeyremove` | `ai-accounts` R35 | `aiaccountremove` |
+| `groupkeyswitch` | `ai-accounts` R35 | `aiaccountswitch` |
+| `groupkeynoticeseen` | `ai-accounts` R35: the once-only notice of the key going to Anthropic | `aisend` (carries the recipient notice, per provider and host) |
+| `accountreferenceset` | `ai-accounts` R35: a member's own account | `aiownadd` |
+| `accountreferenceremove` | `ai-accounts` R35 | `aiaccountremove` |
+| `subscriptiondisconnect` | `ai-accounts` R35: disconnect a sign-in | `aiaccountremove` (an `issued` account is disconnected by removal) |
+| `projectkeyset` | `ai-accounts` R36: a project's key | `aiaccountadd` (project) |
+| `projectsigninset` | `ai-accounts` R36: a project sign-in account | none (project sign-in accounts end, AIR41) |
+| `projectaccountremove` | `ai-accounts` R36 | `aiaccountremove` |
+| `projectaccountswitch` | `ai-accounts` R36 | `aiaccountswitch` |
+| `projectkeynoticeseen` | `ai-accounts` R36 | `aisend` |
+| `subscriptionsignin` (steps start, code, state, signout) | `signin-door`: the sign-in relay to `agent-worker`'s `POST /signin` | `aisignin` (the adapter's connect flow for an `issued` account) |
+| `agent-worker` `POST /signin`, `REMOTE` (R66, R67, R81-R85, R109, R111) | the Claude sign-in relay and remote route | the Anthropic adapter's connect flow and remote adapter behind `agent-model` (`draft-agent-run-path.md`) |
+| `agent-runner` `POST /signin`, `/signin/code`, `/signin/state`, `POST /signout`, the conversation connection, the `RemoteSession` stub (R1-R4, R17-R28, R31, R32, R35-R42) | the Claude Code container's routes | `POST /run` and its routes (`draft-agent-runner.md` R43) for the Gate 1 test container; none for a member's sign-in |
+| `groupkeystate`, `accountreference` (reads), `subscriptionsignin` `{step: "state"}` | the alpha's reachable rule (`interface-shell` R20) | `aipathready` (§8); `accountState` and `accountsOf` for the settings screens |
+

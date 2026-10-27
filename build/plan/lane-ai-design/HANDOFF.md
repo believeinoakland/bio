@@ -16,6 +16,8 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **Was for BOB** · each draft's "For BOB" section (technical points with a recommendation). The cross-draft ones: packaging (`DESIGN-BRIEF.md` §1); who picks the entry (`agent-model.entryFor`, R55); the secret reaching the Worker by `op=aicredential` (run-path For BOB 1); unsigned challenge with the nonce table authoritative (lane recommends); library rows hold parts, speed and task cost only (lane recommends); `run-rules` `TEST_BAR_PARTS` migrated to the six part ids (no draft owns it: PLANNING); `signatures` R49–R53 (catalogue's Uses).
 
+**PLANNING's fold (FOLD-AI §1–§3, K5457) answered in A46:** every gap and form defect fixed; `draft-credentials.md` and `draft-signatures.md` (R49–R56) split out as their own files.
+
 **Needs placed** · PLATFORM: an "AI act" budget class and the assistant's declared reads (`draft-assistant-screens.md` §5 P1, P2). UX-DESIGN: U1–U6, sent by BOB as B555.
 
 **Next steps, in order**
@@ -35,3 +37,16 @@ K5457: every For BOB point decided as recommended. Drafted for PLANNING: `draft-
 
 ## A45 · 2026-10-27 · Bob's K5459 folded: paying owners see per-member use
 AD43 added; `draft-ai-use.md` R27 `accountUseByMember` (team and project accounts, to their owners; a member's own account never); `draft-ai-costs.md` §2; `draft-assistant-screens.md` U7. **Need:** Bob's AI1–AI10.
+
+## A46 · 2026-10-27 · PLANNING's fold answered: every gap and form defect fixed
+Per FOLD-AI §1–§3 as BOB decided (K5457):
+- **ai-accounts** R65 `aicredential` (Worker principal, the act's own account, `AI_GRANT_OPS` and `PLANE_OPS`, never a model tool, never logged), R66 `aigatewayserved`, R67 `aicredentialfailed`, R68 `aipayerclear` (reasoned, `PAYER_CLEAR_NO_REASON`); one refusal `PAYER_NOT_VERIFIED`; the twelve retired ops listed; `aitermsaccept` and `aipersonalchoose` reversible.
+- **credentials** delta moved to `draft-credentials.md` (six amendments, R48 among them).
+- **signatures**: `draft-signatures.md` R49–R56, including the run-key check for issuer R12; the catalogue's references renumbered.
+- **ai-catalogue**: R25 now says omission is never a state change; one closed `ADVISORY_REASONS` list shared with issuer R7; the N1205 reference fixed.
+- **run-rules** R36 follows option B (`draft:reading` → `draft`); ai-gate's Terms and agent-harness R21 say "`GATE_PART_OF`'s values".
+- **Readiness**: `aipathready` with the `ai-health-probe` scheduler consumer (ai-runs R98).
+- **Screens**: interface-shell R20 amended (screens §8); one retirement list (screens §9); `aiusebymember` and the new ops added to §4; PLATFORM P-15's two classes, "AI act" and "Gate 1 run", named.
+- **Form, every draft**: house prefix on every line, Tests on every line, numbers moved to Suggestions as "set at START".
+
+**Need:** Bob's AI1–AI10.
