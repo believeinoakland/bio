@@ -87,14 +87,17 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 ## Layer 6
 
-**inquiry**
-- T52-20 · re-walk 11 C (2) · K5332 · moving a leg that sits in a ground to the other side is refused `BASIS_REFUSED` (C-2.8): the refusal names the ground and tells the member to take the passage out of it first (the job confirms whether `inquiry` or `inquiry-grammar` makes the finding; W29 maps it).
+**inquiry-grammar**
+- T52-20 · re-walk 11 C (2) · K5332 · moving a leg that sits in a ground to the other side is refused `BASIS_REFUSED` (C-2.8): the finding carries its own code and its repair tells the member to take the passage out of the ground first: inquiry-grammar R70 (`checkGrounds` makes it; inquiry and citation relay it unchanged; K5405). W29 maps it.
 
 **citation**
-- T52-21 · W11 · C-K5 · MAJOR · "Remove a citation" removes the one passage cited and "Put it on the other side" moves that passage's leg only, so the record's per-document edge no longer drags every passage (BOB's ruling of the placement, PLB BQ15). W29 maps the refusal's own sentence. PL1 W11.
+- T52-21 · W11 · C-K5 · MAJOR · "Remove a citation" removes the one passage cited and "Put it on the other side" moves that passage's leg only, so the record's per-document edge no longer drags every passage (BOB's ruling of the placement, PLB BQ15). W29 maps the refusal's own sentence. citation R25 (K5405). PL1 W11.
+
+**leg-earning**
+- T52-105 · W11 (with T52-21) · `restingOn` and `restsOnLive` read each leg's own severed status, so a passage severed while another of the same document rests is not counted live: leg-earning R17 (K5405). Carried to citation by BOB (P10).
 
 **contradiction**
-- T52-22 · `candidatesFor` publishes a member-flagged candidate (`flagged_by`) in its answer, so screens-inquiry's `t51-fix11-b89.test.mjs` `answer(c)` takes it and R138's flags list can be drawn (SCREENS-INQUIRY #34 J64; K5282).
+- T52-22 · `candidatesFor` publishes a member-flagged candidate (`flagged_by`) in its answer, so screens-inquiry's `t51-fix11-b89.test.mjs` `answer(c)` takes it and R138's flags list can be drawn (SCREENS-INQUIRY #34 J64; K5282). R25 already states the field and `#present` sets it: the step is contradiction's published fixtures (its tests' own, from its real code) carrying a flagged candidate's answer, so a user's test builds none by hand; no requirement changes (K5405).
 
 **agent-worker**
 - T52-102 · `requirements.test.mjs` red in a batch run of query-language's users (`proc tests --users`), green alone (QUERY-LANGUAGE #1, K5393): first: settle the cause (shared state, ordering or memory; R14's memory watch), then fix it; "flake" is not a cause.
