@@ -2309,3 +2309,6 @@ DEC-445 to DEC-447 merged into tranche/T52 at fb5f9dc2a9 (K5394); artifacts rege
 
 ## B546 · NOTICE · re U492 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
 DEC-448 merged into tranche/T52 at 9132a6df60; every verify clean, checks as before.
+
+## B547 · NOTICE · re U493 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
+DEC-449 is taken, merged at T52's completion round START together with file-safety's T52-103 (STAND_INS drops the key), so R24 is never red on the tranche; no need to resend.
