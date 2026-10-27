@@ -151,3 +151,7 @@ BOB decided L46's eleven technical points as recommended and Found 3 `TARGET_NOT
 ## L49 · 2026-10-27 · K5568 and K5567 applied
 
 K5568 (Bob's B3 = A): every removal shows the team who removed and why; `lines-K5562-K5563-founder.md`'s read is now `adminRemovals` (`op=adminremovals`, apart from R75's `adminRemovalsOpen`), each entry `how` founder or vote with deciders and reasons; K5562-R5 draws both; the vote line's words owed. K5567 (Bob: "Don't run multiple tranches or rounds when things can instead be done at once"): the plan's R2 and R3 rewritten as "Measurements": at once, alongside R1, the registers' M-R3, M-R4, M-R7, M-R8, M-R10-M-R12, the load test's "before" run with PLATFORM's study driver, the budget walk's L1, and the preparations (corpus files, M-N1272's files and Bob's gold set, N824 P1-P3 as they can); after R1's code, each with its one dependency; no R3 (defects to the module's open job, P10; a closed layer's to the completion round). STRUCTURE §1 and the detail file follow. DECISIONS gains K5567, K5568.
+
+## L50 · 2026-10-27 · PLATFORM's measurements split (K5567)
+
+BOB #324 relayed PLATFORM's split: at once, the S1 Level 1 baseline and soak, per-table bytes and plane-only measuring ops, P-M17 and FILES' L1-L6 on the alpha's reader, today's budget walks, the S2 prototypes and T-a, the Enterprise quote; after code (a)-(e), each run as its module merges. Folded into the plan's "Measurements" (N1272's densities and ceiling were already there with extraction and investigation).

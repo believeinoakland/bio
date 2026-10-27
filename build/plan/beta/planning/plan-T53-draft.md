@@ -307,16 +307,17 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 
 **At once, alongside R1** (each measures what exists now or prepares a copy; its result goes to the job that reads it, before that job's layer START where it can):
 - Registers, on the source files and a throwaway on a scratch copy (`planning/plan-T53-capabilities.md` §C): M-R3 index storage at 73,043 / 1M / 5M rows (decides S1-S4 before registers' layer-5 START), M-R7 streaming throughput, CPU, subrequests and decoder state (sets `REGISTER_STREAM_MAX`, `SLICE_*` before register-readers' layer-1 START), M-R4 identifier forms, M-R8 count queries, M-R10 contact-shape false hits (by script, the drafted rule), M-R11 volatile text, M-R12 extract sizes; the federal zips BOB's download.
-- The load test's short "before" run on the alpha's design (`platform/load-test-draft.md` §6), with PLATFORM's study driver on a Level 1 scratch copy (load-check itself is built in R1); and the budget walk's L1 figures on today's deploy (`platform/time-budgets-draft.md` §6).
+- PLATFORM (BOB #324): the S1 Level 1 baseline and soak on plat-s1; per-table bytes and the plane-only measuring ops; P-M17 and FILES' L1-L6 on the alpha's reader; the budget walks of today's screens and acts (`platform/time-budgets-draft.md` §6 L1); the S2 prototypes B and C and T-a (throwaway; T-a is Before R1 (4)); the Enterprise quote; the load test's short "before" run on the alpha's design with PLATFORM's study driver (`platform/load-test-draft.md` §6; load-check itself is built in R1).
 - Preparation: the acceptance corpus's files (N1268, `files/CORPUS-N1268.md`); M-N1272's files, pinned questions and bar in `MEASUREMENTS.md`, and Bob's blind marking of the gold set (K5537); N824 P1-P2 with M1 (Before R1 (6)) and P3's delivery checks once Bob's Email Routing domain exists (N1159).
 
-**After the code it measures** (each on a scratch copy deployed from the tranche; the one dependency named):
+**After the code it measures** (each on a scratch copy deployed from the tranche, run the moment its module merges, never at a round's end; the one dependency named):
 - M-N1272, the proposals' precision and recall on the corpus · after extraction R114-R119 (layer 4).
 - Interpretation timings (`interpretationOf`, `proposeParts`, `partsOf` at 5,000 pages and 1M rows) and the per-level ceiling's figure (R119, K5535) · after extraction and investigation (layers 4, 7).
 - N824's door CPU at 25 MiB · after mail-reader and mail-door (layers 1, 3).
 - The acceptance corpus walk (N1268) · after journey-check's walk and the readers (layers 1, 11).
 - The registers journey · after registers and the registers screen (layers 5, 11).
-- The load test per level (N1274) and the budget walk L2, L3 · after load-check and layer 11's deploy; Level 2 after N1271's design is built (PLATFORM's study).
+- PLATFORM: the after-figures of the fold, the combined read and the work fixes · after PL12-PL14 (admission, store-door, layer 11); per-type load of the photo redraw, Tier 2 and held types, and archive fan-out · after the new readers (layer 1); the N1273 region picker and the `eu` rehearsal · after the installer's new path (layer 11); measured Level 2 · after N1271 is built.
+- The load test per level (N1274) and the budget walk L2, L3 · after load-check and layer 11's deploy.
 
 **No R3.** A defect a measurement finds goes to its module's job, which stays open until its layer closes (P10); a defect in a layer already closed goes to the tranche's completion round (§5.2), the only later round.
 
