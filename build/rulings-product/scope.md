@@ -25,3 +25,4 @@
 - Following a court case (Bob, K5513, on C22: "as recommended"): the follow is the ask under K5498; a daily check for new filings on the team's own free key, only for followed cases, stopping at unfollow.
 - When a member names who a question is about, can that be a government office? (Bob, K5515, on L1: "as recommended"): B · Offices too A question about an office is natural, and the record already grades connections to any entity.
 - "Show documents from other projects": which documents does it add? (Bob, K5516, on L2: "as recommended"): B · Every document the member is allowed to see, each labeled with its project The button's wording drops "your", so it stays true.
+- If one member states a government's fiscal year and another disputes it, does Money still group figures by it? (Bob, K5517, on L3: "as recommended"): A · Yes, shown as disputed Hiding it would change the grouping on screen without saying so. The dispute is shown beside it.
