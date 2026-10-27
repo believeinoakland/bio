@@ -4,7 +4,7 @@
 
 ## 0. State now and next steps
 
-**State.** K5464 (BOB's decisions on L6) applied. The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
+**State.** K5464 and K5468 applied (A2's jurisdictions and local-facts lines are now CAPABILITIES' `N1257-requirements-a2.md` R134, R135, R31, R32; `lines-A2` keeps civil-time and money). The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
 
 **Next steps, in order.**
 1. (done L7) BOB's K5464 applied: the run-rules map, layer 6's positions (FOLD-AI §2.9), CONSISTENCY 11-19; A2 re-cut onto N1257's placeless team-rules layer (its "Owed by N1257" list relayed by BOB to CAPABILITIES; the three lower-level names confirmed by BOB: `FISCAL_YEAR_IN_RECORDS`, `fiscal_year` in a place team layer refused as `TEAM_SECTION_REFUSED`, the fact path per N1257 R25, R27; (a)-(g) relayed to CAPABILITIES). When CAPABILITIES' N1257 companions carry those amendments, check A2 against them.
@@ -42,3 +42,7 @@ PLANNING #2 took over (reading set as the prompt names), archived #1. K5456's si
 ## L7 · 2026-10-27 · K5464 applied; A2 re-cut
 
 BOB decided L6 (K5464): FOLD-AI §1 the map with `draft:reading` → `draft`; §2 as recommended, positions proposed in FOLD-AI §2.9 (run-rules, agent-harness, agent-model, ai-use, ai-runs … agent-steps, agent-worker, ai-gate, agent-runner); CONSISTENCY 11-15, 17-19 as recommended, 16 changed (CHAIN_LIMITS stay counts in connection-grammar; times become budget classes). A Sonnet worker re-cut `lines-A2-fiscal-year.md` onto the team-rules layer: money R39-R41, no basis or status on a stated year, `FISCAL_YEAR_IN_RECORDS` for an equal value, and an "Owed by N1257" list (a)-(g).
+
+## L8 · 2026-10-27 · K5468: A2 aligned with CAPABILITIES' lines
+
+BOB decided CAPABILITIES C18 (K5468). A Sonnet worker aligned `lines-A2-fiscal-year.md`: A2-R1..R3 now point to R134, R31, R32; the fallback A2-R8..R10 retired; place team layers and TEAM_SECTION_REFUSED gone; FACT_VALUE_REFUSED; money R39-R41 still free. The plan's two A2 entries point to CAPABILITIES' file. Found: that file's R134, R31, R32 still limit `government.level` to county and city and write `team/city:<place>`; K5468 (1) and (5) widen both (for CAPABILITIES, through BOB).
