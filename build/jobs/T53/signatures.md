@@ -1,6 +1,6 @@
 # signatures (T53)
 
-**Status** · session_018BhceeVjx2uYzrUetpWc1A · depth 2 · COMPLETE
+**Status** · session_018BhceeVjx2uYzrUetpWc1A · depth 2 · WAITING: CHANGE from BOB with the catalogue signing and recovery key public lines (CATALOGUE_KEYS)
 **Sessions** · 1
 
 ## Completion (2026-10-27)
