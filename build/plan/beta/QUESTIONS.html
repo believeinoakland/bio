@@ -44,7 +44,7 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
     <span class="eyebrow">Kept by BOB · last updated 27 October 2026, BOB #321</span>
     <h1>Questions for Bob</h1>
     <p class="lede">Every question from every lane that needs your decision is on this page, explained, with options and a recommendation. When you answer one, it moves to <a href="#answered">Answered</a> at the bottom, with your words and where they were recorded.</p>
-    <p><span class="count">10 open</span> <span class="count done">14 answered</span></p>
+    <p><span class="count">8 open</span> <span class="count done">16 answered</span></p>
   </header>
 
   <div class="how">To answer, reply in chat and name the question. For example: <em>"P2 as recommended. C1: A."</em> You can also comment "As recommended" on an option right on this page You can answer some now and leave the rest.</div>
@@ -55,26 +55,7 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
     <span class="eyebrow">Speed and where a team's data lives · from the PLATFORM lane</span>
     <p class="lede">You ruled that a team's copy of Civicsmith has three service levels (Team, Organization, Coalition), and that its data store is created near the team (K4746, K4747). Today only Level 1 exists: one data store per team. These questions set the beta's speed bar and what teams are told.</p>
 
-    <article class="q" id="P2">
-      <div class="meta"><span class="k">P2</span><span>PLATFORM · record placement</span><span>asked 27 Oct</span></div>
-      <h3>What does the region picker promise?</h3>
-      <p>You said "a team with a legal requirement can pick a region". Cloudflare offers two different things. A <em>location hint</em> puts the data store near a place for speed, but guarantees nothing about where data is kept. A separate <em>jurisdiction</em> setting does guarantee it, for a few regions such as the EU. Only the second can meet a legal requirement. (The lane will re-check Cloudflare's current pages before this is built.)</p>
-      <ul class="opts">
-        <li><span class="k">A · Offer only "near me"</span><span>Speed only, no guarantee.</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Offer both "near me" and "keep my data in this region", worded honestly about the difference</span><span>Matches your words. It costs more to build, since the guarantee needs a different Cloudflare setup.</span></li>
-        <li><span class="k">C · No picker; use the founder's region without asking</span><span>Simplest, but a team with a legal need can't meet it.</span></li>
-      </ul>
-    </article>
 
-    <article class="q" id="P3">
-      <div class="meta"><span class="k">P3</span><span>PLATFORM · record placement</span><span>asked 27 Oct</span></div>
-      <h3>Can a team change its region after it installs?</h3>
-      <p>A data store can't be moved once it is created.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Not at Level 1</span><span>A team that must move makes a new copy by export and import.</span></li>
-        <li><span class="k">B · Only when the team moves up to Level 2</span><span>Level 2 builds new data stores anyway, so the team can choose a region then.</span></li>
-      </ul>
-    </article>
 
     <article class="q" id="P4">
       <div class="meta"><span class="k">P4</span><span>PLATFORM · service levels</span><span>asked 27 Oct</span></div>
@@ -168,6 +149,14 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
   <section class="group" id="answered">
     <h2>Answered</h2>
     <div class="answered">
+      <details>
+        <summary><span class="k">P3 · Changing region after install: not at Level 1</span><span class="when">27 Oct · K5441</span></summary>
+        <div class="body"><blockquote>"a recommended"</blockquote><p>A Level 1 team's region is fixed once it installs. A team that must move makes a new copy by export and import, and the install screen says so before the team chooses.</p></div>
+      </details>
+      <details>
+        <summary><span class="k">P2 · The region picker: both choices, worded honestly</span><span class="when">27 Oct · K5440</span></summary>
+        <div class="body"><blockquote>"as recommended"</blockquote><p>Teams choose either "near me", for speed with no promise about where data is kept, or "keep my data in this region", which Cloudflare guarantees for the regions it offers. The lane re-checks Cloudflare's current terms before this is built.</p></div>
+      </details>
       <details>
         <summary><span class="k">P1 · How fast the beta must be: keep the bar, with levels for scale</span><span class="when">27 Oct · K5438</span></summary>
         <div class="body"><blockquote>"keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise). A copy configured as a Team may get to the point where it needs to upgrade to an Institution if it expects their workflow to meet the scale and performance metrics."</blockquote><p>The 2-second bar holds at every level. Each level states the size of workload it handles at that speed, and a copy that outgrows its level is told it needs the next one up.</p></div>
