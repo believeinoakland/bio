@@ -41,7 +41,7 @@
 
 **format-registry**
 - T53 · N1266 (K5435-K5437) · the beta's roster, detection by content, macro variant, encrypted, unlisted named (K5436), refused set, `formatNameFor` · `files/REQ-format-registry-beta.md` RF1-RF9
-- T53 · DEC-467 · one table the screens read: each kind's plain name (by key) and its limits (runtime-limits' per-kind rows), for Add's "What can be added", held, refused and over-limit sentences · DEC-467 `[owed: FILES's lines (formatNameFor and the limits read as one op)]`
+- T53 · DEC-467 · one table the screens read: each kind's plain name (by key) and its limits (runtime-limits' per-kind rows), for Add's "What can be added", held, refused and over-limit sentences · DEC-467 · `files/KIND-TABLE.md` (READY; built from runtime-limits' Level 1 rows, never the other way) `[owed: BOB confirms the stated figure for audio and video]`
 
 **reader-container** (new; K4831 (2))
 - T53 · N1266, N1267 · legacy Office and RTF by conversion, macros never run, every image kind to OCR-ready frames, archives as streams within bounds, refusal before any read · `files/REQ-readers-beta.md` CC1-CC6 (CC4 replaced by A4, CONSISTENCY §2.2)
@@ -53,7 +53,7 @@
 - T53 · N1267a · XLSX cells by window before any workbook bound above 250,000 · `next.md` N1267a `[owed: Bob's higher row; else left out, hard reason Bob's]`
 
 **signatures**
-- T53 · K5457 · two more namespaces (eight in all): the catalogue's and the Gate 1 suite's (R49-R53 as AI-DESIGN lists them; the run-key check the issuer's R12 needs) · `lane-ai-design/draft-ai-catalogue.md` (signatures), `draft-ai-gate.md` R54-R64 `[owed: the five lines written as lines; FOLD-AI §3]`
+- T53 · K5457, K5471 · three more namespaces: the catalogue's, the Gate 1 suite's and the AI run's (`NS_AI_RUN`) (R49-R53 as AI-DESIGN lists them; the run-key check the issuer's R12 needs) · `lane-ai-design/draft-ai-catalogue.md` (signatures), `draft-ai-gate.md` R54-R64 `[owed: the five lines written as lines; FOLD-AI §3]`
 
 **bundler**
 - T53 · K5457 · the agent Worker's `HEALTH` Durable Object and provider bindings (AI Gateway, Workers AI); `deleted_classes` for `RemoteSession`, in the same deploy that retires the remote route · `lane-ai-design/draft-agent-run-path.md` (agent-worker R35), `draft-agent-runner.md` R13
@@ -73,6 +73,7 @@
 **ai-accounts**
 - T53 · N1220 (K5457) · the account model (owner, provider, plan, means gateway/sealed/reference/issued/none, ordered entries); plan scope and the personal-subscription rule from the catalogue; the hop; disclosure per provider and host; checks P1-P7; free-tier acceptance; the gateway payer check · `lane-ai-design/draft-ai-accounts.md` R1-R64 `[waits: AI3-AI5]`
 - T53 · K5457 · R8, R12, R13, R18, R35 and twelve old ops retired, nineteen new declared, every user re-pointed in this tranche, no aliases (FOLD-AI §2 lists the sixteen modules) · same, Part 1, R36, R38, R61
+- T53 · DEC-465, DEC-466, K5471 · `aikeyseal` (R69), a member's own list order (R70), declared ops (R71), a share flag turned off (R72), `GATEWAY_UNAVAILABLE` naming who can grant it (R73), the readiness summary (R74); a member clears the payer flag on her own account (R68) · `lane-ai-design/draft-ai-accounts-dec465.md` `[waits: AQ11 on Bob's page, "my projects" owned or joined, drafted "owns"]`
 - T53 · K5457 · migration: apikey to the Anthropic API plan (sealed), signin to subscription (issued), project sign-in accounts ended and told once · same, R59
 
 **credentials**
@@ -87,7 +88,7 @@
 - T53 · A3 · a pulled knock carries the knocker's file name as the knocker's word · `planning/lines-A3-A4-source-picture.md` (doorbell R29) `[owed: L2-5]`
 
 **file-safety**
-- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64)
+- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name read into the record, not shown by default; the place name shown, exact figures one step away `[waits: the published-place default, on Bob's page; L21 the colour profile]`
 - T53 · DEC-454 · the partial-scan reason in plain words · `docs/development/DECISIONS.md` DEC-454
 - T53 · N1266 (K5436) · a held-and-named file safe-graded like any other · `files/REQ-format-registry-beta.md` RF10
 
@@ -153,6 +154,10 @@
 
 **ai-runs**
 - T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended) `[waits: AI1, AI3, AI10]`
+- T53 · N1219, DEC-466 · `read` and `disagree` passed through (R99), `op=airunlog` (R100), segments as parts, hops and refusals recorded (R101, R102), `op=airunparts` "How this run went" (R103), the label names the AI, never the account (R104) · `lane-ai-design/draft-run-record.md`
+
+**observation-log** (layer 5)
+- T53 · N1219 · a run's log entry carries its reads and disagreements as data, with no sight of their own (R40, R41) · `lane-ai-design/draft-run-record.md`
 
 **agent-harness**
 - T53 · K5457 · `ROLE_NEEDS`, `needOf`, `partOf` over the six parts, `disclosureGate`, `resumeAt`; R17 moves with N1205 · `lane-ai-design/draft-agent-run-path.md` (agent-harness R20-R24)
@@ -267,8 +272,10 @@
 
 **screens-settings** (the AI screens)
 - T53 · N1220 (DEC-420, K5457) · `aiproviders`, `aiconnect`, `aimine`, `aiproject`, `aimoments`, `aitest`, `airesults`; `connect`, `teamai`, `projectai` and their acts retired · `lane-ai-design/draft-assistant-screens.md` §2, §4, §5; `UX-REQUIREMENTS.md` `[waits: UX-DESIGN's rows, B555]`
-- T53 · DEC-465 · origin an ordinary check ("Not offered" row removed); a team account's owner opt-in "Projects and members may add this account"; a member's list ordered (`aiorderset`); a key kept sealed in the team's Civicsmith (`aikeyseal`); aimoments names whose checks apply · DEC-465 `[owed: AI-DESIGN's lines for the two ops and the opt-in (ai-accounts)]`
-- T53 · DEC-466 · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 `[owed: AI-DESIGN's lines (ai-runs, interface-shell R20, installer)]`
+- T53 · DEC-465 · origin an ordinary check ("Not offered" row removed); a team account's owner opt-in "Projects and members may add this account"; a member's list ordered (`aiorderset`); a key kept sealed in the team's Civicsmith (`aikeyseal`); aimoments names whose checks apply · DEC-465 → ai-accounts R69-R74 (layer 2)
+- T53 · DEC-466 · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 → ai-runs R99-R104 (layer 6), instance-setup R109 and the installer lines below
+- T53 · DEC-466 U5, K5471 (2) · the installer asks for exactly the AI gateway's two permissions (installer R2, A47's R107) and an install without them completes, the assistant still usable (installer-steps R45, A47's R108); Setup's ready state (instance-setup R109, A47) · `lane-ai-design/draft-instance-setup.md` `[owed: whether "AI Gateway - Edit" carries reading, OPEN in the draft]`
+- T53 · K5471 (5) · the installer's Logpush read is refused (Cloudflare "Authentication error" on plat-s1's install): its scopes (K5449, K5460) lack Logs Read; the check stays advisory · K5471 `first: settle whether the scope is asked for or the check dropped`
 - T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7
 
 **op-declarations**, **op-grades**, **interface-shell** (the assistant)
@@ -277,6 +284,9 @@
 
 **load-check** (new)
 - T53 · N1274 · `runProfile`, `seedCopy`, `report` on a scratch copy only (PL40-PL43), run in R2 · `platform/load-test-draft.md` §5
+
+**JOURNEYS's defects** (K5471 (6))
+- W6's 130 defects (6 BLOCKS; 97 with no T52 entry) in `lane-journeys/REGISTER*.md` become entries here, each under its owning module, once JOURNEYS's requirement drafts arrive `[owed: JOURNEYS READY]`
 
 The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52-37, T52-38; affordances T52-39; tasks T52-40; instance-setup T52-41; store-assembly T52-46, T52-47; store-request T52-48; screens-entry T52-54 to T52-56; screens-wizards T52-57; screens-action T52-81 to T52-84; site T52-96) stand as carried, each `C`.
 
