@@ -243,8 +243,14 @@ test("R13 the keys-only rule at this module's interface: a sentence is read thro
     assert.equal(hasWord(k), false);
     assert.throws(() => word(k), (e) => e.code === "UNKNOWN_WORD");
   }
-  /* placeholders are {name} with name of letters, digits and _, and no other brace form occurs in the file (measured at T49); a sentence written first in code is the design's to review, and is not held to the file's spelling */
-  for (const r of WORD_ROWS.filter((x) => x[5] === "design")) assert.doesNotMatch(r[1].replace(/\{[A-Za-z0-9_]+\}/g, ""), /[{}]/, r[0]);
+  /* placeholders are {name} with name of letters, digits and _; per R18 braces holding anything else are text and survive word() as written, and only an ICU formatted argument ({name, plural, …}) is refused, which no row of the list holds */
+  const formatted = /\{\s*[A-Za-z0-9_]+\s*,\s*(plural|select|selectordinal|number|date|time|spellout|ordinal|duration)\s*[,}]/;
+  for (const r of WORD_ROWS.filter((x) => x[5] === "design")) {
+    assert.doesNotMatch(r[1], formatted, r[0]);
+    const vars = Object.fromEntries([...r[1].matchAll(/\{([A-Za-z0-9_]+)\}/g)].map((m) => [m[1], "x"]));
+    const braces = (t) => (t.replace(/\{[A-Za-z0-9_]+\}/g, "").match(/[{}]/g) ?? []).length;
+    assert.equal(braces(word(r[0], vars)), braces(r[1]), `${r[0]}: other braces are text`);
+  }
   /* DEC-221 (N1068): the file's English spells "labeled" */
   assert.deepEqual(WORD_ROWS.filter((r) => r[5] === "design" && /labelled/i.test(unplaced(r[1]))).map((r) => r[0]), []);
   assert.equal(hasWord("signin.founderhint"), WORD_ROWS.some((r) => r[0] === "signin.founderhint"));
