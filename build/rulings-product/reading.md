@@ -13,3 +13,4 @@
 - Over the limit (Bob, K5447, on C4: "as recommended"): refused with the reason and a way in (a register by filter, N1259; else the part the member needs).
 - Showing what was interpreted (Bob, K5495, on C2: "A, but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted."): a plain line on the document's page and a search mark per investigation, and interpreted parts marked in the document view.
 - Names found while reading (Bob, K5496, on C21: "as recommended"): finding names, organisations and dates for search is reading, not interpretation.
+- A photo's place in a published edition (Bob, K5514, on F4: "as recommended"): the author chooses per photo, off unless turned on.
