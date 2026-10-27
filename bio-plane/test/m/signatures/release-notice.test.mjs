@@ -150,10 +150,10 @@ test("R46 NS_RELEASE_NOTICE is bio-release-notice, a compiled constant distinct 
   }
 });
 
-test("R1 (T48) six namespaces: NS_RELEASE_NOTICE joins the five, distinct from every one, and the release signer's signatures in it are refused in each of them", async () => {
+test("R1 (T48, T53) nine namespaces: NS_RELEASE_NOTICE joins the five, distinct from every one, and the release signer's signatures in it are refused in each of them", async () => {
   const six = Object.keys(sshsig).filter((k) => k.startsWith("NS_")).map((k) => sshsig[k]);
-  assert.equal(six.length, 6);
-  assert.equal(new Set(six).size, 6);
+  assert.equal(six.length, 9);
+  assert.equal(new Set(six).size, 9);
   assert.ok(six.includes(NS_RELEASE_NOTICE));
   const stmt = releaseNoticeStatement(NOTICE);
   const sig = signSshsig(ENV, stmt, NS_RELEASE_NOTICE);

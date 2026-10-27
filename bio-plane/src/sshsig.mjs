@@ -558,3 +558,221 @@ export async function verifyReleaseNotice(notice, armored, running, allowedKeys 
     return { ok: false, reason: "MALFORMED", field: "notice", detail: String((e && e.message) || e) };
   }
 }
+
+/* ------------------------------------- the AI catalogue's statements (R49–R56) */
+
+/* K5457, K5471 (AIR33, AD25, SR60–SR62, SR84, AD8): THE AI CATALOGUE, ITS ADVISORIES
+   AND ITS SEAL KEY ARE SIGNED IN NAMESPACES OF THEIR OWN, and a test container's
+   bundle in a third. Each is distinct from every other namespace, so a signature
+   over a release, a notice, a fleet statement or anything else never verifies as
+   one of these, nor one of these as any of them. Nine namespaces in all (R1). */
+export const NS_AI_CATALOGUE = "bio-ai-catalogue";
+export const NS_AI_ADVISORY = "bio-ai-advisory";
+export const NS_AI_RUN = "bio-ai-run";
+
+/* R50: THE ONE PLACE THE KEYS THAT SIGN THE AI CATALOGUE ARE HELD, a list of its
+   own and never RELEASE_KEYS, so a release key cannot sign the catalogue nor a
+   catalogue key a release. The lines below are TEST FIXTURES (BOB's ruling K5577
+   (5)): throwaway public keys whose private halves were discarded. Bob makes the
+   catalogue signing and recovery keys at the signer page during layer 1, and the
+   lines of those two replace these as a requirement change, from BOB. */
+export const CATALOGUE_KEYS = Object.freeze([
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJB7MsDnHlK8xE6LYP17DKcjD/dg+1Q5Ao9krVNnUaN0 bio-ai-catalogue-test-fixture",
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJV3JkW3PRnHj5TY4aWn399MUyQ1z4JKUtfWZKbt3qJI bio-ai-catalogue-recovery-test-fixture",
+]);
+
+const AI_TOKEN_RE = /^[a-z0-9._:-]+$/;
+const AI_WORD_RE = /^[a-z_]+$/;
+const INSTANT_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/;
+
+const wholeFrom = (n, least) => Number.isSafeInteger(n) && n >= least;
+/* An existing UTC instant `YYYY-MM-DDTHH:MM:SSZ`, judged without a clock (R26). */
+const instantExists = (s) => {
+  const m = typeof s === "string" ? INSTANT_RE.exec(s) : null;
+  return !!m && dateExists(m[1]) && Number(m[2]) < 24 && Number(m[3]) < 60 && Number(m[4]) < 60;
+};
+const aiRefusal = (field) => new Error(`REFUSED [AI_STATEMENT_FIELD]: ${field}`);
+
+/* Each reader takes its fields ONCE into the copy that is judged and signed (as
+   readNotice does) and answers `{copy}` or `{field}`, the first field refused. */
+function readCatalogue(st) {
+  if (!isPlainObject(st)) return { field: "statement" };
+  const { seq, schema_version, issued_at, sha256, bytes } = st;
+  if (!wholeFrom(seq, 1)) return { field: "seq" };
+  if (!wholeFrom(schema_version, 1)) return { field: "schema_version" };
+  if (!instantExists(issued_at)) return { field: "issued_at" };
+  if (typeof sha256 !== "string" || !SHA256_HEX_RE.test(sha256)) return { field: "sha256" };
+  if (!wholeFrom(bytes, 1)) return { field: "bytes" };
+  return { copy: { seq, schema_version, issued_at, sha256, bytes } };
+}
+const renderCatalogue = (c) => te.encode(`bio-ai-catalogue/1\nseq ${c.seq}\nschema ${c.schema_version}\n`
+  + `issued ${c.issued_at}\nsha256 ${c.sha256}\nbytes ${c.bytes}\n`);
+
+function readAdvisory(ad) {
+  if (!isPlainObject(ad)) return { field: "advisory" };
+  const { seq, target, kind, reason, effective_at, issued_at } = ad;
+  if (!wholeFrom(seq, 1)) return { field: "seq" };
+  if (!isPlainObject(target)) return { field: "target" };
+  const keys = Object.keys(target);
+  if (keys.length !== 1 || (keys[0] !== "entry_id" && keys[0] !== "plan_id")) return { field: "target" };
+  const id = target[keys[0]];
+  if (typeof id !== "string" || !AI_TOKEN_RE.test(id)) return { field: `target.${keys[0]}` };
+  if (typeof kind !== "string" || !AI_WORD_RE.test(kind)) return { field: "kind" };
+  if (typeof reason !== "string" || !AI_WORD_RE.test(reason)) return { field: "reason" };
+  if (!instantExists(effective_at)) return { field: "effective_at" };
+  if (!instantExists(issued_at)) return { field: "issued_at" };
+  return { copy: { seq, target: { [keys[0]]: id }, kind, reason, effective_at, issued_at } };
+}
+const renderAdvisory = (c) => {
+  const [k] = Object.keys(c.target);
+  return te.encode(`bio-ai-advisory/1\nseq ${c.seq}\ntarget ${k === "entry_id" ? "entry" : "plan"} ${c.target[k]}\n`
+    + `kind ${c.kind}\nreason ${c.reason}\neffective ${c.effective_at}\nissued ${c.issued_at}\n`);
+};
+
+const BASE64_RE = /^[A-Za-z0-9+/]{43}=$/;
+function readSealKey(doc) {
+  if (!isPlainObject(doc)) return { field: "doc" };
+  const { key_id, public_key, not_before, not_after, seq } = doc;
+  if (typeof key_id !== "string" || !AI_TOKEN_RE.test(key_id)) return { field: "key_id" };
+  if (typeof public_key !== "string" || !BASE64_RE.test(public_key)) return { field: "public_key" };
+  let raw;
+  try { raw = b64ToBytes(public_key); } catch { return { field: "public_key" }; }
+  if (raw.length !== 32 || bytesToB64(raw) !== public_key) return { field: "public_key" };
+  if (!instantExists(not_before)) return { field: "not_before" };
+  if (!instantExists(not_after)) return { field: "not_after" };
+  if (!wholeFrom(seq, 1)) return { field: "seq" };
+  return { copy: { key_id, public_key, not_before, not_after, seq } };
+}
+const renderSealKey = (c) => te.encode(`bio-ai-seal-key/1\nkey_id ${c.key_id}\npublic ${c.public_key}\n`
+  + `not_before ${c.not_before}\nnot_after ${c.not_after}\nseq ${c.seq}\n`);
+
+/* R51, R52, R54: the exact bytes each statement is signed over; what they cannot
+   state exactly is refused by name before a byte is built. */
+export const aiCatalogueStatement = (statement) => {
+  let r; try { r = readCatalogue(statement); } catch { r = { field: "statement" }; }
+  if (!r.copy) throw aiRefusal(r.field);
+  return renderCatalogue(r.copy);
+};
+export const aiAdvisoryStatement = (advisory) => {
+  let r; try { r = readAdvisory(advisory); } catch { r = { field: "advisory" }; }
+  if (!r.copy) throw aiRefusal(r.field);
+  return renderAdvisory(r.copy);
+};
+export const aiSealKeyStatement = (doc) => {
+  let r; try { r = readSealKey(doc); } catch { r = { field: "doc" }; }
+  if (!r.copy) throw aiRefusal(r.field);
+  return renderSealKey(r.copy);
+};
+
+/* The shared shape of the verifiers: the fields are judged first, the signature
+   second (a MALFORMED signature names `field: "signature"`), and `seq` last, so
+   NOT_NEWER is only ever said of a statement the publisher really signed. */
+async function verifyAi(read, render, namespace, input, armored, heldSeq, allowedKeys, freeze) {
+  try {
+    let r; try { r = read(input); } catch { r = { field: "statement" }; }
+    if (!r.copy) return { ok: false, reason: "MALFORMED", field: r.field };
+    if (heldSeq !== undefined && !wholeFrom(heldSeq, 0)) return { ok: false, reason: "MALFORMED", field: "heldSeq" };
+    const v = await verifySshsig(armored, render(r.copy), namespace, allowedKeys);
+    if (!v.ok) return v.reason === "MALFORMED" ? { ...v, field: "signature" } : v;
+    if (heldSeq !== undefined && !(r.copy.seq > heldSeq))
+      return { ok: false, reason: "NOT_NEWER", seq: r.copy.seq, heldSeq };
+    return { ok: true, copy: freeze(r.copy) };
+  } catch (e) {
+    return { ok: false, reason: "MALFORMED", field: "statement", detail: String((e && e.message) || e) };
+  }
+}
+
+/* R53: a catalogue payload or an advisory, judged as a copy must judge one
+   fetched from the network: well formed, signed in its own namespace by a
+   catalogue key over exactly its fields, and newer than the highest held. */
+export async function verifyAiCatalogue(statement, armored, heldSeq, allowedKeys = CATALOGUE_KEYS) {
+  const r = await verifyAi(readCatalogue, renderCatalogue, NS_AI_CATALOGUE, statement, armored,
+    heldSeq === undefined ? 0 : heldSeq, allowedKeys, (c) => Object.freeze({ ...c }));
+  return r.ok ? { ok: true, statement: r.copy } : r;
+}
+export async function verifyAiAdvisory(advisory, armored, heldSeq, allowedKeys = CATALOGUE_KEYS) {
+  const r = await verifyAi(readAdvisory, renderAdvisory, NS_AI_ADVISORY, advisory, armored,
+    heldSeq === undefined ? 0 : heldSeq, allowedKeys,
+    (c) => Object.freeze({ ...c, target: Object.freeze({ ...c.target }) }));
+  return r.ok ? { ok: true, statement: r.copy } : r;
+}
+
+/* R54: the seal-key document, signed in NS_AI_CATALOGUE. Validity at an instant
+   is the caller's; a key swapped by an attacker is UNKNOWN_KEY. */
+export async function verifyAiSealKey(doc, armored, allowedKeys = CATALOGUE_KEYS) {
+  const r = await verifyAi(readSealKey, renderSealKey, NS_AI_CATALOGUE, doc, armored, undefined, allowedKeys,
+    (c) => Object.freeze({ ...c }));
+  return r.ok ? { ok: true, doc: r.copy } : r;
+}
+
+/* ---------------------------------------- the test container's run key (R55–R56) */
+
+/* SHA-256 of bytes, synchronous: the statement is returned as bytes, not a
+   promise, and crypto.subtle only digests asynchronously. FIPS 180-4. */
+const SHA256_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+const sha256Hex = (data) => {
+  const n = data.length;
+  const padded = new Uint8Array(((n + 9 + 63) >> 6) << 6);
+  padded.set(data);
+  padded[n] = 0x80;
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(padded.length - 8, Math.floor(n / 0x20000000));
+  dv.setUint32(padded.length - 4, (n << 3) >>> 0);
+  const h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+  const w = new Uint32Array(64);
+  const rotr = (x, k) => (x >>> k) | (x << (32 - k));
+  for (let off = 0; off < padded.length; off += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, hh] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + SHA256_K[i] + w[i]) >>> 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+      hh = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    h[0] += a; h[1] += b; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+  }
+  return [...h].map((x) => x.toString(16).padStart(8, "0")).join("");
+};
+
+const readRun = (manifestBytes, payloadSha256) => {
+  if (!(manifestBytes instanceof Uint8Array)) return { field: "manifestBytes" };
+  if (typeof payloadSha256 !== "string" || !SHA256_HEX_RE.test(payloadSha256)) return { field: "payloadSha256" };
+  return { copy: { manifestBytes, payloadSha256 } };
+};
+
+/* R55: what a test container signs with its run key: the manifest's digest and
+   the payload's, so a manifest or payload changed by one byte is another statement. */
+export const runBundleStatement = (manifestBytes, payloadSha256) => {
+  const r = readRun(manifestBytes, payloadSha256);
+  if (!r.copy) throw aiRefusal(r.field);
+  return te.encode(`bio-ai-run/1\nmanifest ${sha256Hex(manifestBytes)}\npayload ${payloadSha256}\n`);
+};
+
+/* R56: the check ai-issuer makes of a test container's bundle: signed in
+   NS_AI_RUN by exactly the one run key the challenge was issued against. */
+export async function verifyRunBundle(input) {
+  try {
+    const { manifestBytes, payloadSha256, armored, runPublicKey } = isPlainObject(input) ? input : {};
+    const r = readRun(manifestBytes, payloadSha256);
+    if (!r.copy) return { ok: false, reason: "MALFORMED", field: r.field };
+    if (typeof runPublicKey !== "string" || !normalizeKey(runPublicKey)) return { ok: false, reason: "MALFORMED", field: "runPublicKey" };
+    const v = await verifySshsig(armored, runBundleStatement(manifestBytes, payloadSha256), NS_AI_RUN, [runPublicKey]);
+    return !v.ok && v.reason === "MALFORMED" ? { ...v, field: "signature" } : v;
+  } catch (e) {
+    return { ok: false, reason: "MALFORMED", field: "input", detail: String((e && e.message) || e) };
+  }
+}
