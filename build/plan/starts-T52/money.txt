@@ -1,0 +1,6 @@
+Round R1, layer 5, module money, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module money`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-17 · W8 · C-K6 · MAJOR · the refusal sentence never prints `*` for a body (a fiscal year sent alone). [waits: where a team states its fiscal year (Bob's ruling), so the sentence's pointer and whether the screen offers "Or its fiscal year"]. C-K7: `neighbours` answers a set id (`MSR-…`): the payer, the payee and the source document by title, for facts whose payer and payee are entities or funds. [waits: facts recorded with names as written: a node for the written name, or the screen asks for entities (Bob's ruling)]. money R34, R35 (K5387). PL1 W8.
