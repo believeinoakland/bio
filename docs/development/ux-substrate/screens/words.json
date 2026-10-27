@@ -14,7 +14,7 @@
   "queue": 498,
   "transcribe": 19,
   "capture": 74,
-  "document": 77,
+  "document": 78,
   "question": 82,
   "connection": 34,
   "guide": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7826,
+  "screen": 7831,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19393,
+  "total": 19399,
   "protected": 1162
  },
  "words": [
@@ -7740,10 +7740,10 @@
   },
   {
    "key": "screen.more.sub",
-   "en": "The places the tabs below do not hold.",
+   "en": "The places the tabs do not hold.",
    "protected": false,
    "source": "DEC-241",
-   "note": "DEC-241: the More page's heading line"
+   "note": "DEC-241: the More page's heading line; DEC-259: reworded"
   },
   {
    "key": "theme.never.evidence",
@@ -8006,10 +8006,10 @@
   },
   {
    "key": "capture.fieldneeded",
-   "en": "Fill in the {field} first: it is needed to capture.",
+   "en": "This can be captured only once “{field}” is filled in.",
    "protected": false,
    "source": "DEC-246",
-   "note": "DEC-246: screens-intake R2"
+   "note": "DEC-246: screens-intake R2; DEC-259: reworded"
   },
   {
    "key": "connect.ifnot",
@@ -9756,10 +9756,10 @@
   },
   {
    "key": "shell.unavailable.nothing",
-   "en": "Nothing is here: this address leads nowhere in your team's Civicsmith.",
+   "en": "Nothing you can open is here. If a member invited you to a project, the invitation waits on Home: join it there.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from interface-shell's own rows"
+   "note": "adopted from interface-shell's own rows; DEC-259: reworded"
   },
   {
    "key": "shell.unavailable.notyours",
@@ -11590,10 +11590,10 @@
   },
   {
    "key": "screen.action.pressuremark.reply",
-   "en": "arrived with reply {ord}",
+   "en": "came in reply number {ord}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.action.pressuremark.record",
@@ -13263,10 +13263,10 @@
   },
   {
    "key": "screen.find-in.notread",
-   "en": "{n} documents could not be read for this, so “nothing” is not said for them.",
+   "en": "{n} documents could not be searched, because they are not read yet or are pictures of text. They may hold what you looked for.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.find-in.quote",
@@ -16084,10 +16084,10 @@
   },
   {
    "key": "screen.projectai.purpose",
-   "en": "Who pays for the assistant's work in this project, what it pays for, its limits, and keeping the project's material away from AI. Every owner sees every change.",
+   "en": "Who pays for the assistant's work in this project, what it pays for, its limits, and keeping the project's material away from AI. These are settings only: whether the assistant can answer yet is said where members ask it. Every owner sees every change.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.projectai.account.head",
@@ -19605,7 +19605,7 @@
   },
   {
    "key": "screen.money.didnotmove",
-   "en": "did not move: a {phase} figure",
+   "en": "no money moved: this is a {phase} figure",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -21908,10 +21908,10 @@
   },
   {
    "key": "screen.standard.inforce.none",
-   "en": "when it is in force is not recorded",
+   "en": "The record does not say when it took effect.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.standard.words",
@@ -29027,10 +29027,10 @@
   },
   {
    "key": "label.standardcopy.undetermined",
-   "en": "Kind of copy not known",
+   "en": "Not known whether this is the official text",
    "protected": false,
    "source": "DEC-253",
-   "note": "the copy a member declares a capture to be"
+   "note": "the copy a member declares a capture to be; DEC-259: reworded"
   },
   {
    "key": "standard.binding.binds",
@@ -31166,10 +31166,10 @@
   },
   {
    "key": "screen.find-in.notread.one",
-   "en": "One document could not be read for this, so “nothing” is not said for it.",
+   "en": "One document could not be searched, because it is not read yet or is a picture of text. It may hold what you looked for.",
    "protected": false,
    "source": "DEC-263",
-   "note": "screen.find-in.notread when {n} is 1"
+   "note": "screen.find-in.notread when {n} is 1; DEC-259: reworded"
   },
   {
    "key": "screen.finder.nobody.one",
@@ -38494,7 +38494,7 @@
   },
   {
    "key": "ceremony.gate.other",
-   "en": "Something in the draft stops the signing: {what}. Put it right in the case, then check again.",
+   "en": "This stops the signing: {what}. Put it right above, then check again.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-299: any other gate, {what} its own plain sentence"
@@ -47377,7 +47377,7 @@
   },
   {
    "key": "screen.published.is.leg.4.which.supports",
-   "en": "is Leg {leg}, which supports Finding {n}; it rests on documents this edition does not hold",
+   "en": "supports Finding {n} as passage {leg}; the documents it rests on are not held in this edition",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -71471,21 +71471,21 @@
   },
   {
    "key": "screen.members.cap.administer.confirm.head",
-   "en": "Make {who} an administrator?",
+   "en": "Propose {who} as an administrator?",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 T-05: the confirmation before a grant that includes administering"
   },
   {
    "key": "screen.members.cap.administer.confirm",
-   "en": "Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
+   "en": "Choosing “look after the team's Civicsmith” proposes {who} as an administrator. {who} becomes one once every administrator has agreed, and your choice counts as the first agreement. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 T-05: the confirmation"
   },
   {
    "key": "screen.members.cap.administer.confirm.yes",
-   "en": "Make {who} an administrator",
+   "en": "Propose {who} as an administrator",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 T-05: the confirming button"
@@ -75146,7 +75146,7 @@
   },
   {
    "key": "screen.matter.routes.none",
-   "en": "No route is known for this matter yet.",
+   "en": "No way to take this matter forward is recorded yet: no office or procedure that handles it is named.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-396: B444 6: the routes (procedure guides) list when it is empty"
@@ -82321,7 +82321,7 @@
   },
   {
    "key": "screen.standard.through.none.summary",
-   "en": "When no day is recorded",
+   "en": "If no end date is recorded",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-438: the mockup fold over the unknown state"
@@ -83039,6 +83039,48 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-444: E-K7: counselPacketExport records who, which version, when, which counsel"
+  },
+  {
+   "key": "screen.finder.named.one",
+   "en": "named in 1 document, {document}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: DS11: the singular of screen.finder.named"
+  },
+  {
+   "key": "screen.findin.searched.one",
+   "en": "Searched {read} of 1 document.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: DS11: the singular of screen.findin.searched"
+  },
+  {
+   "key": "screen.finder.shown",
+   "en": "{shown} of {total} documents shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: DS11: Find's own row, in place of screen.held.archivemore (\"files\", a Held row)"
+  },
+  {
+   "key": "screen.timeline.dated.meta.nograde",
+   "en": "{precision} · a dated fact, from {document}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: DS14: the row when the fact has no grade (no bare \"· grade\")"
+  },
+  {
+   "key": "document.unread.page",
+   "en": "Page {pages} is a picture of text that Civicsmith's own reading couldn't make out, so its words can't be found or cited yet. The page image is kept as it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: DS15: the singular of document.unread.pages"
+  },
+  {
+   "key": "screen.find-in.notread.which",
+   "en": "Not searched: {documents}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: DS34: beneath screen.find-in.notread, the documents named, each linked"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -86570,10 +86612,10 @@
   },
   {
    "key": "acquisition.authority_basis.assertion_supplied_mechanical",
-   "en": "no assertion was supplied and no mechanical determination is implemented; recorded {retrieved} for resolution through the task list",
+   "en": "Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.",
    "protected": false,
    "source": "DEC-260",
-   "note": "acquisition, authority_basis"
+   "note": "acquisition, authority_basis; DEC-259: reworded"
   },
   {
    "key": "acquisition.authority.internet_archive",
@@ -87613,10 +87655,10 @@
   },
   {
    "key": "capture.authority_basis",
-   "en": "a file a member brought into the record, which no one fetched; no authority is asserted; recorded {at} for resolution through the task list",
+   "en": "Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.",
    "protected": false,
    "source": "DEC-260",
-   "note": "capture, authority_basis"
+   "note": "capture, authority_basis; DEC-259: reworded"
   },
   {
    "key": "capture.note.attempt_recorded_late",
@@ -92429,10 +92471,10 @@
   },
   {
    "key": "refusal.CO_ATTESTATION_UNACKNOWLEDGED",
-   "en": "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written.",
+   "en": "A document this case rests on has no independent proof of when it was captured. Try getting that proof again, or say, with a reason, that you publish it on your team's word alone. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
-   "note": "case-disclosures' translation, keyed by its code"
+   "note": "case-disclosures' translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.CREDENTIALS_MISSING",
@@ -95222,10 +95264,10 @@
   },
   {
    "key": "refusal.TEMPLATE_NOT_NAMED",
-   "en": "The jurisdiction profile holds no file template for this kind: name a template, or write the words.",
+   "en": "There is no file template for this kind of filing in your place's rules. Write the words yourself on this screen, or ask an administrator to add a template for this kind. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
-   "note": "filings' translation, keyed by its code"
+   "note": "filings' translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.TEMPLATE_USE_BRIEF",
@@ -100526,9 +100568,10 @@
   },
   {
    "key": "public-read.bar_recorded_case",
-   "en": "NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case was published before a case carried its own standard, or no bar was ever declared — in which case the case claims no cleared standard and says so, because undetermined is first-class here and is never rounded to a number nobody chose.",
+   "en": "No standard of proof is recorded for this edition. That is not a standard of zero: the case came before cases carried their own standard, or its team never set one, so it claims to meet none.",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "public-read.capture_member_rests",
@@ -105797,10 +105840,10 @@
   },
   {
    "key": "observation-log.partial.looked_got_part",
-   "en": "we looked and got part of it",
+   "en": "we looked and found only part of it",
    "protected": false,
    "source": "DEC-260",
-   "note": "observation-log, partial"
+   "note": "observation-log, partial; DEC-259: reworded"
   },
   {
    "key": "observation-log.plane",
@@ -107141,10 +107184,10 @@
   },
   {
    "key": "following.why.placed_nowhere_attestation",
-   "en": "placed nowhere: no attestation you can see dates this event",
+   "en": "not placed on the timeline: no record you can see gives its date",
    "protected": false,
    "source": "DEC-260",
-   "note": "following, why"
+   "note": "following, why; DEC-259: reworded"
   },
   {
    "key": "following.text.actions_read",
@@ -110193,10 +110236,10 @@
   },
   {
    "key": "textchain.say.push.page_re_read",
-   "en": "{replaced} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other {kept} page(s) kept tier 1's reading",
+   "en": "Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.",
    "protected": false,
    "source": "DEC-260",
-   "note": "textchain, say.push()"
+   "note": "textchain, say.push(); DEC-259: reworded"
   },
   {
    "key": "textchain.say.push.document_text_layer",
@@ -114393,10 +114436,10 @@
   },
   {
    "key": "refusal.SUBJECT_IN_ACTIVE_PLAN",
-   "en": "That matter is already in an open plan of this project, which is named. A matter is in one open plan of a project at a time; work in that one, or close it first. Nothing was written.",
+   "en": "That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
-   "note": "action-plans' translation, keyed by its code"
+   "note": "action-plans' translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.SUBJECT_NOT_LIVE",
@@ -117685,9 +117728,10 @@
   },
   {
    "key": "reading-pipeline.scanned_page_transcribed",
-   "en": "{filled} scanned page(s) were transcribed by the OCR member and merged into this document's own text{kept}",
+   "en": "{filled} scanned pages were turned into text and added to this document's own text{kept}",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "reading-pipeline.already_text_kept",
@@ -117955,9 +117999,10 @@
   },
   {
    "key": "reading-pipeline.why.reader_found_entities",
-   "en": "the {key} reader found no entities in this document's {fmt} text-layer text (tier {wired_tier}); recorded as an empty reading, never an emptied document",
+   "en": "No names of people or organizations were found in this document's text. The document itself is unchanged.",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "reading-pipeline.why.capture_bytes_parts",
@@ -121400,7 +121445,7 @@
   },
   {
    "key": "screen.more.purpose",
-   "en": "The places the tabs below do not hold: projects, people and settings.",
+   "en": "The places the tabs do not hold: projects, people and settings.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -122516,9 +122561,10 @@
   },
   {
    "key": "act.taskforward.label.home",
-   "en": "Pass it to someone else",
+   "en": "Pass it to another member",
    "protected": true,
-   "source": "registry.json"
+   "source": "registry.json",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "act.adminendorse.label.home",
@@ -123170,9 +123216,10 @@
   },
   {
    "key": "act.taskforward.label.queue",
-   "en": "Forward to a member",
+   "en": "Pass it to another member",
    "protected": true,
-   "source": "registry.json"
+   "source": "registry.json",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "act.owed_updatelater.label.queue",
@@ -123860,9 +123907,10 @@
   },
   {
    "key": "act.projectvisibilityset.label.project",
-   "en": "Change who can find it",
+   "en": "Change who can find this project",
    "protected": true,
-   "source": "registry.json"
+   "source": "registry.json",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "act.projectownerremove.label.project",
@@ -125282,9 +125330,10 @@
   },
   {
    "key": "act.successrecord.label.matter",
-   "en": "Record a success",
+   "en": "Record what this matter achieved",
    "protected": true,
-   "source": "registry.json"
+   "source": "registry.json",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "act.escalationattach.label.matter",
