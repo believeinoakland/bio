@@ -645,34 +645,6 @@
       "line": 600
     },
     {
-      "id": "act.authority.does",
-      "en": "Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 160
-    },
-    {
-      "id": "act.leggrade.does",
-      "en": "Records how well your team's copy of a cited document shows the passage cited for this question, as a grade from A to D with your reason. The grade can be no higher than the record's own ceiling for that copy, and nothing else changes.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 161
-    },
-    {
-      "id": "act.ruleservicesstate.does",
-      "en": "Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 163
-    },
-    {
-      "id": "act.signerknown.does",
-      "en": "An administrator says they know about a signing key a member registered for themselves. It records who said so and when, and nothing else changes.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 162
-    },
-    {
       "id": "action-clocks.count.amount_unit_after_anchor",
       "en": "{amount} {unit} after {anchor}",
       "module": "action-clocks",
@@ -20145,13 +20117,6 @@
       "module": "control-plane",
       "file": "bio-plane/src/control-plane/draft.mjs",
       "line": 110
-    },
-    {
-      "id": "control-plane.reading.not_registered",
-      "en": "the file is kept, but its reading could not be queued, so it is not being read: ask again.",
-      "module": "control-plane",
-      "file": "bio-plane/src/control-plane/index.mjs",
-      "line": 1266
     },
     {
       "id": "corpus-export.declared.export",

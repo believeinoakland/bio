@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19364 design words, 1157 protected; SHA-256
-   0511dbc5b56d08e250b7c7d120b991f5898de3c7c51937d71d2cfb6761fc9b9f) followed by 7513 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19373 design words, 1160 protected; SHA-256
+   9b2db1930060d528cae69e5cd4d28b817513dd0eeefc489923c40807c69c1d1b) followed by 7508 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "0511dbc5b5";
+export const WORDS_COMMIT = "9b2db19300";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -6301,7 +6301,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue.signer-self-registered.summary.comment","{member} registered a signing key for themselves: {comment}","DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}",null,false,"design"],
   ["queue.signer-self-registered.summary.unnamed","A member registered a signing key for themselves","DEC-329: B303 (10): queue-producers/index.mjs:1778",null,false,"design"],
   ["queue.signer-self-registered.summary.unnamed.comment","A member registered a signing key for themselves: {comment}","DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}",null,false,"design"],
-  ["queue.signer-self-registered.detail","A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key.","DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members",null,false,"design"],
+  ["queue.signer-self-registered.detail","A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key. If you did, answer that you know about this key.","DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members",null,false,"design"],
   ["queue.attribution-unchosen.summary","Case {case} uses your observation {observation}: choose how it credits you","DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)",null,false,"design"],
   ["queue.attribution-unchosen.detail","Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.","DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}",null,false,"design"],
   ["queue.docket-core-due.what.response","a response","DEC-329: B303 (10): queue-producers/index.mjs:1890 (DOCKET_CORE_WORDS)",null,false,"design"],
@@ -11846,7 +11846,6 @@ export const WORD_ROWS = Object.freeze([
   ["screen.setup.zone.help","Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team.","DEC-439: D-B1: its help",null,false,"design"],
   ["screen.question.leggrade.head","What this passage earns","DEC-439: D-M1, C-M4: the fold on a cited passage; its act waits on BOB naming the op",null,false,"design"],
   ["screen.question.leggrade.help","Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.","DEC-439: D-M1, C-M4: {ceiling} the record's ceiling, a letter",null,false,"design"],
-  ["screen.question.leggrade.act","Record this grade","DEC-439: D-M1, C-M4: the act's label until the op is named",null,false,"design"],
   ["screen.case-editor.save","Save these details","DEC-439: D-M2: casedraft on the drafted state",null,false,"design"],
   ["screen.case-editor.unsaved","Changes here are not saved yet.","DEC-439: D-M2: drawn once a field of the drafted state is edited",null,false,"design"],
   ["act.resolve.label.document","Find the people and offices it names","DEC-439: D-M3, C-M7: resolve on Document","Has Civicsmith match this document's mention to them, by an identifier or the name, and grade the match. A stronger match raises the grade; a match never falls.",false,"design"],
@@ -11920,6 +11919,9 @@ export const WORD_ROWS = Object.freeze([
   ["screen.standard.binding.imposition","Binds {body}: made binding by {law}","DEC-442: R63 imposition: {law} the law's name",null,false,"design"],
   ["screen.standard.binding.benchmark","A benchmark for {body}, not binding on it","DEC-442: R63 benchmark declaration",null,false,"design"],
   ["screen.standard.binding.recorded","Recorded by {author}, {date}","DEC-442: beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)",null,false,"design"],
+  ["screen.setup.zone.how.help","Required. For example: read it on a government website for your area, or asked a public office.","DEC-443: B538 (2), at setup, where no place is chosen yet (screen.group.timezone.how.help names the city's website)",null,false,"design"],
+  ["screen.document.people.none.summary","When it finds no name","DEC-443: the mockup fold over screen.document.people.none",null,false,"design"],
+  ["control-plane.reading.not_registered","The file is kept, but its reading could not be started, so it is not being read. Ask again.","DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -17871,6 +17873,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.securitytooladd.label.setup","Add a security tool (optional)",null,"Adds a security tool your organization uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.",true,"design"],
   ["act.memberadd.label.setup","Invite a member or a second administrator",null,"Creates an invitation for one person, under the cover the team knows them by. Nothing about them is public.",true,"design"],
   ["act.recoverycodesissue.label.setup","Show my recovery codes",null,"Gives you ten new one-time recovery codes for your own role, shown to you once, and spends every earlier unused one. Nobody else can see or use them.",true,"design"],
+  ["act.factconfirm.label.setup","Save the time zone",null,"Sets or corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",true,"design"],
   ["act.groupdescriptionset.label.group-identity","Save who your team is, and who sees it",null,"Saves what your team is, what it focuses on and why, and who may see each part: members only, or also the public.",true,"design"],
   ["act.groupdescriptiondraft.label.group-identity","Ask the assistant to help write it",null,"Asks the assistant for a draft of your team's description, labeled as its draft. Nothing is saved until you keep it.",true,"design"],
   ["act.invitelook.label.join","Read the invitation",null,"Shows who invited you, to which team, and what joining means, before you decide.",true,"design"],
@@ -17955,7 +17958,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.hostingaccessset.label.group","Record who holds the hosting account",null,"Records who holds the Cloudflare account. Whoever holds it can reach everything, so the team should know who that is.",true,"design"],
   ["act.strengthbarset.label.group","Set the team's bar",null,"Sets the team's bar: how strong an answer must be before the team relies on it, in every project that sets no bar of its own.",true,"design"],
   ["act.declaredstakeset.label.group","Save the statement",null,"Records, in your team's own words, what it stands to gain or lose. It is shown beside your team's name wherever its work is published.",true,"design"],
-  ["act.factconfirm.label.group","Correct the time zone",null,"Corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",true,"design"],
+  ["act.factconfirm.label.group","Correct the time zone",null,"Sets or corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",true,"design"],
   ["act.export.label.group","Take a copy of the record",null,"Takes a copy of the team's whole working record, with checksums to verify it later, and adds it to the list of copies. It cannot be undone, and every administrator can read the list.",true,"design"],
   ["act.exportlog.label.group","Show the list of copies",null,"Shows the copies of the record taken so far, newest first, each with its time, counts and the words given.",true,"design"],
   ["act.writinghelp.label.group","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true,"design"],
@@ -18019,6 +18022,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.expertiseconfirm.label.queue","Confirm expertise",null,"Confirms a member's declared expertise, so it can be asked for when a check needs it.",true,"design"],
   ["act.release.label.queue","Vouch for a capture",null,"Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.",true,"design"],
   ["act.filingapprove.label.queue","Approve a letter",null,"Approves this exact text for sending. Changing it afterwards needs approving again.",true,"design"],
+  ["act.signerknown.label.queue","I know about this key",null,"Records that you know about this signing key and expected it. The key is not changed, and this item leaves the queue.",true,"design"],
   ["act.search.label.finder","Search",null,"Searches everything your team holds that you may see: documents, passages, questions, people.",true,"design"],
   ["act.select.label.finder","Hold these together",null,"Holds the items you picked together so one act can apply to them all. The set is held until the time shown.",true,"design"],
   ["act.findin.label.finder","Find in these",null,"Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.",true,"design"],
@@ -18182,6 +18186,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.proposedispose.label.question","Set this question aside for the project",null,"Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.",true,"design"],
   ["act.readtranslate.label.question","Read in my language",null,"Shows this in the language you read, translated by a machine for you alone and marked as machine work; passages it quotes stay in their own words. Nothing is saved: the original stays the record, one tap away, and you quote only the original.",true,"design"],
   ["act.themeplace.label.question","Place a passage in a theme",null,"Places this document or passage in a theme, with an optional note saying why. At a hunch, it confirms the hunch and keeps who proposed it.",true,"design"],
+  ["act.leggrade.label.question","Record this grade",null,"Records how well the copy your team holds shows this passage, up to the most the record allows, with your reason. The grade is yours, with your name on it.",true,"design"],
   ["act.airunopen.label.question","Ask the assistant",null,"Asks the assistant to work on what this screen shows. Its results are labeled as machine work and become the team's only when a member accepts them.",true,"design"],
   ["act.airunclose.label.question","Stop the assistant",null,"Stops the assistant's run. What it produced so far stays labeled as its draft.",true,"design"],
   ["act.ask.label.answers","Ask",null,"Asks in plain words. The assistant answers only from what your team holds and says where it looked.",true,"design"],
@@ -18744,7 +18749,11 @@ export const WORD_ROWS = Object.freeze([
   ["act.owed_watchitem.does","Puts what you picked on your watch list: Find shows it under Watched by you, and a change to it reaches your queue. Only you see what you watch.",null,null,false,"design"],
   ["act.owed_secondlook.does","Asks the team to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.",null,null,false,"design"],
   ["act.secondlookclear.does","Takes the flag off. No reason is asked; any member who can see the item may clear it.",null,null,false,"design"],
-  ["act.factconfirm.does","Corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",null,null,false,"design"],
+  ["act.factconfirm.does","Sets or corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",null,null,false,"design"],
+  ["act.authority.does","Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing.",null,null,false,"design"],
+  ["act.ruleservicesstate.does","Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing.",null,null,false,"design"],
+  ["act.leggrade.does","Records how well the copy your team holds shows this passage, up to the most the record allows, with your reason. The grade is yours, with your name on it.",null,null,false,"design"],
+  ["act.signerknown.does","Records that you know about this signing key and expected it. The key is not changed, and this item leaves the queue.",null,null,false,"design"],
   ["act.owed_aliaswithdraw.does","Takes off a name you added for them, with your reason. Documents that use only that name are no longer matched to them by it.",null,null,false,"design"],
   ["act.actionrisktier.does","Sets how carefully the team should act on this, from 1 (file freely) to 3 (do not file without counsel), with a reason kept in its history. Only a member sets it.",null,null,false,"design"],
   ["act.actionlawspropose.does","Puts a law beside the one chosen, for a member to weigh. It changes nothing until a member chooses it.",null,null,false,"design"],
@@ -19464,10 +19473,6 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.unpack.the_store_handed_in","the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened",null,null,false,"code"],
   ["acquisition.unpack.these_bytes_are_entry_index","these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}",null,null,false,"code"],
   ["acquisition.unpack.why_nothing_was_opened","{why}; nothing was opened",null,null,false,"code"],
-  ["act.authority.does","Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing.",null,null,false,"code"],
-  ["act.leggrade.does","Records how well your team's copy of a cited document shows the passage cited for this question, as a grade from A to D with your reason. The grade can be no higher than the record's own ceiling for that copy, and nothing else changes.",null,null,false,"code"],
-  ["act.ruleservicesstate.does","Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing.",null,null,false,"code"],
-  ["act.signerknown.does","An administrator says they know about a signing key a member registered for themselves. It records who said so and when, and nothing else changes.",null,null,false,"code"],
   ["action-clocks.count.amount_unit_after_anchor","{amount} {unit} after {anchor}",null,null,false,"code"],
   ["action-clocks.count.amount_unit_before_anchor","{amount} {unit} before {anchor}",null,null,false,"code"],
   ["action-clocks.count.and_between_candidates"," and ",null,null,false,"code"],
@@ -22250,7 +22255,6 @@ export const WORD_ROWS = Object.freeze([
   ["control-plane.declared.captureupload","upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle",null,null,false,"code"],
   ["control-plane.declared.clockpropose","action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it",null,null,false,"code"],
   ["control-plane.draft.draft_over_limit","the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.",null,null,false,"code"],
-  ["control-plane.reading.not_registered","the file is kept, but its reading could not be queued, so it is not being read: ask again.",null,null,false,"code"],
   ["corpus-export.declared.export","writes an export manifest of what is already there",null,null,false,"code"],
   ["corpus-export.declared.exportrender","export: keyed by (viewer, format); renders what the viewer would be carried and logs who took it",null,null,false,"code"],
   ["corpus-export.index.a_part_is_a_whole_number","a part of a rendering is named by a whole number from 1; nothing was rendered or logged",null,null,false,"code"],
