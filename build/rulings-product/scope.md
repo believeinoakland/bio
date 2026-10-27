@@ -11,3 +11,6 @@
 - Read-only layers (Bob, K5451, on C6: "as recommended"): a team's marked correction of a calendar fact stands; laws and deadlines only reported; a team's own rule sits beside, never over.
 - Layers follow the work (Bob, K5452, on C7: "A team might be located outside the US even if their work is focused on some US jurisdiction ... a team's work might be state-wide or some other footprint"): a team's layers are where its work is focused, any set of places at any level.
 - Work outside the United States (Bob, K5497, on C7: "as recommended"): United States places only, said when a team chooses its places; a team working elsewhere adds its own places, offices and rules as its own research; level names unchanged.
+- Company officers (Bob, K5498, on C8: "as recommended"): California's API with the team's own key where sign-up is free, on a member's ask, or the state's bulk file brought in by a member; never OpenCorporates.
+- Donor addresses (Bob, K5499, on C9: "A"): only street lines removed; ZIP, coordinates and city kept.
+- Donor-use guard (Bob, K5500, on C10: "as recommended"): federal registers only for now (11 CFR 104.15); California's rule to a lawyer.
