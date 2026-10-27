@@ -5,18 +5,26 @@ import { handle } from '../src/handler.mjs';
 import { PROVIDERS, providerById } from '../src/providers/catalogue.mjs';
 import { validateDescriptor } from '../src/providers/descriptor.mjs';
 import { depsWith } from './helpers.mjs';
+import { word } from '../../bio-plane/src/setup-words/index.mjs';
 
-// The tools that run on the organization's own server or service, by the recipient their descriptor names in English
-// ("the organization's own …", or a vendor with "(the organization's own …)").
-const OWN = ['metadefender-core', 'defender-storage', 'splunk-hec', 'sentinel', 'google-secops', 'elastic'];
+// The tools that run on the organization's own server or service, by the word key of the recipient their descriptor names.
+const OWN_RECIPIENT = {
+  'metadefender-core': 'file-scanner.catalogue.metadefender_core_the_organizations_own',
+  'defender-storage': 'file-scanner.catalogue.microsoft_the_organizations_own_azure',
+  'splunk-hec': 'file-scanner.catalogue.splunk_hec_the_organizations_own_splunk',
+  sentinel: 'file-scanner.catalogue.microsoft_the_organizations_own_workspace',
+  'google-secops': 'file-scanner.catalogue.google_llc_the_organizations_own',
+  elastic: 'file-scanner.catalogue.elastic_the_organizations_own',
+};
+const OWN = Object.keys(OWN_RECIPIENT);
 
 test('R33 every catalogue descriptor states on_own as a boolean, true exactly for the self-run tools whose recipient names the organization\'s own server or service', () => {
   assert.ok(PROVIDERS.length >= 20);
   for (const d of PROVIDERS) {
     assert.equal(typeof d.handling.on_own, 'boolean', d.provider_id);
     assert.equal(d.handling.on_own, OWN.includes(d.provider_id), d.provider_id);
-    // what the recipient's English names agrees with it (the check the statement replaces on the screen's side)
-    assert.equal(/^the organization\b|\(the organization's own [^)]+\)$/.test(d.handling.recipient), d.handling.on_own, d.provider_id);
+    // what the recipient's word names agrees with it (the check the statement replaces on the screen's side)
+    assert.equal(OWN_RECIPIENT[d.provider_id] !== undefined && d.handling.recipient === word(OWN_RECIPIENT[d.provider_id]), d.handling.on_own, d.provider_id);
   }
 });
 
