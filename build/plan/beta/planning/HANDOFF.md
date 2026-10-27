@@ -9,10 +9,10 @@
 **Next steps, in order.**
 1. (done, K5502) K5501's lines READY for BOB.
 2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
-3. On Bob's answers (L6-L26 (L1-L5 applied, L18), J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
+3. On Bob's answers (L13-L26, L18 among them; L1-L12 applied, L18, L19; L13 rewritten on the page; and J1-J7): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** BOB: `lines-K5513-daily-follow.md`'s three points. Bob: L6-L26, J1-J7, N1257 D3. Lanes: as step 2.
+**Waiting on.** Bob: L13-L26 (L18 among them), J1-J7. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -85,3 +85,19 @@ BOB #322 decided K5501's five points as recommended (K5502): `lines-K5501-role-c
 ## L18 · 2026-10-27 · L1-L5 applied; K5503-K5514 in the plan; K5513's line
 
 BOB #323 relayed K5515-K5519 (Bob, L1-L5, all as recommended): their seven brackets in the A1, A7, A2, A3 drafts now read decided, the plan's waits on them dropped. K5503-K5512 (CAPABILITIES C11-C20) noted on the plan's owed N1259, N824, N1110, N858 entries; K5514 (F4) clears the photo's published-place wait. K5513 (C22): the words "never one a daemon uses" are acquisition R36's, not credentials R29's; `lines-K5513-daily-follow.md` amends R36 (a daemon fetches only for the daily check of a followed case), R29 unchanged; three technical points for BOB. DECISIONS gains K5503-K5519.
+
+## L19 · 2026-10-27 · L6-L12 applied; K5527's R36 points
+
+BOB #323 relayed K5520-K5526 (Bob, L6-L12) and K5527. A drafts: L6, L8, L10, L11 unbracketed; L7 (K5521) changes A4: the camera and lens serials and the owner name are shown beside the picture to members who may see it (governing K5473 (1) for them), image id, artist and copyright still not shown by default (A4-R2, R5, R10 and the table); L9 = B (K5523, not the recommendation): a photo's stated time and place are citable as "the file says", never as a checked fact, new A4-R11 (citation; an edition's place only where the author turned it on, K5514); L12 (K5526): the beta is before 1.0, K5424's exclusion stands. K5527 (6): R36's daemon arm bound to `courtlistener`, `lines-K5513-daily-follow.md` decided. K5527 (4)-(6) given to a Sonnet worker. DECISIONS gains K5520-K5526; QUESTIONS-L2 all answered.
+
+## L20 · 2026-10-27 · K5527 (4)-(6) drafted
+
+A Sonnet worker drafted `lines-K5527-texts-and-listing.md` from N858, N1110, N1257 R125/R126 and the code; PLANNING checked its pointer claims on disk. Found: `case-disclosures` has no R40 (last R23) and an edition holds no profile text, so the hash is `jurisdictions` R40 (as N858 meant) plus a `filings` R29 sentence; R138's `writer` is `authored_by` in the code; `reviews[].organisation` and `credential` are optional in the code and must count as required; guides lack every attribution field; "not a member of a listed group" cannot be checked by the product (T6, possibly Bob's under K5511); `site.md` cites network-notices R23 where K5507 means R32. Lines: jurisdictions R40, R125, R126, R138 (deltas), filings R29, reading-guides R20, network-notices R23 (full). Eight technical points T1-T8 for BOB. Plan entries added (jurisdictions, filings, network-notices).
+
+## L21 · 2026-10-27 · K5528
+
+BOB #323 decided L20's T1-T8 as recommended (K5528): the guide hash by `record-grammar`'s `canonicalJson`; the profile answer key `reviewed` (a team guide's string `reviewed_by` unchanged); the listed-group check a process step (Bob's rule unchanged); K5527 (4)'s note corrected. `lines-K5527-texts-and-listing.md` updated and decided; the plan's wait dropped.
+
+## L22 · 2026-10-27 · N1257 D3 and the photo place cleared
+
+BOB #323: N1257 D3 is C7 (K5452, K5497) and the photo's published-place default is F4 (K5514), both answered. The places page's entry in the plan unbracketed (it waits only on CAPABILITIES' lines); the photo default was already folded at L18. Open with Bob: L13-L26 and J1-J7 only.

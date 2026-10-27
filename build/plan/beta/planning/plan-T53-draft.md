@@ -1,6 +1,6 @@
 # Plan T53 round R1 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L18 (K5495-K5519, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L19 (K5495-K5527, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -20,6 +20,8 @@
 - T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `[owed: CAPABILITIES' lines]`
 - T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18 (Bob)]` (L3 decided, K5517: a disputed year still groups, shown disputed)
 
+- T53 · K5527 (4), (5) · N858's text record in the profile: a review's `reviewed_text_sha` (R40), a guide's attribution fields (R125), what counts as the professional review and `countedReview` (R126), R138 on `authored_by` and `machine_draft` · `planning/lines-K5527-texts-and-listing.md` §1, §3, §4 (T1-T8 decided, K5528) `[owed: CAPABILITIES' N858 READY]`
+
 **civil-time**
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
 
@@ -27,7 +29,7 @@
 - T53 · N1260 (DEC-409 to DEC-411, K1471, K4354) · `chainStrength`, `strongerChain`, paths ordered by strength, `foldParallel`, `CHAIN_LIMITS` · `capabilities/N1260-following-the-trail-a.md` §1, §2 (R22-R25) (counts only; the times are budget classes of `followfrom` and explore's ops, CONSISTENCY §2.16)
 
 **text-chain**
-- T53 · A8 (DEC-464) · a typed passage's two grades (unchecked, checked one step stronger, never `EARNED_CAPTURE_CEILING`) · `planning/lines-A8-typed-page.md` §2 `[owed: L2-10]`
+- T53 · A8 (DEC-464) · a typed passage's two grades (unchecked, checked one step stronger, never `EARNED_CAPTURE_CEILING`) · `planning/lines-A8-typed-page.md` §2 (L10 decided, K5524)
 
 **runtime-limits**
 - T53 · N1267 (K4628, K5427, K5439) · the beta's per-kind bounds and protective limits as one table · `files/SIZES-N1267.md`; per-level rows `[owed: PLATFORM service levels]` (CONSISTENCY §2.8)
@@ -49,7 +51,7 @@
 - T53 · N1266, N1267 · legacy Office and RTF by conversion, macros never run, every image kind to OCR-ready frames, archives as streams within bounds, refusal before any read · `files/REQ-readers-beta.md` CC1-CC6 (CC4 replaced by A4, CONSISTENCY §2.2)
 
 **image-cover**
-- T53 · A4 (DEC-460) · `redrawPicture`, `photoFactsOf`, strict strings · `planning/lines-A3-A4-source-picture.md` (image-cover R12-R14) `[owed: L2-6, L2-7]`
+- T53 · A4 (DEC-460) · `redrawPicture`, `photoFactsOf`, strict strings · `planning/lines-A3-A4-source-picture.md` (image-cover R12-R14) (L6 decided, K5520: JPEG and PNG first)
 
 **office-readers**
 - T53 · N1267a · XLSX cells by window before any workbook bound above 250,000 · `next.md` N1267a `[owed: Bob's higher row; else left out, hard reason Bob's]`
@@ -96,7 +98,7 @@
 - T53 · A3 · a pulled knock carries the knocker's file name as the knocker's word · `planning/lines-A3-A4-source-picture.md` (doorbell R29) (L5 decided, K5519)
 
 **file-safety**
-- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name read into the record, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures `[waits: L21, L22]` (the published place decided, K5514: shown in an edition only where the author turns it on, per photo, off by default)
+- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name shown beside the picture to members who may see it (K5521, governing K5473 (1) for them); image id, artist, copyright read, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures `[waits: L21, L22]` (the published place decided, K5514: shown in an edition only where the author turns it on, per photo, off by default)
 - T53 · DEC-454 · the partial-scan reason in plain words · `docs/development/DECISIONS.md` DEC-454
 - T53 · N1266 (K5436) · a held-and-named file safe-graded like any other · `files/REQ-format-registry-beta.md` RF10
 
@@ -157,7 +159,7 @@
 - T53 · A8 · a leg on a typed passage counts at its grade; `bio-grading/5` · `planning/lines-A8-typed-page.md` §5
 
 **citation**
-- T53 · A8 · a typed passage citable at once; the citation names typist and checker · `planning/lines-A8-typed-page.md` §6 `[owed: L2-11]`
+- T53 · A8 · a typed passage citable at once; the citation names typist and checker · `planning/lines-A8-typed-page.md` §6 (L11 decided, K5525: the member's credit choice wins); A4-R11 (K5523, L9 = B): a photo's stated time and place citable as "the file says", never as a checked fact; a place in an edition only where the author turned it on (K5514) · `planning/lines-A3-A4-source-picture.md`
 
 **run-rules**
 - T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37), per AI and naming it (A48) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) (AI1 answered B, K5475)
@@ -217,6 +219,8 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - T53 · A5 · refused only when the statement is missing; the commit records it · `planning/lines-A5-A6-signing.md` (ratification R62-R63)
 - C T52-24
 
+**filings** (layer 9 job, listed here with its K5527 line) · T53 · K5527 (4) · R29: a profile template's recorded `sha` equals its counted review's hash; an earlier text flagged · `planning/lines-K5527-texts-and-listing.md` §2
+
 **corpus-export**
 - T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` `[owed: READY]`
 
@@ -231,6 +235,8 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 **following** · C T52-34; `[owed: N1259 watches and alerts]` · **monitoring** · `[owed: N1259's pause line]`
 
 ## Layer 11
+
+**network-notices** (layer 8; listed with layer 11's) · T53 · K5507, K5527 (6) · R23 prepares a submission to the network pages, not the directory of groups (civicsmith.org's list, R32); Purpose, R30 and `site`'s note reworded · `planning/lines-K5527-texts-and-listing.md` §5
 
 **op-declarations**
 - C T52-42 · T53 · K4599 · screens declare reads by wave; `screenread` (PL10, PL11); every op and screen a budget class (PL3, PL4) · `platform/combined-read-and-fold-draft.md` §3, `time-budgets-draft.md` §4
@@ -272,7 +278,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 
 **screens-settings**, **installer**, **installer-steps**
 - C T52-58, T52-92 to T52-95 · the AI screens (below)
-- T53 · N1257 (K5450, K5452) · the places page as a tree, the choice a set, "Report a rule" the one act on a shipped rule, an information mark on each entry and the page (screens-settings R82, R83); the install asks where the work focuses, as a set, nothing below federal preselected (installer R86); instance-setup holds the choice and the team's layers (R107-R111) · `capabilities/N1257-requirements-modules.md` `[waits: D3 (Bob); CONSISTENCY §2.17]`
+- T53 · N1257 (K5450, K5452) · the places page as a tree, the choice a set, "Report a rule" the one act on a shipped rule, an information mark on each entry and the page (screens-settings R82, R83); the install asks where the work focuses, as a set, nothing below federal preselected (installer R86); instance-setup holds the choice and the team's layers (R107-R111) · `capabilities/N1257-requirements-modules.md` (D3 = C7, answered: K5452, K5497) `[owed: CAPABILITIES' lines READY]` (CONSISTENCY §2.17 decided)
 - T53 · K5444, K5442, K5454 · a copy chooses its level at install (Team, Institution; Enterprise listed as not yet available, PL29) and can move up later · `[owed: PLATFORM service levels; Levels 2-3 study]`
 - T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" storage in a jurisdiction, the room and its R2 bucket; what runs elsewhere said), the choice fixed and the move by export and import said before it (PL32); Settings states the placement truthfully (PL33) · `platform/record-placement-draft.md` §3 (installer, installer-steps, plane; screen needs to UX-DESIGN)
 - T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` `[owed: READY; one point maybe Bob's (a move carries members' sign-in material?)]`
@@ -315,7 +321,7 @@ The load test per level (N1274, `load-test-draft.md`), its short "before" run on
 
 ## Left out of T53 (P19), each with its hard reason
 
-- K5424 · lift civicsmith.org's `noindex` · Bob's: "not until the 1.0 release is deployed" (L12 on Bob's page: is the beta 1.0? recommended "before 1.0")
+- K5424 · lift civicsmith.org's `noindex` · Bob's: "not until the 1.0 release is deployed" (K5526: the beta is a release before 1.0; the site stays hidden through it)
 - K5447 (B) · keeping an over-limit file and reading only part · Bob's: waits until Civicsmith's proposals work well (K5445)
 - N1270 · audio, video, forum formats · Bob's: after 1.0 (K4628); held and named meanwhile (K5436)
 - K5454 · Enterprise support (Level 3) · Bob's, a hard reason outside the product: built with the first Civicsmith team that wants an Enterprise-scale copy; listed at install as not yet available (PL29)
