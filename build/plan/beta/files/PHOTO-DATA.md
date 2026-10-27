@@ -11,7 +11,7 @@
 |---|---|---|---|
 | camera and exposure fields | make, model, software only | adds lens, exposure, ISO, focal length, flash | A4's (a superset) |
 | the photographer's text | one caption | artist, copyright, description, comments, keywords, byline, credit, place name, PNG text | A4's |
-| colour profile | pixels converted to sRGB | profile dropped; picture shown in standard colours; profile name and colour space beside it (Q-A3A4-4, Bob's/BOB's) | A4's; F12's conversion is option C of Q-A3A4-4, not assumed |
+| colour profile | pixels converted to sRGB (withdrawn) | profile dropped, picture in standard colours (Q-A3A4-4) | **Bob, K5546 (L21 "B"): the photo keeps its colour profile; K5555 (BOB): the ICC profile is re-embedded unchanged, never converted, and only when a strict structural check passes** (else it is left out and `profile` is in `left_out`). A4's `profile` row changes accordingly (PLANNING CONSISTENCY 20 (3)) |
 | serial numbers and owner name | read into the record, not shown by default | in `file_says`, depending on L7 | **K5471 (BOB)**: read into the record, not shown by default; A4-R2 is to say so for these fields |
 | place | place name; exact figures one step away | latitude, longitude, altitude, direction, time, datum, range-checked (L8) | A4's fields; **K5471**: place name shown, exact coordinates one step away |
 | face regions, embedded audio, motion-photo video, paths and edit history | listed separately | covered by `xmp`, `after_end` (a motion photo's video follows the image), `other_metadata` | A4's kinds |

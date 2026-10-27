@@ -53,3 +53,6 @@ Owed by DEC-467/DEC-460 written: KIND-TABLE.md (plain kind names, states and per
 
 ### F13 · 2026-10-27
 PHOTO-DATA.md made to agree with PLANNING's A4 table (one source); K5471 carried; differences listed.
+
+### F14 · 2026-10-27
+K5546/K5555 carried: the colour profile is kept (re-embedded unchanged after a strict check); PHOTO-DATA's sRGB conversion stays withdrawn.
