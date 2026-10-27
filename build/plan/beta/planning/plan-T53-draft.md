@@ -150,10 +150,10 @@
 - T53 · A8 · a typed passage citable at once; the citation names typist and checker · `planning/lines-A8-typed-page.md` §6 `[owed: L2-11]`
 
 **run-rules**
-- T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) (AI1 answered B, K5475)
+- T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37), per AI and naming it (A48) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) (AI1 answered B, K5475)
 
 **ai-runs**
-- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended) `[waits: AI3, AI10]` (AI1 answered, K5475)
+- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI3, AI10]` (AI1 answered, K5475)
 - T53 · N1219, DEC-466 · `read` and `disagree` passed through (R99), `op=airunlog` (R100), segments as parts, hops and refusals recorded (R101, R102), `op=airunparts` "How this run went" (R103), the label names the AI, never the account (R104) · `lane-ai-design/draft-run-record.md`
 
 **observation-log** (layer 5)
