@@ -9,6 +9,11 @@ import { HARBOR, LAKESHORE, DISSENT, UNMEASURED, NEW_SPACES, REPORTERS, combine,
 import { word } from "../../../src/setup-words/index.mjs";
 import { wordRx } from "../../word-rx.mjs";
 
+// A sentence the product writes from a key: the test reads the key and its values, never a copy of the English (K5565).
+const escapeRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const sentenceRx = (key, vars) => new RegExp(escapeRx(word(key, vars)));
+const FLOORS = "ordinance 12274, resolution 75950";
+
 const { spaces, recognise, reach, parcelStanding, systemOf, judgePair, recogniseCitations } = M;
 const H = viewOf(HARBOR);
 const L = viewOf(LAKESHORE);
@@ -242,25 +247,30 @@ test("R7 with no kind, reach is OUTSIDE_REACH below every floor, INSIDE at or ab
     assert.match(r.says, /resolution 75950/);
     assert.match(r.says, /inside the reach for some kinds and outside it for others/);
   }
-  for (const n of [1, 12273]) assert.match(reach(H, n).says, /below every kind's coverage floor \(ordinance 12274, resolution 75950\)/);
-  assert.match(reach(H, 80000).says, /at or above every kind's coverage floor/);
+  for (const n of [1, 12273]) assert.match(reach(H, n).says, sentenceRx("idspaces.says.kind_coverage_floor", { named: FLOORS }));
+  assert.match(reach(H, 80000).says, sentenceRx("idspaces.says.kind_coverage_floor_record", { named: FLOORS }));
   /* a kind with no floor leaves every bare number undetermined, saying why */
   const U = viewOf(HARBOR, UNMEASURED);
   for (const n of [1, 13035, 99999]) {
     const r = reach(U, n);
     assert.equal(r.reach, "UNDETERMINED");
-    assert.match(r.says, /no coverage floor is measured for proclamation/);
+    assert.match(r.says, sentenceRx("idspaces.why.coverage_floor_measured", { kind: "proclamation" }));
   }
   assert.equal(reach(EMPTY, 5).reach, "UNDETERMINED");
 });
 
 test("R8 OUTSIDE_REACH is never reported as not found: says states the source holds nothing that old", () => {
-  const outs = [reach(H, 59916, "resolution"), reach(H, 1, "ordinance"), reach(H, 100), reach(L, 5, "bylaw"),
-    recognise(H, "enactment", "Resolution No. 59916").reach];
-  for (const r of outs) {
+  const HARBOR_RECORD = "the Harbor legislative record (vendor API)";
+  const outs = [
+    [reach(H, 59916, "resolution"), "idspaces.text.first_outside_record", { kind: "resolution", system: HARBOR_RECORD, floor: "75950" }],
+    [reach(H, 1, "ordinance"), "idspaces.text.first_outside_record", { kind: "ordinance", system: HARBOR_RECORD, floor: "12274" }],
+    [reach(H, 100), "idspaces.says.kind_coverage_floor", { named: FLOORS }],
+    [reach(L, 5, "bylaw"), "idspaces.text.first_outside_record", { kind: "bylaw", system: "the township clerk's register", floor: "100" }],
+    [recognise(H, "enactment", "Resolution No. 59916").reach, "idspaces.text.first_outside_record", { kind: "resolution", system: HARBOR_RECORD, floor: "75950" }],
+  ];
+  for (const [r, key, vars] of outs) {
     assert.equal(r.reach, "OUTSIDE_REACH");
-    assert.match(r.says, /OUTSIDE THE RECORD'S REACH/);
-    assert.match(r.says, /holds (no \w+|nothing) that old/);
+    assert.match(r.says, sentenceRx(key, vars));
     assert.equal((r.says.match(/not found/gi) || []).length, (r.says.match(/never "not found"/gi) || []).length,
       "\"not found\" appears only as what it is never");
     assert.doesNotMatch(r.says, /does not exist|no such/i);
@@ -271,25 +281,24 @@ test("R8 OUTSIDE_REACH is never reported as not found: says states the source ho
 test("R9 with no floor for the kind, reach is UNDETERMINED and says why: none measured, or conflicting floors", () => {
   const none = reach(viewOf(HARBOR, UNMEASURED), 5, "proclamation");
   assert.equal(none.reach, "UNDETERMINED");
-  assert.match(none.says, /no coverage floor is measured for proclamation/);
+  assert.match(none.says, sentenceRx("idspaces.why.coverage_floor_measured", { kind: "proclamation" }));
   assert.ok(!("floor" in none));
   const unknownKind = reach(H, 5, "bylaw");
   assert.equal(unknownKind.reach, "UNDETERMINED");
-  assert.match(unknownKind.says, /no coverage floor is measured/);
+  assert.match(unknownKind.says, sentenceRx("idspaces.why.active_profiles_name", { kind: "bylaw" }));
   const D = viewOf(HARBOR, DISSENT);
   assert.equal(D.conflicts.length, 1, "the fixture's combine reports the conflict");
+  const conflict = sentenceRx("idspaces.why.active_profiles_give", { kind: "ordinance", distinct: "test-harbor gives 12274, test-dissent gives 12000" });
   for (const n of [1, 12100, 99999]) {
     const r = reach(D, n, "ordinance");
     assert.equal(r.reach, "UNDETERMINED");
-    assert.match(r.says, /conflicting coverage floors for ordinance/);
-    assert.match(r.says, /test-harbor gives 12274/);
-    assert.match(r.says, /test-dissent gives 12000/);
+    assert.match(r.says, conflict);
   }
   assert.equal(reach(D, 80000, "resolution").reach, "INSIDE", "a floor not in conflict still decides");
-  assert.match(reach(D, 80000).says, /conflicting coverage floors for ordinance/);
+  assert.match(reach(D, 80000).says, conflict);
   assert.equal(reach(D, 80000).reach, "UNDETERMINED");
   /* the whole combine result is accepted too, with its conflicts */
-  assert.match(reach(combine([HARBOR, DISSENT]), 5, "ordinance").says, /conflicting coverage floors/);
+  assert.match(reach(combine([HARBOR, DISSENT]), 5, "ordinance").says, conflict);
   for (const j of JUNK) for (const n of [5, "x", null, NaN, Infinity]) {
     const r = reach(j, n, "ordinance");
     assert.equal(r.reach, "UNDETERMINED", "never throws");
@@ -365,11 +374,10 @@ test("R13 an address names the first matching system by host and, where given, p
 test("R14 a host serving many offices, an unmatched address, and an unparseable one name no system, and why says so", () => {
   const www = systemOf(H, [A.www]);
   assert.equal(www.origin, null);
-  assert.match(www.why, /serves many offices' publications/);
-  assert.match(www.why, /the city's general website/);
+  assert.match(www.why, sentenceRx("idspaces.why.serves_many_offices", { host: "www.harbor.test", why: ` (${HARBOR.mixed_hosts[0].why})` }));
   const unknown = systemOf(H, ["https://nowhere.test/x"]);
   assert.equal(unknown.origin, null);
-  assert.match(unknown.why, /no system in the active profiles matches nowhere\.test/);
+  assert.match(unknown.why, sentenceRx("idspaces.why.system_active_profiles", { host: "nowhere.test" }));
   const bad = systemOf(H, ["not a url"]);
   assert.equal(bad.origin, null);
   assert.match(bad.why, wordRx("idspaces.why.parseable_address"));
@@ -383,17 +391,19 @@ test("R15 several addresses name a system only when every one names the same; ot
   assert.deepEqual([systemOf(H, [A.portal, A.county]).origin], ["county.assessor"], "a republication and its source are one system");
   const none = systemOf(H, []);
   assert.deepEqual([none.origin, none.addresses], [null, []]);
-  assert.match(none.why, /no addresses/);
-  for (const x of [undefined, null, 5, {}]) assert.match(systemOf(H, x).why, /no addresses/, "never throws");
+  const noAddresses = sentenceRx("idspaces.why.addresses_record_holds");
+  assert.match(none.why, noAddresses);
+  for (const x of [undefined, null, 5, {}]) assert.match(systemOf(H, x).why, noAddresses, "never throws");
   const differ = systemOf(H, [A.legis, A.budget]);
   assert.equal(differ.origin, null);
-  assert.match(differ.why, /different systems \(harbor\.legis, harbor\.budget\)/);
+  assert.match(differ.why, sentenceRx("idspaces.text.different_systems_record", { origins: "harbor.legis, harbor.budget" }));
   const partly = systemOf(H, [A.legis, A.www]);
   assert.equal(partly.origin, null);
-  assert.match(partly.why, /unknown systems: some of these addresses name no system/);
+  assert.match(partly.why, sentenceRx("idspaces.text.unknown_systems_some"));
   const allUnknown = systemOf(H, [A.www, "https://nowhere.test/"]);
   assert.equal(allUnknown.origin, null);
-  assert.match(allUnknown.why, /unknown systems: none of these 2 addresses names a system/);
+  assert.match(allUnknown.why, sentenceRx("idspaces.text.unknown_systems_addresses",
+    { list: "2", why: [systemOf(H, [A.www]).why, systemOf(H, ["https://nowhere.test/"]).why].join("; ") }));
   for (const j of JUNK) assert.equal(systemOf(j, [A.legis, 5, null]).origin, null, "never throws");
 });
 
@@ -418,7 +428,9 @@ test("R16 the checks run form, value, independence, fund name, referent: no read
 });
 
 test("R17 different forms are FORMS_UNJOINED unless the view supplies a crosswalk between them", () => {
-  for (const [a, b] of [["C329142", "1000858"], ["1003439A", "1003439"], ["C329142", "P329142"]]) {
+  const PROJECT = "project or capital improvement number";
+  for (const [a, b, fa, fb] of [["C329142", "1000858", "C#####", "100xxxx"], ["1003439A", "1003439", "100xxxx+suffix", "100xxxx"],
+    ["C329142", "P329142", "C#####", "P#####"]]) {
     const r = judgePair(H, "project", end(H, "project", a, A.budget), end(H, "project", b, A.legis), "agrees");
     assert.deepEqual([r.verdict, r.counts], ["FORMS_UNJOINED", false], `${a} ${b}`);
     assert.match(r.says, /unmade join, not a mismatch/);
@@ -726,12 +738,12 @@ test("R28 with no reporter data the answer is undetermined, never 'cites nothing
   assert.deepEqual(withData.citations.map((c) => c.reporter), ["Rep."]);
   assert.deepEqual(withData.undetermined.unrecognised.map((u) => [u.text, u.start, u.end]),
     [["12 Zz. Ct. 5", text.indexOf("12 Zz"), text.indexOf("12 Zz") + 12], ["9 ABC 10", text.indexOf("9 ABC"), text.indexOf("9 ABC") + 8]]);
-  assert.match(withData.undetermined.why, /never dropped and never guessed/);
+  assert.match(withData.undetermined.why, sentenceRx("idspaces.why.run_text_volume", { unrecognized: "2" }));
   }
   /* a spelling the data gives to two reporters is listed with both */
   const amb = recogniseCitations("5 R. 6", REPORTERS);
   assert.deepEqual([amb.citations, amb.undetermined.ambiguous.map((a) => [a.text, a.reporters])], [[], [["5 R. 6", ["Rep.", "Tst."]]]]);
-  assert.match(amb.undetermined.why, /more than one reporter: listed with each, never one chosen/);
+  assert.match(amb.undetermined.why, sentenceRx("idspaces.why.citation_written_spelling", { ambiguous: "1" }));
   /* plain prose is not a citation's shape */
   assert.deepEqual(recogniseCitations("In 2019 the Council met 3 times and Congress acted 4 times.", REPORTERS), { citations: [] });
 });
@@ -761,6 +773,6 @@ test("R29 pure and place-free: reporters are data only, the same inputs give the
   for (const t of junkText) for (const d of junkData) {
     const r = recogniseCitations(t, d);
     assert.ok(Array.isArray(r.citations), "never throws");
-    if (typeof t !== "string") assert.match(r.undetermined.why, /no text was given/);
+    if (typeof t !== "string") assert.match(r.undetermined.why, sentenceRx("idspaces.why.text_given_string"));
   }
 });

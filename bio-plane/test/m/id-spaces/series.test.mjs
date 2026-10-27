@@ -4,6 +4,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { recogniseSeries } from "../../../src/idspaces.mjs";
 import { HARBOR, LAKESHORE, SERIES, viewOf, withSeries } from "./fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+
+// A sentence the product writes from a key: the test reads the key and its values, never a copy of the English (K5565).
+const escapeRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const sentenceRx = (key, vars) => new RegExp(escapeRx(word(key, vars)));
 
 const H = viewOf(HARBOR);
 const HS = withSeries(H);
@@ -45,7 +50,7 @@ test("R31 an edition not written is never supplied; overlapping readings of diff
   assert.deepEqual(amb.citations, []);
   assert.deepEqual(amb.undetermined.ambiguous.map((a) => [a.text, a.readings.map((x) => `${x.key}/${x.series}`)]),
     [["AI 4.12 §3", ["harbor/ai", "tidewater/ai"]]]);
-  assert.match(amb.undetermined.why, /never one chosen/);
+  assert.match(amb.undetermined.why, sentenceRx("idspaces.push.run_text_read", { ambiguous: "1" }));
   /* overlapping with a different number is ambiguous too */
   const wide = { ...SERIES[0], series: { key: "ai", label: "Harbor directive" }, key: "harbor", cite: { re: "\\bAI\\s+(?<number>\\d{1,2})" } };
   const differ = recogniseSeries({ ...H, standard_sources: [SERIES[0], { ...wide, key: "harbor2" }] }, "AI 4.12");
@@ -99,7 +104,7 @@ test("R33 pure and place-free: every series comes from the view, the inputs are 
   for (const t of [undefined, null, 5, {}, [], Symbol("s"), new String("AI 4.12")]) {
     const r = recogniseSeries(HS, t);
     assert.deepEqual(r.citations, []);
-    assert.match(r.undetermined.why, /no text was given/);
+    assert.match(r.undetermined.why, sentenceRx("idspaces.no_series.text_given_string"));
   }
   const junkViews = [undefined, null, 0, "x", [], { standard_sources: 5 }, { standard_sources: [null, 3, { series: 5 }, { series: {}, key: "k" },
     { series: { key: "s" }, key: "k", cite: { re: "(" } }, { series: { key: "z" }, key: "k", cite: { re: "" } }, { series: { key: "n" }, key: "k", cite: { re: "(?<number>\\d+)" }, normal: [{ group: "missing" }] }] },
