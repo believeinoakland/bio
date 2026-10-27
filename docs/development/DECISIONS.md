@@ -6986,3 +6986,123 @@ the design: `act.release.label.home|dash-project` "Vouch for copies" (as the vou
 verified: the page's checks pass; on tranche/T52, the DEC-454 module set and DEC-453's, with these words, against their runs without: words 0, format 0; DEC-454's set 1675/16 both ways, DEC-453's set 1473/54 both ways (the same failures).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`; `screens/registry.src.py`; `screens/mock-screens.js`, `mock-acts.js`.
 owed: BOB: merge this commit with DEC-454 and DEC-455 (one MERGE). Screens-intake: re-point r9-states R65 at `screen.capture.read.queued` when the design returns the row.
+
+### DEC-457 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A1)
+for: Bob
+question: A1, A question's subject. Who a question is about: may a member name it, and when?
+why it is Bob's: what Civicsmith must do (requirements): grading connections rests on it.
+provisional: no subject is ever asked (questions created through screens have none).
+alternative: B, at opening only; C, suggested from the question's words.
+recommendation: A: asked at opening, optional, and changeable later with a reason kept in the question's history.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: A. A question's opening form asks, optionally, "Who is this question about?", choosing from the people and organizations the team follows; a member may add or change it later, the reason kept in the question's history; a question without one says so plainly, with the control to name one.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A1); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through PLANNING): a requirement for the subject at opening and a subject-change act with its reason and history (inquiry, screens-inquiry); the design draws the field, the act and the plain sentence when the act is named.
+
+### DEC-458 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A2)
+for: Bob
+question: A2, Whose fiscal year Money counts in. Whose fiscal year Money uses to group a government's figures.
+why it is Bob's: what Civicsmith must do, and a stated fact's doctrine.
+provisional: the place's records only; "*" printed when they hold none.
+alternative: A, one fiscal year for the team; C, calendar years only.
+recommendation: B: each government's own fiscal year, from the place's records or stated by a member with how they checked it, as the time zone is.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B. A government's fiscal year comes from the place's records; where they hold none, a member states it for that government with how they checked it, as the time zone is set; Money offers the fiscal-year view only for a government whose year is known, says why where it is not, and never prints "*". DEC-451's two sentences stand until the view is redrawn.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A2); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through PLANNING, CAPABILITIES): a stated fiscal-year fact per government (money, civil-time, places) and its form; the design draws the form, the view's offer and its sentence.
+
+### DEC-459 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A3)
+for: Bob
+question: A3, A handed-in file's source link. Who sees the link to a handed-in file's source, and where.
+why it is Bob's: who may see what (doctrine).
+provisional: "A source" in the Inbox only; Held shows a machine reference; Document shows nothing.
+alternative: B, Inbox only; C, every member.
+recommendation: A: the link on Document and Held for the members the team listed; every other member sees "Handed in through the doorbell" with no link; Held shows the file's own name.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: A, as recommended: the confidentiality rule stands; listed members see "A source" on Document and Held; others see "Handed in through the doorbell"; Held names the file by its own name.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A3); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: the listed-member check on Document and Held (screens-inquiry, screens-intake, doorbell); the design draws both views.
+
+### DEC-460 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A4)
+for: Bob
+question: A4, A member's own photograph. How a member looks at a photograph in Civicsmith.
+why it is Bob's: doctrine on opening outside files (the safe-view rule).
+provisional: no safe view for pictures; only "Open the original on your own device"; a sentence contradicting itself.
+alternative: A, words only; C, the uploader may open their own original.
+recommendation: B, with A's wording fix now: a safe picture redrawn from each photo's pixels, carrying nothing else from the file.
+reversal cost: medium (a requirement for the beta's plan).
+response: "B, but only drop metadata is necessary"
+decided: 2026-10-27 · Bob
+the design: B, with Bob's limit: the safe picture is redrawn from the photo's pixels, and only the metadata that must be dropped for safety is dropped; what can be carried safely (such as when and where it was taken, the camera's orientation) is read from the original as data and shown beside the picture, never carried as part of the file. The contradictory sentence goes now.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A4); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through FILES, PLATFORM): a safe-picture maker and its security review, and the list of photo metadata kept as data versus dropped (file-safety); the design draws the picture's safe view and its metadata lines.
+
+### DEC-461 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A5)
+for: Bob
+question: A5, Two "Capture"s and publishing an ungraded case. The two measures both named "Capture", and whether a case may be published with passages ungraded (the publish gate).
+why it is Bob's: policy on publishing (the publish gate, BQ22).
+provisional: "Capture" names both the record's ceiling and a member's grade; a case may be signed with none graded; nothing points the member to the grading fold.
+alternative: A, rename and guide only; C, block signing until every passage is graded.
+recommendation: B: rename the two measures and guide the member, and the signing screen names every passage still ungraded; the member grades there or signs anyway, and the edition says it was published with them ungraded.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B. The two measures are named apart ("How well it could be captured"; "Your team's grade for the copy"); the question points to the grading fold; signing lists every passage still ungraded, with grading there or signing anyway, and the edition states it was published with them ungraded.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A5); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: the signing check that lists ungraded passages and the edition's statement (ratification, case-authoring); the design words the two names and draws the signing step.
+
+### DEC-462 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A6)
+for: Bob
+question: A6, Signing keys in the Queue. The queue items each new signing key raises, and the "Keep it on this device" box.
+why it is Bob's: what Civicsmith must do (the Queue's duty to administrators).
+provisional: one item per key; the box unticked; nothing replaces an earlier key.
+alternative: A, the box ticked by default; C, both.
+recommendation: B: one queue item per member listing each new key with when it was made; the box stays unticked, with a sentence that a key not kept is gone when the browser closes.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B, as recommended.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A6); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: grouping a member's key items into one (queue-producers, signing); the design words the item and the box's sentence.
+
+### DEC-463 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A7)
+for: Bob
+question: A7, Documents from other projects in pickers. Whether a document picker lists other projects' documents with this project's.
+why it is Bob's: what Civicsmith must do across projects.
+provisional: one long list: this project's, then every other document the member may see.
+alternative: A, keep one list; C, this project only.
+recommendation: B: this project's documents first; "Show documents from your other projects" adds the rest, each labeled with its project.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B, as recommended.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A7); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: the picker's two scopes (screens-inquiry); the design draws the control and the labels.
+
+### DEC-464 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A8)
+for: Bob
+question: A8, Citing a typed page. Whether a page a member typed in may be cited, and when.
+why it is Bob's: what counts as evidence (doctrine).
+provisional: typed words are shown with no Cite; a second member's check is shown and counts toward trust.
+alternative: A, citable once a second member has checked it; C, never citable.
+recommendation: A: citable once a second member has checked it.
+reversal cost: medium (a requirement for the beta's plan).
+response: "B, with the proper grade assigned. Having a review further attest to a reading is better than not, but still only incrementally better."
+decided: 2026-10-27 · Bob
+the design: B, with Bob's grading: a typed page is citable as soon as it is typed, labeled "typed by Dev, not yet checked", and graded as its typist's word; a second member's check raises that grade, but only by a step, never to the standing of text Civicsmith read itself; the citation names the typist and any checker and never presents the words as Civicsmith's reading or as the original. Supersedes the recommendation (A).
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A8); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through PLANNING): Cite on typed words, the typed passage's grade (unchecked, and checked as one step higher), and the citation's labels (transcription, leg-earning, strength); the design draws Cite on typed words and the labels.
