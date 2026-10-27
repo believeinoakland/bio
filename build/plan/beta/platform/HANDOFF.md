@@ -49,3 +49,5 @@
 **P-10 · 2026-10-27** · P5 answered (K5454): no Enterprise account now; S3 quotes Cloudflare, Enterprise "not yet available" at install. Waiting on BOB for `plat-s1`'s URL and team (S1 steps 1a-1c).
 
 **P-11 · 2026-10-27** · K5455: `study/second-copy-options.md` (worker, file:line cited): why deploy-test of a new copy is unsafe (shared fleet; plane cannot be created by `deploy.mjs`) and options A (plane alone), B (per-copy fleet names), C (installer install-alongside, per-slug names; Bob's act). Recommended to BOB: C for S1a-c, 1e, 1f, then a plane-only redeploy from `proto/levels-2-3` whose workflow and scripts are patched in that branch only, so 1d's measuring ops deploy without touching shared members.
+
+**P-12 · 2026-10-27** · `study/second-copy-options.md` §C written (Bob's act in plain clicks; the founder claim is Bob's; the invitation link he pastes is the route in; the copy's test flag is BOB's). Waiting on BOB/Bob for the install; still to check on the proto branch before any plane-only deploy: T53 head vs 0.87.0 and the migration-tag unknown.

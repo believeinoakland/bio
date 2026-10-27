@@ -73,3 +73,29 @@ For S1: C then (after a bundler fix) deploy-test, or B, are the clean ones; A ne
 6. Whether biosmoke8's plane refuses a foreign credential before any effect (option A, agent-worker PLANE).
 7. Current account counts for the ceilings in section 3.
 8. Whether T53's 14b73ea14e differs from the 0.87.0 cut (option C).
+
+## C. The exact act for Bob, in plain clicks (added by PLATFORM #1 for BOB, from a worker's read of the installer; file:line in the worker's notes, quoted rulings K3427, K3448, K3556, K3667)
+
+**Before he starts.** Bob is signed in to Cloudflare in his browser as a member of account `20b5…7f72` (the installer's sign-in is private to it). About twenty minutes, at a computer. **He must press only "Install alongside it"**: the same page also offers "update" and "remove" for biosmoke8; he presses neither.
+
+1. Open `https://newgroup.believeinoakland.workers.dev/` (0.87.0 is deployed there, K5350).
+2. "Do you already have a Cloudflare account?" Press **Yes**.
+3. Type the short name `plat-s1` (lowercase letters, digits, hyphens). Press **Continue**. A dialog says the name can never be changed; confirm it.
+4. The page lists what Cloudflare will be asked. Press **Continue to Cloudflare**, and on Cloudflare's page allow the six permissions it lists.
+5. The installer finds biosmoke8 and stops on an "exists" page with the words "Nothing was created or changed". This is expected. Under **"Install alongside it"** type `plat-s1` again, press the button, confirm the dialog, and allow Cloudflare once more if it asks again.
+6. Watch the progress lines (about twenty minutes; each wait is bounded to five minutes). There is no region choice and no team-name or password field; the region follows Bob's own connection (none, or western or eastern North America), as K4747 sets it.
+7. At the end a panel shows the copy's address, a **one-time password** (shown once, with a copy button) and a folded probe key. **Bob must not paste the one-time password into the chat**: it never expires, and whoever holds it before the claim can claim the copy in his place.
+8. Bob presses **"Continue to your team's Civicsmith: become its first administrator"**, chooses a handle and a password of 12 or more characters, and saves the ten recovery codes (these stay his).
+9. In the copy, as administrator, he opens **Members**, adds a member with the role **administrator**, and copies the invitation link it shows once: `<address>/#invite=<token>`. **This link is what he pastes into the chat for my session.** It works once and expires in 7 days unless he sets 1-30 days; only its hash is kept; until it is spent it is a secret that enrols one administrator, so it goes only to this chat and is spent within the hour.
+
+**How my session gets in without any password from Bob.** I open the link's join page, choose my own unique handle and a 12+ character password (generated in my session's environment, kept in `PLATS1_ADMIN_*`, never printed or written to a file; the copy keeps only a hash), and enrol as the administrator. As administrator I then add a member through the product's own act, accept that invitation myself, and keep its handle and password in `PLATS1_MEMBER_*`. Bob never sees either password. If a link is spent or expires before I use it, Bob issues another.
+
+**The copy's test flag (BOB's act, with Bob's in-session approval, K3427, K3448, K1715).** The deploy-test workflow sets `CIVICSMITH_TEST_INSTANCE` for itself from the copy name, so nothing on the copy is needed for that. The copy's own `test_instance: true` (which `journey-check` and the walkers' guards read) needs a plane secret `CIVICSMITH_TEST_INSTANCE=plat-s1` on Worker `plat-s1`, set by BOB (Workers secrets API, or `wrangler secret put --name plat-s1`, account `20b5…` only), as K3448 did for biosmoke8. The installer never sets it (R49).
+
+**Does anything afterwards need a fleet deploy? No.** The installer installs its own per-slug members (`<member>-plat-s1`, buckets `bio-captures-plat-s1` and `bio-published-plat-s1`, container applications at 0 instances) and by R64 touches nothing of biosmoke8's or the shared fleet. **Any later deploy of branch code to `plat-s1` is plane-only, from `proto/levels-2-3`, never the stock deploy-test (it would re-point the shared members).**
+
+**Risks BOB should know before asking Bob.**
+1. The 0.87.0 plane is 28 MB; R33's memory tests were red on the tranche tip (K5350) and an earlier live run died at 21 MB (K3440); there is no recorded live run of this installer at 0.87.0. A failed run leaves a resumable partial copy under the same slug (R69); if it fails, the next step is BOB's diagnosis, not a retry loop.
+2. Container-application headroom in the account is unverified (K3262's "13 of 16" is not in the tree); three more applications (10, 3, 3 instances) are created at 0 instances.
+3. The copy is the signed 0.87.0, not `tranche/T53` 14b73ea14e; S1's figures state that, and the proto branch's plane-only deploy later brings the branch code.
+4. K3556's "nothing it holds is secret" names biosmoke8 only; plat-s1 holds only generated or public documents (`s1-steps.md` §2), so it carries no secret either way, and the founder claim is Bob's.
