@@ -1,6 +1,6 @@
 # N1259 (b): the NEW module `registers` (requirement drafts, whole)
 
-**Status** · DRAFT for the PLANNING lane (CAPABILITIES lane worker, 2026-10-27; checked by C7, see the last section): the whole of the new module `registers` (proposed layer 5, after `workbooks`): purpose, provides, uses, satisfies, invariants and lines R1 to R45, for the unassisted part of N1259 (DEC-406/407/408/411, K4403, K4405). Part (b) of five; (a) is the file reader, definitions, acquisition and content hooks it builds on.
+**Status** · READY (C29, every point of Bob's settled) for the PLANNING lane (CAPABILITIES lane worker, 2026-10-27; checked by C7, see the last section): the whole of the new module `registers` (proposed layer 5, after `workbooks`): purpose, provides, uses, satisfies, invariants and lines R1 to R45, for the unassisted part of N1259 (DEC-406/407/408/411, K4403, K4405). Part (b) of five; (a) is the file reader, definitions, acquisition and content hooks it builds on.
 **Read / not read** · Author: the canon of part (a) and `following.md`; storage limits from `lane-performance/service-levels.html`, not re-measured. C7 checked the cited lines and code; what it could not verify says `(UNVERIFIED: why)`.
 **DRAFT, not READY** · The lane lead marks READY. A NEW module's ids start at R1; PLANNING renumbers. Op names are proposals (BOB's, (e) §1); this module's guardrail test lines are in part (d), ids R61 to R72 (reserved).
 

@@ -1,6 +1,6 @@
 # N1257: every stored name keeps its layer (K5458): requirement lines for the modules (draft)
 
-**Status** · DRAFT by a worker for CAPABILITIES #1; not READY; written 2026-10-27 for Bob's ruling K5458 (layers are addressed `<layer id>:<name>`; every module that stores a rule, deadline, closure-list, law, holiday-list or office name stores the layer it came from).
+**Status** · READY for PLANNING, except a2 R135, bracketed on Bob's L18 (the records' year vs the team's statement); by a worker for CAPABILITIES #1; written 2026-10-27 for Bob's ruling K5458 (layers are addressed `<layer id>:<name>`; every module that stores a rule, deadline, closure-list, law, holiday-list or office name stores the layer it came from).
 Companion of `N1257-requirements-modules.md` (its draft ids are taken: local-facts R23-R27, instance-setup R107-R111, screens-settings R82-R83, screens-action R60, actions R112, action-clocks R27, queue-producers R58, filing-templates R36, reading-guides R17, entities R68) and of `N1257-requirements-jurisdictions.md` (R99-R133); the ids below follow those, and PLANNING renumbers. Revised for PLANNING rows 15 and 17: the team has one placeless team layer (`jurisdictions` R115) held by `local-facts` (R30 of the companion); `instance-setup` holds no team layer.
 Read whole: the lines cited in the table, in `build/requirements/*.md` and `bio-plane/src`; not run, not tested; section "What I could not verify" lists the claims that rest on a reading only.
 

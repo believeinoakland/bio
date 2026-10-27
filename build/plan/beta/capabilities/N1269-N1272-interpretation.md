@@ -1,6 +1,6 @@
 # N1269 and N1272: what is read, what is interpreted, and what members are told (questions for Bob)
 
-**Status** · DRAFT by CAPABILITIES #1 (C2), for BOB to place on QUESTIONS.html. Written to stand alone: it needs none of the lane's files. Nothing is decided here; each question carries options and a recommendation. Requirement lines follow once Bob answers (they belong to `extraction`, `reading-pipeline`, `screens-inquiry` and the investigation modules, with the FILES lane's size rules).
+**Status** · READY (C29, every point of Bob's settled) by CAPABILITIES #1 (C2), for BOB to place on QUESTIONS.html. Written to stand alone: it needs none of the lane's files. Nothing is decided here; each question carries options and a recommendation. Requirement lines follow once Bob answers (they belong to `extraction`, `reading-pipeline`, `screens-inquiry` and the investigation modules, with the FILES lane's size rules).
 
 ## What is already settled (Bob, K4628, K4632, K4636)
 
@@ -22,7 +22,7 @@ Plain picture: a 400-page budget PDF or a 600,000-row register is held and searc
 
 ## Q2 (N1272). How is it shown, and how does a later investigation find what was not interpreted?
 
-**ANSWERED, K5495 (C2): option A**, "but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." The document view marks interpreted parts visibly (requirement R147; UX-DESIGN draws it).
+**ANSWERED, K5495 (C2): option A**, "but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." The document view marks interpreted parts visibly (requirement R147; drawn, DEC-476: a solid margin bar for this investigation, a dashed muted bar for another).
 
 **C21 (what "interpretation" means for non-sheet files): ANSWERED, K5496, option A.** Finding names, organisations and dates across a whole document to make it searchable is reading, not interpretation.
 
