@@ -130,6 +130,10 @@ Terms.
   - With `captures: "omit"`, `captures` is `{}` and the answer adds `captures_omitted: true`. No capture's bytes are read.
   - Everything else is as R14 says.
 
+#### T53 additions
+
+- **R32** (T53; JOURNEYS R-94, owner half, BLOCKS; Bob K5558, J5 = A: the project's owner, from the docket page; changes R1, R10, R12) *(not yet met: T53)* The entry kinds the screen offers are the kinds the act accepts for the viewer; a court order, a correction and a withdrawal are filed by the manager (R12) through one act each, and an Outcome entry names the two fields it needs in its refusal. Test: each kind with each role answers filed or its refusal naming the missing field.
+
 ## Private
 
 ### Uses

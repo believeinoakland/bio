@@ -65,6 +65,10 @@ Terms are `actions`'. An **action** is a bundle whose type normalises to `action
 
 - **R15** (new; K61; the map's §1; `case-account` R12's form) `actionRecordsOf(host, deps)` answers the one instance for a host: every caller for the same host gets the same instance, its `deps` (`record`, `membership`, `progressions`, `standards`, `now`) reached lazily on the host unless given. At its creation it creates its six tables with the DDL `actions` created them by (`CREATE TABLE IF NOT EXISTS`, `action_law_proposals`' `standard` column added where absent), so a running store's rows are kept with no data move, and declares them (R11); a refused declaration is thrown at creation and no instance is kept. `actions`' factory creates it at its own creation, so its tables exist and are declared at every boot. `actionRecordsOps(r, url, body)` publishes this module's ops map, one route arm per act, reading each argument as `actions`' map read it (the target from the query, else the body; the stamps from the query): `actionlawspropose` (R1), `actionriskpropose` (R2), `actionseekspropose` (R3), `actionreceipt` (R4), `actionscope` (R5), `actionpromise` (R6), each answering exactly what its act answers, a catalogue-backed refusal with its row (`withRow`). The op names, their declarations, grades, help and `proposer` stamps are unchanged; the plane spreads the map (`plane`'s L11 job).
 
+#### T53 additions
+
+- **R21** (T53; N1257; K5458; amends `action-records` R1, R11) *(not yet met: T53)* **A proposed law keeps its layer.** `action_law_proposals` (`action-records/schema.mjs:38-47`, keyed `bundle_id, proposed_by, ord`) gains a column `layer`, empty for rows written before; `lawPropose` (`op=actionlawspropose`) takes and stores it, `governing_laws_proposals` answers it, and a member's `actionLaws` that adopts a proposed entry carries its `layer` (`actions` R113). A proposal naming a citation two active layers give, with no `layer`, is stored as written and answered `layer: null` with `ambiguous: true`, never settled for the proposer. Test: a proposal with `layer` is answered with it; adopting it writes it into the governing law. Control: a proposal written before the change is answered as it was, `layer` absent.
+
 ## Private
 
 ### Uses
@@ -79,6 +83,7 @@ Terms are `actions`'. An **action** is a bundle whose type normalises to `action
 - `provenance`: the `register` read contract (its R48; R4's `UNREGISTERED_ARTIFACT`), read as `actions` reads it.
 - `test-support`: the tests' fixtures.
 - Its users: `actions` creates it and calls R1–R10's reads and judgments (its R18, R23, R25, R64, R66, R70), and (T48) R16's site (its R101); `action-grammar`'s rows name its regions (their `where`s, T47-36); `plane` spreads R15's map; `affordances`, `escalation` and `action-clocks` tests drive its acts (the map's §5).
+- `jurisdictions` (T53; N1257, K5458): `nameResolve` (its R121), to tell a citation two active layers give (R21). A new `modules.json` edge, BOB's; `jurisdictions` is layer 1, earlier.
 
 ### Invariants
 

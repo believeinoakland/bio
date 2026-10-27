@@ -162,6 +162,11 @@ Terms.
 
   **Settled readings of R16, R18–R20** (CASE-IMPORT #2's questions, K1381, K1383): (1) R18 skips an entry when this import already holds one with the same bytes served (`seq`, `digest`, `json` and `signature`; verified or refused), so a refused tampered copy never hides the genuine entry served later; a `seq` held by a verified entry with another digest makes the new one `refused`, `differs: true`, both digests; a `seq` held only by refused entries is checked afresh. (2) `new_entries` counts every entry the read newly recorded, `new_moves` and `new_refused` being parts of it; `entries_seen` is the length of `answer.entries`, `last_entry` is `answer.last_entry`. (3) `outcome: "read"` without an object carrying an `entries` list is recorded `unreadable`, reason `not_a_docket`; any other outcome than `read` or `unreadable` is `unreadable`, reason `outcome_unknown`; a missing or unreadable `at` is this copy's instant. (4) R19's `publisher.edition` is the newest `edition` move naming an edition later than this one (R33 (a)'s rule); `publisher` is `{edition, withdrawal}`, each null when none, itself null when neither, with `publisher_note` saying no move has been seen, beside `last_read`. (5) R20's `entries` and `refused` cover every entry seen for each import, also under an ended or replaced watch, each naming the `set_by` of the watch whose read saw it; `unreadable` covers watches in force only. (6) R16's move ids are `IMM-<n>`; `after` null or `""` starts from the first.
 
+#### T53 additions
+
+- **R34** (T53; DEC-461; amends R1) *(not yet met: T53)* **The new format imports, and its statement is recorded.** A case file whose document is of the new format imports as an earlier one (manifest check unchanged) and records with the edition `ungraded_passages` as the document states it: `{stated: true, rows}` (empty with no block) or `{stated: false}` for an earlier format. The source's statement, once, append-only (R12), never recomputed or filled; the block never makes an edition "differ" (R1's hash is the manifest's) and never refuses an import. Test: two rows record two; earlier format `stated: false`; re-import `existed: true`. Control: no block is `stated: true, rows: []`, not `stated: false`.
+- **R35** (T53; DEC-461; amends R4, R26) *(not yet met: T53)* **A member reads what the source published ungraded.** `importedCase` answers per edition `ungraded_passages: {stated, count, rows}` and per finding its rows `{ord, content_id, title}`, labelled the source's statement, never this group's grade (R11); `stated: false` reads "the source does not say" by key, never none. `importedCases` carries `ungraded_count` per edition (null when not stated). A non-member gets the bytes of no import. `accepted-work`'s `finding` read carries them. Test: editions with 2 rows and earlier format: counts 2 and null. Control: non-member bytes equal an instance with no import; accepting a finding with a listed passage succeeds and changes no grade or bar reading; no composed strength (R10).
+
 ## Private
 
 ### Uses
@@ -182,6 +187,7 @@ Terms.
 - (T51; K4169) `membership`: `inSight`, `noSuchProject` (its R78), `projectAuthority` (its R55, R122) for R29–R31. `strength`: `strengthOf` (R31). `bias`: `biasManifest` at project scope (its R15, R31). `basis-versions`: `projectQuestions` (its R41, R30). `case-grammar`: `lensOf`, `lensStatementKey` (its R9) and `biasApplicationsOf` (its R24, R27). `test-support`: `declaredOpHolds` (the tests of R33).
 - `public-read` (G50, fix round 6; tests only): `buildCaseFile` and the container writer, which make the `/4` case file that `g50-import.test.mjs` imports (the discriminated paths of two captures of one `ref`). No call is made to it from the module.
 - `public-read` (T46; N903): the shape of R34's `group_fields`, which R4 records as the caller hands it; no call is made to it. Its user: `conformance` reads R4's `group_fields` (its R32).
+- `case-grammar` (T53; A58): the `ungraded_passages:` block reader `ungradedPassagesOf` (its R36), for R34 and R35.
 
 ### Invariants
 
@@ -193,6 +199,7 @@ Terms.
   - C-130.15 `IMPORT_WATCH_BAD_ADDRESS`: "That is not the public https address of the publishing group's copy. Give the address of their copy, with no query and no fragment. Nothing was written."
   - C-130.16 `IMPORT_NOT_WATCHED`: "This imported case is not being watched, so there is no watch to end. Nothing was written."
 - **R15** No place is named in this module's behaviour or outward text.
+- **R36** (T53; DEC-461; invariant) *(not yet met: T53)* **The source's ungrading is not this group's.** The statement changes no result (R3), acceptance (R6), flag (R8) or re-evaluation cause; this group's own case resting on accepted work lists only its own ungraded passages. Test: accept a finding with a listed passage, run case-disclosures R35 on an own case resting on it: none of the source's listed. Control: an own ungraded passage in that case is listed.
 
 ### Satisfies
 

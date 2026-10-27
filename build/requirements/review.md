@@ -80,6 +80,10 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - **R32** At start it registers R30–R31 with `ratification` R50.
 - **R33** (D61) `reviewCommentsFor({case, edition, viewer})`, registered at start with `case-account.registerReviewComments` (its R7; K2483; N839, K2608, T42-23a; was `case-authoring`'s, its R66, retired), lists the comments on the case's review copies for the publisher's choice; after publication, each reviewer whose comments were left out and who is a member is told once (`notice-producers`) that they were not included and that a response may be filed in the case's docket (`docket` R1, as anyone outside may).
 
+#### T53 additions
+
+- **R46** (T53; JOURNEYS R-98, owner half; changes R4) *(not yet met: T53)* A reader grant's acknowledgement keeps the reader's name (the grant's recipient) as its author, distinct from a member's. Test: acknowledge through a grant: the stored author names the recipient. (T52-26 carries the owner's own acknowledgement.)
+
 ## Private
 
 ### Uses
