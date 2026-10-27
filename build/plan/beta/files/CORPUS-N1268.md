@@ -1,6 +1,6 @@
 # N1268: the beta's acceptance corpus, drafted
 
-**Status** · DRAFT 1 by FILES #1 (F2), 2026-10-27. Not READY: waits on the final type list. Bob (K4632): for the beta. Kept in the build state and re-run every tranche on the live test copy (K4628 (4)).
+**Status** · READY (F3; the type list is settled; S2 sampling continues and may change source rows). First drafted by FILES #1 (F2), 2026-10-27. Not READY: waits on the final type list. Bob (K4632): for the beta. Kept in the build state and re-run every tranche on the live test copy (K4628 (4)).
 
 ## 1. What it is
 

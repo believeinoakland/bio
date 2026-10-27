@@ -1,6 +1,6 @@
 # N1267: the beta's file sizes, by kind, with the added types
 
-**Status** · DRAFT 1 by FILES #1 (F2), 2026-10-27. Not READY: waits on Bob's answers F1-F3 (K5426) for which types are in. Figures: K4628 (3) option B, K4831 (3), (4), (8), (10), K5427 (text 100 MB). Requirement wording is BOB's (P17).
+**Status** · READY (F3; the type list is settled, K5435 to K5437). First drafted by FILES #1 (F2), 2026-10-27. Not READY: waits on Bob's answers F1-F3 (K5426) for which types are in. Figures: K4628 (3) option B, K4831 (3), (4), (8), (10), K5427 (text 100 MB). Requirement wording is BOB's (P17).
 
 ## 1. The rule
 

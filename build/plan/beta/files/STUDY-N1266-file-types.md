@@ -1,6 +1,6 @@
 # N1266: the file types the beta reads, closely studied (for Bob, K4632)
 
-**Status** · DRAFT 1 by FILES #1, 2026-10-27, for BOB to bring to Bob with options and a recommendation (P17). Decides nothing. Part 1 is written for Bob; parts 2 to 6 are the working study behind it. Inputs: K4628, K4630, K4632, K4636, K4831; `next.md` N1266 to N1268; `format-registry.md`; GAP.md and stage0/RESULTS.md of the reading lane; the CPRA text (Gov. Code 7922.570 to 7922.580).
+**Status** · READY (F3). The list is settled by Bob: K5435 (A2: ruled list plus Tier 2), K5436 (B2: held and named), K5437 (D: MBOX in; PST, Access and Tier 3 held and named), K5427 (text 100 MB). Requirement drafts: `REQ-format-registry-beta.md`, `REQ-readers-beta.md`; screen needs: `UX-NEEDS.md`. First written as DRAFT 1 by FILES #1, 2026-10-27, for BOB to bring to Bob with options and a recommendation (P17). Decides nothing. Part 1 is written for Bob; parts 2 to 6 are the working study behind it. Inputs: K4628, K4630, K4632, K4636, K4831; `next.md` N1266 to N1268; `format-registry.md`; GAP.md and stage0/RESULTS.md of the reading lane; the CPRA text (Gov. Code 7922.570 to 7922.580).
 
 ## 1. For Bob
 
