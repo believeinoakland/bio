@@ -301,7 +301,7 @@ async function handleStructure(req, env) {
   const opened = await openPdfRange(bytes);
   if (!opened.ok) return json(opened, 422); // NOT_A_PDF / NOT_BYTES — stated, not faked.
   const structure = await opened.range({ from, ...(body.count !== undefined ? { count: body.count } : {}) });
-  structure.notes = [];
+  structure.notes = [...(structure.notes ?? [])]; // pdf-reader's own notes for the range, kept; this member's are appended
   const asked = body.count ?? Infinity;
   /* a range with no page in it opens nothing; a document tier 1 found no page in is still opened, for pdf.js may find them */
   const open = opened.pages === 0 || Math.min(asked, opened.pages - from) > 0;
