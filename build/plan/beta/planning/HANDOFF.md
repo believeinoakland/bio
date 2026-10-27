@@ -4,10 +4,10 @@
 
 ## 0. State now and next steps
 
-**State.** The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
+**State.** K5464 (BOB's decisions on L6) applied. The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
 
 **Next steps, in order.**
-1. On BOB's answers to FOLD-AI §1-§3 and CONSISTENCY rows 11-19: revise the plan; on row 15, re-cut A2-R1 to A2-R3 onto N1257's placeless team layer (or the fallback).
+1. (done L7) BOB's K5464 applied: the run-rules map, layer 6's positions (FOLD-AI §2.9), CONSISTENCY 11-19; A2 re-cut onto N1257's placeless team-rules layer (its "Owed by N1257" list relayed by BOB to CAPABILITIES; three names of the worker's own for BOB to confirm: `FISCAL_YEAR_IN_RECORDS`, `fiscal_year` refused in a place team layer, the fact path's form). When CAPABILITIES' N1257 companions carry those amendments, check A2 against them.
 2. On Bob's answers to L1-L26 and AI1-AI10: unbracket or change the lines each decides.
 3. At each check, MAP.md and every lane's section 0: fold each new READY draft. Not yet READY: CAPABILITIES N1259 (a-e), N824, N1110, N858, N1265, N1269-N1272 (K5460-K5462 since); PLATFORM service levels, whole-record move, Levels 2-3 study; JOURNEYS (walking); TESTS-SWEEP's judgment list.
 4. Owed to others through BOB: FILES's CC4 to A4-R1..R6 (K5448); screens-intake R36 and R5 amended for the safe picture (A4-R10); UX-DESIGN needs from A6 (Q-A6-1, Q-A6-2 wording, K5456) and A4.
@@ -38,3 +38,7 @@ The A drafts' new lines folded into `plan-T53-draft.md` (layer-8 `/10` format, c
 ## L6 · 2026-10-27 · takeover; K5456 in the A drafts; AI-DESIGN, PLATFORM placement, N1257 and N1260 folded
 
 PLANNING #2 took over (reading set as the prompt names), archived #1. K5456's six unbracketed; the seven A drafts marked READY for BOB. DECISIONS gains K5450-K5452, K5454. Five Sonnet reading workers read AI-DESIGN's eleven drafts and CAPABILITIES' N1257 and N1260 whole; their entries are in the plan by layer. Main findings: run-rules' "six-part" delta reads two ways (recommend the map, FOLD-AI §1); three layer-6 order problems (ai-use before agent-model, ai-runs reading ai-gate, ai-gate's conformance scorer); `aicredential` unowned; twelve retired ops still named in sixteen layer-11 modules; A2's fiscal year no longer fits N1257's many team layers (CONSISTENCY 15); eight id ranges claimed by two or three drafts (BOB numbers). `MODULE_ORDER` is member-roster R27 (R61), not membership R83; corrected. K5454: Enterprise left out with its hard reason.
+
+## L7 · 2026-10-27 · K5464 applied; A2 re-cut
+
+BOB decided L6 (K5464): FOLD-AI §1 the map with `draft:reading` → `draft`; §2 as recommended, positions proposed in FOLD-AI §2.9 (run-rules, agent-harness, agent-model, ai-use, ai-runs … agent-steps, agent-worker, ai-gate, agent-runner); CONSISTENCY 11-15, 17-19 as recommended, 16 changed (CHAIN_LIMITS stay counts in connection-grammar; times become budget classes). A Sonnet worker re-cut `lines-A2-fiscal-year.md` onto the team-rules layer: money R39-R41, no basis or status on a stated year, `FISCAL_YEAR_IN_RECORDS` for an equal value, and an "Owed by N1257" list (a)-(g).
