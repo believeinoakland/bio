@@ -16,3 +16,4 @@
 - K5435 · 2026-10-27 · F1 (A2) "As recommended" (the ruled list plus the cheap siblings of the study's Tier 2) · Bob, via BOB #321
 - K5436 · 2026-10-27 · F2 (B2) "as recommened" (an unreadable type is held whole, named plainly, findable, read when a reader arrives; RAR and programs stay refused) · Bob, via BOB #321
 - K5437 · 2026-10-27 · F3 "as recommened" (MBOX read in the beta; PST, Access and the rest of Tier 3 held and named until a real file shows they turn up) · Bob, via BOB #321
+- K5439 · 2026-10-27 · BOB's protective limits under K4831 (8): 100,000 messages per mailbox; JSON/XML depth 1,000; 100,000 events per calendar file; archive depth 3 and 10,000 members; a file past a limit is refused whole with the limit named · BOB #321

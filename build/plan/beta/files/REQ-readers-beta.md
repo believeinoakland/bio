@@ -9,13 +9,14 @@
 - **SR3** KML and KMZ: placemark names, descriptions and extended data are read; coordinates are kept as data on the unit. GeoJSON: each feature's properties are read and its geometry type and bounding box are kept. No map is drawn (a CAPABILITIES matter). A KMZ's KML is read through the archive route. Test: a parcels GeoJSON's property is found; a KMZ's placemark found.
 - **SR4** SVG: text elements and titles are read; scripts and external references are never run or fetched. Test: an SVG with a `<script>` and an external image: text found, nothing fetched.
 - **SR5** A malformed file is read as far as it parses and the rest stated ("stopped at line N"), never dropped and never claimed whole. Test: a JSON file broken at 40 %: 40 % read, the break stated.
-- **SR6** Each step's cost is bounded by bytes decoded; no quadratic scan. Test: a 100 MB single-line JSON and a deeply nested XML (depth 10,000) finish within the step budget or are refused with a stated depth limit.
+- **SR7** A calendar file of more than 100,000 events is refused whole with the limit named (K5439). Test: 100,001 events refused naming 100,000.
+- **SR6** Each step's cost is bounded by bytes decoded; no quadratic scan. Test: a 100 MB single-line JSON and a deeply nested XML (depth 10,000) finish within the step budget; nesting deeper than 1,000 refuses the file whole, naming the limit (K5439).
 
 ## New module: `mail-reader` (layer 1; uses `ooxml`, `structured-text-reader`, `setup-words`, `runtime-limits`, `test-support`)
 
 - **ML1** EML: headers (from, to, cc, date, subject, message-id), the body (plain text, else the HTML cleaned), decoded from every transfer and character encoding. Test: quoted-printable, base64, a UTF-16 body, an HTML-only message.
 - **ML2** MSG: read from its compound container (OLE), the same fields. Test: a generated MSG with body and attachment.
-- **ML3** MBOX: split into messages by streaming, never loaded whole; each message a member read as EML; the count of messages is a protective limit (BOB's). Test: a generated 500 MB mailbox reads every message once, a token in the last message found.
+- **ML3** MBOX: split into messages by streaming, never loaded whole; each message a member read as EML; a mailbox of more than 100,000 messages is refused whole with the limit named (K5439). Test: a generated 500 MB mailbox reads every message once, a token in the last message found; a 100,001-message mailbox refused naming 100,000.
 - **ML4** Each attachment is a member filed as its own capture with its own job, linked to its message; nested messages (an attached EML) to depth 3. Test: a message with a PDF, an XLSX and an inner EML: three members, each read.
 - **ML5** Headers are searchable and cited as headers; remote content (images, tracking links) is never fetched. Test: a message with a remote image: no request made.
 - **ML6** Email capture (N824) and forwarding use this reader; a forwarded message and an uploaded one of the same bytes are the same document (one whole sha). Test: the same bytes by both ways give one record.
@@ -33,6 +34,6 @@
 Reader choice and licences are GAP-3.0's; LibreOffice for conversion, libvips for images, libarchive or 7-Zip for archives, an OLE parser for MSG; none asserted here.
 
 ## Open points
-1. Protective limits (messages per mailbox; JSON/XML depth; calendar events) are BOB's (K4831 (8)).
+1. Protective limits set by BOB (K5439): 100,000 messages a mailbox; JSON/XML depth 1,000; 100,000 events a calendar file; archive depth 3 and 10,000 members.
 2. Whether `structured-text-reader` also takes `text` and `html` or leaves them where they are (a BOB or PLANNING placement).
 3. N1267a (XLSX cells by window) before any workbook bound above 250,000 cells.
