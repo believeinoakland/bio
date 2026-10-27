@@ -2169,12 +2169,12 @@ test("R71: migrate runs RECORD_SCHEMA itself and this module's own migrations, s
 
 const opsUrl = (op, params = {}) => { const u = new URL(`https://plane.invalid/?op=${op}`); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return u; };
 
-test("R72: recordCoreOps holds eight ops, each answering what its service answers from the query's parameters", async () => {
+test("R72: recordCoreOps holds seven ops, each answering what its service answers from the query's parameters", async () => {
   const { s, rc } = fresh();
   const exercised = new Set();
   const ops = (op, p, body = null) => { exercised.add(op); return recordCoreOps(rc, opsUrl(op, p), body, {})[op](); };
   const held = Object.keys(recordCoreOps(rc, opsUrl("x"), null)).sort();
-  assert.equal(held.length, 8, "eight ops");
+  assert.equal(held.length, 7, "seven ops");
   assert.ok(Object.values(recordCoreOps(rc, opsUrl("x"), null)).every((f) => typeof f === "function" && f.length === 0), "each a function of no arguments");
   assert.deepEqual(ops("allocid", { prefix: "INFO", year: "2026" }), { id: "INFO-2026-0001" });
   assert.equal(ops("allocid", { prefix: "PROJ", year: "2026" }).reason, "ALLOCID_PREFIX_GATED");

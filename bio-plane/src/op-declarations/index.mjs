@@ -658,7 +658,7 @@ const OP_STAMPS_HAND = aliasRows(Object.fromEntries([
     return [op, frozenList([...new Set(["viewer", ...(who ? [who] : []), ...(f.extra[op] ?? [])])])];
   })),
   ...ASK_GRANT_OPS.map((op) => [op, frozenList(["viewer"])]),
-  ["exportpage", frozenList([])], ["moneydetectorsrun", frozenList([])], ["tablebytes", frozenList([])],
+  ["exportpage", frozenList([])], ["moneydetectorsrun", frozenList([])],
   ["claim", frozenList(["source", "country"])], ["login", frozenList(["source", "country"])],
   ["agentpack", frozenList(["viewer"])],
 ]));
@@ -1506,8 +1506,6 @@ const OPS_HAND = aliasRows({
   casefilespec:    { classes: null,                              mutating: false },
   /* T33 (K1640; R17): a page of an export, with `export`'s credential (corpus-export R6, R8); it writes nothing. */
   exportpage:      { classes: ["admin"],                         mutating: false },
-  /* PROTOTYPE (proto/levels-2-3): the administrator's per-table size read (record-core `tableBytes`), exportpage's posture: admin class only, no session, nothing stamped, writes nothing. */
-  tablebytes:      { classes: ["admin"],                         mutating: false },
   /* T33 (K1566; money-checks R6): the detectors' bounded run is the scheduler's, which calls it in-process; the op is
      the operator's, `reproject`'s posture, and no session reaches it (recorded below). */
   moneydetectorsrun: { classes: ["admin", "probe"],              mutating: true  },

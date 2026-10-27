@@ -1217,33 +1217,6 @@ export class RecordCore {
     return f;
   }
 
-  /** PROTOTYPE (proto/levels-2-3 only): `op=tablebytes`, the administrator's measuring read. Per table of this object's
-   *  SQLite database: its name, row count and bytes (the table's own pages and its indexes'), with `dbBytes` as `stats`
-   *  gives it. Bytes come from `dbstat` (`SELECT name, SUM(pgsize) AS bytes FROM dbstat GROUP BY name`); where the
-   *  storage has no `dbstat`, `bytes` is null on every row and `source` says `count-only`. Writes nothing; never throws. */
-  tableBytes() {
-    const out = { source: "dbstat", dbBytes: this.#dbBytes(), tables: [] };
-    let names = [];
-    try { names = [...this.#sql.exec(`SELECT name, type, tbl_name FROM sqlite_master WHERE type IN ('table','index')`)]; } catch { /* unread */ }
-    let bytes = null;
-    try {
-      bytes = new Map();
-      for (const r of this.#sql.exec(`SELECT name, SUM(pgsize) AS bytes FROM dbstat GROUP BY name`)) bytes.set(r.name, Number(r.bytes));
-    } catch { bytes = null; out.source = "count-only"; }
-    const indexOf = new Map();
-    for (const r of names) if (r.type === "index") indexOf.set(r.tbl_name, [...(indexOf.get(r.tbl_name) ?? []), r.name]);
-    for (const r of names) {
-      if (r.type !== "table") continue;
-      let rows = null;
-      try { for (const c of this.#sql.exec(`SELECT COUNT(*) AS c FROM "${String(r.name).replace(/"/g, '""')}"`)) rows = c.c; } catch { rows = null; }
-      const own = bytes ? (bytes.get(r.name) ?? null) : null;
-      const idx = bytes ? (indexOf.get(r.name) ?? []).reduce((n, i) => n + (bytes.get(i) ?? 0), 0) : null;
-      out.tables.push({ name: r.name, rows, bytes: own === null ? null : own + idx, tableBytes: own, indexBytes: idx });
-    }
-    out.tables.sort((x, y) => (y.bytes ?? -1) - (x.bytes ?? -1) || (x.name < y.name ? -1 : 1));
-    return out;
-  }
-
   /** R64: purge's proof of what it removed, the private form of the same figures, WHOLE (§5: *the purge proof's own
    *  count stays whole*): the whole log as `observations`, with `leads`, the themes and `dbBytes`, and no
    *  `observationsNonLead`. No route answers it: purge reads it before and after it clears. Writes nothing; never
@@ -2064,8 +2037,6 @@ export function recordCoreOps(record, url, body, { sight = null } = {}) {
     /* R64: `capacity` is the control plane's stamp from the authenticated class, true exactly when it is `1`; a viewer
        never stamped is a direct internal call, counted whole */
     stats: () => record.stats({ capacity: q("capacity") === "1", viewer: url.searchParams.has("viewer") ? q("viewer") : undefined }),
-    /* PROTOTYPE: the administrator's per-table measuring read; writes nothing */
-    tablebytes: () => record.tableBytes(),
     audit: () => audit(record, { after: q("after") || "", limit: q("limit"), viewer: q("viewer"), sight }),
     /* R22–R24, D-113: one transaction, the private proof read just before and just after */
     purge: () => {
