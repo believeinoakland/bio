@@ -45,3 +45,9 @@
 - When a typed page is cited, does the record grade it automatically? (Bob, K5549, on L24: "as recommended"): A · The record grades it, as it already does for derived connections
 - Do further checks raise a typed page higher? (Bob, K5550, on L25: "as recommended"): A · No: one check raises it from D to C; later checks are named but raise nothing
 - Who chooses how a typist or checker is credited in a published case, and what is the default? (Bob, K5552, on L26: "as recommended"): A · Each person chooses for their own typing, per edition; the default is "a member of the team"; it never blocks signing
+- Can an administrator set aside held material in their own name? (Bob, K5553, on J1: "as recommended"): A · Yes, when the administrator is also a person on the team Their own sign-in counts as a member's. An administrator account that isn't a team member sees a sentence saying who can do it.
+- When a member opens a record that isn't theirs to see, does Civicsmith admit it exists? (Bob, K5554, on J2: "as recommended"): C · "You can't open this", with who to ask The project's owner is named only when the member can already see that project.
+- What kind of proceeding can a team register before it has chosen its places? (Bob, K5556, on J3: "as recommended"): C · The screen says to choose the team's places first and links there, with A beside it so the team isn't stuck
+- What can a person's page record? (Bob, K5557, on J4: "as recommended"): A · Add membership and credential to what can be recorded The page already shows them; only adding them is missing.
+- Who files a correction, a withdrawal or a court order on a case's docket? (Bob, K5558, on J5: "as recommended"): A · The project's owner, from the docket page
+- When a new edition of a case is published, is that recorded on its docket? (Bob, K5559, on J6: "as recommended"): A · Automatically, with the edition's "what changed" text Readers look for changes in both places.
