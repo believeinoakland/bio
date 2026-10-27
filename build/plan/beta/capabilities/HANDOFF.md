@@ -4,17 +4,13 @@
 
 ## 0. State now and next steps
 
-**Every draft in this folder is READY (C29, 2026-10-27; BOB #323: mark READY under LANES.md §1)**, with these exceptions inside them: `N1257-requirements-a2.md` R135 (and a2's L18 lines) stays bracketed on Bob's L18 (the records' year vs the team's statement), open on his page; N824's M1 (`email()` probe on Civicsmith's own account) is a measurement entry for PLANNING to place as a job, not run by this lane (K5529). Bob's rulings are all in DECISIONS.md (K5445-K5529).
+**Every draft in this folder is READY, with nothing of Bob's open (C35, 2026-10-27).** L18 was answered K5543 (A: the records' year governs; the team's statement is listed as set aside), so `N1257-requirements-a2.md` R135 stands, no longer conditional. N824's M1 (`email()` probe on Civicsmith's own account) is a measurement entry for PLANNING to place as a job, not run by this lane (K5529). Bob's rulings are all in DECISIONS.md (K5445-K5543).
 
-Drafts: N1260 a/b (following the trail); N1257 six files (places in layers, federal offices, A2 fiscal year); N1259 a-f/b2 (registers, alerts, publication; docket poll final K5513); N824 email capture + container-member job + `-changes`; N1110; N1265; N858 (templates and guides; ids jurisdictions R136-R138, reading-guides R19-R20); N1269-N1272 (interpretation; aligned with DEC-476, UX needs sent as B562-B564); LOAD-TABLE for PLATFORM.
+Drafts: N1260 a/b; N1257 six files; N1259 a-f/b2/a2; N824 (+ container-member-job, -changes); N1110; N1265; N858; N1269-N1272 (+ -changes); LOAD-TABLE.
 
-**Hands off to PLANNING (K5527, K5529):** R137's reviewed-text hash goes in jurisdictions R40 plus a filings R29 sentence (K5528 T8, not case-disclosures); N1257 R125/R126 matching edit (no room in that file); R138 field names verified in code; acquisition R36 amended (daily check of a followed case, CourtListener only, else NOT_PERMITTED); network-notices R23; sibling id collisions (content R63-R64, citation R26, queue R97, screens-settings R82) renumbered at fold.
+**Hands off to PLANNING (K5527-K5532, K5529):** R137's reviewed-text hash in jurisdictions R40 plus a filings R29 sentence (K5528 T8); N1257 R125/R126 matching edit (no room); R138 field names verified in code; acquisition R36 amended; network-notices R23; jurisdictions R130/R133 officers-lookup entries; sibling id collisions renumbered at fold; the registers job verifies how the bulk stream reaches streamRegister (K5532).
 
-**Next steps:**
-1. On L18's answer: record it in DECISIONS.md; keep or drop a2 R135 (worker); no other draft waits.
-2. Answer PLANNING/BOB questions about the drafts; apply new K rulings by worker; keep files under 45,000 bytes; run `proc sizes` before each commit.
-3. BOB accepted the lane as READY (C29). Stopped; BOB will message when Bob answers L18, then remove a2 R135's bracket.
-4. Lessons: workers read no code in first drafts; code-review workers find real defects; new files for additions; BOB numbers lines at writing.
+**Next steps:** none for this lane. If BOB sends a new ruling: record it in DECISIONS.md, apply by worker, keep files under 45,000 bytes, run `proc sizes`, push, report by one line.
 
 ## Entries
 
@@ -29,3 +25,4 @@ Drafts: N1260 a/b (following the trail); N1257 six files (places in layers, fede
 - **C31** · 2026-10-27 · PLANNING L23 / K5530 items: registers R46 (California officers: keyed read on the team's own key when a member asks, plus the state's bulk file; R3 amended), acquisition R137 (keyed docket answer filed as a capture; in N1259-a2-additions.md), N1265 R86 (one probe upload only where no read answers), N858 R137 storage and the listed-group check, N824 R6 notice final and mail-door uses member-roster, N1110 B2/B3 answered. Bracketed on Bob's page: N824 B4 (C31), N1272 R119 (C32), M-N1272 gold set (C33), DEC-340 facts (C34). To confirm with BOB: R84 now allows one keyed service (officers lookup); how the member's bulk-file stream reaches streamRegister (UNVERIFIED); N1110 contact line as a field of the listing request; PLANNING: jurisdictions R130/R133 officers entries; no guardrail line for R46 (part d at cap).
 - **C32** · 2026-10-27 · K5534 (N824 B4: published copy shows text, attachments, From/To/Cc/Date/Subject, no technical headers or addresses; names only where the case's author marks them material, one by one; mail-door R7 and doc-clean R13 aligned; UX need for the marking) and K5535 (N1272 R119 ceiling per service level, shown when reached, PLATFORM sets the figure) carried and applied. Open: a2 R135 on L18 only.
 - **C33-C34** · 2026-10-27 · answered PLATFORM P-19 (read-only ops interpretationOf R116, partsOf R65, proposeParts R27; no read counts drafted, none graded); K5538 (C34) carried: N858's DEC-340 researched facts offered with citation, marked 'researched, not reviewed'; N858 unbracketed. Only a2 R135 (L18) is left.
+- **C35** · 2026-10-27 · K5543 (L18 = A) carried; a2 R135 unbracketed; all N1257 Status lines read READY (L18 answered). The lane has nothing open with Bob.
