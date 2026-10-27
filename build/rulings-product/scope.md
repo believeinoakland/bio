@@ -33,3 +33,6 @@
 - If a member changes who a question is about, and the evidence already graded doesn't support the new subject, what happens? (Bob, K5536, on L13: "as recommended"): A · Refuse the change until the grades are restated Civicsmith names the connections that no longer fit (here, the memo). A member re-grades each for Jane, then the subject change goes through. No grade moves without a member's act.
 - May a researched legal fact be offered without the professional review a text needs? (Bob, K5538, on C34: "as recommended"): A · Yes: offered with its citation and marked "researched, not reviewed" Members can check the source themselves; the "legal information, not legal advice" label stays.
 - Who may change a question's subject? (Bob, K5539, on L14: "B"): B · Only its owner or an administrator
+- Can a published question, or one divided into parts, have its subject changed? (Bob, K5540, on L15: "B"): B · Both, with the change shown
+- May a member remove the subject altogether, with a reason? (Bob, K5541, on L16: "as recommended"): A · Yes A question named about the wrong person must be correctable.
+- May a concluded question's subject change, keeping its conclusion? (Bob, K5542, on L17: "as recommended"): A · Yes, with the strength before and after shown
