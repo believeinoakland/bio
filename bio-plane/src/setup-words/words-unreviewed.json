@@ -24729,28 +24729,28 @@
       "en": "event-directed: keyed by (event, entity, role); writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1523
+      "line": 1527
     },
     {
       "id": "events.declared.createevent",
       "en": "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1521
+      "line": 1525
     },
     {
       "id": "events.declared.recorddatedfact",
       "en": "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1519
+      "line": 1523
     },
     {
       "id": "events.declared.relate",
       "en": "event-directed: keyed by the two events; writes a cited relation and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1525
+      "line": 1529
     },
     {
       "id": "events.follow.a_register_import_reads_one",
@@ -24953,7 +24953,7 @@
       "en": "a proceeding's status is read by its entity id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1370
+      "line": 1374
     },
     {
       "id": "events.index.a_relation_is_between_two",
@@ -25023,7 +25023,7 @@
       "en": "a status is read as of a date",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1385
+      "line": 1389
     },
     {
       "id": "events.index.a_timeline_is_of_an",
@@ -25261,14 +25261,14 @@
       "en": "statements are read for one registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1360
+      "line": 1364
     },
     {
       "id": "events.index.status_as_of_a_date",
       "en": "status as of a date is read of an entity of kind proceeding",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1376
+      "line": 1380
     },
     {
       "id": "events.index.testimony_carries_the_member_s",
@@ -25366,14 +25366,14 @@
       "en": "who was sent something is read of a communication, an issuance or a meeting",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1350
+      "line": 1354
     },
     {
       "id": "events.owner.this_node_has_v1_connections",
       "en": "this node has {v1} connections of the kind {v2}, more than that kind's bound of {hubBoundOf}; it is named, never expanded",
       "module": "events",
       "file": "bio-plane/src/events/owner.mjs",
-      "line": 126
+      "line": 128
     },
     {
       "id": "events.recorded.a_read_names_the_member",
