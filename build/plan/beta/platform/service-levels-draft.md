@@ -34,7 +34,7 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 - **PL23** The members-at-once figure is a rating, never a measured live count shown to a member; the room's measured load is the administrator's only (an input to the level's rating, not a promise). Test: the level line states the rating and no live count.
 
 **installer** and the upgrade step (beta, with N1271)
-- **PL24** A team moves from Level 1 to Level 2 by its own act (N1265): the copy runs an upgrade step on its own data that moves the record into the split design, with the Level 1 room kept whole as the rollback until the administrator confirms; a copy that cannot hold both (shelf, R2) refuses the step, naming what is short. Test: a seeded copy upgraded, read-equal before and after; a copy with no room refused.
+- **PL24** A team moves from Level 1 to Level 2 by its own act (N1265): the copy runs an upgrade step on its own data that moves the record into the split design, every new room created in the team's own region or jurisdiction (K5441: the region is fixed; `record-placement-draft.md` §4), with the Level 1 room kept whole as the rollback until the administrator confirms; a copy that cannot hold both (shelf, R2) refuses the step, naming what is short. Test: a seeded copy upgraded, read-equal before and after; a copy with no room refused.
 - **PL25** A team changing its Cloudflare plan without the split design changes its guarantees and upload size, not its level; `levelOf` stays 1. Test: a Level 1 copy declaring Business answers 1.
 
 **Outgrowing a level (K5438)** (screens-settings, with the plane's `stats`; the door already stamps every op's time)

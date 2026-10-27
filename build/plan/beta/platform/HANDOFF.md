@@ -4,24 +4,24 @@
 
 ## 0. State now and next steps
 
-**Branch.** PR #46 (P-1) was merged by BOB; `lane/platform` was restarted from `tranche/T53` (b3ef391c) for P-2.
+**Branch.** `lane/platform` restarted from `tranche/T53` after PR #46 merged; PR #47 (P-2) open; P-3 pushed on it.
 
 **Drafts (this folder).**
-- `time-budgets-draft.md` **READY**: nine classes, time and hop ceilings, PL1-PL6. Bob's bar is ANSWERED (K5438, P1 option A): K4354's bar stands at every level.
-- `combined-read-and-fold-draft.md` **READY**: fold (N1264) and combined read (K4599), PL10-PL17; throwaway tests T-a/T-b first; two technical points BOB's (§5).
-- `load-test-draft.md` **READY**: ramped test on a scratch copy, proposed module `load-check`, PL40-PL43. The scratch deployment is BOB's under K5120, no approval needed (K5434): say when and on what.
-- `service-levels-draft.md` **DRAFT**: gains K5438: the bar holds at every level; a copy is told when it is approaching (70 %) or outgrowing (90 %) its level's range (PL26-PL28); names read as Team / Institution / Enterprise = Levels 1 / 2 / 3 (BOB to confirm). Figures are estimates until measured; Level 2-3 wait on N1271's study; needs load figures.
-- `record-placement-draft.md` **DRAFT**: PL30-PL33, the split's needs for N1271; waits on Bob's P2 (what the picker promises) and P3 (region after install).
-- `DECISIONS.md`: eight decisions of Bob's (K5438 added).
+- `time-budgets-draft.md` **READY**: nine classes, PL1-PL6; the bar kept at every level (K5438).
+- `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; throwaway tests first; two technical points BOB's.
+- `load-test-draft.md` **READY**: PL40-PL43, proposed module `load-check`; the scratch deployment is BOB's (K5120, K5434): say when and on what.
+- `record-placement-draft.md` **READY** for placement and the picker (P2 K5440, P3 K5441 folded; Cloudflare's pages re-read 2026-10-27 and quoted in §2, which changed the design: a jurisdiction covers only where the room runs and stores; Workers reach it from anywhere, so the words promise storage, and the R2 bucket needs its own jurisdiction at creation, PL34). The split (§4) waits on N1271's study.
+- `service-levels-draft.md` **DRAFT**: PL20-PL28; names read Team / Institution / Enterprise = Levels 1 / 2 / 3 (BOB to confirm); figures estimates until measured; waits on P4 and on load figures from FILES and CAPABILITIES.
+- `DECISIONS.md`: ten decisions of Bob's (K5438, K5440, K5441 added).
 
-**Open with Bob (QUESTIONS.html):** P2 picker (hint vs jurisdiction), P3 region after install, P4 which levels teams see.
+**Open with Bob:** P4 (which levels' figures teams see).
 
-**Needs from others.** FILES (via BOB; MAP.md §2 row exists): per-type load of Tier 2 (K5435) and held types (K5436), per-image time of DEC-460's photo redraw, the reading rate floor. CAPABILITIES (via BOB): load of registers, team layers and N824 (their step 4 will send it); neither lane has stated figures yet. AI-DESIGN: the assistant's declared reads. BOB: re-time biosmoke8's hop (BOB's act), the scratch deployment when the plan reaches the load test.
+**Needs from others.** FILES: per-type load (Tier 2, held types), per-image time of DEC-460's photo redraw, the reading rate floor, and whether a jurisdiction R2 bucket changes the direct-to-R2 route. CAPABILITIES: load of registers, team layers, N824, and the whole-record export (PL35, K5441's move). BOB: re-time biosmoke8's hop; the scratch deployment at the load test; PL34's effect on rehearsal installs (K4942). AI-DESIGN: the assistant's declared reads.
 
 **Next steps.**
-1. On Bob's P2-P4, fold the answers into `record-placement-draft.md` and `service-levels-draft.md`; mark each READY.
-2. When FILES and CAPABILITIES send load figures, fold them into the rating (service-levels §2, load-test profile §3); mark service-levels READY.
-3. Check Cloudflare's current Durable Object and R2 jurisdiction and limits pages (figures of 2026-10-23) before any figure is final.
+1. On P4, fold it into `service-levels-draft.md`; mark it READY once the load figures are in.
+2. Fold FILES' and CAPABILITIES' load figures into the rating (service-levels §2) and the load-test profile (§3).
+3. Re-read Cloudflare's Workers and Durable Object limits pages (figures of 2026-10-23) before any figure is final (the data-location pages are done).
 4. Hand over at 40 % context.
 
 ## Entries
@@ -29,3 +29,5 @@
 **P-1 · 2026-10-27** · Five drafts opened from the P1-P26 digest and the requirements already in force (`runtime-limits` R27-R35, `plane` R95, `installer` R83, `admission`). Nothing measured by this lane (it changes no code and has not touched a copy). Not confirmed: that biosmoke8's room was re-created and the hop fell.
 
 **P-2 · 2026-10-27** · Bob's P1 answered (K5438): bar kept at every level, ranges per level, copies told when outgrowing. Folded into `service-levels-draft.md` (PL26-PL28; the name reading) and `time-budgets-draft.md` §5; `DECISIONS.md` +1. FILES and CAPABILITIES have stated no load figures yet; asked via BOB.
+
+**P-3 · 2026-10-27** · Bob's P2 and P3 answered (K5440, K5441). Cloudflare's data-location pages (Durable Objects, 2026-06-26; R2, 2026-08-19) read and quoted in `record-placement-draft.md` §2; design changed by what they say (storage-only promise; R2 bucket in the same jurisdiction; hint and jurisdiction not combined; jurisdictions are eu, us, fedramp). New lines PL34 (R2 bucket) and PL35 (whole-record export, deferred to its owner).
