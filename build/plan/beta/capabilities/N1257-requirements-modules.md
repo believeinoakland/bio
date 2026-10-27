@@ -1,6 +1,6 @@
 # N1257 and N1256: requirement lines for the modules that use the layers (draft)
 
-**Status** · DRAFT, not READY; written by a worker for CAPABILITIES #1; revised 2026-10-27 for Bob's ruling K5452 (a team's footprint is any set of places) and for PLANNING rows 15 and 17 (see "Changed for PLANNING rows 15,17,18" in the main file): one placeless team layer, held by `local-facts`, not `instance-setup`.
+**Status** · READY for PLANNING, except a2 R135, bracketed on Bob's L18 (the records' year vs the team's statement); written by a worker for CAPABILITIES #1; revised 2026-10-27 for Bob's ruling K5452 (a team's footprint is any set of places) and for PLANNING rows 15 and 17 (see "Changed for PLANNING rows 15,17,18" in the main file): one placeless team layer, held by `local-facts`, not `instance-setup`.
 Companion of `N1257-places-in-layers.md`; `N1257-requirements-jurisdictions.md` holds the `jurisdictions` lines (R99 to R133 there). Draft ids follow each file's highest `**Rn**` (local-facts R22, instance-setup R106, installer R85, screens-settings R81, screens-action R59, entities R67, filing-templates R35, reading-guides R16, action-clocks R26, actions R111, queue-producers R55); PLANNING renumbers. *(per C1)*, *(per C3)* mark lines that change with BOB's answer to that point. `civil-time` gets no line: it reads a closure list by name from the view (its R9 to R14), and R104 of the companion keeps that true; F measures it.
 
 ## local-facts (the team layer, corrections and reports)

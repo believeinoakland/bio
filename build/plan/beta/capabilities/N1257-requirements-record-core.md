@@ -1,6 +1,6 @@
 # N1257: record-core: a setting as of a date (draft)
 
-**Status** · DRAFT by a worker for CAPABILITIES #1; not READY; written 2026-10-27.
+**Status** · READY for PLANNING, except a2 R135, bracketed on Bob's L18 (the records' year vs the team's statement); by a worker for CAPABILITIES #1; written 2026-10-27.
 Companion of `N1257-requirements-layer-names.md` (its R122 is this file's R92; R121's `nameResolve` is the reader that needs it) for BOB's decision C10 (R122 becomes a new record-core requirement line, "a setting as of a date"), under K5458.
 The line below is for `build/requirements/record-core.md` after R26/R84 (its next free id is R91 + 1 = R92, `record-core.md` holds R1 to R91); PLANNING renumbers. The draft ids it cites: companion R121 (`nameResolve`), R122 (replaced by this line).
 
