@@ -1,0 +1,10 @@
+# T53 R1 · register-readers · rows
+
+## plan-T53-capabilities.md
+
+**register-readers** (new, §B)
+- T53 · N1259 (K4403 (2), (5); K1484, K1485, DEC-408) · streams delimited files to rows under a definition, zip by directory and member (ZIP64), drops contact columns before any other code sees a row (street lines only, K5499), withholds phone and address shapes in free text, the closed filter (`validateFilter`, `matches`, `autoWatchable`), the reducer with the original's fingerprint, estimates; pure, no AI · N1259-a register-readers R1-R11
+
+## build/rulings.md
+
+- K5577 · 2026-10-27 · layer 1 requirement lines (BOB's; K5571's l1 group) · `bob/T53-req-l1` @ c997abbd's 17 requirement files taken into `tranche/T53` before layer 1's START (K5571), reviewed: (1) bundler R43 (c): the release's `worker.json` carries no provider bindings; the agent Worker's AI Gateway and Workers AI bindings deploy from its own configuration (R19, R20); (2) register-readers R4: the street types are data the caller passes from the active layers (jurisdictions' federal layer holds the USPS street suffixes), never words in the module's code (`build/layers.md` rule 1); `contactShape(text, streetTypes)`; jurisdictions' job adds the federal layer's `street_types` section as data; (3) structured-text-reader: text and HTML stay where they are read now; (4) the worker-drafted lines csv-reader R28, text-chain R108, court-doctypes R19, jurisdictions R137, R139 stand as drafted; names marked "BOB's" (`kindTable`, `photoFactsOf`, `redrawPicture`'s refusal) are the jobs' to choose; (5) signatures R50: layer 1 does not wait on the catalogue key ceremony: the job builds `CATALOGUE_KEYS` with test keys; Bob makes the catalogue signing and recovery keys on the signer page during layer 1 (as K2922), and BOB sends their public lines to the running signatures job as a CHANGE. Checks after: format 0, architecture 0, coverage 17 findings, all layer 1's new not-yet-met lines (met by its jobs), channels 0, words 0 · P5, P10, P17, P19; K2922, K5567, K5571
