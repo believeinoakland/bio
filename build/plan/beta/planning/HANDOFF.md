@@ -4,16 +4,15 @@
 
 ## 0. State now and next steps
 
-**State.** BOB is #322 (`session_018Bhcedcx1arC3HPfsGQvzJ`). UX-DESIGN's DEC-465 to DEC-467 folded (L9); K5471 folded (L10); K5473 applied and JOURNEYS folded (L11). K5464 and K5468 applied (A2's jurisdictions and local-facts lines are now CAPABILITIES' `N1257-requirements-a2.md` R134, R135, R31, R32; `lines-A2` keeps civil-time and money). The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
+**State.** PLANNING #2 hands over at L15 (context 37 %). Folded into `plan-T53-draft.md` by layer (34 KB): the seven A drafts (READY for BOB; lines on Bob's open L1-L26 bracketed); FILES (readers, registry, sizes, corpus, KIND-TABLE; PHOTO-DATA defers to A4); PLATFORM (time budgets, combined read, load test, record placement PL30-PL35); AI-DESIGN final (A43-A58; findings and BOB's K5464 in `FOLD-AI.md`; layer 6 re-ordered, §2.9); CAPABILITIES N1257 (with K5452, K5458, K5462, K5467, K5468: A2's team-layer lines are CAPABILITIES' `N1257-requirements-a2.md` R134, R135, R31, R32) and N1260; JOURNEYS W6-W7 (130 defects in the detail file `plan-T53-journeys.md`, placements K5476); UX-DESIGN DEC-454 to DEC-470. `CONSISTENCY.md` rows 1-20 all decided; §1 holds the id rules (BOB numbers at writing; A lines keep theirs, C21). Nothing is open with BOB from this lane.
 
 **Next steps, in order.**
-1. (done L7) BOB's K5464 applied: the run-rules map, layer 6's positions (FOLD-AI §2.9), CONSISTENCY 11-19; A2 re-cut onto N1257's placeless team-rules layer (its "Owed by N1257" list relayed by BOB to CAPABILITIES; the three lower-level names confirmed by BOB: `FISCAL_YEAR_IN_RECORDS`, `fiscal_year` in a place team layer refused as `TEAM_SECTION_REFUSED`, the fact path per N1257 R25, R27; (a)-(g) relayed to CAPABILITIES). When CAPABILITIES' N1257 companions carry those amendments, check A2 against them.
-2. On Bob's answers to L1-L26 and AI1-AI10: unbracket or change the lines each decides.
-3. At each check, MAP.md and every lane's section 0: fold each new READY draft. Not yet READY: CAPABILITIES N1259 (a-e), N824, N1110, N858, N1265, N1269-N1272 (K5460-K5462 since); PLATFORM service levels, whole-record move, Levels 2-3 study; JOURNEYS (walking); TESTS-SWEEP's judgment list.
-4. Owed to others through BOB: FILES's CC4 to A4-R1..R6 (K5448); screens-intake R36 and R5 amended for the safe picture (A4-R10); UX-DESIGN needs from A6 (Q-A6-1, Q-A6-2 wording, K5456) and A4.
-5. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy cases screens-inquiry 153 KB and interface-shell 123 KB before drafts), the plan under 51,200 bytes, READY.
+1. (PLANNING #3) Takeover; merge tranche/T53 in; read MAP.md and every lane's section 0.
+2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (a-e), N824 (with its container member job), N1110, N858, N1265, N1269-N1272 (K5460-K5466 and later are its rulings); PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
+3. On Bob's answers (L1-L26, J1-J7, N1257 D3, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes).
+4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** Bob: L1-L26, J1-J7, N1257 D3, the published-place default (every AI question answered, K5475-K5494). BOB: nothing open from this lane. Lanes: CAPABILITIES N1259, N824, N1110, N858, N1265, N1269-N1272; PLATFORM service levels and whole-record move; TESTS-SWEEP's judgment list.
+**Waiting on.** Bob: L1-L26, J1-J7, N1257 D3, the published-place default. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
