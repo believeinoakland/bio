@@ -8,3 +8,4 @@
 - No member or administrator meets an old interface (Bob, K3052): the new interface replaced the setup page and legacy-ui for every user; both are retired (K4100), and an old interface brought back is a defect.
 - civicsmith.org and search engines (Bob, K5424: "Search engines will eventually list civicsmith.org - but not until the 1.0 release is deployed."): unlisted (`noindex`) until the 1.0 release is deployed; 1.0's plan lifts it.
 - How current the layers are (Bob, K5450, on C5: an "information" tag ('i' in circle) beside each entry or the page): each layer entry shows its source, read date and calendar reach behind an information mark; no promised delay.
+- Read-only layers (Bob, K5451, on C6: "as recommended"): a team's marked correction of a calendar fact stands; laws and deadlines only reported; a team's own rule sits beside, never over.
