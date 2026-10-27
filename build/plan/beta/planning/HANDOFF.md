@@ -9,10 +9,10 @@
 **Next steps, in order.**
 1. (done, K5502) K5501's lines READY for BOB.
 2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
-3. On Bob's answers (L13-L26 (L1-L12 applied, L18, L19; L13 rewritten on the page, open), L18, J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
+3. On Bob's answers (L13-L26, L18 among them; L1-L12 applied, L18, L19; L13 rewritten on the page; and J1-J7): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** Bob: L13-L26, J1-J7, N1257 D3, L18. Lanes: as step 2.
+**Waiting on.** Bob: L13-L26 (L18 among them), J1-J7. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -97,3 +97,7 @@ A Sonnet worker drafted `lines-K5527-texts-and-listing.md` from N858, N1110, N12
 ## L21 · 2026-10-27 · K5528
 
 BOB #323 decided L20's T1-T8 as recommended (K5528): the guide hash by `record-grammar`'s `canonicalJson`; the profile answer key `reviewed` (a team guide's string `reviewed_by` unchanged); the listed-group check a process step (Bob's rule unchanged); K5527 (4)'s note corrected. `lines-K5527-texts-and-listing.md` updated and decided; the plan's wait dropped.
+
+## L22 · 2026-10-27 · N1257 D3 and the photo place cleared
+
+BOB #323: N1257 D3 is C7 (K5452, K5497) and the photo's published-place default is F4 (K5514), both answered. The places page's entry in the plan unbracketed (it waits only on CAPABILITIES' lines); the photo default was already folded at L18. Open with Bob: L13-L26 and J1-J7 only.
