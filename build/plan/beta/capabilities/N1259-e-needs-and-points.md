@@ -116,7 +116,7 @@ Nothing here repeats an answer in K4403, K4405 (its ten points) or DEC-447. Each
 7. **A row is stored once per sight scope**; a hidden project's import is not shared with the team (part (b) R19, R21).
 8. **Removal replaces the segment** (new digest), purges the old object and marks content rows over it stale, never deleting them (part (b) R30). Technical risk: re-keying cited legs (R26 of part (d)).
 9. **Phone and address shapes in free text** are withheld in a cell and counted (part (a) R4); at publication a hit is refused unless a held capture says it is a public office's (part (d) R36); false positives are measured (M-R10).
-10. **Free keyed service on the alarm for a named follow (ANSWERED, K5498).** `acquisition` R36 is amended by part (a) R130 to "no daemon uses a keyed service except a member-asked read of a team's own key" (K1449 stands for paid or account-gated sources). A member's refresh of a docket follow works; the alarm polls CourtListener's entries with the team's own free token for a follow a member made (part (a) R130, R131; part (c) R41, R42, R81; part (d) R134). No webhook (a paid organisational feature); no OpenFEC key (the bulk files need none).
+10. **Free keyed service on the alarm for a followed case (ANSWERED, K5498; the poll final, K5513).** PLANNING amends `acquisition` R36 (K5527 (6)): a daemon fetches only for the daily check of a followed case, CourtListener only, else `NOT_PERMITTED` (K5469); `credentials` R29 is unchanged (K1449 stands for paid or account-gated sources). A member's refresh of a docket follow works; once a day the alarm checks CourtListener's entries with the team's own free token for a case a member chose to follow, and stops when they unfollow (part (a) R130, R131; part (c) R41, R42, R81; part (d) R134). No webhook (a paid organisational feature); no OpenFEC key (the bulk files need none).
 11. **What the listing calls its sources.** "NetFile" is not claimed: the City's campaign filings come from its open-data copy (`measures` M-R1 row 1), named so; Form 700, licence files, contractors, company bulk and OpenCorporates are not listed as importable until measured (`jurisdictions` R133, part (a) R105).
 12. **`on_publish` for a limited register is `warn`** until counsel answers (part (d) R37); a profile value.
 13. **The officers' refusal is data plus `PRODUCT_PHASE`** (part (b) R3), not code that names a company.
@@ -131,7 +131,7 @@ Nothing here repeats an answer in K4403, K4405 (its ten points) or DEC-447. Each
 3. DEC-411's door "Propose this register" says "nothing is brought in"; K4405 (4) says a team's own register is imported (public sites only, its own terms, columns by role). Two steps are needed (propose, then define); only the first is drawn.
 4. The mock's "Alerts from outside services" has a member enter the team's key; `credentials` R29 lets only an administrator set a key. The screen must offer it to administrators.
 5. K4403 (5) (a reduced copy on arrival) departs from `acquisition` R26 ("raw bytes as served are the primary evidence, never rewritten") and R10's whole-file model; part (a) R125 amends R26 for register pieces only, with the original's fingerprint recorded.
-6. `acquisition` R36 and `credentials` R29 said a keyed service is never one a daemon uses (K1449); K5498 amends R36 (part (a) R130) as in point 10. Open for BOB: `credentials` R29's wording is not amended in this lane's text; and the alarm's docket poll uses a team's own CourtListener token with no member present, which fits "a member-asked read" only because the member made the follow (`standing`).
+6. `acquisition` R36 and `credentials` R29 said a keyed service is never one a daemon uses (K1449). Answered: PLANNING amends R36 (K5527 (6); part (a) R130, point 10); `credentials` R29 is unchanged; the daily docket check of a followed case is final (K5513).
 7. `mock-acts.js` and the design words call this act `registerimport` (renamed `registerfileimport`, K5469: `events` R38's op of that name is a different act) and still say it "brings in a whole public register as one capture"; K4403 (5) and DEC-411 make it a reduced copy (stale wording).
 8. `draft-T52-DEC406` B-2 option B ("FEC by cycle and state") cannot be done: the federal bulk files are by cycle only (`measures` M-R1 row 4). K4403 (2) replaced "whole" by a filter read as the file streams, which this draft does.
 9. The T52 DEC-406 draft proposed an `openfec` key service; the T52 plan leaves the OpenFEC route out. This draft follows the plan (no `openfec`).
@@ -152,16 +152,21 @@ Nothing here repeats an answer in K4403, K4405 (its ten points) or DEC-447. Each
 
 ## Changed for K5469
 
-1. `acquisition` R36 ("a keyed service is never one a daemon uses", K1449) stood, amended nowhere, until K5498: see "Changed for K5498" below. (K5469's "CONDITIONAL on C8-poll" openings are removed.)
+1. `acquisition` R36 ("a keyed service is never one a daemon uses", K1449) stood, amended nowhere, until K5498: see "Changed for K5498" and "Changed for K5513" below. (K5469's "CONDITIONAL on C8-poll" openings are removed.)
 2. The op name: ours is not `events` R38's `registerimport` (`op-declarations/index.mjs:238`, `events/index.mjs:1500`: `followedRegister`, a followed court register's rows as machine-stamped filing or order events, graded `substrate`, t33.mjs:103). Ours is a member's act that queues a file import and refuses a machine, so it is renamed `registerfileimport` in parts (b), (b2), (c), this part; refusal codes unchanged. The design words (`act.owed_registerimport.*`, `screen.registers.import.go`) and `mock-acts.js` still use the old name: for the design stream.
 3. Labels: `I1-I9`, `G1-G5` are the table in `draft-T52-DEC406.md` §1, now cited as `T52-DEC406 §1 I8` (not "DEC-406 I8") in parts (b), (c), (f); M-R3, M-R7 point to `draft-T52-plan.md`, M-R10 to §3 here (note above the table); part (b)'s "Unverifiable" line says so.
 
 ## Changed for K5498, K5499, K5500
 
-1. K5498 (C8-poll): every "CONDITIONAL on C8-poll" mark removed; part (a) R130 amends `acquisition` R36 to "no daemon uses a keyed service except a member-asked read of a team's own key"; R130, R131; part (c) alerts note, R41, R42, R81; part (d) R134; points P-1, 4, 10, 16 and gap 6 here.
+1. K5498 (C8-poll): every "CONDITIONAL on C8-poll" mark removed; part (a) R130, R131; part (c) alerts note, R41, R42, R81; part (d) R134; points P-1, 4, 10, 16 and gap 6 here (see "Changed for K5513" for the final wording).
 2. K5499 (C9): part (a) R3 keeps ZIP, coordinates and city (street lines only removed); P-2.
 3. K5500 (C10): part (d) R66 and header say the guard is federal only; P-3 and the lawyer list here.
 
 ## Changed for K5503
 
 1. K5503 (C11): part (d) R35 adds the seventh recorded reason `named_in_cited_filing`, proven by the cited row, with its test; P-4 marked ANSWERED. No other line here lists the reasons.
+
+## Changed for K5513 and K5527 (6)
+
+1. K5513: the docket poll is final: a followed case is checked for new filings once a day on the team's own free CourtListener key, only for cases a member chose to follow, stopping when they unfollow; a daemon fetches nothing else with a keyed service (else `NOT_PERMITTED`, K5469). Part (a) R130, R84, R131; part (c) alerts note, R41, R42 (the cadence is one day, not derived from the limit; the poll share caps a day's checks, the rest `rate_held`), R81 unchanged; part (d) R134; points 10 and gap 6 here. The phrase "member-asked read" and the open question about it are gone.
+2. K5527 (6): PLANNING amends `acquisition` R36; `credentials` R29 is unchanged (part (a) R84 no longer says it amends R29).
