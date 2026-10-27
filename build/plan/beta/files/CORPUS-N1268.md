@@ -2,6 +2,8 @@
 
 **Status** · READY (F3; the type list is settled; S2 sampling continues and may change source rows). First drafted by FILES #1 (F2), 2026-10-27. Not READY: waits on the final type list. Bob (K4632): for the beta. Kept in the build state and re-run every tranche on the live test copy (K4628 (4)).
 
+**Placement (K5448 (5)):** the corpus is walked by `journey-check`.
+
 ## 1. What it is
 
 Per type: a **small**, a **typical** and a **largest-allowed** file (SIZES-N1267 §2), plus a **just-over** file for each bound (refusal with its size). Each goes in by **upload** and, where a web address can hold it, by **web capture**, on the live test copy. Pass means, for each:

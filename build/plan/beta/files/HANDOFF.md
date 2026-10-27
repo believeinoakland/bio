@@ -32,3 +32,6 @@ PLATFORM's need answered: `LOAD-PER-TYPE.md` (every figure marked M/D/U; L1-L6 m
 
 ### F6 · 2026-10-27
 L3, L4, L5 run locally and written into LOAD-PER-TYPE (photo redraw 48 MP 0.55 s/80 MB; RTF/doc ~1 s per MB, 215-260 MB; 1.9 GB archive streamed 16-25 s, 14 MB). L1, L2, L6 not run, reasons stated. Sent to BOB.
+
+### F7 · 2026-10-27
+K5448 placement carried (CC4 now points to A4; module placement; Level 1 row; journey-check). PROBE-SPEC.md written for PLATFORM's S1 cycle. Answered BOB on R2 to R2 copy (CopyObject and UploadPartCopy documented; cross-jurisdiction untested).
