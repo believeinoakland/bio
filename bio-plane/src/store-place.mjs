@@ -28,10 +28,28 @@ const roomName = (env, name) => {
   return g === 1 ? name : `${name}~g${g}`;
 };
 
-export const storeId = (env, name) => env.STORE.idFromName(roomName(env, name));
+/* A jurisdiction (R43; N1273, K5440, K5441): Cloudflare's `eu`, `us`, `fedramp`. The one value serves the team's R2 bucket as it serves the room (R45);
+ * this file creates no bucket and runs no install. */
+export const STORE_JURISDICTIONS = Object.freeze(["eu", "us", "fedramp"]);
+
+export const storeJurisdiction = (env) => {
+  const v = env?.STORE_JURISDICTION;
+  return typeof v === "string" && STORE_JURISDICTIONS.includes(v) ? v : null;
+};
+
+/* The room's namespace: the binding itself, or its jurisdiction's. A jurisdiction and a hint never both apply (Cloudflare's page does not say they combine),
+ * so a copy that sets both is refused with a coded Error (an identifier, K3971). */
+const namespace = (env) => {
+  const j = storeJurisdiction(env);
+  if (j && storeHint(env)) throw Object.assign(new Error("STORE_PLACE_CONFLICT"), { code: "STORE_PLACE_CONFLICT" });
+  return j ? env.STORE.jurisdiction(j) : env.STORE;
+};
+
+export const storeId = (env, name) => namespace(env).idFromName(roomName(env, name));
 
 export const storeStub = (env, name) => {
-  const id = storeId(env, name);
+  const ns = namespace(env);
+  const id = ns.idFromName(roomName(env, name));
   const hint = storeHint(env);
-  return hint ? env.STORE.get(id, { locationHint: hint }) : env.STORE.get(id);
+  return hint ? ns.get(id, { locationHint: hint }) : ns.get(id);
 };

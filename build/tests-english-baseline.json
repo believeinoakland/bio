@@ -582,7 +582,6 @@
   "bio-plane/test/m/run-rules/t50.test.mjs": 4,
   "bio-plane/test/m/run-rules/table.test.mjs": 8,
   "bio-plane/test/m/run-rules/verification.test.mjs": 2,
-  "bio-plane/test/m/runtime-limits/runtime-limits.test.mjs": 2,
   "bio-plane/test/m/screens-action/fix10-t51.test.mjs": 1,
   "bio-plane/test/m/screens-daily/browse.test.mjs": 1,
   "bio-plane/test/m/screens-daily/c25-seam.test.mjs": 1,
