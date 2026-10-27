@@ -57,3 +57,4 @@
 - K5534 · 2026-10-27 · on QUESTIONS.html C31 (N824): "All visible headers, though not all MIME headers. It does not include email addresses, but may include the names of recipients when that's material to the case." · `build/rulings.md`
 - K5535 · 2026-10-27 · on QUESTIONS.html C32, option A: "as recommended" (a ceiling on interpreted parts per service level, shown when reached) · `build/rulings.md`
 - K5536 · 2026-10-27 · on QUESTIONS.html L13, option A: "as recommended" (a subject change refused until the named connections are re-graded) · `build/rulings.md`
+- K5537 · 2026-10-27 · on QUESTIONS.html C33: "A" (Bob prepares the M-N1272 gold set himself, marking blind) · `build/rulings.md`

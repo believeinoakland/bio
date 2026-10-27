@@ -323,7 +323,7 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 
 ## R2 (measure, scratch copy, BOB's under K5120)
 
-CAPABILITIES' (§C of `planning/plan-T53-capabilities.md`): M-R3, M-R4, M-R7, M-R8, M-R10-M-R12 (registers: storage, streaming limits, counts, contact-shape false hits, extract sizes; the federal zips BOB's download), M-N1272 (proposals on the N1268 corpus, its bar and gold set recorded by BOB before the run), interpretation timings, N824 P3 if not before R1, the registers journey.
+CAPABILITIES' (§C of `planning/plan-T53-capabilities.md`): M-R3, M-R4, M-R7, M-R8, M-R10-M-R12 (registers: storage, streaming limits, counts, contact-shape false hits, extract sizes; the federal zips BOB's download), M-N1272 (proposals on the N1268 corpus; BOB records the bar and prepares the files and pinned questions; Bob's act: he marks the gold set blind before the run, K5537), interpretation timings, N824 P3 if not before R1, the registers journey.
 
 The load test per level (N1274, `load-test-draft.md`), its short "before" run on the alpha's design first; the budget walk (L1, L2, L3 of `time-budgets-draft.md` §6); the acceptance corpus (N1268). Their defects are R3's entries.
 

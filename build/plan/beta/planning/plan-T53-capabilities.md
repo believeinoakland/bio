@@ -274,6 +274,7 @@
 - N858: find the writer and reviewer per kind; approve each text with a K ruling; name who owns re-reviews; Bob's question on DEC-340's two `researched` facts (§2 item 9).
 - N1110: steward address, `STEWARD_KEYS`, `SOURCE_KEY`, N1159's Email Routing test, the civicsmith.org domain (K3296), a site deploy per listing change (K1715).
 - N1159: the Email Routing domain (M1 P3).
+- M-N1272 (K5537): Bob marks the gold set blind, on files and pinned questions BOB prepares and gives him before the run.
 
 ---
 
@@ -335,6 +336,6 @@ Conflicts with PLANNING resolved as in §A (`/10`, acquisition R36); none with j
 - **mail-door as a capability module** (layers.md ruling 5): recommend yes.
 - **N1110 B2** (how a declined group learns part and reason): recommend the steward's own mail, never public. **B3** (four parts as a closed list with the text's date): recommend yes; R24 is written so. Also the steward address and keys.
 - **N1272 R119**: answered, K5535 (C32): a ceiling per service level, shown when reached; PLATFORM sets the figure from measurements.
-- **M-N1272 gold-set reviewer**: needs a person who knows the topic: possibly Bob (flag).
+- **M-N1272 gold-set reviewer**: answered, K5537 (C33 A): Bob marks the gold set blind; BOB prepares the files and pinned questions and gives them to him before the run.
 - **N1259-d R36 (case-disclosures R41)**: decided by BOB, K5531: a member's own written observation is the group's words, checked before signing and refused if it holds a home address or phone (DEC-408); refusing alters nothing, so R26 stands. Not Bob's.
 - **N858**: per-text writer, reviewer and any payment; the opt-out screen as an experience; whether DEC-340's two `researched` facts suffice; the K ruling for each text.
