@@ -39536,13 +39536,13 @@
   },
   {
    "key": "screen.aichecks.origin.name",
-   "en": "Not made by an organization based in China",
+   "en": "Not developed by a Chinese organization",
    "protected": false,
    "note": "DEC-420: B488 aichecks: origin name"
   },
   {
    "key": "screen.aichecks.origin.line",
-   "en": "The organization that makes the AI is not based in China.",
+   "en": "Judged by who developed the model, whichever company serves it.",
    "protected": false,
    "note": "DEC-420: B488 aichecks: origin line"
   },
@@ -39947,12 +39947,6 @@
    "en": "Not offered as the team's account: its terms bar use by a team for work like this. A member may still use it for their own work.",
    "protected": false,
    "note": "DEC-420: B488 aiproviders: refused personal"
-  },
-  {
-   "key": "screen.aiproviders.refused.origin",
-   "en": "Not offered while the team requires the check “Not made by an organization based in China”.",
-   "protected": false,
-   "note": "DEC-420: B488 aiproviders: refused origin"
   },
   {
    "key": "screen.aiproviders.held.head",
@@ -40412,7 +40406,7 @@
   },
   {
    "key": "screen.aiconnect.s3.why",
-   "en": "Four ways. Choose one.",
+   "en": "Five ways. Choose one.",
    "protected": false,
    "note": "DEC-420: B488 aiconnect: s3 why"
   },
@@ -44957,6 +44951,72 @@
    "en": "Sending was canceled. Nothing was kept.",
    "protected": false,
    "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
+  },
+  {
+   "key": "screen.aiproviders.origin.notoffered",
+   "en": "Not offered while your team requires the origin check.",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)"
+  },
+  {
+   "key": "screen.aiproviders.optin",
+   "en": "Projects and members may add this account to their own lists",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the owner opt-in on a team account row, off by default"
+  },
+  {
+   "key": "screen.aiproviders.optin.note",
+   "en": "Off until an administrator turns it on. Work never moves to it from another list otherwise.",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the opt-in note"
+  },
+  {
+   "key": "screen.aimine.optin",
+   "en": "My projects may add this account to their lists",
+   "protected": false,
+   "note": "DEC-465: aimine: the opt-in on a member's own API-key account, off by default"
+  },
+  {
+   "key": "screen.aimine.subscription.ownlist",
+   "en": "A personal subscription is only ever on your own list, never on your team's or a project's.",
+   "protected": false,
+   "note": "DEC-465: aimine: the line on a member's personal subscription row"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed",
+   "en": "Keep it sealed in your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the fifth way a key is held"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed.line",
+   "en": "Your team's Civicsmith keeps the key sealed, readable only by its own programs, until you remove it.",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the sealed way, its line"
+  },
+  {
+   "key": "screen.aimoments.checksapply",
+   "en": "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.",
+   "protected": false,
+   "note": "DEC-465: aimoments: whose checks apply; {project}"
+  },
+  {
+   "key": "screen.aiconnect.s3.sealgo",
+   "en": "Keep it sealed",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the sealed way, its button"
+  },
+  {
+   "key": "screen.aimoments.mock.i",
+   "en": "whose checks apply",
+   "protected": false,
+   "note": "DEC-465: aimoments: the mock choice for the new moment"
+  },
+  {
+   "key": "screen.aimoments.continued.crossowner",
+   "en": "It went on with your team's second account, which your administrators let projects use.",
+   "protected": false,
+   "note": "DEC-465: aimoments a: the continued account belongs to another owner"
   }
  ],
  "rewrite": {

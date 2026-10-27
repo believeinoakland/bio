@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7907,
+  "screen": 7917,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1301,
+  "act": 1304,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -237,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19539,
-  "protected": 1164
+  "total": 19552,
+  "protected": 1166
  },
  "words": [
   {
@@ -77709,14 +77709,14 @@
   },
   {
    "key": "screen.aichecks.origin.name",
-   "en": "Not made by an organization based in China",
+   "en": "Not developed by a Chinese organization",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aichecks: origin name"
   },
   {
    "key": "screen.aichecks.origin.line",
-   "en": "The organization that makes the AI is not based in China.",
+   "en": "Judged by who developed the model, whichever company serves it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aichecks: origin line"
@@ -78189,13 +78189,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aiproviders: refused personal"
-  },
-  {
-   "key": "screen.aiproviders.refused.origin",
-   "en": "Not offered while the team requires the check “Not made by an organization based in China”.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-420: B488 aiproviders: refused origin"
   },
   {
    "key": "screen.aiproviders.held.head",
@@ -78731,7 +78724,7 @@
   },
   {
    "key": "screen.aiconnect.s3.why",
-   "en": "Four ways. Choose one.",
+   "en": "Five ways. Choose one.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aiconnect: s3 why"
@@ -84034,6 +84027,83 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
+  },
+  {
+   "key": "screen.aiproviders.origin.notoffered",
+   "en": "Not offered while your team requires the origin check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)"
+  },
+  {
+   "key": "screen.aiproviders.optin",
+   "en": "Projects and members may add this account to their own lists",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiproviders: the owner opt-in on a team account row, off by default"
+  },
+  {
+   "key": "screen.aiproviders.optin.note",
+   "en": "Off until an administrator turns it on. Work never moves to it from another list otherwise.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiproviders: the opt-in note"
+  },
+  {
+   "key": "screen.aimine.optin",
+   "en": "My projects may add this account to their lists",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimine: the opt-in on a member's own API-key account, off by default"
+  },
+  {
+   "key": "screen.aimine.subscription.ownlist",
+   "en": "A personal subscription is only ever on your own list, never on your team's or a project's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimine: the line on a member's personal subscription row"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed",
+   "en": "Keep it sealed in your team's Civicsmith",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiconnect step 3: the fifth way a key is held"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed.line",
+   "en": "Your team's Civicsmith keeps the key sealed, readable only by its own programs, until you remove it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiconnect step 3: the sealed way, its line"
+  },
+  {
+   "key": "screen.aimoments.checksapply",
+   "en": "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimoments: whose checks apply; {project}"
+  },
+  {
+   "key": "screen.aiconnect.s3.sealgo",
+   "en": "Keep it sealed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiconnect step 3: the sealed way, its button"
+  },
+  {
+   "key": "screen.aimoments.mock.i",
+   "en": "whose checks apply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimoments: the mock choice for the new moment"
+  },
+  {
+   "key": "screen.aimoments.continued.crossowner",
+   "en": "It went on with your team's second account, which your administrators let projects use.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimoments a: the continued account belongs to another owner"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -126992,6 +127062,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_aikeyseal.label.aiconnect",
+   "en": "Keep it sealed",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_aitermsaccept.label.aiconnect",
    "en": "Accept the terms that bind our use",
    "protected": true,
@@ -127030,6 +127106,12 @@
   {
    "key": "act.owed_aimycheckset.label.aimine",
    "en": "Require a check for my own work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiorderset.label.aimine",
+   "en": "Move an account up or down",
    "protected": true,
    "source": "registry.json"
   },
@@ -128406,6 +128488,12 @@
   {
    "key": "act.owed_aisignin.does",
    "en": "Takes you to the provider's own page to sign in and approve the connection. Civicsmith never sees your password.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aikeyseal.does",
+   "en": "Keeps the key sealed in your team's Civicsmith, readable only by its own programs, until you remove it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
