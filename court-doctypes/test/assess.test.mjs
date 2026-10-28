@@ -2,9 +2,10 @@
  * registers and edits of them a register really makes (a row added, removed, corrected; a status moved). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { EVENTS } from "../../docprofile/registry.mjs";
 import { courtlistenerDocket as CL, cpucProceeding as CPUC, ecourtRoa as EC } from "../index.mjs";
-import { fixture, viewFor, LOCATORS, ctxFor, FIRST } from "./helpers.mjs";
+import { fixture, viewFor, LOCATORS, ctxFor, FIRST, wordRe } from "./helpers.mjs";
 
 const VIEW = viewFor(FIRST);
 const L = LOCATORS[FIRST];
@@ -41,7 +42,7 @@ test("R10: two readings that differ only in page order, white space and text-fre
   let r = CL.assess(cl(P4), cl(respaced));
   assert.deepEqual(r.events, []);
   assert.equal(r.meaningful, false);
-  assert.match(r.why, /all 27 rows of this register are unchanged/);
+  assert.equal(r.why, localize("court-doctypes.common.all_length_rows_of_this", "all {length} rows of this register are unchanged", { length: 27 }));
   assert.deepEqual(r.confirmed, { rows: 27, intact: 27 });
   /* the CPUC report sorted the other way */
   const rows = cpucRows(DOCS);
@@ -65,7 +66,7 @@ test("R10: a row added gives item_added (routine), naming the row", () => {
   assert.equal(r.events[0].entry_id, "179");
   assert.equal(r.events[0].significance, "routine");
   assert.equal(r.meaningful, false);
-  assert.match(r.why, /1 row\(s\) added/);
+  assert.ok(r.why.includes(localize("court-doctypes.common.length_row_s_added", "{length} row(s) added", { length: 1 })));
 });
 
 test("R10: a row gone is delisted only when both readings are complete, possibly_delisted otherwise", () => {
@@ -78,7 +79,7 @@ test("R10: a row gone is delisted only when both readings are complete, possibly
   assert.equal(r.meaningful, true);
   r = CL.assess(cl(onePage(P4)), cl(onePage(without)));
   assert.deepEqual(types(r), ["delisted"]);
-  assert.match(r.events[0].why, /both readings hold the whole register/);
+  assert.match(r.events[0].why, wordRe("court-doctypes.common.row_gone_both_complete"));
   r = CL.assess(cl(onePage(P4)), cl(without));
   assert.deepEqual(types(r), ["possibly_delisted"], "one complete reading is not two");
 });
@@ -148,8 +149,8 @@ test("R11: under the CPUC composite key an edited key field reads as one row gon
   const gone = r.events.find((e) => e.type === "possibly_delisted"), added = r.events.find((e) => e.type === "item_added");
   assert.equal(gone.counterpart, added.key);
   assert.equal(added.counterpart, gone.key);
-  assert.match(gone.why, /likely this row with a key field edited/);
-  assert.match(added.why, /likely the row no longer listed/);
+  assert.match(gone.why, wordRe("court-doctypes.common.a_row_is_not_in_counterpart", { key: added.key }));
+  assert.equal(added.why, localize("court-doctypes.common.row_added_counterpart", "a row was added to the register; it is likely the row no longer listed under key {key} with a key field edited", { key: gone.key }));
   assert.equal(r.events.filter((e) => e.type === "outcome_changed").length, 0, "never paired silently into one changed or unchanged row");
   /* each key field: date, type, filer, description */
   for (const [was, now] of [["February 26, 2026", "February 27, 2026"], [">DECISION<", ">RULING<"], ["headers=\"FILED_BY\">-<", "headers=\"FILED_BY\">CPUC<"]]) {
@@ -171,21 +172,21 @@ test("R12 R17: no row read, or a failed reading, is a failed read with why, neve
     const r = CPUC.assess(a, b);
     assert.equal(r.meaningful, null);
     assert.deepEqual(r.events, []);
-    assert.match(r.why, /never a register emptied/);
+    assert.match(r.why, wordRe("court-doctypes.common.why_so_nothing_is_claimed"));
   }
   const login = fixture("courtlistener-sign-in.html");
   let r = CL.assess(cl(P4), cl(login));
   assert.equal(r.meaningful, null);
   assert.deepEqual(r.events, []);
-  assert.match(r.why, /a reading failed/);
+  assert.match(r.why, wordRe("court-doctypes.common.a_reading_failed_v1"));
   /* an eCourt capture that is not a member's own fails, and its absence of rows removes nothing */
   r = EC.assess(ec(ROA), EC.parse(ctxFor(ROA, { view: VIEW, locator: L.ecourt })));
   assert.equal(r.meaningful, null);
-  assert.match(r.why, /a member's own capture/);
+  assert.match(r.why, wordRe("court-doctypes.ecourt.member_only"));
   /* two readings of different proceedings are not one register */
   r = EC.assess(ec(ROA), ec(ROA.replace("24CV000123", "24CV000999")));
   assert.equal(r.meaningful, null);
-  assert.match(r.why, /different proceedings/);
+  assert.match(r.why, wordRe("court-doctypes.common.the_two_readings_are_of"));
   /* and of different registers' types */
   r = CL.assess(cl(P4), cp(DOCS));
   assert.equal(r.meaningful, null);

@@ -10,7 +10,7 @@ import { CONTRACT } from "../../docprofile/doctypes/index.mjs";
 import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { EMPTY, HELD, PE, PE_POLICY } from "./fixtures.mjs";
 import { CASES } from "./golden-cases.mjs";
-import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 import { readWith } from "./read.mjs";
 import { POLICIES, ANSWERS, SECTION_ANSWERS, FRESH, FRESH_ANSWERS, score, scoreSections, same } from "./policies.mjs";
 
@@ -42,7 +42,7 @@ test("R1 R25 policy is registered after regulation, matches CERTAIN only on a he
   for (const v of [EMPTY, { ...PE, vocabulary: { ...PE.vocabulary, policy_headers: [] } }, { ...PE, standard_sources: [] }]) {
     const r = policy.detect({ text: PE_POLICY, view: v });
     assert.equal(r.confidence, CONFIDENCE.NONE);
-    assert.equal(r.why, localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy"));
+    assert.equal(r.why, word("doctypes.policy.no_series_supplied"));
   }
   // a standard's designation opening a line is never the series a header names (K1933): the test profile's MHSI standard
   const standard = PE_POLICY.replace("HARBOUR STANDING ORDER\nOrder No. 07/24", "MHSI Standard 101\nOrder No. 07/24");
@@ -119,7 +119,7 @@ test("R27 R33 sections: outline headings in document order with paths and extent
   // no heading: no sections, and why
   const flat = parse(PE_POLICY.split("Page 1 of 2")[0] + "Page 1 of 2\nThis order has no parts.");
   assert.deepEqual(flat.sections, []);
-  assert.match(flat.sections_why, /no outline heading/);
+  assert.equal(flat.sections_why, word("doctypes.policy.no_outline"));
 });
 
 /* ------------------------------------------------------------------- R28, R33 */
@@ -136,7 +136,7 @@ test("R28 R33 definitions: the entries of a section headed as definitions and th
   const early = parse(PE_POLICY.replace("Page 1 of 2\n", "Page 1 of 2\n\"Basin\" means the harbour's water.\n"));
   const u = early.definitions.find((d) => d.term === "Basin");
   assert.equal(u.section, null);
-  assert.match(u.why, /before the first heading/);
+  assert.equal(u.why, word("doctypes.sections.unplaced"));
   assert.equal(early.counts.definitions_unplaced, 1);
 });
 
@@ -230,8 +230,8 @@ test("R34 assess: a header field or a section that moved, or one read on one sid
   const r2 = policy.assess(none, none);
   assert.equal(r2.meaningful, null);
   assert.deepEqual(r2.events, []);
-  assert.equal(r2.header_why, localize("doctypes.policy.header_neither", "neither reading gave a header, so nothing is said about the header"));
-  assert.equal(r2.sections_why, localize("doctypes.policy.sections_neither", "neither reading gave sections, so nothing is said about sections: {why}", { why: none.sections_why }));
+  assert.equal(r2.header_why, word("doctypes.policy.header_neither"));
+  assert.equal(r2.sections_why, word("doctypes.policy.sections_neither", { why: none.sections_why }));
 });
 
 /* ------------------------------------------------------------------- R35, R3 */
