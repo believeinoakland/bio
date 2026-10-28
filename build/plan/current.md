@@ -688,6 +688,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-424 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/screens-daily.md`
 **screens-inquiry**
+- T53-562 · K5698, provenance's word `provenance.testify.provenance_notes` · `document.mjs` (~176, ~1735) tells testimony by its English (`/Authored through op=testify/`): read provenance's own mark instead; `fr28-document.test.mjs:438`, `fr3-document.test.mjs:184` copy the sentence (the words check's testcopy 2, red until this entry)
 - T53-425 · A1 · subject at opening and its change
 - T53-426 · A7 · the pickers
 - T53-427 · N1260 · "Follow from here" outside Document
