@@ -1,6 +1,6 @@
 # credentials (T53)
 
-**Status** · session_018Bhceesg4XYzpL7ZX32uiC · depth 2 · WORKING
+**Status** · session_018Bhceesg4XYzpL7ZX32uiC · depth 2 · WAITING: CHANGE fixed at eb788d8af53 (holds before and after member-roster); will complete with --with member-roster once MEMBER-ROSTER reads COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-28)
