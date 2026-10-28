@@ -20207,35 +20207,35 @@
       "en": "a reading failed ({v1})",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 292
+      "line": 314
     },
     {
       "id": "court-doctypes.common.a_row_is_not_in",
       "en": "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 340
+      "line": 375
     },
     {
       "id": "court-doctypes.common.a_row_is_not_in_counterpart",
       "en": "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established; the row added under key {key} is likely this row with a key field edited, and the two are reported together, never paired silently",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 341
+      "line": 376
     },
     {
       "id": "court-doctypes.common.all_length_rows_of_this",
       "en": "all {length} rows of this register are unchanged",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 380
+      "line": 415
     },
     {
       "id": "court-doctypes.common.an_address_of_name",
       "en": "an address of {name}",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 389
+      "line": 425
     },
     {
       "id": "court-doctypes.common.aswritten_has_the_shape_of",
@@ -20243,6 +20243,13 @@
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
       "line": 175
+    },
+    {
+      "id": "court-doctypes.common.intact_of_rows_unchanged",
+      "en": "{intact} of {rows} rows unchanged; {parts}",
+      "module": "court-doctypes",
+      "file": "court-doctypes/common.mjs",
+      "line": 414
     },
     {
       "id": "court-doctypes.common.its_address_could_not_be_read",
@@ -20259,11 +20266,25 @@
       "line": 144
     },
     {
+      "id": "court-doctypes.common.length_row_s_added",
+      "en": "{length} row(s) added",
+      "module": "court-doctypes",
+      "file": "court-doctypes/common.mjs",
+      "line": 406
+    },
+    {
+      "id": "court-doctypes.common.length_row_s_changed",
+      "en": "{length} row(s) changed",
+      "module": "court-doctypes",
+      "file": "court-doctypes/common.mjs",
+      "line": 408
+    },
+    {
       "id": "court-doctypes.common.length_row_s_no_longer",
       "en": "{length} row(s) no longer listed",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 372
+      "line": 407
     },
     {
       "id": "court-doctypes.common.no_active_profile_names_its",
@@ -20284,49 +20305,49 @@
       "en": "no register row was read in the {v1} reading",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 301
+      "line": 324
     },
     {
       "id": "court-doctypes.common.no_register_row_was_read_either",
       "en": "no register row was read in either reading",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 301
+      "line": 324
     },
     {
       "id": "court-doctypes.common.other_change_s_to_the",
       "en": "{other} change(s) to the proceeding",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 375
+      "line": 410
     },
     {
       "id": "court-doctypes.common.row_added",
       "en": "a row was added to the register",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 354
+      "line": 389
     },
     {
       "id": "court-doctypes.common.row_added_counterpart",
       "en": "a row was added to the register; it is likely the row no longer listed under key {key} with a key field edited",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 355
+      "line": 390
     },
     {
       "id": "court-doctypes.common.row_gone_both_complete",
       "en": "a row the register listed is no longer listed, and both readings hold the whole register",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 336
+      "line": 371
     },
     {
       "id": "court-doctypes.common.row_gone_both_complete_counterpart",
       "en": "a row the register listed is no longer listed, and both readings hold the whole register; the row added under key {key} is likely this row with a key field edited, and the two are reported together, never paired silently",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 337
+      "line": 372
     },
     {
       "id": "court-doctypes.common.the_capture_names_no_address",
@@ -20350,46 +20371,53 @@
       "line": 171
     },
     {
+      "id": "court-doctypes.common.the_proceeding_is_unchanged",
+      "en": "the proceeding is unchanged",
+      "module": "court-doctypes",
+      "file": "court-doctypes/common.mjs",
+      "line": 416
+    },
+    {
       "id": "court-doctypes.common.the_proceedings_caption_as_written",
       "en": "the proceeding's caption as written changed",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 311
+      "line": 336
     },
     {
       "id": "court-doctypes.common.the_proceedings_replace_as_written",
       "en": "the proceeding's {replace} as written changed from {show} to {show_2}",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 315
+      "line": 340
     },
     {
       "id": "court-doctypes.common.the_proceedings_status_as_written",
       "en": "the proceeding's status as written changed from {show} to {show_2}",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 308
+      "line": 333
     },
     {
       "id": "court-doctypes.common.the_row_key_changed_its",
       "en": "the row {key} changed its {replace}",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 365
+      "line": 400
     },
     {
       "id": "court-doctypes.common.the_two_readings_are_of",
       "en": "the two readings are of different proceedings ({na} and {nb})",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 297
+      "line": 320
     },
     {
       "id": "court-doctypes.common.the_two_readings_are_of_kinds",
       "en": "the two readings are of different kinds of register",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 294
+      "line": 317
     },
     {
       "id": "court-doctypes.common.this_is_page_n_of",
@@ -20431,28 +20459,28 @@
       "en": "{v1}{show} is newly named on the page",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 323
+      "line": 348
     },
     {
       "id": "court-doctypes.common.v1_show_is_no_longer",
       "en": "{v1}{show} is no longer named on the page",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 320
+      "line": 345
     },
     {
       "id": "court-doctypes.common.what_s_structure_is_present",
       "en": "{what}'s structure is present, but {why}",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 390
+      "line": 426
     },
     {
       "id": "court-doctypes.common.why_so_nothing_is_claimed",
       "en": "{why}, so nothing is claimed about the register either way (a failed read is never a register emptied)",
       "module": "court-doctypes",
       "file": "court-doctypes/common.mjs",
-      "line": 259
+      "line": 281
     },
     {
       "id": "court-doctypes.courtlistener.an_unnumbered_entry_with",
@@ -20460,6 +20488,13 @@
       "module": "court-doctypes",
       "file": "court-doctypes/courtlistener.mjs",
       "line": 88
+    },
+    {
+      "id": "court-doctypes.courtlistener.docket_number_core",
+      "en": "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener.mjs",
+      "line": 123
     },
     {
       "id": "court-doctypes.courtlistener.key_basis",
@@ -20488,6 +20523,90 @@
       "module": "court-doctypes",
       "file": "court-doctypes/courtlistener.mjs",
       "line": 144
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.count",
+      "en": "this answer states {count} entries and holds {length}, so it holds only some of them",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 107
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.earlier",
+      "en": "this answer has an earlier page, so it holds only some of the register's entries",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 106
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.key_basis",
+      "en": "courtlistener_api (PROVISIONAL): a numbered entry is keyed by the entry number the answer gives it (entry_id); an unnumbered (minute) entry by its date and its text as written (or, with no text, its documents' descriptions), and twins on one reading by their order among themselves; the JSON shape is assumed from CourtListener's published description and has not been checked on a real answer, until a fixture captured from a member's authenticated call replaces the assumed one",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 120
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.label",
+      "en": "a CourtListener docket-entries answer",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 20
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.lacks",
+      "en": "this answer lacks {what}'s own structure (results that are entries with an entry number and a filing date, and a next that is a string or null)",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 50
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.more",
+      "en": "this answer has a next cursor, so it holds only some of the register's entries",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 105
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.no_entries",
+      "en": "this answer holds no entries, so there is no register to read in it",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 49
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.not_json",
+      "en": "this answer is not a JSON object, so it is not {what}",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 45
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.refusal",
+      "en": "this answer is a refusal by the service (\"{detail}\"), not {what}",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 47
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.signal",
+      "en": "docket entries (results with an entry number and a filing date)",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 57
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.states_no",
+      "en": "the answer does not state it",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 109
+    },
+    {
+      "id": "court-doctypes.courtlistener_api.unkeyed",
+      "en": "an unnumbered entry with neither a date nor a text, so it has no key",
+      "module": "court-doctypes",
+      "file": "court-doctypes/courtlistener-api.mjs",
+      "line": 87
     },
     {
       "id": "court-doctypes.cpuc.key_basis",
