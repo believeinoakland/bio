@@ -1,9 +1,10 @@
 /* retrieval: the meaning-grain read (R10–R15, R31's C-23.1 and C-23.2), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, V, T0, VOCAB } from "./fixture.mjs";
+import { world, V, T0, VOCAB, coverageOf } from "./fixture.mjs";
 import { MEANING_READ_CHECKS, meaningLevels } from "../../../src/retrieval/index.mjs";
 import { MEANING, MEANING_AXIS_CAP } from "../../../src/query.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 
 function legs(w) {
   w.doc("INFO-1");
@@ -96,26 +97,27 @@ test("R13: the four-level statement — level; scope over the query's other arms
   assert.deepEqual([r.scope.documents, r.scope.documents_with_rows, r.scope.documents_without_rows], [4, 2, 2]);
   assert.deepEqual(Object.keys(r.levels), ["internet", "document", "content", "meaning"]);
   assert.equal(r.levels.internet.state, "UNDETERMINED");
-  assert.match(r.levels.internet.why, /observation log/);
+  assert.equal(r.levels.internet.why, WORD("retrieval.why.anybody_looked_all"));
   assert.equal(r.levels.document.state, "COUNTED");
   assert.equal(r.levels.content.state, "UNDETERMINED");
-  assert.match(r.levels.content.why, /passage:/);
+  assert.equal(r.levels.content.why, WORD("retrieval.why.arm_answers_meaning"));
   assert.equal(r.levels.meaning.state, "COUNTED");
   assert.match(r.says, /5 row\(s\) over 4 document/);
   /* The three empties. */
   const noDoc = w.retrieval.meaningRows({ q: "id:NOPE", rows: "leg", viewer: V("vera") });
-  assert.match(noDoc.says, /no document was in scope/);
+  assert.equal(noDoc.says, WORD("retrieval.text.matched_document_scope"));
   const noRows = w.retrieval.meaningRows({ q: "id:INFO-1", rows: "leg", viewer: V("vera") });
-  assert.match(noRows.says, /none of which holds a row of this kind/);
+  assert.equal(noRows.says, WORD("retrieval.text.matched_over_document", { documents: noRows.scope.documents }));
   const filtered = w.retrieval.meaningRows({ q: "leg:cuts_against", rows: "leg", viewer: V("vera") });
   assert.equal(filtered.total, 0);
-  assert.match(filtered.says, /filters excluded/);
+  assert.equal(filtered.says, WORD("retrieval.text.matched_over_document_scope",
+    { documents: filtered.scope.documents, with_rows: filtered.scope.documents_with_rows }));
   /* The content arm at its own level. */
   const content = w.retrieval.meaningRows({ q: "", rows: "content", viewer: V("vera") });
   assert.deepEqual([content.level, content.levels.content.state, content.levels.meaning.state], ["content", "COUNTED", "UNDETERMINED"]);
-  assert.match(content.levels.content.why, /cited or marked citable/);
+  assert.equal(content.levels.content.why, WORD("retrieval.why.document_scope_holds", { count: content.scope.documents }));
   /* The pure statement's zero-document branch, without a corpus. */
-  assert.match(meaningLevels("meaning", 0, 0, 0).levels.document.why, /no document is in scope/);
+  assert.equal(meaningLevels("meaning", 0, 0, 0).levels.document.why, WORD("retrieval.why.document_scope_all"));
 });
 
 test("R14 (K102): for rows=passage the statement carries the content-axis tally over the scope's captures, the captures not read split by the missing-row cause, and `says` leads with coverage, saying nobody has read only the never_looked ones", () => {
@@ -142,16 +144,13 @@ test("R14 (K102): for rows=passage the statement carries the content-axis tally 
   assert.deepEqual([s.indexed_full, s.indexed_partial, s.indexed_none, s.not_extracted, s.undetermined], [1, 1, 1, 1, 2]);
   assert.deepEqual(s.not_read, { never_looked: 1, undetermined: 1 });
   assert.deepEqual(miss.content_axis, { vocabulary: VOCAB.CONTENT_AXIS_STATES, undetermined_value: "undetermined" });
-  assert.match(miss.says, /^Coverage: /, "says leads with coverage");
-  assert.match(miss.says, /1 never extracted — nobody has read them/);
-  assert.match(miss.says, /1 have no extraction this record can account for/);
-  assert.match(miss.says, /so it cannot say that nobody read them/);
-  assert.match(miss.says, /covers only the part of the record that has been read/);
-  assert.doesNotMatch(miss.says, /2 never extracted|3 never extracted/, "the undetermined captures are not said to be unread");
+  assert.equal(miss.says, `${WORD("retrieval.lead", { coverage: coverageOf(s) })} ${WORD("retrieval.text.matched_over_searchable",
+    { count: 2, rest: `, ${WORD("retrieval.text.further_capture_scope", { gap: 3 })}` })}`, "says leads with coverage");
   /* A hit: the count of passages, and the coverage still leads. */
   const hit = w.retrieval.meaningRows({ q: "passage:budget", rows: "passage", viewer: V("vera") });
   assert.equal(hit.total, 2);
-  assert.match(hit.says, /^Coverage: .*2 passage\(s\) matched/);
+  assert.equal(hit.says, `${WORD("retrieval.lead", { coverage: coverageOf(hit.scope) })} ${WORD("retrieval.text.passage_matched_over",
+    { passages: 2, documents: hit.scope.documents, rest: `, ${WORD("retrieval.text.capture_scope_read", { gap: 3 })}` })}`);
   /* A state the vocabulary does not know is counted undetermined, never dropped. */
   const odd = w.cap("odd", "o");
   w.doc("INFO-2", {}, { captures: [odd] });
@@ -167,5 +166,5 @@ test("R14: the tally counts at most 500 captures, observing truncation by readin
   w.doc("INFO-1", {}, { captures: caps });
   const r = w.retrieval.meaningRows({ q: "passage:zzqx", rows: "passage", viewer: V("vera") });
   assert.deepEqual([r.scope.captures_counted, r.scope.captures_truncated, r.scope.captures_bound], [MEANING_AXIS_CAP, true, MEANING_AXIS_CAP]);
-  assert.match(r.says, /the tally covers the first 500 capture\(s\)/);
+  assert.ok(r.says.includes(WORD("retrieval.text.tally_covers_first", { bound: MEANING_AXIS_CAP })));
 });

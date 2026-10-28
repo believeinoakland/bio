@@ -21,6 +21,7 @@ import { CONTENT_SCHEMA } from "../../../src/content/index.mjs";
 import { ENTITIES_SCHEMA } from "../../../src/entities/index.mjs";
 import * as OL from "../../../src/observation-log/index.mjs";
 import { retrievalOf, observationOf } from "../../../src/retrieval/index.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -104,6 +105,12 @@ export const VOCAB = Object.freeze({
 /* ---- documents ---- */
 
 export const T0 = "2026-09-27T00:00:00Z";
+
+/* The coverage sentence a passage answer leads with, built from its scope's tally by key (R14). */
+export const coverageOf = (s) => WORD("retrieval.text.capture_counted_scope", { captures_counted: s.captures_counted,
+  searchable: s.indexed_full + s.indexed_partial, full: s.indexed_full, part: s.indexed_partial, none: s.indexed_none,
+  never: s.not_read.never_looked, unread_undet: s.not_read.undetermined, index_undet: s.undetermined - s.not_read.undetermined, over: "" });
+export const leadOf = (s) => WORD("retrieval.lead", { coverage: coverageOf(s) });
 
 export function md(fields, body = "\n## Summary\n\nA document.\n") {
   const lines = ["---"];
