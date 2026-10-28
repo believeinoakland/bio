@@ -57,3 +57,16 @@ test('R7 G136b a converter that ignores the range and makes every page still yie
   assert.equal(bare.r.status, 422);
   assert.equal(bare.body.code, 'NOT_RENDERABLE');
 });
+
+test('R7 R12 a conversion runs in a private profile that blocks linked pictures (BlockUntrustedRefererLinks) and keeps macros and links off', { skip }, async () => {
+  const x = await render('PAGES:1');
+  assert.equal(x.made.length, 1);
+  const settings = x.made[0].settings;
+  assert.ok(settings, 'the converter found the profile\'s registry settings in its own profile');
+  for (const [name, value] of [['BlockUntrustedRefererLinks', 'true'], ['DisableMacrosExecution', 'true'], ['DisableActiveContent', 'true']]) {
+    assert.match(settings, new RegExp(`oor:name="${name}"[^>]*><value>${value}</value>`), name);
+  }
+  // control: no conversion sees a profile without the setting
+  const y = await render('PAGES:2');
+  assert.match(y.made[0].settings, /BlockUntrustedRefererLinks/);
+});
