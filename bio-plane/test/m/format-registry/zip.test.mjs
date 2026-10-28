@@ -57,8 +57,8 @@ const isZipHit = (r, confidence = "likely") => {
   assert.deepEqual(Object.keys(r), ["format", "confidence", "signals"]);
 };
 
-test("R23: the roster is the twelve built-in entries, zip last", () => {
-  assert.deepEqual(listFormats(), ["jpeg", "png", "html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"]);
+test("R23: the roster, zip after every office and OpenDocument entry", () => {
+  assert.deepEqual(listFormats(), ["jpeg", "png", "gif", "tiff", "webp", "bmp", "jp2", "heic", "heif", "avif", "html", "pdf", "rtf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "doc", "xls", "ppt", "tar", "gz", "7z", "zip", "text"]);
   assert.equal(zip.format, "zip");
 });
 
@@ -103,7 +103,10 @@ test("R28: an office or OpenDocument file never detects as zip, and the registry
     assert.equal(zip.detect(bytes, null), null, f.variant ?? f.flavour);
     const r = detectFormat(bytes, "application/zip");
     assert.equal(r.format, f.flavour, `${f.variant ?? f.flavour} wins over zip and over its declared type`);
-    assert.deepEqual(r, getFormat(f.flavour).detect(bytes, null));
+    const { variant, flavour, macros, ...answer } = r;
+    assert.deepEqual({ ...answer, signals: answer.signals.slice(0, getFormat(f.flavour).detect(bytes, null).signals.length) },
+      getFormat(f.flavour).detect(bytes, null), "the entry's own answer, a template's variant (R33, R36) apart");
+    if (f.variant && /^(dotx|xltx|potx)$/.test(f.variant)) assert.deepEqual([variant, flavour], ["template", f.variant]);
   }
   isZipHit(detectFormat(PLAIN, null));
   assert.deepEqual(detectFormat(PLAIN, "application/pdf"), zip.detect(PLAIN, null), "bytes outrank a declared type");

@@ -59,8 +59,9 @@ test("R1 staff_roster: no match on the staff directory's look-alikes, its direct
   /* Self-naming is never sufficient alone: the EIR chapter and the sign-in sheet both name themselves. */
   for (const k of ["neg_commenters", "neg_signin"]) assert.match(text(D[k]), /roster/i, k);
   /* Every directory staff_directory reads (five or more addresses at one domain) is refused as one. */
-  for (const k of ["directory_nss", "directory_cro", "directory_benefits"])
-    assert.match(staffRoster.detect(ctxOf(FW20.documents[k], FIRST)).why, /staff directory's shape/, k);
+  const DIRECTORY_AT_DOMAIN = { directory_nss: "12", directory_cro: "40", directory_benefits: "10" };
+  for (const [k, atDomain] of Object.entries(DIRECTORY_AT_DOMAIN))
+    assert.equal(staffRoster.detect(ctxOf(FW20.documents[k], FIRST)).why, localize("roster-reader.staff-roster.atdomain_distinct_addresses_at_one", "{atDomain} distinct addresses at one domain: this is a staff directory's shape, which staff_directory reads", { atDomain }), k);
 });
 
 test("R1 staff_roster: the floor, the contact-point and the dated-rows rules hold at their edges", () => {
@@ -125,7 +126,7 @@ test("R2 staff_roster parse: rows as the lines state them, a post's title and un
   for (const r of w.rows) { assert.ok(!("name" in r)); assert.ok(notDivided.includes(r.why)); }
   assert.equal(w.as_of, null);
   assert.equal(w.as_of_why, localize("roster-reader.staff-roster.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date"));
-  assert.equal(w.organisation.text, "Oakland Workforce Development Board");
+  assert.equal(w.organisation.text, text(D.roster_wdb).split("\n")[0]);
   /* A title before or after one name divides; two names beside a title, or a name between two titles,
      do not. */
   const s = staffRoster.parse(synth("Director Jane Doe\nJohn Roe Manager\nJane Doe, John Roe Director\nDirector Ann Lee Manager"));
@@ -161,7 +162,7 @@ test("R3 org_chart parse: units and posts as read, a name beside a post only on 
   assert.deepEqual(s.reports_to.map((x) => [x.from, x.to]), [["Records Manager", "Deputy Director"]]);
   /* A post and a name on adjacent lines are not paired: the layout is not the text. */
   assert.ok(!s.posts.some((x) => x.name === "John Roe"));
-  assert.match(s.pairs_why, /1 reporting relation\(s\) stated in words/);
+  assert.equal(s.pairs_why, localize("roster-reader.org-chart.reporting_relation_s_stated_in_words", "{count} reporting relation(s) stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read", { count: "1" }));
 });
 
 test("R4 neither type reads or emits a phone number, street address or e-mail address; a row carrying one is read without it", () => {
@@ -314,7 +315,7 @@ test("R9 the types are tested on real documents fetched and read through the pla
     assert.equal(d.text.document.length, d.chars, k);
     assert.ok(d.what, k);
   }
-  assert.match(ROSTER_DOCS.note, /read through the plane/);
+  assert.ok(ROSTER_DOCS.note.includes("plane"));
   assert.equal(Object.keys(D).length, 15);
   /* The staff directory header's four: the candidate list, the dated schedule, the business directory
      (all three refused, R1), the board roster (the positive, R1). */

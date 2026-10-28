@@ -254,7 +254,7 @@ test("R22: each part's derivation steps are stamped with its pages (dedup, sorte
   /* [] reads as UNREADABLE to every reader, never "all the document". */
   assert.equal(derivationCap(r), null);
   assert.equal(derivationCap(r, { page: 1 }), null);
-  assert.match(describeChain(r), /over an extent this record cannot read/);
+  assert.ok(describeChain(r).includes(word("textchain.map.over_extent_record")));
   /* Parts that share a page are each stamped with their index as well (so R81 and R28 can tell them apart);
      partitioned parts carry no index. */
   const shared = mergedChain([{ chain: [L(null)], pages: [0, 1] }, { chain: [{ step: "pixels" }, O("C")], pages: [1, 0] }]);
