@@ -44878,6 +44878,132 @@
       "line": 189
     },
     {
+      "id": "reader-container.note.encrypted",
+      "en": "This file is locked with a password, so it was kept but not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/reader.mjs",
+      "line": 96
+    },
+    {
+      "id": "reader-container.note.macros",
+      "en": "This document holds macros. They were not run.",
+      "module": "reader-container",
+      "file": "reader-container/src/reader.mjs",
+      "line": 94
+    },
+    {
+      "id": "reader-container.refusal.archive_over_bound",
+      "en": "This archive is {size}, over the limit of {limit} for an archive as uploaded, so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 26
+    },
+    {
+      "id": "reader-container.refusal.document_over_bound",
+      "en": "This document is {size}, over the limit of {limit} for a document, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 23
+    },
+    {
+      "id": "reader-container.refusal.member",
+      "en": "A file in this archive is {size}, over the limit of {limit} for one file, so the archive was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 51
+    },
+    {
+      "id": "reader-container.refusal.members",
+      "en": "This archive holds more than {limit} files, so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 42
+    },
+    {
+      "id": "reader-container.refusal.name",
+      "en": "A file in this archive has a name longer than {limit} characters, so the archive was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 54
+    },
+    {
+      "id": "reader-container.refusal.nested",
+      "en": "This archive is nested more than {limit} levels deep (level {depth}), so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 39
+    },
+    {
+      "id": "reader-container.refusal.not_read_here",
+      "en": "This kind of file ({kind}) is not read by the container reader.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 35
+    },
+    {
+      "id": "reader-container.refusal.pages",
+      "en": "This picture has {pages} pages, over the limit of {limit} pages, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 61
+    },
+    {
+      "id": "reader-container.refusal.picture_over_bound",
+      "en": "This picture is {size}, over the limit of {limit} for a picture, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 25
+    },
+    {
+      "id": "reader-container.refusal.pixels",
+      "en": "This picture is {pixels} pixels, over the limit of {limit} pixels, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 58
+    },
+    {
+      "id": "reader-container.refusal.rar",
+      "en": "RAR archives are not opened. Unpack it and add the files, or add it as a ZIP.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 32
+    },
+    {
+      "id": "reader-container.refusal.ratio",
+      "en": "A file in this archive unpacks to more than {limit} times its packed size, which no ordinary archive does, so the archive was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 45
+    },
+    {
+      "id": "reader-container.refusal.spreadsheet_over_bound",
+      "en": "This spreadsheet is {size}, over the limit of {limit} for a spreadsheet, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 24
+    },
+    {
+      "id": "reader-container.refusal.unpacked",
+      "en": "This archive unpacks to more than {limit}, so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 48
+    },
+    {
+      "id": "reader-container.refusal.unreachable",
+      "en": "The reader could not be reached. The file is kept; it will be read when the reader is back.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 67
+    },
+    {
+      "id": "reader-container.refusal.unreadable",
+      "en": "This file could not be read: it is damaged or not what its type says.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 64
+    },
+    {
       "id": "reading-guides.check.a_guide_holds_from_1",
       "en": "a guide holds from 1 to {ITEMS_MAX} items; {v1}. Nothing was written.",
       "module": "reading-guides",
