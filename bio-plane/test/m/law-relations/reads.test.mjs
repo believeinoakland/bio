@@ -9,6 +9,7 @@ import { LawRecords, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD, LAW_RE
 import { ownerConformance, createRegistry, derivedId, BOUNDS, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordTextRx } from "../../word-rx.mjs";
 
 const rel = (w, type, from, to, citation, effective, by = "bob") => {
   const r = w.law.lawRelate({ type, from, to, citation, ...(effective ? { effective } : {}), reason: REASON, author: V(by), viewer: V(by) });
@@ -58,7 +59,7 @@ test("R3 R20 addressesOf follows adopted renumbers and recodifies relations both
   const long = w.law.addressesOf({ key: "/eli/x/sb/110" });
   assert.equal(BOUNDS.depth_default, 8);
   assert.deepEqual([long.truncated, long.addresses.length, Math.max(...long.addresses.map((x) => x.depth))], [true, 8, 8]);
-  assert.match(long.why, /past 8 steps/);
+  assert.match(long.why, wordTextRx("law-relations.why.chain_renumberings_recodifications", { depth_default: "8" }));
   for (const key of ["", "  ", null, undefined]) {
     const b = w.law.addressesOf({ key });
     assert.deepEqual([b.reason, b.host, b.op], ["STANDARD_NO_ID", true, "addresses"]);
@@ -99,9 +100,10 @@ test("R12 weakestCeiling answers the weakest transcription ceiling among the pas
   for (const [standings, ids, grade] of [[{ a: S("A") }, ["a"], "A"], [{ a: S("A"), b: S("C") }, ["a", "b"], "C"],
                                          [{ a: S("B"), b: S("A") }, ["a", "b"], "B"], [{ a: S("D"), b: S("A") }, ["a", "b"], "D"]])
     assert.deepEqual(weakestCeiling(standings, ids), { grade, why: null }, JSON.stringify(ids));
-  const u = weakestCeiling({ a: S("A"), b: S(null, "the chain is not read") }, ["a", "b"]);
+  const UNREAD = "the chain is not read";
+  const u = weakestCeiling({ a: S("A"), b: S(null, UNREAD) }, ["a", "b"]);
   assert.equal(u.grade, "D");
-  assert.match(u.why, /lowest grade, because b…: the chain is not read/);
+  assert.match(u.why, wordTextRx("law-relations.why.lowest_grade", { whys: `b…: ${UNREAD}` }));
   const missing = weakestCeiling({ a: S("A") }, ["a", "zz"]);
   assert.equal(missing.grade, "D");
   assert.match(missing.why, /zz…: not held/);
@@ -227,7 +229,7 @@ test("R7 the hub bound and paging: a node with more items than BOUNDS.hub is nam
   many(1);
   const hub = w.law.neighbours({ node: node.id, at: "2022-06-01T12:00:00Z", viewer: V("carol") });
   assert.deepEqual([hub.items, hub.hub.set_size], [[], BOUNDS.hub + 1]);
-  assert.match(hub.hub.why, /never expanded/);
+  assert.match(hub.hub.why, wordTextRx("law-relations.why.node_connections_hub", { live: String(BOUNDS.hub + 1), hub: String(BOUNDS.hub) }));
 });
 
 test("R19 a relation, link or treatment is answered by addressesOf, stillStanding, neighbours and lawRelationsOf only to a viewer the host's readable admits to both of its ends; otherwise it is neither answered nor counted, exactly as if absent, so a policy held at its source's bundle sight shows no relation to one who may not see it", async () => {

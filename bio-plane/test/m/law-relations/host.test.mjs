@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, seeded, V, MACHINE, REASON, codeOf } from "./fixture.mjs";
 import { LawRecords, HOST_READS, LAW_TABLES, LAW_RELATIONS_CHECKS, LAW_CODES, MODULE } from "../../../src/law-relations/index.mjs";
+import { wordTextRx } from "../../word-rx.mjs";
 
 const NAMES = ["law_relations", "court_links", "court_treatments", "law_withdrawals", "law_proposals"];
 
@@ -123,7 +124,8 @@ test("R17 a fact the record does not supply is answered undetermined, never a de
   const rid = w.law.lawRelate({ type: "refers_to", from: open.id, to: x.id, citation: open.t, reason: REASON, author: V("bob") }).relation.id;
   const item = w.law.neighbours({ node: x.id, at: "2020-01-01T00:00:00Z", viewer: V("bob") }).items.find((i) => i.id === rid);
   assert.ok(item.undetermined && item.undetermined.why, "a period the record does not state: undetermined, marked");
-  assert.match((await w.law.resolveCourtCitation({ citation: "1 U.S. 1", viewer: V("bob") })).why, /not decided here/, "unverified is never 'no such case'");
+  assert.match((await w.law.resolveCourtCitation({ citation: "1 U.S. 1", viewer: V("bob") })).why,
+               wordTextRx("law-relations.why.held_capture_see", { volume: "1", reporter: "U.S.", page: "1", truncated: "" }), "unverified is never 'no such case'");
   /* outward text: every row, and every answer and refusal the services give here */
   const places = /oakland|alameda|california|port ellery|marlow|san francisco/i;
   for (const [code, row] of Object.entries(LAW_RELATIONS_CHECKS)) assert.doesNotMatch(row.translation, places, code);
