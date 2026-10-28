@@ -1,0 +1,217 @@
+{
+ "when": "2026-10-28T16:31:24.157Z",
+ "seed_summary": {
+  "docs_asked": 100,
+  "bytes_each": 100000,
+  "docs_promoted": 100,
+  "failures": [],
+  "read_ticks": 100,
+  "seed_s": 28,
+  "capture_text_rows": 111703,
+  "capture_text_fts_rows": 111703,
+  "keeps_pending_rows": 101,
+  "owed_reading_registered": true,
+  "rss_at_end": 434.5
+ },
+ "env": {
+  "PROTO_PIECE_UNITS": "4096",
+  "PROTO_WINDOW_BYTES": "auto",
+  "PROTO_CHAIN_BYTES": "16777216",
+  "PROTO_CHAIN_REST_MS": "20000"
+ },
+ "extra_bytes": null,
+ "only_extra": false,
+ "recycle_ms": null,
+ "segments": [
+  {
+   "n": 0,
+   "baseline": {
+    "rss": 260.5,
+    "heap": {
+     "used": 52.8,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "wall_ms": 3766,
+   "rss": {
+    "start": 260.5,
+    "end": 308.9,
+    "vm_hwm": 308.9,
+    "peak_sampled": 308.9,
+    "peak_above_baseline": 48.4
+   },
+   "heap": {
+    "baseline_used": 52.8,
+    "peak_used": 79.3,
+    "peak_total": 102.1,
+    "floor_windows_3s": 2,
+    "floor_first": 52.8,
+    "floor_last": 62.3,
+    "floor_min": 52.8,
+    "floor_max": 62.3,
+    "floors": [
+     [
+      0,
+      52.8
+     ],
+     [
+      3,
+      62.3
+     ]
+    ]
+   },
+   "chain_lines": [
+    {
+     "arrived_ms": 745,
+     "chain_bytes": 1900079,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 2656,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 1319,
+     "chain_bytes": 2948659,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 3230,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 1894,
+     "chain_bytes": 3997239,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 3805,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 2426,
+     "chain_bytes": 4774388,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 4337,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 2952,
+     "chain_bytes": 5176718,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 4863,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 3485,
+     "chain_bytes": 5204383,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 5396,
+     "rested": false,
+     "event": "step"
+    }
+   ],
+   "readout_reads": 0,
+   "rests": [],
+   "timeline": [
+    [
+     9,
+     260.8
+    ],
+    [
+     524,
+     274.6
+    ],
+    [
+     1038,
+     275.4
+    ],
+    [
+     1545,
+     290.2
+    ],
+    [
+     2057,
+     294.5
+    ],
+    [
+     2566,
+     300.3
+    ],
+    [
+     3067,
+     302.5
+    ],
+    [
+     3577,
+     306.2
+    ]
+   ],
+   "heap_series": [
+    [
+     2,
+     52.8,
+     68.7
+    ],
+    [
+     580,
+     53.9,
+     72.7
+    ],
+    [
+     861,
+     54.8,
+     72.9
+    ],
+    [
+     1320,
+     65,
+     86
+    ],
+    [
+     1581,
+     71.1,
+     90.5
+    ],
+    [
+     1960,
+     59.6,
+     89.4
+    ],
+    [
+     2206,
+     61.2,
+     89.4
+    ],
+    [
+     2631,
+     62.1,
+     93.4
+    ],
+    [
+     3009,
+     62.3,
+     95
+    ],
+    [
+     3277,
+     63.5,
+     95
+    ],
+    [
+     3597,
+     79.3,
+     102.1
+    ]
+   ]
+  }
+ ],
+ "finished": true,
+ "wall_ms": 11233
+}

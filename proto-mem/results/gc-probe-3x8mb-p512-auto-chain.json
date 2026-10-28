@@ -1,0 +1,8687 @@
+{
+ "when": "2026-10-28T18:25:36.420Z",
+ "seed_summary": {
+  "docs_asked": 100,
+  "bytes_each": 100000,
+  "docs_promoted": 100,
+  "failures": [],
+  "read_ticks": 100,
+  "seed_s": 28,
+  "capture_text_rows": 111703,
+  "capture_text_fts_rows": 111703,
+  "keeps_pending_rows": 101,
+  "owed_reading_registered": true,
+  "rss_at_end": 434.5
+ },
+ "env": {
+  "PROTO_PIECE_UNITS": "512",
+  "PROTO_WINDOW_BYTES": "auto",
+  "PROTO_CHAIN_BYTES": "16777216",
+  "PROTO_CHAIN_REST_MS": "20000"
+ },
+ "extra_bytes": null,
+ "only_extra": false,
+ "recycle_ms": null,
+ "segments": [
+  {
+   "n": 0,
+   "baseline": {
+    "rss": 257.7,
+    "heap": {
+     "used": 52.8,
+     "total": 68.5,
+     "backing": 0.9
+    }
+   },
+   "wall_ms": 115737,
+   "rss": {
+    "start": 257.7,
+    "end": 319,
+    "vm_hwm": 442.7,
+    "peak_sampled": 443.1,
+    "peak_above_baseline": 185.4
+   },
+   "heap": {
+    "baseline_used": 52.8,
+    "peak_used": 127.6,
+    "peak_total": 172.2,
+    "floor_windows_3s": 39,
+    "floor_first": 52.8,
+    "floor_last": 59.2,
+    "floor_min": 51.7,
+    "floor_max": 59.2,
+    "floors": [
+     [
+      0,
+      52.8
+     ],
+     [
+      3,
+      51.9
+     ],
+     [
+      6,
+      51.9
+     ],
+     [
+      9,
+      51.7
+     ],
+     [
+      12,
+      51.8
+     ],
+     [
+      15,
+      51.7
+     ],
+     [
+      18,
+      51.7
+     ],
+     [
+      21,
+      51.8
+     ],
+     [
+      24,
+      53.3
+     ],
+     [
+      27,
+      56.4
+     ],
+     [
+      30,
+      54.5
+     ],
+     [
+      33,
+      52.7
+     ],
+     [
+      36,
+      52.7
+     ],
+     [
+      39,
+      52.6
+     ],
+     [
+      42,
+      52.6
+     ],
+     [
+      45,
+      52.6
+     ],
+     [
+      48,
+      52.6
+     ],
+     [
+      51,
+      52.6
+     ],
+     [
+      54,
+      54.6
+     ],
+     [
+      57,
+      57.1
+     ],
+     [
+      60,
+      53.1
+     ],
+     [
+      63,
+      52.8
+     ],
+     [
+      66,
+      52.8
+     ],
+     [
+      69,
+      52.8
+     ],
+     [
+      72,
+      52.9
+     ],
+     [
+      75,
+      52.8
+     ],
+     [
+      78,
+      52.9
+     ],
+     [
+      81,
+      54.9
+     ],
+     [
+      84,
+      55.3
+     ],
+     [
+      87,
+      57.6
+     ],
+     [
+      90,
+      53.5
+     ],
+     [
+      93,
+      52.9
+     ],
+     [
+      96,
+      52.9
+     ],
+     [
+      99,
+      52.9
+     ],
+     [
+      102,
+      52.9
+     ],
+     [
+      105,
+      52.9
+     ],
+     [
+      108,
+      54.4
+     ],
+     [
+      111,
+      54.3
+     ],
+     [
+      114,
+      59.2
+     ]
+    ]
+   },
+   "chain_lines": [
+    {
+     "arrived_ms": 1282,
+     "chain_bytes": 8000058,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 3493,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 2341,
+     "chain_bytes": 16000115,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 4553,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 3237,
+     "chain_bytes": 24000177,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 5448,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 3386,
+     "chain_bytes": 24000177,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 5598,
+     "rested": false,
+     "event": "rest_begin",
+     "rest_ms": 20000
+    },
+    {
+     "arrived_ms": 23391,
+     "chain_bytes": 0,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25603,
+     "rested": true,
+     "event": "rest_end"
+    },
+    {
+     "arrived_ms": 23400,
+     "chain_bytes": 131076,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25612,
+     "rested": true,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23459,
+     "chain_bytes": 262152,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25668,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23512,
+     "chain_bytes": 393228,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25724,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23576,
+     "chain_bytes": 524304,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25788,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23649,
+     "chain_bytes": 655380,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25861,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23709,
+     "chain_bytes": 786456,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 25920,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23813,
+     "chain_bytes": 917532,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26025,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23864,
+     "chain_bytes": 1048608,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26076,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23916,
+     "chain_bytes": 1179684,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26128,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 23976,
+     "chain_bytes": 1310760,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26187,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24023,
+     "chain_bytes": 1441836,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26234,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24091,
+     "chain_bytes": 1572912,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26303,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24160,
+     "chain_bytes": 1703988,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26372,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24230,
+     "chain_bytes": 1835064,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26441,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24301,
+     "chain_bytes": 1966140,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26512,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24380,
+     "chain_bytes": 2097216,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26591,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24435,
+     "chain_bytes": 2228292,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26647,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24493,
+     "chain_bytes": 2359368,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26705,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24545,
+     "chain_bytes": 2490444,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26757,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24612,
+     "chain_bytes": 2621520,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26824,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24668,
+     "chain_bytes": 2752596,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26880,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24766,
+     "chain_bytes": 2883672,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 26977,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24815,
+     "chain_bytes": 3014748,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27026,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24875,
+     "chain_bytes": 3145824,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27087,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 24941,
+     "chain_bytes": 3276900,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27152,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25000,
+     "chain_bytes": 3407976,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27212,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25066,
+     "chain_bytes": 3539052,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27277,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25188,
+     "chain_bytes": 3670128,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27400,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25266,
+     "chain_bytes": 3801204,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27477,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25337,
+     "chain_bytes": 3932280,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27549,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25413,
+     "chain_bytes": 4063356,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27624,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25487,
+     "chain_bytes": 4194432,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27698,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25542,
+     "chain_bytes": 4325508,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27754,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25625,
+     "chain_bytes": 4456584,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27837,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25691,
+     "chain_bytes": 4587660,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27902,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25756,
+     "chain_bytes": 4718736,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 27968,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25825,
+     "chain_bytes": 4849812,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28036,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25893,
+     "chain_bytes": 4980888,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28105,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 25969,
+     "chain_bytes": 5111964,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28181,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26051,
+     "chain_bytes": 5243040,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28262,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26119,
+     "chain_bytes": 5374116,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28330,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26172,
+     "chain_bytes": 5505192,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28382,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26214,
+     "chain_bytes": 5636268,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28425,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26273,
+     "chain_bytes": 5767344,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28485,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26320,
+     "chain_bytes": 5898420,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28531,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26397,
+     "chain_bytes": 6029496,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28609,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26446,
+     "chain_bytes": 6160572,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28658,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26495,
+     "chain_bytes": 6291648,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28707,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26564,
+     "chain_bytes": 6422724,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28775,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26612,
+     "chain_bytes": 6553800,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28824,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26672,
+     "chain_bytes": 6684876,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28884,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26754,
+     "chain_bytes": 6815952,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 28965,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26824,
+     "chain_bytes": 6947028,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29035,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26879,
+     "chain_bytes": 7078104,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29091,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 26927,
+     "chain_bytes": 7209180,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29138,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27002,
+     "chain_bytes": 7340256,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29185,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27047,
+     "chain_bytes": 7471332,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29259,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27097,
+     "chain_bytes": 7602408,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29309,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27165,
+     "chain_bytes": 7733484,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29377,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27232,
+     "chain_bytes": 7864560,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29444,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27298,
+     "chain_bytes": 7995636,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29509,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27371,
+     "chain_bytes": 8126712,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29583,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27415,
+     "chain_bytes": 8257788,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29627,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27471,
+     "chain_bytes": 8388864,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29683,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27540,
+     "chain_bytes": 8519940,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29752,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27610,
+     "chain_bytes": 8651016,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29821,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27665,
+     "chain_bytes": 8782092,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29877,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27729,
+     "chain_bytes": 8913168,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29940,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27785,
+     "chain_bytes": 9044244,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 29997,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27936,
+     "chain_bytes": 9175320,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30147,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 27993,
+     "chain_bytes": 9306396,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30204,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28037,
+     "chain_bytes": 9437472,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30248,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28081,
+     "chain_bytes": 9568548,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30292,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28133,
+     "chain_bytes": 9699624,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30344,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28200,
+     "chain_bytes": 9830700,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30411,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28287,
+     "chain_bytes": 9961776,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30499,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28345,
+     "chain_bytes": 10092852,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30557,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28410,
+     "chain_bytes": 10223928,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30621,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28464,
+     "chain_bytes": 10355004,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30676,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28515,
+     "chain_bytes": 10486080,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30726,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28569,
+     "chain_bytes": 10617156,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30781,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28639,
+     "chain_bytes": 10748232,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30850,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28683,
+     "chain_bytes": 10879308,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30895,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28725,
+     "chain_bytes": 11010384,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30937,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28766,
+     "chain_bytes": 11141460,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 30978,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28831,
+     "chain_bytes": 11272536,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31042,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28913,
+     "chain_bytes": 11403612,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31125,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 28990,
+     "chain_bytes": 11534688,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31202,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29052,
+     "chain_bytes": 11665764,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31264,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29112,
+     "chain_bytes": 11796840,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31323,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29176,
+     "chain_bytes": 11927916,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31388,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29247,
+     "chain_bytes": 12058992,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31459,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29314,
+     "chain_bytes": 12190068,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31526,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29396,
+     "chain_bytes": 12321144,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31608,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29447,
+     "chain_bytes": 12452220,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31659,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29494,
+     "chain_bytes": 12583296,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31705,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29556,
+     "chain_bytes": 12714372,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31768,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29603,
+     "chain_bytes": 12845448,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31815,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29647,
+     "chain_bytes": 12976524,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31858,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29711,
+     "chain_bytes": 13107600,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31921,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29780,
+     "chain_bytes": 13238676,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 31992,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29848,
+     "chain_bytes": 13369752,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32060,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29918,
+     "chain_bytes": 13500828,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32130,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 29988,
+     "chain_bytes": 13631904,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32200,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30054,
+     "chain_bytes": 13762980,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32266,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30135,
+     "chain_bytes": 13894056,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32347,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30256,
+     "chain_bytes": 14025132,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32467,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30331,
+     "chain_bytes": 14156208,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32542,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30402,
+     "chain_bytes": 14287284,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32614,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30472,
+     "chain_bytes": 14418360,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32684,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30541,
+     "chain_bytes": 14549436,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32752,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30625,
+     "chain_bytes": 14680512,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32836,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30698,
+     "chain_bytes": 14811588,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32909,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30763,
+     "chain_bytes": 14942664,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 32974,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30828,
+     "chain_bytes": 15073740,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33040,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30896,
+     "chain_bytes": 15204816,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33107,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 30962,
+     "chain_bytes": 15335892,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33174,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31076,
+     "chain_bytes": 15466968,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33287,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31147,
+     "chain_bytes": 15598044,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33359,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31199,
+     "chain_bytes": 15729120,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33411,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31245,
+     "chain_bytes": 15860196,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33457,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31298,
+     "chain_bytes": 15991272,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33510,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31347,
+     "chain_bytes": 16122348,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33559,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31391,
+     "chain_bytes": 16253424,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33603,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31433,
+     "chain_bytes": 16384500,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33645,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31483,
+     "chain_bytes": 16515576,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33695,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31531,
+     "chain_bytes": 16646652,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33742,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31596,
+     "chain_bytes": 16777728,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33808,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 31662,
+     "chain_bytes": 16777728,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 33873,
+     "rested": false,
+     "event": "rest_begin",
+     "rest_ms": 20000
+    },
+    {
+     "arrived_ms": 51668,
+     "chain_bytes": 0,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 53880,
+     "rested": true,
+     "event": "rest_end"
+    },
+    {
+     "arrived_ms": 51676,
+     "chain_bytes": 131076,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 53888,
+     "rested": true,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 51742,
+     "chain_bytes": 262152,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 53954,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 51790,
+     "chain_bytes": 393228,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54001,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 51837,
+     "chain_bytes": 524304,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54048,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 51888,
+     "chain_bytes": 655380,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54099,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 51950,
+     "chain_bytes": 786456,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54162,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52000,
+     "chain_bytes": 917532,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54212,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52057,
+     "chain_bytes": 1048608,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54269,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52104,
+     "chain_bytes": 1179684,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54316,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52155,
+     "chain_bytes": 1310760,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54367,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52203,
+     "chain_bytes": 1441836,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54415,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52264,
+     "chain_bytes": 1572912,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54476,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52320,
+     "chain_bytes": 1703988,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54532,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52396,
+     "chain_bytes": 1835064,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54608,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52449,
+     "chain_bytes": 1966140,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54660,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52488,
+     "chain_bytes": 2097216,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54700,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52543,
+     "chain_bytes": 2228292,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54755,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52592,
+     "chain_bytes": 2359368,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54804,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52634,
+     "chain_bytes": 2490444,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54846,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52678,
+     "chain_bytes": 2621520,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54890,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52727,
+     "chain_bytes": 2752596,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 54938,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52795,
+     "chain_bytes": 2883672,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55007,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52845,
+     "chain_bytes": 3014748,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55057,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52896,
+     "chain_bytes": 3145824,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55108,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52938,
+     "chain_bytes": 3276900,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55150,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 52997,
+     "chain_bytes": 3407976,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55208,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53063,
+     "chain_bytes": 3539052,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55274,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53124,
+     "chain_bytes": 3670128,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55335,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53175,
+     "chain_bytes": 3801204,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55386,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53239,
+     "chain_bytes": 3932280,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55450,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53301,
+     "chain_bytes": 4063356,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55512,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53357,
+     "chain_bytes": 4194432,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55569,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53400,
+     "chain_bytes": 4325508,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55612,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53449,
+     "chain_bytes": 4456584,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55661,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53492,
+     "chain_bytes": 4587660,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55704,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53534,
+     "chain_bytes": 4718736,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55746,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53585,
+     "chain_bytes": 4849812,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 55797,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53891,
+     "chain_bytes": 4980888,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56103,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53939,
+     "chain_bytes": 5111964,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56150,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 53987,
+     "chain_bytes": 5243040,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56199,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54046,
+     "chain_bytes": 5374116,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56258,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54106,
+     "chain_bytes": 5505192,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56318,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54171,
+     "chain_bytes": 5636268,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56383,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54289,
+     "chain_bytes": 5767344,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56501,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54342,
+     "chain_bytes": 5898420,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56554,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54385,
+     "chain_bytes": 6029496,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56597,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54431,
+     "chain_bytes": 6160572,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56643,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54492,
+     "chain_bytes": 6291648,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56703,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54550,
+     "chain_bytes": 6422724,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56762,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54603,
+     "chain_bytes": 6553800,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56815,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54657,
+     "chain_bytes": 6684876,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56868,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54703,
+     "chain_bytes": 6815952,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56915,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54749,
+     "chain_bytes": 6947028,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 56960,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54807,
+     "chain_bytes": 7078104,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57019,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54874,
+     "chain_bytes": 7209180,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57086,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 54962,
+     "chain_bytes": 7340256,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57174,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55006,
+     "chain_bytes": 7471332,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57218,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55048,
+     "chain_bytes": 7602408,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57260,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55105,
+     "chain_bytes": 7733484,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57317,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55163,
+     "chain_bytes": 7864560,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57375,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55213,
+     "chain_bytes": 7995636,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57424,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55271,
+     "chain_bytes": 8126712,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57483,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55356,
+     "chain_bytes": 8257788,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57567,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55409,
+     "chain_bytes": 8388864,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57621,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55465,
+     "chain_bytes": 8519940,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57677,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55513,
+     "chain_bytes": 8651016,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57724,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55561,
+     "chain_bytes": 8782092,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57773,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55624,
+     "chain_bytes": 8913168,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57835,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55675,
+     "chain_bytes": 9044244,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57887,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55724,
+     "chain_bytes": 9175320,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57936,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55785,
+     "chain_bytes": 9306396,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 57997,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55840,
+     "chain_bytes": 9437472,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58049,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55904,
+     "chain_bytes": 9568548,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58116,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 55963,
+     "chain_bytes": 9699624,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58175,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56025,
+     "chain_bytes": 9830700,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58236,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56090,
+     "chain_bytes": 9961776,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58302,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56148,
+     "chain_bytes": 10092852,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58360,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56197,
+     "chain_bytes": 10223928,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58408,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56254,
+     "chain_bytes": 10355004,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58466,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56301,
+     "chain_bytes": 10486080,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58513,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56348,
+     "chain_bytes": 10617156,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58560,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56403,
+     "chain_bytes": 10748232,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58614,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56450,
+     "chain_bytes": 10879308,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58662,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56509,
+     "chain_bytes": 11010384,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58721,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56556,
+     "chain_bytes": 11141460,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58768,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56624,
+     "chain_bytes": 11272536,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58835,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56697,
+     "chain_bytes": 11403612,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58909,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56760,
+     "chain_bytes": 11534688,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 58970,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56806,
+     "chain_bytes": 11665764,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59017,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56850,
+     "chain_bytes": 11796840,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59062,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56895,
+     "chain_bytes": 11927916,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59107,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 56957,
+     "chain_bytes": 12058992,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59169,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57002,
+     "chain_bytes": 12190068,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59214,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57052,
+     "chain_bytes": 12321144,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59263,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57120,
+     "chain_bytes": 12452220,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59332,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57184,
+     "chain_bytes": 12583296,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59395,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57246,
+     "chain_bytes": 12714372,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59458,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57321,
+     "chain_bytes": 12845448,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59533,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57366,
+     "chain_bytes": 12976524,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59578,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57415,
+     "chain_bytes": 13107600,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59627,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57465,
+     "chain_bytes": 13238676,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59677,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57518,
+     "chain_bytes": 13369752,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59730,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57572,
+     "chain_bytes": 13500828,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59783,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57617,
+     "chain_bytes": 13631904,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59828,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57677,
+     "chain_bytes": 13762980,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59889,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57732,
+     "chain_bytes": 13894056,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 59943,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57798,
+     "chain_bytes": 14025132,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60010,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57867,
+     "chain_bytes": 14156208,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60078,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 57991,
+     "chain_bytes": 14287284,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60202,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58051,
+     "chain_bytes": 14418360,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60263,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58096,
+     "chain_bytes": 14549436,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60308,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58140,
+     "chain_bytes": 14680512,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60352,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58183,
+     "chain_bytes": 14811588,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60395,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58235,
+     "chain_bytes": 14942664,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60446,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58276,
+     "chain_bytes": 15073740,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60488,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58337,
+     "chain_bytes": 15204816,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60548,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58380,
+     "chain_bytes": 15335892,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60592,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58423,
+     "chain_bytes": 15466968,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60635,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58480,
+     "chain_bytes": 15598044,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60692,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58529,
+     "chain_bytes": 15729120,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60741,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58571,
+     "chain_bytes": 15860196,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60782,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58623,
+     "chain_bytes": 15991272,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60835,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58685,
+     "chain_bytes": 16122348,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60896,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58749,
+     "chain_bytes": 16253424,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 60960,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58823,
+     "chain_bytes": 16384500,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 61035,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58888,
+     "chain_bytes": 16515576,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 61099,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 58966,
+     "chain_bytes": 16646652,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 61178,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 59013,
+     "chain_bytes": 16777728,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 61225,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 59052,
+     "chain_bytes": 16777728,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 61264,
+     "rested": false,
+     "event": "rest_begin",
+     "rest_ms": 20000
+    },
+    {
+     "arrived_ms": 79059,
+     "chain_bytes": 0,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81271,
+     "rested": true,
+     "event": "rest_end"
+    },
+    {
+     "arrived_ms": 79067,
+     "chain_bytes": 131076,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81278,
+     "rested": true,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79130,
+     "chain_bytes": 262152,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81341,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79203,
+     "chain_bytes": 393228,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81414,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79272,
+     "chain_bytes": 524304,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81484,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79321,
+     "chain_bytes": 655380,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81533,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79435,
+     "chain_bytes": 786456,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81647,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79497,
+     "chain_bytes": 917532,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81709,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79566,
+     "chain_bytes": 1048608,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81778,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79613,
+     "chain_bytes": 1179684,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81825,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79664,
+     "chain_bytes": 1310760,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81876,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79722,
+     "chain_bytes": 1441836,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81934,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79774,
+     "chain_bytes": 1572912,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 81986,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79820,
+     "chain_bytes": 1703988,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82031,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79884,
+     "chain_bytes": 1835064,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82096,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79935,
+     "chain_bytes": 1966140,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82147,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 79983,
+     "chain_bytes": 2097216,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82195,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80051,
+     "chain_bytes": 2228292,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82263,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80114,
+     "chain_bytes": 2359368,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82326,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80180,
+     "chain_bytes": 2490444,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82391,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80234,
+     "chain_bytes": 2621520,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82446,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80290,
+     "chain_bytes": 2752596,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82502,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80364,
+     "chain_bytes": 2883672,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82575,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80418,
+     "chain_bytes": 3014748,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82630,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80522,
+     "chain_bytes": 3145824,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82733,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80593,
+     "chain_bytes": 3276900,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82805,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80651,
+     "chain_bytes": 3407976,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82862,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80712,
+     "chain_bytes": 3539052,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82924,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80768,
+     "chain_bytes": 3670128,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 82979,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80822,
+     "chain_bytes": 3801204,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83034,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80883,
+     "chain_bytes": 3932280,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83095,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 80942,
+     "chain_bytes": 4063356,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83154,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81007,
+     "chain_bytes": 4194432,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83218,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81093,
+     "chain_bytes": 4325508,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83305,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81164,
+     "chain_bytes": 4456584,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83375,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81249,
+     "chain_bytes": 4587660,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83461,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81305,
+     "chain_bytes": 4718736,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83516,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81353,
+     "chain_bytes": 4849812,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83565,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81408,
+     "chain_bytes": 4980888,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83620,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81467,
+     "chain_bytes": 5111964,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83679,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81525,
+     "chain_bytes": 5243040,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83737,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81580,
+     "chain_bytes": 5374116,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83792,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81638,
+     "chain_bytes": 5505192,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83850,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81694,
+     "chain_bytes": 5636268,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83905,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81764,
+     "chain_bytes": 5767344,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 83976,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81821,
+     "chain_bytes": 5898420,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84032,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81897,
+     "chain_bytes": 6029496,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84108,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 81967,
+     "chain_bytes": 6160572,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84179,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82046,
+     "chain_bytes": 6291648,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84257,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82117,
+     "chain_bytes": 6422724,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84328,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82200,
+     "chain_bytes": 6553800,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84412,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82295,
+     "chain_bytes": 6684876,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84505,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82371,
+     "chain_bytes": 6815952,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84583,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82440,
+     "chain_bytes": 6947028,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84651,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82513,
+     "chain_bytes": 7078104,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84725,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82576,
+     "chain_bytes": 7209180,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84787,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82632,
+     "chain_bytes": 7340256,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84843,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82695,
+     "chain_bytes": 7471332,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84906,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82746,
+     "chain_bytes": 7602408,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 84958,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82798,
+     "chain_bytes": 7733484,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85010,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82874,
+     "chain_bytes": 7864560,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85086,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 82948,
+     "chain_bytes": 7995636,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85160,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83031,
+     "chain_bytes": 8126712,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85242,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83106,
+     "chain_bytes": 8257788,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85318,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83166,
+     "chain_bytes": 8388864,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85378,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83246,
+     "chain_bytes": 8519940,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85457,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83325,
+     "chain_bytes": 8651016,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85537,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83412,
+     "chain_bytes": 8782092,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85624,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83457,
+     "chain_bytes": 8913168,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85669,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83508,
+     "chain_bytes": 9044244,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85720,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83560,
+     "chain_bytes": 9175320,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85772,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83617,
+     "chain_bytes": 9306396,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85829,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83675,
+     "chain_bytes": 9437472,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85887,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83759,
+     "chain_bytes": 9568548,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 85971,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83828,
+     "chain_bytes": 9699624,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86039,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83894,
+     "chain_bytes": 9830700,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86106,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 83952,
+     "chain_bytes": 9961776,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86164,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84002,
+     "chain_bytes": 10092852,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86213,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84076,
+     "chain_bytes": 10223928,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86288,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84149,
+     "chain_bytes": 10355004,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86361,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84215,
+     "chain_bytes": 10486080,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86426,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84281,
+     "chain_bytes": 10617156,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86492,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84340,
+     "chain_bytes": 10748232,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86552,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84401,
+     "chain_bytes": 10879308,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86612,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84454,
+     "chain_bytes": 11010384,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86666,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84522,
+     "chain_bytes": 11141460,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86733,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84590,
+     "chain_bytes": 11272536,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86802,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84666,
+     "chain_bytes": 11403612,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86877,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84729,
+     "chain_bytes": 11534688,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 86940,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84824,
+     "chain_bytes": 11665764,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87035,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84898,
+     "chain_bytes": 11796840,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87109,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 84969,
+     "chain_bytes": 11927916,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87181,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85049,
+     "chain_bytes": 12058992,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87261,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85120,
+     "chain_bytes": 12190068,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87332,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85188,
+     "chain_bytes": 12321144,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87400,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85238,
+     "chain_bytes": 12452220,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87449,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85291,
+     "chain_bytes": 12583296,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87502,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85338,
+     "chain_bytes": 12714372,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87550,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85398,
+     "chain_bytes": 12845448,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87610,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85484,
+     "chain_bytes": 12976524,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87696,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85534,
+     "chain_bytes": 13107600,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87746,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85586,
+     "chain_bytes": 13238676,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87798,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85704,
+     "chain_bytes": 13369752,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87916,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85760,
+     "chain_bytes": 13500828,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 87972,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85825,
+     "chain_bytes": 13631904,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88036,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85885,
+     "chain_bytes": 13762980,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88096,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 85959,
+     "chain_bytes": 13894056,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88171,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86037,
+     "chain_bytes": 14025132,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88249,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86116,
+     "chain_bytes": 14156208,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88327,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86191,
+     "chain_bytes": 14287284,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88403,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86259,
+     "chain_bytes": 14418360,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88471,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86354,
+     "chain_bytes": 14549436,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88565,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86425,
+     "chain_bytes": 14680512,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88637,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86483,
+     "chain_bytes": 14811588,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88695,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86539,
+     "chain_bytes": 14942664,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88751,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86596,
+     "chain_bytes": 15073740,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88808,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86650,
+     "chain_bytes": 15204816,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88861,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86702,
+     "chain_bytes": 15335892,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88913,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86759,
+     "chain_bytes": 15466968,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 88970,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86829,
+     "chain_bytes": 15598044,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89041,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86891,
+     "chain_bytes": 15729120,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89102,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 86973,
+     "chain_bytes": 15860196,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89185,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87031,
+     "chain_bytes": 15991272,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89242,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87086,
+     "chain_bytes": 16122348,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89298,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87144,
+     "chain_bytes": 16253424,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89356,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87208,
+     "chain_bytes": 16384500,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89420,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87282,
+     "chain_bytes": 16515576,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89493,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87339,
+     "chain_bytes": 16646652,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89551,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87392,
+     "chain_bytes": 16777728,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89604,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 87438,
+     "chain_bytes": 16777728,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 89648,
+     "rested": false,
+     "event": "rest_begin",
+     "rest_ms": 20000
+    },
+    {
+     "arrived_ms": 107443,
+     "chain_bytes": 0,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 109654,
+     "rested": true,
+     "event": "rest_end"
+    },
+    {
+     "arrived_ms": 107466,
+     "chain_bytes": 131076,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 109678,
+     "rested": true,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107553,
+     "chain_bytes": 262152,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 109765,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107621,
+     "chain_bytes": 393228,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 109832,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107681,
+     "chain_bytes": 524304,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 109893,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107741,
+     "chain_bytes": 655380,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 109953,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107796,
+     "chain_bytes": 786456,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110007,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107863,
+     "chain_bytes": 917532,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110075,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107929,
+     "chain_bytes": 1048608,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110141,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 107992,
+     "chain_bytes": 1179684,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110204,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108072,
+     "chain_bytes": 1310760,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110283,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108129,
+     "chain_bytes": 1441836,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110341,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108185,
+     "chain_bytes": 1572912,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110397,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108232,
+     "chain_bytes": 1703988,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110444,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108282,
+     "chain_bytes": 1835064,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110494,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108329,
+     "chain_bytes": 1966140,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110541,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108380,
+     "chain_bytes": 2097216,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110592,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108440,
+     "chain_bytes": 2228292,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110652,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108515,
+     "chain_bytes": 2359368,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110727,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108589,
+     "chain_bytes": 2490444,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110800,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108644,
+     "chain_bytes": 2621520,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110856,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108698,
+     "chain_bytes": 2752596,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110909,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108782,
+     "chain_bytes": 2883672,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 110993,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108843,
+     "chain_bytes": 3014748,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111054,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108900,
+     "chain_bytes": 3145824,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111111,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 108965,
+     "chain_bytes": 3276900,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111177,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109023,
+     "chain_bytes": 3407976,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111234,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109096,
+     "chain_bytes": 3539052,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111307,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109171,
+     "chain_bytes": 3670128,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111382,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109247,
+     "chain_bytes": 3801204,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111459,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109313,
+     "chain_bytes": 3932280,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111524,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109362,
+     "chain_bytes": 4063356,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111573,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109428,
+     "chain_bytes": 4194432,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111640,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109496,
+     "chain_bytes": 4325508,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111707,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109559,
+     "chain_bytes": 4456584,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111771,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109610,
+     "chain_bytes": 4587660,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111822,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109658,
+     "chain_bytes": 4718736,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111870,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109714,
+     "chain_bytes": 4849812,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111926,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109780,
+     "chain_bytes": 4980888,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 111990,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109850,
+     "chain_bytes": 5111964,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112062,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109917,
+     "chain_bytes": 5243040,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112129,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 109966,
+     "chain_bytes": 5374116,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112177,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110013,
+     "chain_bytes": 5505192,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112225,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110073,
+     "chain_bytes": 5636268,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112285,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110129,
+     "chain_bytes": 5767344,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112341,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110188,
+     "chain_bytes": 5898420,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112400,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110260,
+     "chain_bytes": 6029496,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112472,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110318,
+     "chain_bytes": 6160572,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112530,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110385,
+     "chain_bytes": 6291648,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112596,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110454,
+     "chain_bytes": 6422724,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112665,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110520,
+     "chain_bytes": 6553800,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112732,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110641,
+     "chain_bytes": 6684876,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112853,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110712,
+     "chain_bytes": 6815952,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112924,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110777,
+     "chain_bytes": 6947028,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 112989,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110839,
+     "chain_bytes": 7078104,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113050,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110905,
+     "chain_bytes": 7209180,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113117,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 110956,
+     "chain_bytes": 7340256,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113167,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111025,
+     "chain_bytes": 7466025,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113237,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111080,
+     "chain_bytes": 7597101,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113292,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111136,
+     "chain_bytes": 7728177,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113346,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111185,
+     "chain_bytes": 7807019,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113397,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111237,
+     "chain_bytes": 7938095,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113449,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111323,
+     "chain_bytes": 8069171,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113535,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111400,
+     "chain_bytes": 8100996,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113611,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111454,
+     "chain_bytes": 8232072,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113665,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111516,
+     "chain_bytes": 8363148,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113728,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111574,
+     "chain_bytes": 8494224,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113785,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111655,
+     "chain_bytes": 8625300,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113866,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111713,
+     "chain_bytes": 8756376,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113925,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111771,
+     "chain_bytes": 8887452,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 113983,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111879,
+     "chain_bytes": 9018528,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114090,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111939,
+     "chain_bytes": 9149604,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114151,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 111988,
+     "chain_bytes": 9280680,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114200,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112056,
+     "chain_bytes": 9411756,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114267,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112105,
+     "chain_bytes": 9542832,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114317,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112158,
+     "chain_bytes": 9673908,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114370,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112208,
+     "chain_bytes": 9804984,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114419,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112283,
+     "chain_bytes": 9936060,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114495,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112368,
+     "chain_bytes": 10067136,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114580,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112430,
+     "chain_bytes": 10198212,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114642,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112478,
+     "chain_bytes": 10329288,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114690,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112521,
+     "chain_bytes": 10460364,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114733,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112568,
+     "chain_bytes": 10591440,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114780,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112624,
+     "chain_bytes": 10722516,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114836,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112679,
+     "chain_bytes": 10853592,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114891,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112722,
+     "chain_bytes": 10984668,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114934,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112766,
+     "chain_bytes": 11115744,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 114978,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112808,
+     "chain_bytes": 11246820,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115020,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112857,
+     "chain_bytes": 11377896,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115069,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112926,
+     "chain_bytes": 11508972,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115138,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 112973,
+     "chain_bytes": 11640048,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115185,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113037,
+     "chain_bytes": 11771124,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115249,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113097,
+     "chain_bytes": 11902200,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115308,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113156,
+     "chain_bytes": 12033276,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115368,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113260,
+     "chain_bytes": 12164352,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115472,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113310,
+     "chain_bytes": 12295428,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115522,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113354,
+     "chain_bytes": 12426504,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115565,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113399,
+     "chain_bytes": 12557580,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115611,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113445,
+     "chain_bytes": 12688656,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115656,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113488,
+     "chain_bytes": 12819732,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115700,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113562,
+     "chain_bytes": 12950808,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115774,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113610,
+     "chain_bytes": 13081884,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115822,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113679,
+     "chain_bytes": 13212960,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115890,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113725,
+     "chain_bytes": 13344036,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115936,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113784,
+     "chain_bytes": 13475112,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 115996,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113832,
+     "chain_bytes": 13606188,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116043,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113907,
+     "chain_bytes": 13737264,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116119,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 113960,
+     "chain_bytes": 13868340,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116171,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114016,
+     "chain_bytes": 13999416,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116228,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114070,
+     "chain_bytes": 14130492,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116282,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114123,
+     "chain_bytes": 14261568,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116335,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114218,
+     "chain_bytes": 14392644,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116430,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114296,
+     "chain_bytes": 14497253,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116508,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114361,
+     "chain_bytes": 14628329,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116573,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114421,
+     "chain_bytes": 14686071,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116632,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114483,
+     "chain_bytes": 14817147,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116695,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114537,
+     "chain_bytes": 14827842,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116749,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114561,
+     "chain_bytes": 14958918,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116773,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114619,
+     "chain_bytes": 15089994,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116831,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114687,
+     "chain_bytes": 15221070,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116899,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114734,
+     "chain_bytes": 15352146,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 116946,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114802,
+     "chain_bytes": 15483222,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117013,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114851,
+     "chain_bytes": 15614298,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117063,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114908,
+     "chain_bytes": 15745374,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117120,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 114964,
+     "chain_bytes": 15876450,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117176,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 115022,
+     "chain_bytes": 16007526,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117233,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 115070,
+     "chain_bytes": 16109314,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117282,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 115124,
+     "chain_bytes": 16164156,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117336,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 115193,
+     "chain_bytes": 16171978,
+     "window_bytes": 131072,
+     "piece_units": 512,
+     "isolate_age_ms": 117405,
+     "rested": false,
+     "event": "step"
+    }
+   ],
+   "readout_reads": 0,
+   "rests": [
+    {
+     "at_ms": 3386,
+     "rest_ms": 20005,
+     "rss_before": 369,
+     "rss_min_during": 277.9,
+     "heap_used_before": 81.8,
+     "heap_used_min_during": 51.7,
+     "heap_used_end": 51.8,
+     "isolate_age_at_rest_begin": 5598,
+     "isolate_age_at_rest_end": 25603
+    },
+    {
+     "at_ms": 31662,
+     "rest_ms": 20006,
+     "rss_before": 311,
+     "rss_min_during": 305.3,
+     "heap_used_before": 55.8,
+     "heap_used_min_during": 52.6,
+     "heap_used_end": 52.6,
+     "isolate_age_at_rest_begin": 33873,
+     "isolate_age_at_rest_end": 53880
+    },
+    {
+     "at_ms": 59052,
+     "rest_ms": 20007,
+     "rss_before": 313.7,
+     "rss_min_during": 281,
+     "heap_used_before": 61.9,
+     "heap_used_min_during": 52.8,
+     "heap_used_end": 52.9,
+     "isolate_age_at_rest_begin": 61264,
+     "isolate_age_at_rest_end": 81271
+    },
+    {
+     "at_ms": 87438,
+     "rest_ms": 20005,
+     "rss_before": 314.7,
+     "rss_min_during": 309.9,
+     "heap_used_before": 65,
+     "heap_used_min_during": 52.9,
+     "heap_used_end": 52.9,
+     "isolate_age_at_rest_begin": 89648,
+     "isolate_age_at_rest_end": 109654
+    }
+   ],
+   "gc_probes": [
+    {
+     "at_ms": 5050,
+     "used_before": 118,
+     "used_after": 51.9,
+     "total_after": 113.1,
+     "rss_after": 364.5,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 24
+    },
+    {
+     "at_ms": 10050,
+     "used_before": 52,
+     "used_after": 51.7,
+     "total_after": 113.1,
+     "rss_after": 338.4,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 21
+    },
+    {
+     "at_ms": 15076,
+     "used_before": 51.8,
+     "used_after": 51.7,
+     "total_after": 55.6,
+     "rss_after": 335.1,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 25
+    },
+    {
+     "at_ms": 20109,
+     "used_before": 51.8,
+     "used_after": 51.7,
+     "total_after": 54.9,
+     "rss_after": 335.3,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 20
+    },
+    {
+     "at_ms": 25177,
+     "used_before": 57.2,
+     "used_after": 52.6,
+     "total_after": 63.5,
+     "rss_after": 283.8,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 29
+    },
+    {
+     "at_ms": 30256,
+     "used_before": 71.9,
+     "used_after": 53.6,
+     "total_after": 84.1,
+     "rss_after": 310.2,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 44
+    },
+    {
+     "at_ms": 35221,
+     "used_before": 56.4,
+     "used_after": 52.7,
+     "total_after": 83,
+     "rss_after": 308.8,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 38
+    },
+    {
+     "at_ms": 40219,
+     "used_before": 52.8,
+     "used_after": 52.6,
+     "total_after": 56.7,
+     "rss_after": 308.3,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 26
+    },
+    {
+     "at_ms": 45245,
+     "used_before": 52.7,
+     "used_after": 52.6,
+     "total_after": 57,
+     "rss_after": 308.5,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 27
+    },
+    {
+     "at_ms": 50269,
+     "used_before": 52.7,
+     "used_after": 52.6,
+     "total_after": 56.7,
+     "rss_after": 305.3,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 23
+    },
+    {
+     "at_ms": 55330,
+     "used_before": 64,
+     "used_after": 53.8,
+     "total_after": 72.9,
+     "rss_after": 298,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 32
+    },
+    {
+     "at_ms": 60324,
+     "used_before": 63.4,
+     "used_after": 53.1,
+     "total_after": 85.7,
+     "rss_after": 312.2,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 36
+    },
+    {
+     "at_ms": 65340,
+     "used_before": 53.2,
+     "used_after": 52.8,
+     "total_after": 57.2,
+     "rss_after": 310,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 25
+    },
+    {
+     "at_ms": 70359,
+     "used_before": 52.9,
+     "used_after": 52.8,
+     "total_after": 57.5,
+     "rss_after": 310,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 18
+    },
+    {
+     "at_ms": 75400,
+     "used_before": 52.9,
+     "used_after": 52.8,
+     "total_after": 57.2,
+     "rss_after": 308.7,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 19
+    },
+    {
+     "at_ms": 80476,
+     "used_before": 58,
+     "used_after": 53.9,
+     "total_after": 63.9,
+     "rss_after": 287.9,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 28
+    },
+    {
+     "at_ms": 85485,
+     "used_before": 73.8,
+     "used_after": 54,
+     "total_after": 79.4,
+     "rss_after": 307.3,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 37
+    },
+    {
+     "at_ms": 90477,
+     "used_before": 66.6,
+     "used_after": 53.5,
+     "total_after": 83.7,
+     "rss_after": 313.8,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 38
+    },
+    {
+     "at_ms": 95486,
+     "used_before": 53.6,
+     "used_after": 52.9,
+     "total_after": 57.5,
+     "rss_after": 312.2,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 28
+    },
+    {
+     "at_ms": 100513,
+     "used_before": 53,
+     "used_after": 52.9,
+     "total_after": 57,
+     "rss_after": 312.2,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 20
+    },
+    {
+     "at_ms": 105544,
+     "used_before": 53,
+     "used_after": 52.9,
+     "total_after": 56.7,
+     "rss_after": 309.9,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 18
+    },
+    {
+     "at_ms": 110642,
+     "used_before": 62.9,
+     "used_after": 53.5,
+     "total_after": 72.1,
+     "rss_after": 312.6,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 38
+    },
+    {
+     "at_ms": 115685,
+     "used_before": 69,
+     "used_after": 53.6,
+     "total_after": 85.5,
+     "rss_after": 319,
+     "gc_fn": "function",
+     "gc_called": true,
+     "gc_ms": 48
+    }
+   ],
+   "timeline": [
+    [
+     9,
+     257.9
+    ],
+    [
+     525,
+     284.8
+    ],
+    [
+     1037,
+     293.9
+    ],
+    [
+     1567,
+     311.6
+    ],
+    [
+     2129,
+     315
+    ],
+    [
+     2641,
+     345.2
+    ],
+    [
+     3158,
+     367.2
+    ],
+    [
+     3672,
+     372.1
+    ],
+    [
+     4187,
+     442.9
+    ],
+    [
+     4696,
+     443
+    ],
+    [
+     5204,
+     364.5
+    ],
+    [
+     5720,
+     364.5
+    ],
+    [
+     6236,
+     364.7
+    ],
+    [
+     6751,
+     364.7
+    ],
+    [
+     7267,
+     364.7
+    ],
+    [
+     7777,
+     364.7
+    ],
+    [
+     8290,
+     364.7
+    ],
+    [
+     8804,
+     364.7
+    ],
+    [
+     9312,
+     364.7
+    ],
+    [
+     9822,
+     364.8
+    ],
+    [
+     10380,
+     334.4
+    ],
+    [
+     10897,
+     334.4
+    ],
+    [
+     11411,
+     334.4
+    ],
+    [
+     11925,
+     334.8
+    ],
+    [
+     12443,
+     334.8
+    ],
+    [
+     12954,
+     334.9
+    ],
+    [
+     13468,
+     334.9
+    ],
+    [
+     13980,
+     334.9
+    ],
+    [
+     14494,
+     335
+    ],
+    [
+     15009,
+     335.1
+    ],
+    [
+     15527,
+     335.1
+    ],
+    [
+     16037,
+     335.1
+    ],
+    [
+     16551,
+     335.2
+    ],
+    [
+     17062,
+     335.2
+    ],
+    [
+     17575,
+     335.2
+    ],
+    [
+     18089,
+     335.3
+    ],
+    [
+     18598,
+     335.3
+    ],
+    [
+     19114,
+     335.3
+    ],
+    [
+     19627,
+     335.3
+    ],
+    [
+     20141,
+     335.3
+    ],
+    [
+     20652,
+     335.3
+    ],
+    [
+     21178,
+     335.4
+    ],
+    [
+     21703,
+     335.4
+    ],
+    [
+     22244,
+     335.4
+    ],
+    [
+     22751,
+     335.4
+    ],
+    [
+     23263,
+     277.9
+    ],
+    [
+     23771,
+     281.5
+    ],
+    [
+     24281,
+     283.8
+    ],
+    [
+     24791,
+     284.8
+    ],
+    [
+     25336,
+     284.3
+    ],
+    [
+     25848,
+     287.4
+    ],
+    [
+     26357,
+     291.7
+    ],
+    [
+     26865,
+     292
+    ],
+    [
+     27402,
+     293.2
+    ],
+    [
+     27916,
+     294.1
+    ],
+    [
+     28422,
+     295.6
+    ],
+    [
+     28929,
+     297
+    ],
+    [
+     29438,
+     301.8
+    ],
+    [
+     29947,
+     307.6
+    ],
+    [
+     30463,
+     310.3
+    ],
+    [
+     30978,
+     310.4
+    ],
+    [
+     31488,
+     310.6
+    ],
+    [
+     32018,
+     311
+    ],
+    [
+     32556,
+     311
+    ],
+    [
+     33069,
+     311
+    ],
+    [
+     33587,
+     311.2
+    ],
+    [
+     34096,
+     311.2
+    ],
+    [
+     34610,
+     311.2
+    ],
+    [
+     35119,
+     311.3
+    ],
+    [
+     35630,
+     308.8
+    ],
+    [
+     36144,
+     308.8
+    ],
+    [
+     36654,
+     308.8
+    ],
+    [
+     37169,
+     308.8
+    ],
+    [
+     37689,
+     308.8
+    ],
+    [
+     38201,
+     308.8
+    ],
+    [
+     38717,
+     308.8
+    ],
+    [
+     39228,
+     308.8
+    ],
+    [
+     39742,
+     308.8
+    ],
+    [
+     40256,
+     308.3
+    ],
+    [
+     40774,
+     308.3
+    ],
+    [
+     41332,
+     308.3
+    ],
+    [
+     41848,
+     308.3
+    ],
+    [
+     42366,
+     308.3
+    ],
+    [
+     42876,
+     308.3
+    ],
+    [
+     43405,
+     308.3
+    ],
+    [
+     43916,
+     308.4
+    ],
+    [
+     44429,
+     308.4
+    ],
+    [
+     44941,
+     308.4
+    ],
+    [
+     45454,
+     308.5
+    ],
+    [
+     45966,
+     308.5
+    ],
+    [
+     46479,
+     308.5
+    ],
+    [
+     46990,
+     305.3
+    ],
+    [
+     47509,
+     305.3
+    ],
+    [
+     48022,
+     305.3
+    ],
+    [
+     48539,
+     305.3
+    ],
+    [
+     49058,
+     305.3
+    ],
+    [
+     49571,
+     305.3
+    ],
+    [
+     50084,
+     305.3
+    ],
+    [
+     50601,
+     305.3
+    ],
+    [
+     51116,
+     305.3
+    ],
+    [
+     51633,
+     305.3
+    ],
+    [
+     52140,
+     306.6
+    ],
+    [
+     52649,
+     307.6
+    ],
+    [
+     53157,
+     308.4
+    ],
+    [
+     53667,
+     309.5
+    ],
+    [
+     54179,
+     309.9
+    ],
+    [
+     54711,
+     310.2
+    ],
+    [
+     55219,
+     300.2
+    ],
+    [
+     55734,
+     298.4
+    ],
+    [
+     56245,
+     298.8
+    ],
+    [
+     56752,
+     298.9
+    ],
+    [
+     57263,
+     306
+    ],
+    [
+     57775,
+     312.1
+    ],
+    [
+     58341,
+     312.7
+    ],
+    [
+     58850,
+     313.2
+    ],
+    [
+     59377,
+     313.7
+    ],
+    [
+     59886,
+     313.7
+    ],
+    [
+     60459,
+     312.2
+    ],
+    [
+     60968,
+     312.3
+    ],
+    [
+     61477,
+     312.3
+    ],
+    [
+     61988,
+     312.3
+    ],
+    [
+     62504,
+     312.3
+    ],
+    [
+     63034,
+     312.3
+    ],
+    [
+     63543,
+     312.3
+    ],
+    [
+     64081,
+     312.3
+    ],
+    [
+     64587,
+     312.3
+    ],
+    [
+     65095,
+     312.3
+    ],
+    [
+     65602,
+     310
+    ],
+    [
+     66111,
+     310
+    ],
+    [
+     66620,
+     310
+    ],
+    [
+     67130,
+     310
+    ],
+    [
+     67639,
+     310
+    ],
+    [
+     68151,
+     310
+    ],
+    [
+     68664,
+     310
+    ],
+    [
+     69171,
+     310
+    ],
+    [
+     69682,
+     310
+    ],
+    [
+     70194,
+     310
+    ],
+    [
+     70707,
+     310
+    ],
+    [
+     71244,
+     308.6
+    ],
+    [
+     71757,
+     308.7
+    ],
+    [
+     72268,
+     308.7
+    ],
+    [
+     72777,
+     308.7
+    ],
+    [
+     73289,
+     308.7
+    ],
+    [
+     73804,
+     308.7
+    ],
+    [
+     74314,
+     308.7
+    ],
+    [
+     74840,
+     308.7
+    ],
+    [
+     75353,
+     308.7
+    ],
+    [
+     75869,
+     308.7
+    ],
+    [
+     76436,
+     308.7
+    ],
+    [
+     76946,
+     308.7
+    ],
+    [
+     77458,
+     308.7
+    ],
+    [
+     77970,
+     308.7
+    ],
+    [
+     78522,
+     308.7
+    ],
+    [
+     79029,
+     281
+    ],
+    [
+     79537,
+     283.9
+    ],
+    [
+     80047,
+     286.6
+    ],
+    [
+     80556,
+     288
+    ],
+    [
+     81068,
+     288.6
+    ],
+    [
+     81576,
+     292.9
+    ],
+    [
+     82087,
+     296.8
+    ],
+    [
+     82602,
+     297.2
+    ],
+    [
+     83111,
+     298.6
+    ],
+    [
+     83618,
+     299.5
+    ],
+    [
+     84134,
+     300.7
+    ],
+    [
+     84643,
+     301.7
+    ],
+    [
+     85152,
+     302.8
+    ],
+    [
+     85662,
+     307.5
+    ],
+    [
+     86173,
+     311.2
+    ],
+    [
+     86678,
+     313.8
+    ],
+    [
+     87188,
+     314.5
+    ],
+    [
+     87699,
+     314.7
+    ],
+    [
+     88213,
+     314.8
+    ],
+    [
+     88727,
+     314.8
+    ],
+    [
+     89238,
+     314.8
+    ],
+    [
+     89750,
+     314.9
+    ],
+    [
+     90265,
+     314.9
+    ],
+    [
+     90778,
+     313.8
+    ],
+    [
+     91294,
+     313.9
+    ],
+    [
+     91811,
+     313.9
+    ],
+    [
+     92323,
+     314
+    ],
+    [
+     92840,
+     314
+    ],
+    [
+     93355,
+     314
+    ],
+    [
+     93873,
+     314.1
+    ],
+    [
+     94392,
+     314.1
+    ],
+    [
+     94906,
+     314.1
+    ],
+    [
+     95417,
+     314.1
+    ],
+    [
+     95933,
+     312.2
+    ],
+    [
+     96445,
+     312.2
+    ],
+    [
+     96963,
+     312.2
+    ],
+    [
+     97473,
+     312.2
+    ],
+    [
+     97984,
+     312.2
+    ],
+    [
+     98492,
+     312.2
+    ],
+    [
+     99004,
+     312.2
+    ],
+    [
+     99517,
+     312.2
+    ],
+    [
+     100030,
+     312.2
+    ],
+    [
+     100539,
+     312.2
+    ],
+    [
+     101052,
+     312.2
+    ],
+    [
+     101563,
+     312.2
+    ],
+    [
+     102077,
+     312.2
+    ],
+    [
+     102589,
+     312.2
+    ],
+    [
+     103099,
+     309.9
+    ],
+    [
+     103612,
+     309.9
+    ],
+    [
+     104118,
+     309.9
+    ],
+    [
+     104632,
+     309.9
+    ],
+    [
+     105146,
+     309.9
+    ],
+    [
+     105661,
+     309.9
+    ],
+    [
+     106222,
+     309.9
+    ],
+    [
+     106733,
+     309.9
+    ],
+    [
+     107245,
+     309.9
+    ],
+    [
+     107758,
+     310.8
+    ],
+    [
+     108269,
+     311.7
+    ],
+    [
+     108775,
+     312.7
+    ],
+    [
+     109285,
+     313.3
+    ],
+    [
+     109807,
+     314.3
+    ],
+    [
+     110323,
+     314.8
+    ],
+    [
+     110833,
+     312.8
+    ],
+    [
+     111344,
+     304.1
+    ],
+    [
+     111861,
+     304.2
+    ],
+    [
+     112370,
+     305.1
+    ],
+    [
+     112883,
+     305.4
+    ],
+    [
+     113396,
+     309.5
+    ],
+    [
+     113905,
+     314.9
+    ],
+    [
+     114417,
+     320.3
+    ],
+    [
+     114931,
+     321.2
+    ],
+    [
+     115664,
+     320
+    ]
+   ],
+   "heap_series": [
+    [
+     2,
+     52.8,
+     68.5
+    ],
+    [
+     587,
+     68.6,
+     86
+    ],
+    [
+     889,
+     70,
+     91.7
+    ],
+    [
+     1130,
+     72.3,
+     94.5
+    ],
+    [
+     1567,
+     75.2,
+     105.2
+    ],
+    [
+     1845,
+     76.7,
+     104.8
+    ],
+    [
+     2137,
+     78.6,
+     106.3
+    ],
+    [
+     2363,
+     77.5,
+     106.3
+    ],
+    [
+     2726,
+     81,
+     127.5
+    ],
+    [
+     2969,
+     81,
+     139.8
+    ],
+    [
+     3195,
+     81,
+     140.5
+    ],
+    [
+     3756,
+     115.9,
+     154.6
+    ],
+    [
+     4014,
+     92,
+     146.5
+    ],
+    [
+     4347,
+     118,
+     172.2
+    ],
+    [
+     4555,
+     118,
+     172.2
+    ],
+    [
+     4761,
+     118,
+     172.2
+    ],
+    [
+     4968,
+     118,
+     172.2
+    ],
+    [
+     5205,
+     51.9,
+     113.1
+    ],
+    [
+     5412,
+     51.9,
+     113.1
+    ],
+    [
+     5618,
+     51.9,
+     113.1
+    ],
+    [
+     5825,
+     51.9,
+     113.1
+    ],
+    [
+     6040,
+     51.9,
+     113.1
+    ],
+    [
+     6247,
+     51.9,
+     113.1
+    ],
+    [
+     6453,
+     51.9,
+     113.1
+    ],
+    [
+     6660,
+     51.9,
+     113.1
+    ],
+    [
+     6869,
+     51.9,
+     113.1
+    ],
+    [
+     7076,
+     51.9,
+     113.1
+    ],
+    [
+     7283,
+     51.9,
+     113.1
+    ],
+    [
+     7489,
+     51.9,
+     113.1
+    ],
+    [
+     7694,
+     52,
+     113.1
+    ],
+    [
+     7900,
+     52,
+     113.1
+    ],
+    [
+     8105,
+     52,
+     113.1
+    ],
+    [
+     8310,
+     52,
+     113.1
+    ],
+    [
+     8516,
+     52,
+     113.1
+    ],
+    [
+     8724,
+     52,
+     113.1
+    ],
+    [
+     8929,
+     52,
+     113.1
+    ],
+    [
+     9138,
+     52,
+     113.1
+    ],
+    [
+     9346,
+     52,
+     113.1
+    ],
+    [
+     9552,
+     52,
+     113.1
+    ],
+    [
+     9761,
+     52,
+     113.1
+    ],
+    [
+     9967,
+     52,
+     113.1
+    ],
+    [
+     10204,
+     51.7,
+     113.1
+    ],
+    [
+     10454,
+     51.7,
+     113.1
+    ],
+    [
+     10659,
+     51.8,
+     113.1
+    ],
+    [
+     10866,
+     51.8,
+     113.1
+    ],
+    [
+     11073,
+     51.8,
+     113.1
+    ],
+    [
+     11280,
+     51.8,
+     113.1
+    ],
+    [
+     11484,
+     51.8,
+     113.1
+    ],
+    [
+     11691,
+     51.8,
+     113.1
+    ],
+    [
+     11896,
+     51.8,
+     113.1
+    ],
+    [
+     12102,
+     51.8,
+     113.1
+    ],
+    [
+     12309,
+     51.8,
+     113.1
+    ],
+    [
+     12517,
+     51.8,
+     113.1
+    ],
+    [
+     12723,
+     51.8,
+     113.1
+    ],
+    [
+     12929,
+     51.8,
+     113.1
+    ],
+    [
+     13134,
+     51.8,
+     113.1
+    ],
+    [
+     13340,
+     51.8,
+     113.1
+    ],
+    [
+     13544,
+     51.8,
+     113.1
+    ],
+    [
+     13751,
+     51.8,
+     113.1
+    ],
+    [
+     13959,
+     51.8,
+     113.1
+    ],
+    [
+     14165,
+     51.8,
+     113.1
+    ],
+    [
+     14371,
+     51.8,
+     113.1
+    ],
+    [
+     14578,
+     51.8,
+     113.1
+    ],
+    [
+     14784,
+     51.8,
+     113.1
+    ],
+    [
+     14991,
+     51.8,
+     113.1
+    ],
+    [
+     15231,
+     51.7,
+     55.6
+    ],
+    [
+     15435,
+     51.7,
+     55.6
+    ],
+    [
+     15641,
+     51.8,
+     55.6
+    ],
+    [
+     15846,
+     51.8,
+     55.6
+    ],
+    [
+     16053,
+     51.8,
+     55.6
+    ],
+    [
+     16264,
+     51.8,
+     55.6
+    ],
+    [
+     16468,
+     51.8,
+     55.6
+    ],
+    [
+     16673,
+     51.8,
+     55.6
+    ],
+    [
+     16879,
+     51.8,
+     55.6
+    ],
+    [
+     17088,
+     51.8,
+     55.6
+    ],
+    [
+     17293,
+     51.8,
+     55.6
+    ],
+    [
+     17497,
+     51.8,
+     55.6
+    ],
+    [
+     17704,
+     51.8,
+     55.6
+    ],
+    [
+     17909,
+     51.8,
+     55.6
+    ],
+    [
+     18117,
+     51.8,
+     55.6
+    ],
+    [
+     18322,
+     51.8,
+     55.6
+    ],
+    [
+     18528,
+     51.8,
+     55.6
+    ],
+    [
+     18732,
+     51.8,
+     55.6
+    ],
+    [
+     18940,
+     51.8,
+     55.6
+    ],
+    [
+     19144,
+     51.8,
+     55.6
+    ],
+    [
+     19358,
+     51.8,
+     55.6
+    ],
+    [
+     19564,
+     51.8,
+     55.6
+    ],
+    [
+     19771,
+     51.8,
+     55.6
+    ],
+    [
+     19980,
+     51.8,
+     55.6
+    ],
+    [
+     20211,
+     51.7,
+     54.9
+    ],
+    [
+     20415,
+     51.7,
+     54.9
+    ],
+    [
+     20621,
+     51.8,
+     54.9
+    ],
+    [
+     20826,
+     51.8,
+     54.9
+    ],
+    [
+     21034,
+     51.8,
+     54.9
+    ],
+    [
+     21240,
+     51.8,
+     54.9
+    ],
+    [
+     21446,
+     51.8,
+     54.9
+    ],
+    [
+     21652,
+     51.8,
+     54.9
+    ],
+    [
+     21858,
+     51.8,
+     54.9
+    ],
+    [
+     22065,
+     51.8,
+     54.9
+    ],
+    [
+     22271,
+     51.8,
+     54.9
+    ],
+    [
+     22478,
+     51.8,
+     54.9
+    ],
+    [
+     22684,
+     51.8,
+     54.9
+    ],
+    [
+     22894,
+     51.8,
+     54.9
+    ],
+    [
+     23101,
+     51.8,
+     54.9
+    ],
+    [
+     23307,
+     51.8,
+     54.9
+    ],
+    [
+     23547,
+     52.8,
+     57
+    ],
+    [
+     23856,
+     54.9,
+     59.9
+    ],
+    [
+     24076,
+     54.5,
+     60.3
+    ],
+    [
+     24369,
+     56.7,
+     62.3
+    ],
+    [
+     24600,
+     55.8,
+     63.8
+    ],
+    [
+     24867,
+     58.3,
+     64.5
+    ],
+    [
+     25114,
+     57.2,
+     65
+    ],
+    [
+     25475,
+     54.7,
+     64
+    ],
+    [
+     25747,
+     57.1,
+     64.3
+    ],
+    [
+     26011,
+     55.4,
+     67.4
+    ],
+    [
+     26263,
+     54.9,
+     70.1
+    ],
+    [
+     26519,
+     61.2,
+     70.8
+    ],
+    [
+     26781,
+     60,
+     70.6
+    ],
+    [
+     27017,
+     58.9,
+     70.5
+    ],
+    [
+     27287,
+     57.6,
+     71.1
+    ],
+    [
+     27527,
+     56.4,
+     72
+    ],
+    [
+     27772,
+     61.7,
+     72.5
+    ],
+    [
+     28081,
+     60.9,
+     72.5
+    ],
+    [
+     28306,
+     58.9,
+     72.9
+    ],
+    [
+     28561,
+     57.9,
+     73.5
+    ],
+    [
+     28820,
+     64.3,
+     74.2
+    ],
+    [
+     29076,
+     63,
+     74
+    ],
+    [
+     29360,
+     68.1,
+     76.5
+    ],
+    [
+     29603,
+     61.1,
+     80.5
+    ],
+    [
+     29875,
+     66.9,
+     81.8
+    ],
+    [
+     30160,
+     71.9,
+     86.6
+    ],
+    [
+     30530,
+     58.4,
+     84.5
+    ],
+    [
+     30790,
+     63.4,
+     85
+    ],
+    [
+     31076,
+     54.9,
+     84.1
+    ],
+    [
+     31298,
+     60,
+     84.6
+    ],
+    [
+     31568,
+     67.3,
+     85.3
+    ],
+    [
+     31792,
+     56.3,
+     85.1
+    ],
+    [
+     31999,
+     56.3,
+     85.1
+    ],
+    [
+     32203,
+     56.3,
+     85.1
+    ],
+    [
+     32432,
+     56.3,
+     85.1
+    ],
+    [
+     32641,
+     56.3,
+     85.1
+    ],
+    [
+     32849,
+     56.3,
+     85.1
+    ],
+    [
+     33053,
+     56.3,
+     85.1
+    ],
+    [
+     33261,
+     56.3,
+     85.1
+    ],
+    [
+     33475,
+     56.3,
+     85.1
+    ],
+    [
+     33680,
+     56.3,
+     85.1
+    ],
+    [
+     33887,
+     56.3,
+     85.1
+    ],
+    [
+     34093,
+     56.3,
+     85.1
+    ],
+    [
+     34300,
+     56.3,
+     85.1
+    ],
+    [
+     34504,
+     56.3,
+     85.1
+    ],
+    [
+     34711,
+     56.4,
+     85.1
+    ],
+    [
+     34915,
+     56.4,
+     85.1
+    ],
+    [
+     35122,
+     56.4,
+     85.1
+    ],
+    [
+     35376,
+     52.7,
+     83
+    ],
+    [
+     35584,
+     52.7,
+     83
+    ],
+    [
+     35790,
+     52.7,
+     83
+    ],
+    [
+     36001,
+     52.7,
+     83
+    ],
+    [
+     36208,
+     52.7,
+     83
+    ],
+    [
+     36416,
+     52.7,
+     83
+    ],
+    [
+     36623,
+     52.7,
+     83
+    ],
+    [
+     36828,
+     52.7,
+     83
+    ],
+    [
+     37035,
+     52.7,
+     83
+    ],
+    [
+     37241,
+     52.7,
+     83
+    ],
+    [
+     37447,
+     52.7,
+     83
+    ],
+    [
+     37654,
+     52.7,
+     83
+    ],
+    [
+     37860,
+     52.7,
+     83
+    ],
+    [
+     38065,
+     52.7,
+     83
+    ],
+    [
+     38271,
+     52.7,
+     83
+    ],
+    [
+     38478,
+     52.7,
+     83
+    ],
+    [
+     38684,
+     52.8,
+     83
+    ],
+    [
+     38892,
+     52.8,
+     83
+    ],
+    [
+     39101,
+     52.8,
+     83
+    ],
+    [
+     39306,
+     52.8,
+     83
+    ],
+    [
+     39510,
+     52.8,
+     83
+    ],
+    [
+     39716,
+     52.8,
+     83
+    ],
+    [
+     39923,
+     52.8,
+     83
+    ],
+    [
+     40134,
+     52.8,
+     83
+    ],
+    [
+     40374,
+     52.6,
+     56.7
+    ],
+    [
+     40578,
+     52.6,
+     56.7
+    ],
+    [
+     40788,
+     52.6,
+     56.7
+    ],
+    [
+     41038,
+     52.6,
+     56.7
+    ],
+    [
+     41243,
+     52.6,
+     56.7
+    ],
+    [
+     41447,
+     52.6,
+     56.7
+    ],
+    [
+     41653,
+     52.6,
+     56.7
+    ],
+    [
+     41859,
+     52.6,
+     56.7
+    ],
+    [
+     42065,
+     52.6,
+     56.7
+    ],
+    [
+     42271,
+     52.6,
+     56.7
+    ],
+    [
+     42476,
+     52.6,
+     56.7
+    ],
+    [
+     42680,
+     52.7,
+     56.7
+    ],
+    [
+     42887,
+     52.7,
+     56.7
+    ],
+    [
+     43097,
+     52.7,
+     56.7
+    ],
+    [
+     43306,
+     52.7,
+     56.7
+    ],
+    [
+     43513,
+     52.7,
+     56.7
+    ],
+    [
+     43719,
+     52.7,
+     56.7
+    ],
+    [
+     43924,
+     52.7,
+     56.7
+    ],
+    [
+     44132,
+     52.7,
+     56.7
+    ],
+    [
+     44338,
+     52.7,
+     56.7
+    ],
+    [
+     44544,
+     52.7,
+     56.7
+    ],
+    [
+     44749,
+     52.7,
+     56.7
+    ],
+    [
+     44953,
+     52.7,
+     56.7
+    ],
+    [
+     45159,
+     52.7,
+     56.7
+    ],
+    [
+     45403,
+     52.6,
+     57
+    ],
+    [
+     45607,
+     52.6,
+     57
+    ],
+    [
+     45811,
+     52.6,
+     57
+    ],
+    [
+     46017,
+     52.6,
+     57
+    ],
+    [
+     46226,
+     52.6,
+     57
+    ],
+    [
+     46434,
+     52.6,
+     57
+    ],
+    [
+     46641,
+     52.6,
+     57
+    ],
+    [
+     46847,
+     52.6,
+     57
+    ],
+    [
+     47053,
+     52.7,
+     57
+    ],
+    [
+     47259,
+     52.7,
+     57
+    ],
+    [
+     47464,
+     52.7,
+     57
+    ],
+    [
+     47671,
+     52.7,
+     57
+    ],
+    [
+     47876,
+     52.7,
+     57
+    ],
+    [
+     48082,
+     52.7,
+     57
+    ],
+    [
+     48288,
+     52.7,
+     57
+    ],
+    [
+     48493,
+     52.7,
+     57
+    ],
+    [
+     48697,
+     52.7,
+     57
+    ],
+    [
+     48903,
+     52.7,
+     57
+    ],
+    [
+     49108,
+     52.7,
+     57
+    ],
+    [
+     49313,
+     52.7,
+     57
+    ],
+    [
+     49519,
+     52.7,
+     57
+    ],
+    [
+     49723,
+     52.7,
+     57
+    ],
+    [
+     49928,
+     52.7,
+     57
+    ],
+    [
+     50133,
+     52.7,
+     57
+    ],
+    [
+     50372,
+     52.6,
+     56.7
+    ],
+    [
+     50583,
+     52.6,
+     56.7
+    ],
+    [
+     50789,
+     52.6,
+     56.7
+    ],
+    [
+     50995,
+     52.6,
+     56.7
+    ],
+    [
+     51200,
+     52.6,
+     56.7
+    ],
+    [
+     51406,
+     52.6,
+     56.7
+    ],
+    [
+     51612,
+     52.6,
+     56.7
+    ],
+    [
+     51860,
+     54.7,
+     58.8
+    ],
+    [
+     52126,
+     54.6,
+     60.1
+    ],
+    [
+     52386,
+     57.1,
+     61.3
+    ],
+    [
+     52627,
+     57.1,
+     64.2
+    ],
+    [
+     52888,
+     56.6,
+     65
+    ],
+    [
+     53115,
+     58.3,
+     66
+    ],
+    [
+     53350,
+     57.7,
+     66.7
+    ],
+    [
+     53690,
+     58.7,
+     69.5
+    ],
+    [
+     54069,
+     63.9,
+     72.1
+    ],
+    [
+     54332,
+     61.3,
+     73.3
+    ],
+    [
+     54572,
+     61,
+     73.6
+    ],
+    [
+     54833,
+     61.2,
+     74.1
+    ],
+    [
+     55074,
+     59.9,
+     74.8
+    ],
+    [
+     55400,
+     55.4,
+     73
+    ],
+    [
+     55643,
+     55,
+     73
+    ],
+    [
+     55904,
+     54.6,
+     73
+    ],
+    [
+     56135,
+     59.5,
+     73.4
+    ],
+    [
+     56373,
+     59.1,
+     73.6
+    ],
+    [
+     56613,
+     58.5,
+     73.6
+    ],
+    [
+     56867,
+     64.7,
+     75.8
+    ],
+    [
+     57110,
+     57.1,
+     79.8
+    ],
+    [
+     57366,
+     62.6,
+     80.4
+    ],
+    [
+     57617,
+     69.1,
+     86
+    ],
+    [
+     57856,
+     61.3,
+     86.1
+    ],
+    [
+     58141,
+     66.8,
+     86.8
+    ],
+    [
+     58397,
+     61.3,
+     86.6
+    ],
+    [
+     58673,
+     68,
+     87.3
+    ],
+    [
+     58938,
+     60.4,
+     87
+    ],
+    [
+     59160,
+     63.3,
+     87.3
+    ],
+    [
+     59413,
+     63.3,
+     87.3
+    ],
+    [
+     59621,
+     63.4,
+     87.3
+    ],
+    [
+     59828,
+     63.4,
+     87.3
+    ],
+    [
+     60078,
+     63.4,
+     87.3
+    ],
+    [
+     60283,
+     63.4,
+     87.3
+    ],
+    [
+     60531,
+     53.1,
+     85.7
+    ],
+    [
+     60735,
+     53.1,
+     85.7
+    ],
+    [
+     60940,
+     53.1,
+     85.7
+    ],
+    [
+     61145,
+     53.1,
+     85.7
+    ],
+    [
+     61354,
+     53.1,
+     85.7
+    ],
+    [
+     61559,
+     53.1,
+     85.7
+    ],
+    [
+     61764,
+     53.1,
+     85.7
+    ],
+    [
+     61969,
+     53.1,
+     85.7
+    ],
+    [
+     62174,
+     53.1,
+     85.7
+    ],
+    [
+     62379,
+     53.1,
+     85.7
+    ],
+    [
+     62582,
+     53.1,
+     85.7
+    ],
+    [
+     62789,
+     53.1,
+     85.7
+    ],
+    [
+     62995,
+     53.1,
+     85.7
+    ],
+    [
+     63199,
+     53.1,
+     85.7
+    ],
+    [
+     63404,
+     53.1,
+     85.7
+    ],
+    [
+     63609,
+     53.1,
+     85.7
+    ],
+    [
+     63812,
+     53.1,
+     85.7
+    ],
+    [
+     64025,
+     53.1,
+     85.7
+    ],
+    [
+     64230,
+     53.1,
+     85.7
+    ],
+    [
+     64438,
+     53.1,
+     85.7
+    ],
+    [
+     64643,
+     53.2,
+     85.7
+    ],
+    [
+     64848,
+     53.2,
+     85.7
+    ],
+    [
+     65054,
+     53.2,
+     85.7
+    ],
+    [
+     65258,
+     53.2,
+     85.7
+    ],
+    [
+     65496,
+     52.8,
+     57.2
+    ],
+    [
+     65703,
+     52.8,
+     57.2
+    ],
+    [
+     65911,
+     52.8,
+     57.2
+    ],
+    [
+     66118,
+     52.9,
+     57.2
+    ],
+    [
+     66324,
+     52.9,
+     57.2
+    ],
+    [
+     66530,
+     52.9,
+     57.2
+    ],
+    [
+     66734,
+     52.9,
+     57.2
+    ],
+    [
+     66939,
+     52.9,
+     57.2
+    ],
+    [
+     67144,
+     52.9,
+     57.2
+    ],
+    [
+     67349,
+     52.9,
+     57.2
+    ],
+    [
+     67554,
+     52.9,
+     57.2
+    ],
+    [
+     67760,
+     52.9,
+     57.2
+    ],
+    [
+     67966,
+     52.9,
+     57.2
+    ],
+    [
+     68172,
+     52.9,
+     57.2
+    ],
+    [
+     68378,
+     52.9,
+     57.2
+    ],
+    [
+     68585,
+     52.9,
+     57.2
+    ],
+    [
+     68790,
+     52.9,
+     57.2
+    ],
+    [
+     68996,
+     52.9,
+     57.2
+    ],
+    [
+     69203,
+     52.9,
+     57.2
+    ],
+    [
+     69409,
+     52.9,
+     57.2
+    ],
+    [
+     69616,
+     52.9,
+     57.2
+    ],
+    [
+     69820,
+     52.9,
+     57.2
+    ],
+    [
+     70026,
+     52.9,
+     57.2
+    ],
+    [
+     70234,
+     52.9,
+     57.2
+    ],
+    [
+     70461,
+     52.8,
+     57.5
+    ],
+    [
+     70667,
+     52.8,
+     57.5
+    ],
+    [
+     70879,
+     52.8,
+     57.5
+    ],
+    [
+     71084,
+     52.9,
+     57.5
+    ],
+    [
+     71290,
+     52.9,
+     57.5
+    ],
+    [
+     71495,
+     52.9,
+     57.5
+    ],
+    [
+     71700,
+     52.9,
+     57.5
+    ],
+    [
+     71907,
+     52.9,
+     57.5
+    ],
+    [
+     72112,
+     52.9,
+     57.5
+    ],
+    [
+     72318,
+     52.9,
+     57.5
+    ],
+    [
+     72524,
+     52.9,
+     57.5
+    ],
+    [
+     72729,
+     52.9,
+     57.5
+    ],
+    [
+     72935,
+     52.9,
+     57.5
+    ],
+    [
+     73141,
+     52.9,
+     57.5
+    ],
+    [
+     73347,
+     52.9,
+     57.5
+    ],
+    [
+     73558,
+     52.9,
+     57.5
+    ],
+    [
+     73765,
+     52.9,
+     57.5
+    ],
+    [
+     73972,
+     52.9,
+     57.5
+    ],
+    [
+     74180,
+     52.9,
+     57.5
+    ],
+    [
+     74388,
+     52.9,
+     57.5
+    ],
+    [
+     74592,
+     52.9,
+     57.5
+    ],
+    [
+     74805,
+     52.9,
+     57.5
+    ],
+    [
+     75012,
+     52.9,
+     57.5
+    ],
+    [
+     75221,
+     52.9,
+     57.5
+    ],
+    [
+     75453,
+     52.8,
+     57.2
+    ],
+    [
+     75661,
+     52.8,
+     57.2
+    ],
+    [
+     75870,
+     52.8,
+     57.2
+    ],
+    [
+     76077,
+     52.8,
+     57.2
+    ],
+    [
+     76339,
+     52.9,
+     57.2
+    ],
+    [
+     76547,
+     52.9,
+     57.2
+    ],
+    [
+     76754,
+     52.9,
+     57.2
+    ],
+    [
+     76959,
+     52.9,
+     57.2
+    ],
+    [
+     77164,
+     52.9,
+     57.2
+    ],
+    [
+     77370,
+     52.9,
+     57.2
+    ],
+    [
+     77574,
+     52.9,
+     57.2
+    ],
+    [
+     77779,
+     52.9,
+     57.2
+    ],
+    [
+     77986,
+     52.9,
+     57.2
+    ],
+    [
+     78195,
+     52.9,
+     57.2
+    ],
+    [
+     78401,
+     52.9,
+     57.2
+    ],
+    [
+     78606,
+     52.9,
+     57.2
+    ],
+    [
+     78810,
+     52.9,
+     57.2
+    ],
+    [
+     79017,
+     52.9,
+     57.2
+    ],
+    [
+     79289,
+     55,
+     59.3
+    ],
+    [
+     79613,
+     56,
+     60.8
+    ],
+    [
+     79873,
+     55.7,
+     61.1
+    ],
+    [
+     80106,
+     57.9,
+     63.2
+    ],
+    [
+     80354,
+     56.7,
+     65
+    ],
+    [
+     80680,
+     54.6,
+     64
+    ],
+    [
+     80930,
+     56.9,
+     64.3
+    ],
+    [
+     81204,
+     54.9,
+     64.8
+    ],
+    [
+     81456,
+     60.4,
+     66.5
+    ],
+    [
+     81683,
+     59.2,
+     67.9
+    ],
+    [
+     81958,
+     57.7,
+     71
+    ],
+    [
+     82280,
+     56.5,
+     71.4
+    ],
+    [
+     82543,
+     61.4,
+     71.9
+    ],
+    [
+     82790,
+     60.6,
+     72.5
+    ],
+    [
+     83061,
+     59.1,
+     73.3
+    ],
+    [
+     83312,
+     63.2,
+     73.7
+    ],
+    [
+     83589,
+     63.1,
+     73.7
+    ],
+    [
+     83857,
+     62.1,
+     74.3
+    ],
+    [
+     84106,
+     60.7,
+     74.5
+    ],
+    [
+     84359,
+     65.8,
+     75
+    ],
+    [
+     84625,
+     64.6,
+     75.4
+    ],
+    [
+     84887,
+     62.5,
+     75.7
+    ],
+    [
+     85180,
+     67.7,
+     76.4
+    ],
+    [
+     85416,
+     73.8,
+     82.6
+    ],
+    [
+     85789,
+     59.9,
+     79.9
+    ],
+    [
+     86072,
+     65.1,
+     83.4
+    ],
+    [
+     86383,
+     56.6,
+     85.8
+    ],
+    [
+     86618,
+     61.8,
+     86.3
+    ],
+    [
+     86855,
+     67,
+     86.8
+    ],
+    [
+     87087,
+     58.9,
+     86
+    ],
+    [
+     87331,
+     63.7,
+     86.4
+    ],
+    [
+     87545,
+     66.5,
+     86.7
+    ],
+    [
+     87754,
+     66.5,
+     86.7
+    ],
+    [
+     87959,
+     66.5,
+     86.7
+    ],
+    [
+     88166,
+     66.5,
+     86.7
+    ],
+    [
+     88371,
+     66.5,
+     86.7
+    ],
+    [
+     88577,
+     66.5,
+     86.7
+    ],
+    [
+     88785,
+     66.5,
+     86.7
+    ],
+    [
+     88991,
+     66.5,
+     86.7
+    ],
+    [
+     89196,
+     66.6,
+     86.7
+    ],
+    [
+     89403,
+     66.6,
+     86.7
+    ],
+    [
+     89611,
+     66.6,
+     86.7
+    ],
+    [
+     89816,
+     66.6,
+     86.7
+    ],
+    [
+     90022,
+     66.6,
+     86.7
+    ],
+    [
+     90227,
+     66.6,
+     86.7
+    ],
+    [
+     90434,
+     66.6,
+     86.7
+    ],
+    [
+     90685,
+     53.5,
+     83.7
+    ],
+    [
+     90893,
+     53.5,
+     83.7
+    ],
+    [
+     91100,
+     53.5,
+     83.7
+    ],
+    [
+     91311,
+     53.5,
+     83.7
+    ],
+    [
+     91518,
+     53.5,
+     83.7
+    ],
+    [
+     91724,
+     53.5,
+     83.7
+    ],
+    [
+     91930,
+     53.5,
+     83.7
+    ],
+    [
+     92138,
+     53.5,
+     83.7
+    ],
+    [
+     92344,
+     53.5,
+     83.7
+    ],
+    [
+     92553,
+     53.5,
+     83.7
+    ],
+    [
+     92760,
+     53.5,
+     83.7
+    ],
+    [
+     92967,
+     53.5,
+     83.7
+    ],
+    [
+     93172,
+     53.5,
+     83.7
+    ],
+    [
+     93377,
+     53.5,
+     83.7
+    ],
+    [
+     93585,
+     53.5,
+     83.7
+    ],
+    [
+     93791,
+     53.5,
+     83.7
+    ],
+    [
+     93998,
+     53.5,
+     83.7
+    ],
+    [
+     94204,
+     53.5,
+     83.7
+    ],
+    [
+     94415,
+     53.5,
+     83.7
+    ],
+    [
+     94620,
+     53.5,
+     83.7
+    ],
+    [
+     94827,
+     53.6,
+     83.7
+    ],
+    [
+     95036,
+     53.6,
+     83.7
+    ],
+    [
+     95243,
+     53.6,
+     83.7
+    ],
+    [
+     95450,
+     53.6,
+     83.7
+    ],
+    [
+     95694,
+     52.9,
+     57.5
+    ],
+    [
+     95901,
+     52.9,
+     57.5
+    ],
+    [
+     96108,
+     52.9,
+     57.5
+    ],
+    [
+     96311,
+     52.9,
+     57.5
+    ],
+    [
+     96518,
+     52.9,
+     57.5
+    ],
+    [
+     96722,
+     52.9,
+     57.5
+    ],
+    [
+     96927,
+     52.9,
+     57.5
+    ],
+    [
+     97135,
+     52.9,
+     57.5
+    ],
+    [
+     97340,
+     52.9,
+     57.5
+    ],
+    [
+     97545,
+     52.9,
+     57.5
+    ],
+    [
+     97751,
+     53,
+     57.5
+    ],
+    [
+     97955,
+     53,
+     57.5
+    ],
+    [
+     98162,
+     53,
+     57.5
+    ],
+    [
+     98370,
+     53,
+     57.5
+    ],
+    [
+     98575,
+     53,
+     57.5
+    ],
+    [
+     98780,
+     53,
+     57.5
+    ],
+    [
+     98985,
+     53,
+     57.5
+    ],
+    [
+     99194,
+     53,
+     57.5
+    ],
+    [
+     99401,
+     53,
+     57.5
+    ],
+    [
+     99608,
+     53,
+     57.5
+    ],
+    [
+     99817,
+     53,
+     57.5
+    ],
+    [
+     100023,
+     53,
+     57.5
+    ],
+    [
+     100229,
+     53,
+     57.5
+    ],
+    [
+     100435,
+     53,
+     57.5
+    ],
+    [
+     100667,
+     52.9,
+     57
+    ],
+    [
+     100875,
+     52.9,
+     57
+    ],
+    [
+     101081,
+     52.9,
+     57
+    ],
+    [
+     101287,
+     52.9,
+     57
+    ],
+    [
+     101493,
+     52.9,
+     57
+    ],
+    [
+     101699,
+     52.9,
+     57
+    ],
+    [
+     101905,
+     52.9,
+     57
+    ],
+    [
+     102111,
+     52.9,
+     57
+    ],
+    [
+     102319,
+     52.9,
+     57
+    ],
+    [
+     102525,
+     52.9,
+     57
+    ],
+    [
+     102733,
+     52.9,
+     57
+    ],
+    [
+     102939,
+     53,
+     57
+    ],
+    [
+     103146,
+     53,
+     57
+    ],
+    [
+     103355,
+     53,
+     57
+    ],
+    [
+     103562,
+     53,
+     57
+    ],
+    [
+     103769,
+     53,
+     57
+    ],
+    [
+     103976,
+     53,
+     57
+    ],
+    [
+     104182,
+     53,
+     57
+    ],
+    [
+     104387,
+     53,
+     57
+    ],
+    [
+     104593,
+     53,
+     57
+    ],
+    [
+     104798,
+     53,
+     57
+    ],
+    [
+     105006,
+     53,
+     57
+    ],
+    [
+     105210,
+     53,
+     57
+    ],
+    [
+     105417,
+     53,
+     57
+    ],
+    [
+     105650,
+     52.9,
+     56.7
+    ],
+    [
+     105857,
+     52.9,
+     56.7
+    ],
+    [
+     106064,
+     52.9,
+     56.7
+    ],
+    [
+     106274,
+     52.9,
+     56.7
+    ],
+    [
+     106483,
+     52.9,
+     56.7
+    ],
+    [
+     106688,
+     52.9,
+     56.7
+    ],
+    [
+     106897,
+     52.9,
+     56.7
+    ],
+    [
+     107103,
+     52.9,
+     56.7
+    ],
+    [
+     107309,
+     52.9,
+     56.7
+    ],
+    [
+     107539,
+     53.5,
+     56.4
+    ],
+    [
+     107785,
+     55.1,
+     59.3
+    ],
+    [
+     108060,
+     55.1,
+     60.1
+    ],
+    [
+     108301,
+     56.8,
+     60.8
+    ],
+    [
+     108578,
+     56.3,
+     63.9
+    ],
+    [
+     108800,
+     57.8,
+     64.7
+    ],
+    [
+     109058,
+     57.1,
+     65.8
+    ],
+    [
+     109351,
+     59.1,
+     66.5
+    ],
+    [
+     109599,
+     61.4,
+     67.6
+    ],
+    [
+     109839,
+     60.1,
+     70.8
+    ],
+    [
+     110091,
+     60,
+     73.8
+    ],
+    [
+     110343,
+     65.2,
+     74.3
+    ],
+    [
+     110701,
+     54.4,
+     72.1
+    ],
+    [
+     110956,
+     60,
+     72.8
+    ],
+    [
+     111185,
+     58.5,
+     72.4
+    ],
+    [
+     111444,
+     57.1,
+     72.4
+    ],
+    [
+     111680,
+     56,
+     72.4
+    ],
+    [
+     111957,
+     61.2,
+     72.9
+    ],
+    [
+     112199,
+     59.9,
+     73.3
+    ],
+    [
+     112479,
+     59.1,
+     73.3
+    ],
+    [
+     112714,
+     58.9,
+     73.1
+    ],
+    [
+     112965,
+     58.8,
+     73.3
+    ],
+    [
+     113210,
+     63.7,
+     73.8
+    ],
+    [
+     113445,
+     69.4,
+     78.4
+    ],
+    [
+     113717,
+     62.5,
+     79.4
+    ],
+    [
+     113951,
+     67.6,
+     82.2
+    ],
+    [
+     114208,
+     60.2,
+     85.9
+    ],
+    [
+     114473,
+     65.3,
+     86.2
+    ],
+    [
+     114727,
+     70.8,
+     86.7
+    ],
+    [
+     114986,
+     64.7,
+     86.9
+    ],
+    [
+     115235,
+     69,
+     87
+    ],
+    [
+     115629,
+     69,
+     87
+    ]
+   ]
+  }
+ ],
+ "finished": true,
+ "wall_ms": 125227
+}

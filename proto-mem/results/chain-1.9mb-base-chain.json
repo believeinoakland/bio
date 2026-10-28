@@ -1,0 +1,211 @@
+{
+ "when": "2026-10-28T16:30:26.771Z",
+ "seed_summary": {
+  "docs_asked": 100,
+  "bytes_each": 100000,
+  "docs_promoted": 100,
+  "failures": [],
+  "read_ticks": 100,
+  "seed_s": 28,
+  "capture_text_rows": 111703,
+  "capture_text_fts_rows": 111703,
+  "keeps_pending_rows": 101,
+  "owed_reading_registered": true,
+  "rss_at_end": 434.5
+ },
+ "env": {
+  "PROTO_CHAIN_BYTES": "16777216",
+  "PROTO_CHAIN_REST_MS": "20000"
+ },
+ "extra_bytes": null,
+ "only_extra": false,
+ "recycle_ms": null,
+ "segments": [
+  {
+   "n": 0,
+   "baseline": {
+    "rss": 259.1,
+    "heap": {
+     "used": 52.8,
+     "total": 69,
+     "backing": 0.9
+    }
+   },
+   "wall_ms": 3529,
+   "rss": {
+    "start": 259.1,
+    "end": 307.1,
+    "vm_hwm": 307.1,
+    "peak_sampled": 307.1,
+    "peak_above_baseline": 48
+   },
+   "heap": {
+    "baseline_used": 52.8,
+    "peak_used": 79.1,
+    "peak_total": 101.9,
+    "floor_windows_3s": 2,
+    "floor_first": 52.8,
+    "floor_last": 62.7,
+    "floor_min": 52.8,
+    "floor_max": 62.7,
+    "floors": [
+     [
+      0,
+      52.8
+     ],
+     [
+      3,
+      62.7
+     ]
+    ]
+   },
+   "chain_lines": [
+    {
+     "arrived_ms": 712,
+     "chain_bytes": 1900079,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 2654,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 1360,
+     "chain_bytes": 2948659,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 3302,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 1826,
+     "chain_bytes": 3997239,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 3767,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 2320,
+     "chain_bytes": 4774388,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 4262,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 2841,
+     "chain_bytes": 5176718,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 4783,
+     "rested": false,
+     "event": "step"
+    },
+    {
+     "arrived_ms": 3265,
+     "chain_bytes": 5204383,
+     "window_bytes": 1048576,
+     "piece_units": 4096,
+     "isolate_age_ms": 5207,
+     "rested": false,
+     "event": "step"
+    }
+   ],
+   "readout_reads": 0,
+   "rests": [],
+   "timeline": [
+    [
+     10,
+     259.4
+    ],
+    [
+     521,
+     274
+    ],
+    [
+     1037,
+     274.2
+    ],
+    [
+     1547,
+     288.8
+    ],
+    [
+     2057,
+     293.4
+    ],
+    [
+     2564,
+     299
+    ],
+    [
+     3075,
+     301
+    ]
+   ],
+   "heap_series": [
+    [
+     3,
+     52.8,
+     69
+    ],
+    [
+     515,
+     62.2,
+     73.5
+    ],
+    [
+     821,
+     54.6,
+     72.9
+    ],
+    [
+     1172,
+     55.8,
+     72.9
+    ],
+    [
+     1540,
+     70.6,
+     89.8
+    ],
+    [
+     1890,
+     75,
+     93.1
+    ],
+    [
+     2125,
+     60.3,
+     89.6
+    ],
+    [
+     2527,
+     61.7,
+     93.1
+    ],
+    [
+     2903,
+     62.1,
+     94.5
+    ],
+    [
+     3119,
+     63.4,
+     94.5
+    ],
+    [
+     3479,
+     64.8,
+     96.3
+    ]
+   ]
+  }
+ ],
+ "finished": true,
+ "wall_ms": 11125
+}
