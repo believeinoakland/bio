@@ -13892,7 +13892,7 @@
   },
   {
    "key": "screen.members.a.lone.administrator.can.never",
-   "en": "A lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
+   "en": "Apart from the founder, a lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
    "protected": false,
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
@@ -19322,7 +19322,7 @@
   },
   {
    "key": "refusal.IMPOSSIBLE_AT_TWO",
-   "en": "With only two administrators, a removal can never carry, so neither can remove the other. Nothing was written.",
+   "en": "With only two administrators, a removal by vote can never carry, so only the team's founder can remove an administrator. Nothing was written.",
    "protected": false,
    "note": "DEC-342: administrator removal vote with two administrators"
   },
@@ -33770,9 +33770,9 @@
   },
   {
    "key": "screen.doorbell.after.head",
-   "en": "After you hand it over",
+   "en": "What to keep",
    "protected": false,
-   "note": "DEC-384: B411 I-20"
+   "note": "DEC-384: B411 I-20; DEC-479: heads the receipt, the reference first, then fingerprint, size, pseudonym and phrase"
   },
   {
    "key": "screen.document.cite.option",
@@ -45734,9 +45734,9 @@
   },
   {
    "key": "screen.photo.dropped.profile",
-   "en": "the color profile",
+   "en": "a color profile that failed its safety check",
    "protected": false,
-   "note": "DEC-473: A4-R3 left_out kind profile, {what}"
+   "note": "DEC-473: A4-R3 left_out kind profile, {what}; DEC-482: only a profile that failed the structural check (K5546 keeps a sound one, K5555)"
   },
   {
    "key": "screen.photo.dropped.extra_picture",
@@ -46121,6 +46121,342 @@
    "en": "A source this text rests on changed on {date}. It is waiting to be reviewed again, and is still offered.",
    "protected": false,
    "note": "DEC-478: a reviewed text the link check flagged (B564, K5512, K5529)"
+  },
+  {
+   "key": "screen.doorbell.preview.head",
+   "en": "What you get back",
+   "protected": false,
+   "note": "DEC-479: doorbell: the sample receipt shown before sending, folded (25)"
+  },
+  {
+   "key": "screen.inbox.view.nokind",
+   "en": "This kind of file has no safe view yet. Its name and type are above: move it into the record, or discard it with a reason.",
+   "protected": false,
+   "note": "DEC-479: inbox: inboxview refused, the kind has no safe view (45)"
+  },
+  {
+   "key": "screen.inbox.view.changed",
+   "en": "What is stored no longer matches what was handed in, so it is not shown. Nothing was changed; tell an administrator.",
+   "protected": false,
+   "note": "DEC-479: inbox: inboxview refused, the bytes do not match the knock's digest (45)"
+  },
+  {
+   "key": "screen.inbox.view.refused.summary",
+   "en": "When it cannot be shown safely",
+   "protected": false,
+   "note": "DEC-479: inbox: the folded list of why a safe view is not shown (45)"
+  },
+  {
+   "key": "screen.document.text.unsure",
+   "en": "{unsure} of them were hard to make out and are marked on the page. Check a marked word against the original before you cite it.",
+   "protected": false,
+   "note": "DEC-479: document: after the reading line, only when the reader measured how clearly each character resolved; never a model's own opinion of itself (51)"
+  },
+  {
+   "key": "screen.document.text.unsure.tip",
+   "en": "hard to make out",
+   "protected": false,
+   "note": "DEC-479: document: a marked word, its card title (51)"
+  },
+  {
+   "key": "screen.document.text.unsure.tip_why",
+   "en": "The reader could not make this word out clearly. Check it against the original.",
+   "protected": false,
+   "note": "DEC-479: document: a marked word, its card (51)"
+  },
+  {
+   "key": "screen.ceremony.emails.head",
+   "en": "Emails in this case",
+   "protected": false,
+   "note": "DEC-480: ceremony: the section, after Photos in this case"
+  },
+  {
+   "key": "screen.ceremony.emails.by",
+   "en": "forwarded by {member}, {date}",
+   "protected": false,
+   "note": "DEC-480: ceremony: an email row, who brought it in and when"
+  },
+  {
+   "key": "screen.ceremony.emails.counts",
+   "en": "{count} names: {shown} shown, {withheld} withheld",
+   "protected": false,
+   "note": "DEC-480: ceremony: an email row, its names counted"
+  },
+  {
+   "key": "screen.ceremony.emails.withheld",
+   "en": "withheld",
+   "protected": false,
+   "note": "DEC-480: ceremony and the published copy: what an unshown name reads (K5534)"
+  },
+  {
+   "key": "screen.ceremony.emails.shown",
+   "en": "shown: {reason}",
+   "protected": false,
+   "note": "DEC-480: ceremony: a shown name, with the reason it is material"
+  },
+  {
+   "key": "screen.ceremony.emails.preview",
+   "en": "As it will be published",
+   "protected": false,
+   "note": "DEC-480: ceremony: the folded preview of the published copy"
+  },
+  {
+   "key": "screen.ceremony.emails.note",
+   "protected": true,
+   "note": "DEC-480: ceremony: what the published copy carries (K5534, DEC-408)",
+   "en": "Each person's name in an email is withheld unless you show it, with the reason it is material to the case. The published copy carries the text, the attachments, and From, To, Cc, Date and Subject; never an email address, and never the technical headers that came with the message. A home address or phone in the text is removed, as from every published document."
+  },
+  {
+   "key": "screen.ceremony.emails.why",
+   "en": "Why this name is material",
+   "protected": false,
+   "note": "DEC-480: ceremony: the reason asked before a name is shown"
+  },
+  {
+   "key": "screen.ceremony.emails.after",
+   "en": "If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.",
+   "protected": false,
+   "note": "DEC-480: ceremony: as for a photo mark"
+  },
+  {
+   "key": "screen.published.subjectchanged.named",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding is now about {subject}.",
+   "protected": false,
+   "note": "DEC-481: published: under a finding whose question's subject changed after the edition, the new subject publicly nameable (K5540)"
+  },
+  {
+   "key": "screen.published.subjectchanged.unnamed",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding is now about someone this page does not name.",
+   "protected": false,
+   "note": "DEC-481: published: as .named, the new subject not publicly nameable (K5540)"
+  },
+  {
+   "key": "screen.published.subjectchanged.removed",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding no longer names who it is about.",
+   "protected": false,
+   "note": "DEC-481: published: the subject removed (K5541)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.named",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about {subject}.",
+   "protected": false,
+   "note": "DEC-481: published: one part of a divided question, each part shown on its own (K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.unnamed",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about someone this page does not name.",
+   "protected": false,
+   "note": "DEC-481: published: as .part.named, not nameable (K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.removed",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding no longer names who it is about.",
+   "protected": false,
+   "note": "DEC-481: published: a part's subject removed (K5541, K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.forms",
+   "en": "When the subject cannot be named, was removed, or changed for one part",
+   "protected": false,
+   "note": "DEC-481: published: the design page's fold of the line's other forms"
+  },
+  {
+   "key": "screen.question.about.head",
+   "en": "Who it is about",
+   "protected": false,
+   "note": "DEC-481: question: the section with the subject and its changes (K5540)"
+  },
+  {
+   "key": "screen.question.subjectchanged",
+   "en": "{member} changed who this question is about, from {old} to {new}, on {date}.",
+   "protected": false,
+   "note": "DEC-481: question: the team's note of a change (K5540)"
+  },
+  {
+   "key": "screen.question.subjectremoved",
+   "en": "{member} removed {old} as who this question is about, on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-481: question: the team's note of a removal, with its reason (K5541)"
+  },
+  {
+   "key": "screen.question.part.subjectchanged",
+   "en": "{member} changed who part “{part}” is about, from {old} to {new}, on {date}.",
+   "protected": false,
+   "note": "DEC-481: question: a part's change, noted on its own (K5551)"
+  },
+  {
+   "key": "screen.question.part.subjectremoved",
+   "en": "{member} removed {old} as who part “{part}” is about, on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-481: question: a part's removal (K5541, K5551)"
+  },
+  {
+   "key": "screen.question.subjectchanged.published",
+   "en": "This question is in {case}, edition {n}. Its public page now says the subject changed after that edition.",
+   "protected": false,
+   "note": "DEC-481: question: under a change, when a published case carries the question (K5540)"
+  },
+  {
+   "key": "screen.members.invite.nolink",
+   "en": "No invitation link exists yet. It appears here once {names} have endorsed, or once the team's founder has.",
+   "protected": false,
+   "note": "DEC-483: members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen"
+  },
+  {
+   "key": "screen.members.invite.waiting.summary",
+   "en": "When a new administrator waits on endorsements",
+   "protected": false,
+   "note": "DEC-483: members: the design page's fold for the nolink line"
+  },
+  {
+   "key": "screen.members.founder.removes",
+   "en": "The team's founder can remove any other administrator alone, with a reason everyone on the team sees. Other administrators still need a majority vote, and no one can remove the founder.",
+   "protected": false,
+   "note": "DEC-484: members: in What removing an administrator takes, at every size (K5562)"
+  },
+  {
+   "key": "screen.members.founder.remove.summary",
+   "en": "When the founder removes an administrator",
+   "protected": false,
+   "note": "DEC-484: members: the fold with the founder's own removal (K5562)"
+  },
+  {
+   "key": "screen.members.removed.byfounder",
+   "en": "{founder}, the team's founder, removed {handle} as an administrator on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-484: members, and the team's updates: the removal and its reason, shown to the team (K5562)"
+  },
+  {
+   "key": "screen.members.endorse.founder",
+   "en": "{handle} is proposed as an administrator. As the team's founder, your endorsement alone makes them one.",
+   "protected": false,
+   "note": "DEC-484: members: endorse.what's line for the founder (K5563)"
+  },
+  {
+   "key": "screen.members.proposal.summary",
+   "en": "When the founder endorses, or the proposal is cancelled",
+   "protected": false,
+   "note": "DEC-484: members: the design page's fold for a proposed administrator's two outcomes"
+  },
+  {
+   "key": "screen.members.proposal.cancelled",
+   "en": "{handle}'s proposal is cancelled. They stay a member, without an administrator's powers; the endorsements given so far stay in the history.",
+   "protected": false,
+   "note": "DEC-484: members: after Cancel this proposal (K5563)"
+  },
+  {
+   "key": "screen.members.removals.head",
+   "en": "Administrators removed",
+   "protected": false,
+   "note": "DEC-485: members: the team's list of every administrator removal, the founder's and by vote (K5568)"
+  },
+  {
+   "key": "screen.members.removals.none",
+   "en": "No administrator has been removed.",
+   "protected": false,
+   "note": "DEC-485: members: the list, empty"
+  },
+  {
+   "key": "screen.members.removed.byvote",
+   "en": "{handle} was removed as an administrator by vote on {date}.",
+   "protected": false,
+   "note": "DEC-485: members: a removal by vote, then each voter's reason (K5568)"
+  },
+  {
+   "key": "screen.members.removed.voter",
+   "en": "{member}: “{reason}”",
+   "protected": false,
+   "note": "DEC-485: members: one voter's reason under a removal by vote (K5568)"
+  },
+  {
+   "key": "screen.members.founder.remove.now",
+   "en": "Remove {member} now, as the founder",
+   "protected": false,
+   "note": "DEC-485: members: the founder's act inside a removal vote under way; it removes at once (K5562; members.mjs:284 drew Agree)"
+  },
+  {
+   "key": "screen.members.founder.seen",
+   "en": "Seen by the team's founder",
+   "protected": false,
+   "note": "DEC-485: members: the design page's fold for the founder's act inside a vote"
+  },
+  {
+   "key": "screen.members.founder.remove.now.what",
+   "en": "As the team's founder, you can remove {member} now, without waiting for the vote. Your reason is shown to the team.",
+   "protected": false,
+   "note": "DEC-485: members: above the founder's act inside a vote"
+  },
+  {
+   "key": "refusal.NO_WAITING_PROPOSAL",
+   "en": "There is no waiting proposal to cancel: it was already accepted or cancelled. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-485: adminproposalcancel (K5566)"
+  },
+  {
+   "key": "refusal.NOT_YOUR_PROPOSAL",
+   "en": "Only the team's founder or the member who proposed it can cancel this proposal. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-485: adminproposalcancel (K5566)"
+  },
+  {
+   "key": "screen.capture.person.refused",
+   "en": "The site asked for a person, not a program, so nothing was captured. A Queue item lets you bring the page in yourself.",
+   "protected": false,
+   "note": "DEC-486: add: the fetch met a challenge or CAPTCHA page (K5574 (1)); never filed as the document"
+  },
+  {
+   "key": "screen.capture.person.refused.following",
+   "en": "The site asked for a person, not a program, so nothing was captured. The members following this address have a Queue item to bring the page in themselves.",
+   "protected": false,
+   "note": "DEC-486: add, or the address's page: a request no member asked, such as a scheduled re-fetch (K5575)"
+  },
+  {
+   "key": "screen.capture.person.never",
+   "en": "Civicsmith never passes the check for you and never carries your pass to its own server: the page comes from your browser.",
+   "protected": false,
+   "note": "DEC-486: add and queue: the rule beneath K5574 (2), K3656"
+  },
+  {
+   "key": "queue.kind.capture-person",
+   "en": "Pages that asked for a person",
+   "protected": false,
+   "note": "DEC-486: queue: the kind (K5575)"
+  },
+  {
+   "key": "queue.capture.person.item",
+   "en": "{site} asked for a person before handing over {address}. Open it in your own browser, pass the check, save the file, then add it here.",
+   "protected": false,
+   "note": "DEC-486: queue: the item to the member who asked, or to those following (K5575)"
+  },
+  {
+   "key": "queue.capture.person.open",
+   "en": "Open the page in your browser",
+   "protected": false,
+   "note": "DEC-486: queue: the link, opened in a new tab of the member's own browser"
+  },
+  {
+   "key": "queue.capture.person.add",
+   "en": "Add the file you saved",
+   "protected": false,
+   "note": "DEC-486: queue: to Add, the request waiting"
+  },
+  {
+   "key": "screen.capture.person.matched",
+   "en": "Matched to the request for {address}. Recorded as brought in by you from that address, on {date}, after the site asked for a person.",
+   "protected": false,
+   "note": "DEC-486: add: after the file is matched by its address (K5575)"
+  },
+  {
+   "key": "capture.basis.person",
+   "en": "{member} brought it in from {address} on {date}, after the site asked for a person. It rests on {member}'s word, as any file a member hands in.",
+   "protected": false,
+   "note": "DEC-486: the record's line under the document (K5575)"
+  },
+  {
+   "key": "screen.capture.person.summary",
+   "en": "If the site asks for a person",
+   "protected": false,
+   "note": "DEC-486: add: the fold"
   }
  ],
  "rewrite": {
@@ -46351,6 +46687,9 @@
   "filings.floors_capture_connection": "Floors: copy {capture}, connection {connection}. {detail}",
   "standard.source.capture": "could be captured: {capture}, {extent}",
   "standard.source.capture.whole": "could be captured: {capture}",
-  "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}"
+  "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}",
+  "screen.doorbell.happens.court": "A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them.",
+  "refusal.CONSENSUS_REQUIRED": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}.",
+  "screen.members.remove.reason": "Why remove their administrator's powers? (everyone on the team will see this)"
  }
 }

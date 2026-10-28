@@ -15,4 +15,4 @@ A reading worker's triage of `build/plan/later-ux.md` on `tranche/T52` (about 16
 
 **C (about 41):** 1-5, 8, 9, 11, 21, 23, 27, 28, 30-32, 34, 36, 37, 39, 43, 49, 52, 54, 55, 67-70, 72, 73, 76-80, 87, 88, 90, 98, 102, 105, 111, 112: the jobs' (singular choices, raw ids, layout at 390 px, labels the code must choose by kind). **D (about 43):** the rest.
 
-**Done (UX design #43):** W group 1 (items 6-19) as DEC-452; groups 2 and 3 (the refusals line, Document's and the ceremony's lines) as DEC-453, with its parked items named there. The Add and Document line (82-159) as DEC-454. The B items' drawings 125, 149, 152 as DEC-455. Left: B items 25, 38, 45, 51, 61, 74, 81 (Bob's or BOB's, or re-read the walk first), DEC-453's parked items.
+**Done (UX design #43):** W group 1 (items 6-19) as DEC-452; groups 2 and 3 (the refusals line, Document's and the ceremony's lines) as DEC-453, with its parked items named there. The Add and Document line (82-159) as DEC-454. The B items' drawings 125, 149, 152 as DEC-455. B items 25, 45, 51, 61 as DEC-479 (UX design #45). Left: B items 38, 74, 81 (Bob's or BOB's, or re-read the walk first), DEC-453's parked items.
