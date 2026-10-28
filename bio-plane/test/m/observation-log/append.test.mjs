@@ -2,8 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, entry } from "./fixture.mjs";
-import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_STATES, CONDITION_KINDS, OBSERVATION_REFERENT_FAULTS, checkCondition }
+import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_STATES, CONDITION_KINDS, OBSERVATION_REFERENT_FAULTS, checkCondition, LEAD_LOOK_OUTCOMES }
   from "../../../src/observation-log/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const refused = (r) => (r ? [r.code, r.check] : null);
 
@@ -69,8 +70,7 @@ test("R33 the condition vocabulary holds its twelve kinds and the five sweep and
   for (const [k, s] of Object.entries(CONDITION_KINDS))
     assert.ok(typeof s === "string" && s.trim().length > 20, `${k} has its sentence`);
   // each sweep kind's sentence names the monitoring rule it is taken from; each notice kind's, queue-producers R27
-  for (const k of SWEEP) assert.match(CONDITION_KINDS[k], /\(monitoring R[0-9, R]*R63\)$/, k);
-  for (const k of NOTICE) assert.match(CONDITION_KINDS[k], /queue-producers R27\)$/, k);
+  for (const k of [...SWEEP, ...NOTICE]) assert.equal(CONDITION_KINDS[k], word(`observation-log.vocabulary.condition_${k.replace(/-/g, "_")}`), k);
   // every new kind is accepted at the one append site, on a look and on a governed look, and checkCondition agrees
   const w = world();
   for (const c of [...SWEEP, ...NOTICE]) {
@@ -94,7 +94,7 @@ test("R3 NEVER_LOOKED is refused at the append as AI_LOG_NEVER_LOOKED_STORED (C-
   const w = world();
   const r = w.obs.observe(entry({ state: "NEVER_LOOKED" }));
   assert.deepEqual(refused(r), ["AI_LOG_NEVER_LOOKED_STORED", "C-22.17"]);
-  assert.match(r.detail, /never stored/);
+  assert.equal(r.detail, word("observation-log.vocabulary.never_looked_is_never_stored", { LEAD_LOOK_OUTCOMES: LEAD_LOOK_OUTCOMES.join(", ") }));
   assert.ok(typeof r.translation === "string" && r.translation.length > 20 && r.ok === false);
   // C-22.1 keeps its own condition: a state not in R1
   assert.deepEqual(refused(w.obs.observe(entry({ state: "NOT_A_STATE" }))), ["AI_LOG_STATE_UNKNOWN", "C-22.1"]);

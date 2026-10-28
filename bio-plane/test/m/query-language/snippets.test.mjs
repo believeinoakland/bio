@@ -6,6 +6,15 @@ import { world } from "./fixture.mjs";
 import { compile, textOf } from "../../../src/query.mjs";
 
 const V = "class:member";
+/* The fixture's own words: each snippet must carry or omit them, so each is named once and read back from here. */
+const FRAG = {
+  earlier: "earlier page of the first capture",
+  consent: "consent calendar",
+  later: "later page",
+  zebrafish: "zebrafish habitat survey",
+  passageText: "passage text",
+  firstExtent: "first extent",
+};
 const unit = (w, bundle, sha, seq, text) => w.insert("capture_text", { capture_sha: sha, bundle_id: bundle,
   extent_kind: "pdf-page", extent: `{"page":${seq}}`, ref: `page ${seq + 1}`, seq, text, truncated: 0, chain_kind: "layer" });
 const hitsOf = (w, opts) => Object.fromEntries(w.run({ viewer: V, ...opts }).rows.map((r) => [r.bundle_id, r]));
@@ -17,10 +26,10 @@ function scene() {
   w.bundle("Q-2", { title: "Culvert", body: "nothing about it here", meta: "zebrafish steward MEM-9" });
   w.bundle("DOC-1", { title: "Council packet", body: "our notes on the packet" });
   w.bundle("DOC-2", { title: "Second packet", body: "more notes" });
-  unit(w, "DOC-1", "sha-b", 0, "item 420 on the consent calendar was pulled for discussion");
-  unit(w, "DOC-1", "sha-a", 3, "a later page that also mentions 420 in its last paragraph");
-  unit(w, "DOC-1", "sha-a", 1, "an earlier page of the first capture where 420 is the council file number");
-  unit(w, "DOC-2", "sha-c", 0, "zebrafish habitat survey appendix and the appropriation 420");
+  unit(w, "DOC-1", "sha-b", 0, `item 420 on the ${FRAG.consent} was pulled for discussion`);
+  unit(w, "DOC-1", "sha-a", 3, `a ${FRAG.later} that also mentions 420 in its last paragraph`);
+  unit(w, "DOC-1", "sha-a", 1, `an ${FRAG.earlier} where 420 is the council file number`);
+  unit(w, "DOC-2", "sha-c", 0, `${FRAG.zebrafish} appendix and the appropriation 420`);
   return w;
 }
 
@@ -30,8 +39,8 @@ test("R33 a bundle matched only by passage:420 answers the words of its first ma
   assert.deepEqual(Object.keys(h).sort(), ["DOC-1", "DOC-2"]);
   assert.equal(h["DOC-1"].snippet_from, "passage");
   assert.match(h["DOC-1"].snippet, /\u0001420\u0002/, "the matched words of the passage, in the page's marks (MARK_OPEN, MARK_CLOSE)");
-  assert.match(h["DOC-1"].snippet, /earlier page of the first capture/, "sha-a before sha-b, and seq 1 before seq 3");
-  assert.doesNotMatch(h["DOC-1"].snippet, /consent calendar|later page/);
+  assert.ok(h["DOC-1"].snippet.includes(FRAG.earlier), "sha-a before sha-b, and seq 1 before seq 3");
+  assert.ok(!h["DOC-1"].snippet.includes(FRAG.consent) && !h["DOC-1"].snippet.includes(FRAG.later));
   assert.equal(h["DOC-2"].snippet_from, "passage");
   assert.match(h["DOC-2"].snippet, /\u0001420\u0002/);
   for (const r of Object.values(h)) assert.ok(Object.keys(r).includes("snippet") && Object.keys(r).includes("snippet_from"));
@@ -88,11 +97,11 @@ test("R33 a text term that matches only meta falls to the matching passage; text
   assert.deepEqual([both["Q-2"].snippet, both["Q-2"].snippet_from], [null, null]);
   const w2 = world();
   w2.bundle("B", { title: "Notes", body: "the hydrant inspection notes", meta: "x" });
-  unit(w2, "B", "s", 0, "hydrant inspection passage text");
+  unit(w2, "B", "s", 0, `hydrant inspection ${FRAG.passageText}`);
   const b = hitsOf(w2, { q: "hydrant passage:hydrant" }).B;
   assert.equal(b.snippet_from, "text");
   assert.match(b.snippet, /\u0001hydrant\u0002/);
-  assert.doesNotMatch(b.snippet, /passage text/);
+  assert.ok(!b.snippet.includes(FRAG.passageText));
   const m = hitsOf(w2, { q: "x passage:hydrant" }).B;
   assert.equal(m.snippet_from, "passage", "the text term hits only meta, so the passage supplies the snippet");
 });
@@ -158,14 +167,14 @@ test("R34 a passage hit's snippet_unit is the row whose text holds the snippet's
   assert.equal(h["DOC-1"].snippet_from, "passage");
   assert.equal(typeof h["DOC-1"].snippet_unit, "number");
   const text = unitText(w, h["DOC-1"].snippet_unit);
-  assert.match(text, /earlier page of the first capture/, "sha-a, seq 1 comes before sha-a seq 3 and sha-b");
+  assert.ok(text.includes(FRAG.earlier), "sha-a, seq 1 comes before sha-a seq 3 and sha-b");
   for (const word of words(h["DOC-1"].snippet)) assert.ok(text.includes(word), `${word} is in the unit the snippet names`);
-  assert.match(unitText(w, h["DOC-2"].snippet_unit), /zebrafish habitat survey/);
+  assert.ok(unitText(w, h["DOC-2"].snippet_unit).includes(FRAG.zebrafish));
   const tie = world();
   tie.bundle("T", { title: "Tie" });
   tie.insert("capture_text", { capture_sha: "s", bundle_id: "T", extent_kind: "pdf-page", extent: '{"page":9}', ref: "p", seq: 0, text: "second extent holds needle", truncated: 0, chain_kind: "layer" });
-  tie.insert("capture_text", { capture_sha: "s", bundle_id: "T", extent_kind: "pdf-page", extent: '{"page":1}', ref: "p", seq: 0, text: "first extent holds needle", truncated: 0, chain_kind: "layer" });
-  assert.match(unitText(tie, hitsOf(tie, { q: "passage:needle" }).T.snippet_unit), /first extent/, "extent breaks a tie of capture and seq");
+  tie.insert("capture_text", { capture_sha: "s", bundle_id: "T", extent_kind: "pdf-page", extent: '{"page":1}', ref: "p", seq: 0, text: `${FRAG.firstExtent} holds needle`, truncated: 0, chain_kind: "layer" });
+  assert.ok(unitText(tie, hitsOf(tie, { q: "passage:needle" }).T.snippet_unit).includes(FRAG.firstExtent), "extent breaks a tie of capture and seq");
 });
 
 test("R34 control: a text hit, a text hit that also matches a passage, and an unmatched hit carry snippet_unit null; the key is always present", () => {

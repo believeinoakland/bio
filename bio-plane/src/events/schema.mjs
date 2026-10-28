@@ -149,6 +149,26 @@ CREATE TABLE IF NOT EXISTS event_sources (
   capture_sha TEXT NOT NULL,
   at          TEXT NOT NULL
 );
+-- R58 (T53): one entry of a followed register read in two forms and stated differently, held with the second reading and
+-- shown with the event, never silent. bundle_id is the second reading's capture's home (its sight, R40); held_capture_sha
+-- the first reading's, shown only to a viewer who may see it.
+CREATE TABLE IF NOT EXISTS event_disagreements (
+  disagreement_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id         TEXT NOT NULL,
+  entry_id         TEXT NOT NULL,
+  field            TEXT NOT NULL,
+  held_text        TEXT,
+  stated_text      TEXT,
+  content_type     TEXT NOT NULL,
+  capture_sha      TEXT NOT NULL,
+  bundle_id        TEXT,
+  held_capture_sha TEXT,
+  held_bundle_id   TEXT,
+  provisional      INTEGER NOT NULL DEFAULT 0,
+  by_actor         TEXT,
+  at               TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS event_disagreements_event ON event_disagreements(event_id, disagreement_id);
 -- R43-R45, R47, R48 (T35): A USE OF A POWER's facet, one row beside its event (kind discretion, waiver or assessment).
 -- The provision is an opaque standards key (standard, portion). reason_stated is 1 for a cited reason, 0 for "none"
 -- (NULL for an assessment). reason, outcome_cite, scope and each of conditions are cited passages
@@ -194,5 +214,6 @@ CREATE TABLE IF NOT EXISTS event_read_optin (
 );
 `;
 
-/* Columns added after a table's first release, added at boot to a store that predates them (R48, T35). */
-export const EVENTS_ADDED_COLUMNS = Object.freeze([["dated_facts", "question", "TEXT"]]);
+/* Columns added after a table's first release, added at boot to a store that predates them (R48, T35; R61, T53). */
+export const EVENTS_ADDED_COLUMNS = Object.freeze([["dated_facts", "question", "TEXT"], ["events", "withdrawn_actor", "TEXT"],
+  ["events", "withdrawn_at", "TEXT"], ["events", "withdrawn_why", "TEXT"]]);

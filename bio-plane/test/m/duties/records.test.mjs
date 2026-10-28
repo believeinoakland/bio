@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, fictionalView, E, BOB, CAROL, MACHINE, ZONE } from "./fixture.mjs";
 import { DUTIES_CHECKS, NEVER_SAID, SCHEDULER_STAMP, OCCURRENCE_STATES } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const row = (r, code) => {
   assert.equal(r.ok, false, `${code}: ${JSON.stringify(r).slice(0, 300)}`);
@@ -114,7 +115,7 @@ test("R15 powersOf answers the powers in force with their instruments and delega
   assert.match(r.undetermined[0].why, /does not state when it ceased to be in force/);
   const text = JSON.stringify(r).toLowerCase();
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
-  assert.match(r.says, /a member's determination/);
+  assert.equal(r.says, word("duties.says.powers_held_force"));
   /* the obligation that is not a power is not answered */
   assert.equal(r.powers.length + r.undetermined.length, 2);
 });
@@ -146,7 +147,7 @@ test("R17 setAgainst answers the money facts in scope and period, each compared 
   assert.equal(rel[mny("range")].relation, "undetermined", "a range straddling the term settles nothing");
   assert.ok(!(mny("other") in rel), "a fact outside the scope is not set against it");
   assert.ok(!(mny("cap") in rel), "the term is not set against itself");
-  assert.ok(r.items.every((i) => /never a finding/.test(i.question)));
+  assert.ok(r.items.every((i) => i.question === word("duties.question.how_stand_against", { fact_id: i.fact, id: i.term })));
   const text = JSON.stringify(r).toLowerCase();
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
   /* a threshold duty is set against as a prohibition is */

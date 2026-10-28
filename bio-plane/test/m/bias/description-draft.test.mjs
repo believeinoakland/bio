@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, S, WHY } from "./world.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const A = "BIAS-2026-0001-a";
 const DESC = { kinds: ["issue", "other"], otherKind: "A records clinic", focus: "The records office and its contracts.",
@@ -18,7 +19,7 @@ const tables = (w) => w.rows(`SELECT name FROM sqlite_master WHERE type='table' 
 const NONE = (r) => {
   assert.deepEqual({ ...r, stated: undefined }, { ok: true, description: null, offered: false, proposed: false, authored: false,
     statements: [], installed: false, adopted: false, writes: 0, stated: undefined });
-  assert.match(r.stated, /no description of the team to start a declared bias from/);
+  assert.match(r.stated, wordRx("bias.index.there_is_no_description_of"));
 };
 
 async function described() {
@@ -46,8 +47,7 @@ test("R48: to an active member it answers the latest self-description (kinds, ot
     assert.deepEqual([r.ok, r.offered, r.proposed, r.authored, r.statements], [true, true, true, false, []], viewer);
     assert.equal(r.label, word("bias.label.group_wrote_itself"));
     assert.equal(r.offers, word("bias.opening_text_new"));
-    assert.match(r.stated, /a member writes each statement, names its subject in the registry and justifies it/);
-    assert.match(r.stated, /adopts it with a member's name on it/);
+    assert.match(r.stated, wordRx("bias.group_description_itself"));
     assert.equal("history" in r, false, "only the latest record is offered");
   }
   /* each of the four texts and the kinds as written, with its author and time */
