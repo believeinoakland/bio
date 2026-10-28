@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7615 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7619 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -26350,6 +26350,9 @@ export const WORD_ROWS = Object.freeze([
   ["record-core.index.the_parts_do_not_hash","The parts, read in order, do not hash to the document's fingerprint. Nothing was kept.",null,null,false,"code"],
   ["record-core.index.the_store_would_not_take","The store would not take the document whole ({why}). Nothing was kept.",null,null,false,"code"],
   ["record-core.index.your_teams_civicsmith_could_not","your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.",null,null,false,"code"],
+  ["record-grammar.acts.no_basis.entities","held identifier and grade-D testimony",null,null,false,"code"],
+  ["record-grammar.acts.no_basis.progressions","first declaration and revision of a declared flow",null,null,false,"code"],
+  ["record-grammar.acts.no_citation.progressions","revision of a declared flow and exception document",null,null,false,"code"],
   ["record-grammar.bundle.adjust_the_later_record_timestamp_suffix","adjust the later record timestamp suffix by one second, logged",null,null,false,"code"],
   ["record-grammar.bundle.annotation_file_name_does_not","annotation file '{name}' does not match its id (expected '{expectedFile}')",null,null,false,"code"],
   ["record-grammar.bundle.annotation_file_name_is_not","annotation file '{name}' is not a .json record",null,null,false,"code"],
@@ -26452,6 +26455,7 @@ export const WORD_ROWS = Object.freeze([
   ["record-grammar.frontmatter.line_v1_does_not_fit","line {v1} does not fit the restricted grammar: {line}",null,null,false,"code"],
   ["record-grammar.frontmatter.re_indent_key_to_column","re-indent '{key}' to column 0",null,null,false,"code"],
   ["record-grammar.frontmatter.top_level_key_key_is","top-level key '{key}' is buried by stray indentation at line {v1} and will not register",null,null,false,"code"],
+  ["record-grammar.labels.unknown_subject","proposalLabel: '{subject}' is not a proposal subject; one of {subjects}",null,null,false,"code"],
   ["reevaluation.checks.only_a_named_member_can","Only a named member can record that a reference stays on the earlier version. That is a judgement about the evidence, and a machine credential holds no judgement the record would stand behind.",null,null,false,"code"],
   ["reevaluation.checks.only_a_named_member_can_2","Only a named member can record that a finding was looked at again. A re-evaluation is a judgement about whether the finding still stands, and a machine credential holds no judgement the record would stand behind.",null,null,false,"code"],
   ["reevaluation.declared.adoptversion","notice-directed: adopts the newer capture a version notice names, keyed by notice, with the member's reason for adopting it, now required (reevaluation R15; DEC-88: `reasoned`); travels with the notice (reevaluation R14)",null,null,false,"code"],

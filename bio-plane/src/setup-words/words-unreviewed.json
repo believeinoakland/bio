@@ -46124,6 +46124,27 @@
       "line": 147
     },
     {
+      "id": "record-grammar.acts.no_basis.entities",
+      "en": "held identifier and grade-D testimony",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 56
+    },
+    {
+      "id": "record-grammar.acts.no_basis.progressions",
+      "en": "first declaration and revision of a declared flow",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 54
+    },
+    {
+      "id": "record-grammar.acts.no_citation.progressions",
+      "en": "revision of a declared flow and exception document",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 65
+    },
+    {
       "id": "record-grammar.bundle.adjust_the_later_record_timestamp_suffix",
       "en": "adjust the later record timestamp suffix by one second, logged",
       "module": "record-grammar",
@@ -46836,6 +46857,13 @@
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/frontmatter.mjs",
       "line": 161
+    },
+    {
+      "id": "record-grammar.labels.unknown_subject",
+      "en": "proposalLabel: '{subject}' is not a proposal subject; one of {subjects}",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/labels.mjs",
+      "line": 203
     },
     {
       "id": "reevaluation.checks.only_a_named_member_can",

@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { checkBundle, EXTENSION_ARMS, idDisagrees } from "../../../src/record-grammar/index.mjs";
 import { fixtures, STUBS, sha256, NOW } from "./fixtures/bundles.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const EXPECTED = JSON.parse(readFileSync(new URL("./fixtures/expected.json", import.meta.url), "utf8"));
 const run = (b, grammars = STUBS) => checkBundle(b, { grammars, ...(b.knownSchemas ? { knownSchemas: b.knownSchemas } : {}) });
@@ -87,7 +87,7 @@ test("R28 R39 R40 a grammar claiming an arm's whole id list runs in that arm's p
   assert.deepEqual(r.findings.map((f) => f.message), ["information", "info2", r.findings[2].message, "sup", "recheck", "inq",
     "proj", "later"]);
   assert.equal(r.findings[2].check, "C-6.1");
-  assert.match(r.findings[2].message, /closed vocabulary/);
+  assert.equal(r.findings[2].message, word("record-grammar.bundle.references_i_rel_rel_is", { i: 0, rel: "knows" }));
   /* Every arm sees the parsed document and the files: the one context. */
   const seen = [];
   const spy = (module, ids) => ({ module, ids, arm: (ctx) => { seen.push([module, ctx.fm.id, ctx.files.has("bundle.md"), typeof ctx.body]); } });
@@ -197,14 +197,14 @@ test("R39 an object_type naming no type by its own key (toString, constructor, _
   for (const t of NAMES) {
     const r = await withType(t);
     assert.deepEqual(like(r, t), memo, t);
-    assert.deepEqual(r.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), [`object_type '${t}' is not a known type`], t);
+    assert.deepEqual(r.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), [word("record-grammar.bundle.object_type_ot_is_not", { ot: t })], t);
     /* No heading arm and no state arm runs for it, as for any unknown type. */
     assert.ok(!r.findings.some((f) => ["C-3.1", "C-4.1", "C-4.2"].includes(f.check)), t);
   }
   /* Under every bundle prefix, too: the id's implied type is never an inherited value. */
   for (const p of ["PROB", "INQ", "PROJ", "BIAS", "PLN"]) for (const t of ["toString", "constructor", "__proto__"]) {
     const r = await withType(t, p);
-    assert.deepEqual(r.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), [`object_type '${t}' is not a known type`], `${p} ${t}`);
+    assert.deepEqual(r.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), [word("record-grammar.bundle.object_type_ot_is_not", { ot: t })], `${p} ${t}`);
   }
   /* Negative control: a known type still checks, its heading and state arms running (and a legacy spelling read through
      its own table). */
@@ -286,7 +286,7 @@ test("R62 checkBundle admits a success_record document: a bare SUC id core under
   for (const state of ["open", "published", "closed", "superseded"]) {
     const s = await checkSuccess({ state });
     assert.deepEqual(s.findings.filter((f) => f.check === "C-4.1").map((f) => f.message),
-      [`current_state '${state}' is not legal for success_record (legal: recorded)`], state);
+      [word("record-grammar.bundle.current_state_cur_is_not", { cur: state, ot: "success_record", legal: "recorded" })], state);
     assert.equal(s.pass, false);
   }
   /* The type is known to C-2.5 and the SUC prefix implies it: no C-2.5 for the document, and the default stamp admits it. */
