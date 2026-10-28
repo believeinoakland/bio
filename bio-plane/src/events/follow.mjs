@@ -260,9 +260,15 @@ function vote(k, held, row, f, out) {
   keepSource(k, row.key, "participant", String(p.id), { value: f.value }, held.sha);
 }
 
-/* ---- R38: a followed proceeding's register ---- */
+/* ---- R38, R58, R59: a followed proceeding's register ---- */
 
-const COURT_TYPES = ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"];
+/* The content types that read a register (`court-doctypes`), and the system that assigns each one's entry ids (R58 (1)):
+   CourtListener's docket page and its docket-entries answer state the one number for one entry; the others assign none. */
+const COURT_TYPES = ["courtlistener_docket", "courtlistener_api", "cpuc_proceeding", "ecourt_roa"];
+const SYSTEM = { courtlistener_docket: "courtlistener", courtlistener_api: "courtlistener" };
+const systemOf = (type) => SYSTEM[type] ?? type;
+/* The key an entry was held under before T53: the reading's content type, not its system (R58 (5)). */
+const OLD_COURTLISTENER = "courtlistener_docket";
 const US_DATE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
 const LONG_DATE = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})$/;
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
@@ -278,8 +284,29 @@ function dayAsWritten(raw) {
 /* What the entry says it is: an order when its stated kind, or its own opening words, say order; else a filing. */
 const kindOf = (row) => (/order/i.test(String(row.kind_as_written ?? "")) || /^\s*(?:minute\s+)?order\b/i.test(String(row.text ?? ""))
   ? "order" : "filing");
+const dayOf = (row) => { const t = typeof row.date === "string" ? row.date.trim() : ""; return t ? dayAsWritten(t) : null; };
 
-/** R38: register rows with a source-assigned entry id, as `filing` or `order` events of a proceeding a member follows. */
+/* The source row's facts as R58 keeps them: the first reading's (`date`, the held one, and `primary` its content type) and,
+   by content type, each form's last reading. A row kept before T53 holds only its date and was read as a docket page. */
+function factsOf(prior, fallbackType) {
+  const f = JSON.parse(prior.facts);
+  if (f.readings) return f;
+  return { entry_id: f.entry_id, date: f.date ?? null, primary: fallbackType, readings: { [fallbackType]: { date: f.date ?? null, capture_sha: prior.capture_sha } } };
+}
+
+/* R58 (3): one reading stating a different kind or day than the held one is a disagreement, held with its reading and
+   shown with the event, never silent and never a change to it. */
+function disagree(k, held, eventId, entryId, field, was, stated, type, provisional, out) {
+  if (was === stated) return;
+  const dup = k.one(`SELECT 1 AS x FROM event_disagreements WHERE event_id=? AND field=? AND capture_sha=?`, eventId, field, held.sha);
+  if (!dup) k.insert("event_disagreements", { event_id: eventId, entry_id: String(entryId), field, held_text: was, stated_text: stated,
+    content_type: type, capture_sha: held.sha, bundle_id: held.bundleId, held_capture_sha: held.heldSha ?? null, held_bundle_id: held.heldBundle ?? null,
+    provisional: provisional ? 1 : 0, by_actor: MACHINE, at: k.now() });
+  out.disagreements.push({ entry_id: entryId, event_id: eventId, field, held: was, stated, content_type: type, ...(provisional ? { provisional: true } : {}) });
+}
+
+/** R38, R58, R59: register rows with a source-assigned entry id, as `filing` or `order` events of a proceeding a member follows:
+ *  one event for one entry however many readings state it, a second reading adding an attestation. */
 export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {}) {
   if (!said(proceeding)) return noEntity(localize("events.follow.following_a_register_names_the", "following a register names the proceeding a member follows, by its entity id"));
   if (!k.entities || !k.entities.has(proceeding)) return noSuchEntity(proceeding);
@@ -288,28 +315,72 @@ export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {
   if (!held) return refuse("CAPTURE_NOT_HELD", word("events.why.record_holds_capture"));
   const reading = readingOf(k, held.sha);
   if (!reading || !COURT_TYPES.includes(reading.content_type)) return refuse("NOT_A_REGISTER", localize("events.follow.the_capture_is_not_a", "the capture is not a register court-doctypes read"));
+  const type = reading.content_type, system = systemOf(type);
+  const provisional = !!(reading.facts && reading.facts.provisional);
   const rows = reading.facts && Array.isArray(reading.facts.rows) ? reading.facts.rows : [];
-  const out = { written: [], unchanged: 0, skipped: [] };
+  const out = { written: [], readings_added: [], updated: [], unchanged: 0, disagreements: [], skipped: [] };
+  const method = localize("events.follow.court_doctypes_content_type_the", "court-doctypes {content_type}: the entry's date as written", { content_type: String(type) });
   const res = k.tx(() => {
     rows.forEach((row, i) => {
       if (row.entry_id == null || row.entry_id === "") { out.skipped.push({ row: i, why: word("events.why.register_assigns_entry") }); return; }
-      const key = `register:${reading.content_type}:${proceeding}:${row.entry_id}`;
-      const p = source(k, key);
-      if (p) { out.unchanged++; return; }
-      const kind = kindOf(row);
-      const eventId = newEvent(k, kind, "EventScheduled");
-      let fact = null;
+      const key = `register:${system}:${proceeding}:${row.entry_id}`;
+      let p = source(k, key);
+      /* R58 (5): an entry held under the old key is the same entry, re-keyed in this transaction */
+      if (!p && system === "courtlistener") {
+        const old = source(k, `register:${OLD_COURTLISTENER}:${proceeding}:${row.entry_id}`);
+        if (old) {
+          k.rows(`UPDATE event_sources SET source_key=?, facts=? WHERE source_key=?`, key, JSON.stringify(factsOf(old, OLD_COURTLISTENER)), old.source_key);
+          p = source(k, key);
+        }
+      }
+      const stated = { date: row.date ?? null, text: row.text ?? null };
+      const day = dayOf(row);
       const d = readDate(dayAsWritten(typeof row.date === "string" ? row.date.trim() : ""), k.zone());
-      if (!d.bad && k.zone()) fact = k.holdFact({ sha: held.sha, bundleId: held.bundleId, extent: { kind: "document" }, kind: "entered",
-        date: d, method: localize("events.follow.court_doctypes_content_type_the", "court-doctypes {content_type}: the entry's date as written", { content_type: String(reading.content_type) }), by: MACHINE, sourceRow: i }).dated_fact;
-      rowAttestation(k, eventId, held, { source: i }, fact);
-      k.insert("event_concerns", { event_id: eventId, end_id: proceeding, by_actor: MACHINE, at: k.now() });
+      const dated = () => (!d.bad && k.zone() ? k.holdFact({ sha: held.sha, bundleId: held.bundleId, extent: { kind: "document" }, kind: "entered",
+        date: d, method, by: MACHINE, sourceRow: i }).dated_fact : null);
+      if (!p) {
+        const kind = kindOf(row);
+        const eventId = newEvent(k, kind, "EventScheduled");
+        const fact = dated();
+        rowAttestation(k, eventId, held, { source: i }, fact);
+        k.insert("event_concerns", { event_id: eventId, end_id: proceeding, by_actor: MACHINE, at: k.now() });
+        k.setWhen(eventId);
+        keepSource(k, key, "event", eventId, { entry_id: row.entry_id, date: row.date ?? null, primary: type,
+          readings: { [type]: { ...stated, capture_sha: held.sha } } }, held.sha);
+        out.written.push({ entry_id: row.entry_id, event_id: eventId, kind, ...(fact ? {} : { when_why: word("events.when_why") }) });
+        return;
+      }
+      const eventId = k.resolve(p.target_id);
+      const facts = factsOf(p, type);
+      /* a capture that already attests the event is a re-read: nothing changes */
+      if (k.one(`SELECT 1 AS x FROM event_attestations WHERE event_id=? AND capture_sha=? AND serves='event'`, eventId, held.sha)) { out.unchanged++; return; }
+      const before = facts.readings[type];
+      const same = before && dayOfStated(before) === day && (!("text" in before) || before.text === stated.text);
+      if (same) { out.unchanged++; return; }
+      const primary = facts.primary === type;
+      const fact = dated();
+      const aid = rowAttestation(k, eventId, held, { source: i }, fact);
+      const heldDay = dayOfStated({ date: facts.date }), kind = k.one(`SELECT kind FROM events WHERE event_id=?`, eventId).kind;
+      const ctx = { ...held, heldSha: facts.readings[facts.primary] && facts.readings[facts.primary].capture_sha, heldBundle: null };
+      if (ctx.heldSha) { const h = k.one(`SELECT bundle_id FROM event_attestations WHERE event_id=? AND capture_sha=? AND serves='event' ORDER BY attestation_id LIMIT 1`, eventId, ctx.heldSha); ctx.heldBundle = h ? h.bundle_id : null; }
+      if (before) {
+        /* R59: the same form states a changed date or text: R25's update, recorded */
+        change(k, eventId, { key, was: { date: before.date ?? null, text: before.text ?? null }, now: stated });
+        if (primary && fact && dayOfStated(before) !== day)
+          k.rows(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`, eventId, aid, word("events.rows.source_date_time"), MACHINE, k.now());
+        out.updated.push({ entry_id: row.entry_id, event_id: eventId, content_type: type });
+      } else out.readings_added.push({ entry_id: row.entry_id, event_id: eventId, content_type: type, ...(provisional ? { provisional: true } : {}) });
+      if (primary) { facts.date = stated.date; } else {
+        if (day && heldDay) disagree(k, ctx, eventId, row.entry_id, "date", heldDay, day, type, provisional, out);
+        disagree(k, ctx, eventId, row.entry_id, "kind", kind, kindOf(row), type, provisional, out);
+      }
       k.setWhen(eventId);
-      keepSource(k, key, "event", eventId, { entry_id: row.entry_id, date: row.date ?? null }, held.sha);
-      out.written.push({ entry_id: row.entry_id, event_id: eventId, kind, ...(fact ? {} : { when_why: word("events.when_why") }) });
+      facts.readings[type] = { ...stated, capture_sha: held.sha };
+      keepSource(k, key, "event", eventId, facts, held.sha);
     });
     return { ok: true };
   });
   if (res && res.ok === false) return res;
   return { ok: true, capture_sha: held.sha, proceeding, ...out };
 }
+const dayOfStated = (r) => dayOf({ date: r.date });

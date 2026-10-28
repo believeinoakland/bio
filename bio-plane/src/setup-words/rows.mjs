@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8026 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8027 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23623,6 +23623,7 @@ export const WORD_ROWS = Object.freeze([
   ["events.index.a_vote_is_held_with","a vote is held with the value the record states",null,null,false,"code"],
   ["events.index.a_vote_value_is_one","a vote value is one of the profile's: {values}",null,null,false,"code"],
   ["events.index.a_withdrawal_says_why_the","a withdrawal says why the relation was wrong; it is kept beside it",null,null,false,"code"],
+  ["events.index.a_withdrawal_says_why_the_event","a withdrawal says why the event was wrong; it is kept beside it",null,null,false,"code"],
   ["events.index.an_act_is_named_by","an act is named by its ACT- id",null,null,false,"code"],
   ["events.index.an_attestation_from_a_captured","an attestation from a captured document names its capture sha256",null,null,false,"code"],
   ["events.index.an_attestation_is_a_held","an attestation is a held dated fact, a passage of a captured document, or a member's testimony",null,null,false,"code"],
