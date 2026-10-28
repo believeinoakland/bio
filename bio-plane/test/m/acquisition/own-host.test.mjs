@@ -93,7 +93,7 @@ test("R42: a render is handed the group's own hosts as `own_hosts` (capture-sour
 test("R42 R36: keyedFetch refuses a request to one of the group's own hosts before the key is read or anything is sent; citationLookup passes the list on", async () => {
   let asked = 0;
   const store = { credentials: { keyedServiceFor: async () => { asked++; return { ok: true, key: "SENTINEL-KEY" }; } } };
-  const r = await keyedFetch(store, { service: "courtlistener", request: { url: "https://www.courtlistener.com/api/x" }, viewer: "member:m1",
+  const r = await keyedFetch(store, { service: "courtlistener", purpose: "citation-lookup", request: { url: "https://www.courtlistener.com/api/x" }, viewer: "member:m1",
                                       ownHosts: ["www.courtlistener.com"] });
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.host], [false, "OWN_HOST_REFUSED", "OWN_HOST_REFUSED", ...ROW, "www.courtlistener.com"]);
   assert.equal(asked, 0, "no key read, nothing sent");
@@ -104,7 +104,7 @@ test("R42 R36: keyedFetch refuses a request to one of the group's own hosts befo
   const orig = globalThis.fetch;
   globalThis.fetch = async () => new Response("[]", { headers: { "content-type": "application/json" } });
   try {
-    const ok = await keyedFetch(store, { service: "courtlistener", request: { url: "https://www.courtlistener.com/api/x" }, viewer: "member:m1", ownHosts: OWN });
+    const ok = await keyedFetch(store, { service: "courtlistener", purpose: "citation-lookup", request: { url: "https://www.courtlistener.com/api/x" }, viewer: "member:m1", ownHosts: OWN });
     assert.equal(ok.ok, true);
   } finally { globalThis.fetch = orig; }
 });

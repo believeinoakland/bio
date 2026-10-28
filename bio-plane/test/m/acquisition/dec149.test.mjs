@@ -74,6 +74,6 @@ test("R4 (DEC-149, index.mjs:878): an unreachable Drive export says the export a
 test("R36 (DEC-149, keyed.mjs:65): an unknown keyed service's refusal says \"the keyed services your group's Civicsmith speaks to are\"", async () => {
   const r = await keyedFetch({}, { service: "nowhere" });
   assert.equal(r.reason, "UNKNOWN_KEYED_SERVICE");
-  assert.match(r.detail, /^the keyed services your team's Civicsmith speaks to are courtlistener; nothing was fetched$/);
+  assert.match(r.detail, /^the keyed services your team's Civicsmith speaks to are courtlistener, ca-officers; nothing was fetched$/);
   assert.doesNotMatch(r.detail, /this copy/);
 });
