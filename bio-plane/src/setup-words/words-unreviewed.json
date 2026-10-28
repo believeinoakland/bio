@@ -40346,7 +40346,14 @@
       "en": "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it",
       "module": "ocr-worker",
       "file": "ocr-worker/src/tessengine.mjs",
-      "line": 64
+      "line": 63
+    },
+    {
+      "id": "ocr-worker.tessengine.the_wasm_core_did_not_arrive",
+      "en": "the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, and this member must be installed with its `assets/tesseract-core.wasm` part",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/tessengine.mjs",
+      "line": 61
     },
     {
       "id": "odf-reader.odf.content_xml_byte_identical_across",

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7625 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7626 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25525,6 +25525,7 @@ export const WORD_ROWS = Object.freeze([
   ["ocr-worker.pngsamples.the_image_data_of_the_png_does_not_inflate","the image data of the PNG does not inflate: it is not a valid compressed stream",null,null,false,"code"],
   ["ocr-worker.pngsamples.the_inflated_raster_is_shorter","the inflated raster is shorter than the header's dimensions require",null,null,false,"code"],
   ["ocr-worker.tessengine.the_language_model_is_v1","the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it",null,null,false,"code"],
+  ["ocr-worker.tessengine.the_wasm_core_did_not_arrive","the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, and this member must be installed with its `assets/tesseract-core.wasm` part",null,null,false,"code"],
   ["odf-reader.odf.content_xml_byte_identical_across","content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",null,null,false,"code"],
   ["odf-reader.odf.content_xml_could_not_be","content.xml could not be read whole ({why})",null,null,false,"code"],
   ["odf-reader.odf.content_xml_is_not_valid","content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken",null,null,false,"code"],
