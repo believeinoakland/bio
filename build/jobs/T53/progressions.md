@@ -1,6 +1,6 @@
 # progressions (T53)
 
-**Status** · session_018BhcefkfuJhoEDmxX32LxQ · depth 2 · WORKING
+**Status** · session_018BhcefkfuJhoEDmxX32LxQ · depth 2 · NEEDS BOB: decide the words testcopy at extraction nosha.test.mjs:13,16 (the sentence my feeds:179 localize carries, commit fa21bcc1)
 **Sessions** · 1
 
 ## Completion (2026-10-28)
