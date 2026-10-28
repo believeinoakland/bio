@@ -72,6 +72,7 @@ import { boundOf, statement } from "../read-bounds.mjs";
 export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS,
          DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 /* R36, R37 (T33-21, K1449): the keyed-service fetch path and its first client. */
+export { streamRegister, probeRegister, sourceChanged, REGISTER_STREAM_MAX, REGISTER_SEGMENT_MAX, REGISTER_PURPOSE, REGISTER_HOPS_MAX } from "./register.mjs";
 export { keyedFetch, keyedServiceUsage, citationLookup, KEYED_PURPOSES, POLL_SHARE_DEFAULT, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */

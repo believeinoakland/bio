@@ -171,7 +171,7 @@ const storeFailed = (e) => { const x = e instanceof Error ? e : new Error(String
  *  own SHA-256 (R10's form). Answers `{sha256, bytes, parts}`; a part already held is not written again. A file of more than
  *  one part is also kept whole under its own digest (`putFromParts`, as R96 keeps a capture) when the store offers it. A store
  *  failure is thrown tagged `storeFailure`. */
-async function storeChunks(ev, chunks) {
+export function partsWriter(ev) {
   const whole = createSha256();
   const parts = [];
   let held = [], heldBytes = 0, total = 0;
@@ -191,25 +191,36 @@ async function storeChunks(ev, chunks) {
       parts.push({ sha256: psha, bytes: n });
     }
   };
-  for await (const c of chunks) {
-    whole.update(c); total += c.length;
-    held.push(c); heldBytes += c.length;
-    if (heldBytes >= PART) await flush(false);
-  }
-  await flush(true);
-  /* an empty file is held under the empty digest, as any capture would be */
-  if (!parts.length) {
-    const e = new Uint8Array(0), esha = hex(await crypto.subtle.digest("SHA-256", e));
-    try { if (!(await ev.head(esha))) await ev.put(esha, e); } catch (x) { throw storeFailed(x); }
-    parts.push({ sha256: esha, bytes: 0 });
-  }
-  const sha256 = whole.hex();
-  if (parts.length > 1 && typeof ev.putFromParts === "function") {
-    let kept = null;
-    try { if (!(await ev.head(sha256))) kept = await ev.putFromParts(sha256, parts.map((p) => p.sha256)); else kept = { ok: true }; } catch (e) { throw storeFailed(e); }
-    if (!(kept && kept.ok === true)) throw storeFailed(new Error("the store would not make the whole from its parts"));
-  }
-  return { sha256, bytes: total, parts };
+  return {
+    /** one chunk of the file */
+    async write(c) {
+      whole.update(c); total += c.length;
+      held.push(c); heldBytes += c.length;
+      if (heldBytes >= PART) await flush(false);
+    },
+    /** the file's end: `{sha256, bytes, parts}` */
+    async finish() {
+      await flush(true);
+      /* an empty file is held under the empty digest, as any capture would be */
+      if (!parts.length) {
+        const e = new Uint8Array(0), esha = hex(await crypto.subtle.digest("SHA-256", e));
+        try { if (!(await ev.head(esha))) await ev.put(esha, e); } catch (x) { throw storeFailed(x); }
+        parts.push({ sha256: esha, bytes: 0 });
+      }
+      const sha256 = whole.hex();
+      if (parts.length > 1 && typeof ev.putFromParts === "function") {
+        let kept = null;
+        try { if (!(await ev.head(sha256))) kept = await ev.putFromParts(sha256, parts.map((p) => p.sha256)); else kept = { ok: true }; } catch (e) { throw storeFailed(e); }
+        if (!(kept && kept.ok === true)) throw storeFailed(new Error("the store would not make the whole from its parts"));
+      }
+      return { sha256, bytes: total, parts };
+    },
+  };
+}
+async function storeChunks(ev, chunks) {
+  const w = partsWriter(ev);
+  for await (const c of chunks) await w.write(c);
+  return w.finish();
 }
 
 /* ======================================================================= *
