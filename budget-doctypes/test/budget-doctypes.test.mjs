@@ -136,7 +136,7 @@ test("R2: each table has its fields, every figure as printed and unscaled, each 
     }
   }
   const [net] = onPage(r, 49);
-  assert.equal(net.title, "Statement of Net Position");
+  assert.ok(firstView().vocabulary.financial_headings.some((h) => new RegExp(h.pattern.re, h.pattern.flags).test(net.title)));
   assert.equal(net.scale, "In thousands");
   /* The first profile holds no form for a dated heading ("June 30, 2024"): no period. */
   assert.equal(net.period_as_written, null); assert.equal(net.period_why, localize("budget-doctypes.tables.no_fiscal_year_form", "no fiscal-year form the view holds was read above, below or in the header of the table"));

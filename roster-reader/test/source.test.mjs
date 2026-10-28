@@ -13,7 +13,7 @@ const CONTACT = /@|\b\d{3}[-.]\d{4}\b|\b\d{1,6}\s+\w+\s+(?:Street|St|Avenue|Ave|
 const TABLE = {
   source: { table: "TBL-1" }, as_of: "2025-02-01", view: FIRST,
   header: ["Full Name", "Job Title", "Department", "Start Date", "End Date", "Employee ID", "Phone", "Home Address", "Notes"],
-  rows: [["Jane Doe", "Director", "Public Works", "2019-04-01", "", "E100", "510-555-0101", "12 Main Street", "private note"],
+  rows: [["Jane Doe", "Director", "Public Works", "2019-04-01", "", "E100", "510-555-0101", "12 Main Street", "NOTE-7f3a"],
          ["John Roe 510-555-0102", "Analyst II", "Finance", "2021-01-04", "2024-06-30", "E101", "510-555-0199", "4 Oak Ave", "x"],
          ["", "", "", "", "", "", "510-555-0000", "", ""]],
 };
@@ -55,7 +55,7 @@ test("R12 a held roster table is read through R6's column roles, each row {name?
     { name: "John Roe", title: "Analyst II", unit: "Finance", start: "2021-01-04", end: "2024-06-30", employee_id: "E101", source: { roster: { table: "TBL-1" }, row: 1 } },
   ]);
   assert.doesNotMatch(JSON.stringify(a), CONTACT);
-  assert.doesNotMatch(JSON.stringify(a), /private note/);
+  assert.doesNotMatch(JSON.stringify(a), /NOTE-7f3a/);
   assert.deepEqual(r.columns.map((c) => c.role), ["name", "title", "unit", "start", "end", "employee_id", "contact", "contact", null]);
   assert.equal(r.columns_why, `${localize("roster-reader.source.contact_contact_column_s_not", "{contact} contact column(s) not read", { contact: "2" })}; ${localize("roster-reader.source.unnamed_column_s_with_no", "{unnamed} column(s) with no role not read", { unnamed: "1" })}`);
   /* Rows keyed by header text read the same way; a table stating no date says so. */

@@ -17,7 +17,7 @@ import {
 } from "./fixtures.mjs";
 import { CASES, pairsOf } from "./golden-cases.mjs";
 import { registryOf, readWith, typeFor } from "./read.mjs";
-import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 const { DOCTYPES, registerDoctypes } = dt;
 const PA = view(PORT_ALDER);
@@ -256,7 +256,7 @@ test("R3 R8 the minutes-due date is the profile's practice counted by civil-time
   const b = due("3/2/2026", bv);
   assert.equal(b.expected_by, "2026-03-17");
   assert.match(b.why, /more than 10 business days ago/);
-  assert.equal(due("3/2/2026", bv, "2026-03-17T12:00:00Z").why, localize("doctypes.meeting-calendar.taken_place", "this meeting has taken place and no minutes are offered yet"),
+  assert.equal(due("3/2/2026", bv, "2026-03-17T12:00:00Z").why, word("doctypes.meeting-calendar.taken_place"),
     "on the due day itself, not yet late");
   // the same period in calendar days is not the same date
   assert.equal(due("3/2/2026", PA).expected_by, "2026-03-12");
@@ -399,10 +399,10 @@ test("R23 a reading or a diff that found nothing is a failed reader, and a mass 
 test("R24 every no says which no and why", () => {
   assert.match(typeOf("regulation").parse({ text: "DOES ORDAIN", view: PA }).number_why, /no caption/);
   assert.match(typeOf("regulation").parse({ text: PA_BYLAW, view: PA }).number_why, /carries no number/);
-  assert.equal(typeOf("regulation").parse({ text: "nothing", view: PA }).form_why, localize("doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section"));
+  assert.equal(typeOf("regulation").parse({ text: "nothing", view: PA }).form_why, word("doctypes.regulation.no_form"));
   assert.match(typeOf("regulation").parse({ text: "DOES ORDAIN", view: PA }).sections_why, /SECTION 1/);
-  assert.equal(typeOf("meeting_agenda").parse({ text: PA_AGENDA, view: EMPTY }).references_why, localize("doctypes.meeting-agenda.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read"));
-  assert.equal(typeOf("meeting_minutes").parse({ text: PA_MINUTES, view: EMPTY }).body_why, localize("doctypes.meeting-minutes.no_body_profile", "no active jurisdiction profile says how a body is named, so which body met is not read"));
+  assert.equal(typeOf("meeting_agenda").parse({ text: PA_AGENDA, view: EMPTY }).references_why, word("doctypes.meeting-agenda.no_file_shape"));
+  assert.equal(typeOf("meeting_minutes").parse({ text: PA_MINUTES, view: EMPTY }).body_why, word("doctypes.meeting-minutes.no_body_profile"));
   assert.match(typeOf("staff_directory").parse({ text: PA_DIRECTORY.replace("Harbor Staff Directory", "Harbor"), view: PA }).title_why, /./);
   assert.match(typeFor(REG, { text: "plain", view: PA }).type.key, /generic/);
   const cal = typeOf("meeting_calendar");

@@ -186,7 +186,7 @@ export function flattenText(supplied) {
              position_why: localize("docprofile.readtext.the_text_arrived_as_a", "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said") };
   if (!supplied || typeof supplied !== "object")
     return { text: "", source: null, chars: 0, undetermined: 0, reasons: [], size_refusal: null, segments: [],
-             position_why: "no text was supplied" };
+             position_why: localize("docprofile.readtext.no_text_was_supplied", "no text was supplied") };
   let text = "", source = null, segments = [], position_why = null;
   if (typeof supplied.document === "string" && supplied.document.length) {
     text = supplied.document; source = "document";
