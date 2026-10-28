@@ -12,7 +12,8 @@
   },
   "image": {
     "repository": "docker.io/civicsmith/reader-container",
-    "digest": null,
+    "digest": "sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
+    "source_sha256": "a6dc1cb86a5cd27995b779755e597acbb9da2490ecde6ac76c48538c5dcd0b5c",
     "platform": "linux/amd64",
     "port": 8080,
     "schedulingPolicy": "default",
@@ -53,5 +54,5 @@
       "kind": "service"
     }
   ],
-  "note": "The fleet-member marker of a container member with one class (bundler R24-R27, R36, R37; K5637). `bundle` is the Worker that answers the plane's READER_CONTAINER service binding and hosts the class (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. `image` names the class's image, only as repository@digest once the release publishes it: `digest` and `source_sha256` are null until then and are recorded by bundler's recordContainerDigest, which also writes the digest into wrangler.jsonc (whose image carries a placeholder digest of zeros until then). The base is pinned by digest, as the Dockerfile's FROM; `packages` is the Debian package statement (bundler R27). The container has no internet (`egress` empty; the Worker's class sets enableInternet false): the Worker hands it every byte it reads, and it keeps nothing between requests (R8)."
+  "note": "The fleet-member marker of a container member with one class (bundler R24-R27, R36, R37; K5637). `bundle` is the Worker that answers the plane's READER_CONTAINER service binding and hosts the class (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. `image` names the class's image only as repository@digest: `digest` and `source_sha256` are recorded by bundler's recordContainerDigest from the image container-images.yml publishes, which writes the same digest into wrangler.jsonc. The base is pinned by digest, as the Dockerfile's FROM; `packages` is the Debian package statement (bundler R27). The container has no internet (`egress` empty; the Worker's class sets enableInternet false): the Worker hands it every byte it reads, and it keeps nothing between requests (R8)."
 }

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadWorker } from './workers-runtime.mjs';
 import { parseJsonc } from '../../bio-plane/scripts/jsonc.mjs';
-import { discoverMembers, classPackages, containerClasses, containerSourceHash } from '../../bio-plane/scripts/fleet-bundle.mjs';
+import { discoverMembers, classPackages, containerClasses, containerSourceHash, containerImageStates } from '../../bio-plane/scripts/fleet-bundle.mjs';
 
 const here = (p) => new URL(`../${p}`, import.meta.url);
 const text = (p) => readFileSync(here(p), 'utf8');
@@ -75,6 +75,8 @@ test('R8 the member is discovered by its marker; its class, image, binding and p
   assert.deepEqual([classes[0].class_name, classes[0].max_instances, classes[0].bind], ['ReaderContainer', 3, [{ member: 'reader-container', binding: 'READER' }]]);
   assert.equal(wrangler.containers[0].class_name, 'ReaderContainer');
   assert.equal(wrangler.containers[0].image.split('@')[0], marker.image.repository);
+  assert.equal(wrangler.containers[0].image, `${marker.image.repository}@${marker.image.digest}`, 'both files name the one published image');
+  assert.deepEqual(containerImageStates(member).map((c) => [c.class_name, c.state]), [['ReaderContainer', 'current']], 'the image was built from the files now here');
   assert.equal(wrangler.containers[0].max_instances, marker.max_instances);
   const pk = classPackages(member, classes[0]);
   assert.equal(pk.unread, undefined, pk.unread);

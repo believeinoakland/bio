@@ -21,13 +21,13 @@
   "limits": { "cpu_ms": 300000 },
 
   // The one container. Its image is named by the release's registry rule, as file-scanner's: the repository
-  // fleet-member.json states (Docker Hub, docker.io/civicsmith), @sha256:<64 hex>, the digest the release published.
-  // PLACEHOLDER: the zeros below are no image; bundler's recordContainerDigest replaces them with the published
-  // digest (never in a session, K1898), and no install deploys this member before then. No internet (src/worker.mjs).
+  // fleet-member.json states (Docker Hub, docker.io/civicsmith), @sha256:<64 hex>, the digest the release published
+  // (container-images.yml, recorded by bundler's recordContainerDigest; never built in a session, K1898). No internet
+  // (src/worker.mjs).
   "containers": [
     {
       "class_name": "ReaderContainer",
-      "image": "docker.io/civicsmith/reader-container@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "image": "docker.io/civicsmith/reader-container@sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
       "instance_type": "standard-1",
       "max_instances": 3
     }
