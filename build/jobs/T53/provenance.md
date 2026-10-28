@@ -1,6 +1,6 @@
 # provenance (T53)
 
-**Status** · session_018BhcefG3xsWrytnAQMJzis · depth 3 · COMPLETE
+**Status** · session_018BhcefG3xsWrytnAQMJzis · depth 3 · WAITING: COMPLETE sent to BOB; available for a CHANGE
 **Sessions** · 1
 
 ## Completion (2026-10-28)
