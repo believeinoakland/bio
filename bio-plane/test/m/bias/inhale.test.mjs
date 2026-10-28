@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./world.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { BIAS_INHALE_SENTENCES_MAX } from "../../../src/bias/index.mjs";
 
 const POLICY = [
@@ -60,7 +61,7 @@ test("R21: installed false, adopted false, writes 0, what a member does next; ea
   const w = world();
   const r = w.bias.biasInhale({ policy: POLICY, source: "https://example.org/policy", retrieved: "2026-07-01" });
   assert.deepEqual([r.installed, r.adopted, r.writes], [false, false, 0]);
-  assert.match(r.proposes, /adopts it with their name on it/);
+  assert.match(r.proposes, wordRx("bias.member_writes_bias"));
   assert.ok(r.statements.every((s) => s.proposed === true && s.authored === false));
   assert.deepEqual([r.bars_count, r.statements_count, r.residue_count, r.limit, r.truncated], [1, 2, 3, 200, false]);
   assert.deepEqual(r.pin, { source_url: "https://example.org/policy", retrieved: "2026-07-01" });

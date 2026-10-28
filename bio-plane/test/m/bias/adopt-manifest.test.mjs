@@ -65,8 +65,7 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
     assert.equal(r.remedy, INSTANCE_ADOPTION_REMEDY);
     assert.equal(r.message, `${row.translation} ${INSTANCE_ADOPTION_REMEDY}`);
   }
-  assert.match(INSTANCE_ADOPTION_REMEDY, /project you own/);
-  assert.match(INSTANCE_ADOPTION_REMEDY, /ask an administrator/);
+  assert.match(INSTANCE_ADOPTION_REMEDY, wordRx("bias.project_owners_set"));
   assert.equal(w.ops(`bundleId=${A}&author=mo&identity=member:mo&viewer=member:mo`).biasadopt instanceof Function, true);
   assert.equal((await w.ops(`bundleId=${A}&author=mo&identity=member:mo&viewer=member:mo`).biasadopt()).code, "NOT_AN_ADMIN");
   assert.equal(w.dump(), before, "every refusal writes nothing");
@@ -86,8 +85,7 @@ test("R12: one adoption per (scope, project, bundle), replaced on re-adoption, p
   assert.deepEqual({ ...r, note: undefined }, { ok: true, adopted: true, bundleId: A, scope: "instance", scope_id: "", author: "admin",
     at: T0, reason: WHY, pinned: { bundle_sha: head, source_url: "https://example.org/p", retrieved: "2026-06-30", source_sha256: "abc123" },
     in_force: false, pins_proposed: true, note: undefined });
-  assert.match(r.note, /PINS A PROPOSED REVISION/);
-  assert.match(r.note, /REPLACES this scope's lens/);
+  assert.match(r.note, wordRx("bias.note.pins_proposed_revision"));
   assert.deepEqual(at(w), { scope_type: "instance", scope_id: "", bundle_id: A, bundle_sha: head, author: "admin", at: T0,
     source_url: "https://example.org/p", retrieved: "2026-06-30", source_sha256: "abc123", reason: WHY });
   /* adopted, then re-adopted: replaced, never a second row */
@@ -206,7 +204,7 @@ test("R14: instance adoptions, and a project's too, of sets not retired and visi
   const m3 = w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "member:owner" });
   assert.deepEqual(m3.pins_proposed, [{ bundle_id: B, revision: w.record.head(B).bundleSha, scope: "project",
     pinned_state: "proposed", adopted_by: "owner", adopted_at: "2026-07-09T00:00:00Z" }]);
-  assert.match(m3.pins_proposed_stated, /puts no lens in force/);
+  assert.match(m3.pins_proposed_stated, wordRx("bias.index.each_entry_is_an_adoption_whose"));
   assert.deepEqual(m3.bundles.map((b) => b.bundle_id), [A], "the proposed pin puts nothing in force");
   assert.equal("pins_proposed" in w.bias.biasManifest({ viewer: "admin" }), false, "absent when there is none");
   /* retired sets are not read; an invisible set is not read (a member sees every non-project bundle, so the gate is
@@ -339,7 +337,7 @@ test("R24: a project statement on a group statement's subject that names no over
   assert.deepEqual(m2.interactions, [{ statement_id: "p1", bundle_id: "BIAS-2026-0000-proj", subject: "ENT-2026-0007",
     justification: "We hold the office to a higher bar here.",
     instance: [{ statement_id: "s1", bundle_id: A, justification: S("s1").justification }] }]);
-  assert.match(m2.interactions_stated, /refuses nothing/);
+  assert.match(m2.interactions_stated, wordRx("bias.entry_project_statement"));
   assert.equal(m2.statements.length, 3, "listed, never removed or refused");
 });
 
@@ -351,7 +349,7 @@ test("R25: a statement whose subject is not in the registry is listed for review
   w.bias.biasAdopt({ reason: WHY, bundleId: A, ...ADMIN });
   const m = w.bias.biasManifest({ viewer: "admin" });
   assert.deepEqual(m.unregistered_subjects, [{ statement_id: "s2", bundle_id: A, scope: "instance", subject: "ENT-2026-0404" }]);
-  assert.match(m.unregistered_subjects_stated, /does not hold/);
+  assert.match(m.unregistered_subjects_stated, wordRx("bias.entry_statement_force"));
   registry.add("ENT-2026-0404");
   assert.deepEqual(w.bias.biasManifest({ viewer: "admin" }).unregistered_subjects, []);
   const none = await adoptWorld();
