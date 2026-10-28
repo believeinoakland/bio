@@ -97,6 +97,11 @@ const overBytes = (s, limit) => typeof s === "string" && s.length > limit / 3 &&
    index grows to the last line, in batches of LAND_BATCH_BYTES. */
 export const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 export const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
+/** (T53; R122; PLATFORM P-32, K5736) The most a run of `readHeld` for the owed-work ledger's `reading` job holds in memory before it writes and yields: units, and the UTF-8
+ *  bytes of their text. A run offers the index at most this much and says `more`; the next tick resumes from the stored cursor, and the reading it lands is the same as one
+ *  uninterrupted run's. A document within it is read in one run, as before. `runtime-limits` takes both as rows in the completion round. */
+export const READ_RUN_UNITS_MAX = 4096;
+export const READ_RUN_BYTES_MAX = 1024 * 1024;
 /** (fix round 9, G128; R99; K4838 (4); R-GATE) The most UTF-8 bytes of unit text one batch lands in one transaction: runtime-limits' `PLATFORM_FIGURES`
  *  entry, 1 MiB until BOB records P-M9 (far below the 2,098,176-byte value bound; a 10,000-row write blocks the object about 2.8 s). A unit over it lands
  *  alone in its own batch, never cut. */
@@ -742,8 +747,10 @@ export class Extraction {
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
   async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null,
-                         skipKilled = false, stampUnit = null } = {}) {
+                         skipKilled = false, stampUnit = null, run = false } = {}) {
     const e = env || this.env || {};
+    /* R122: a ledger run is held to READ_RUN_UNITS_MAX units and READ_RUN_BYTES_MAX bytes of text, the rest being the next tick's */
+    if (run === true && pieces !== undefined) budget = READ_RUN_BYTES_MAX;
     /* R113: a register segment is handed to no reader and no reading is made */
     const asRegister = this.#heldAsRegister(document && document.capture && document.capture.sha256);
     if (asRegister) return { reading: null, held_as_register: asRegister };
@@ -764,7 +771,8 @@ export class Extraction {
         /* (fix round 10, cause 24 (b); R111) the first piece lands inside the reading's own transaction, which cannot give the turn back between batches:
            of a capture past the first tick's budget (it cannot be read at once) it offers one batch, and the pieces that follow, landed by
            `indexUnitsYielding`, read the rest; a capture within the budget is read at once, as R90 states */
-        maxUnits: (pieces.cursor ?? null) === null && (this.#sizeOf(document) ?? 0) > CAPTURE_TEXT_CAPTURE_BOUND ? LAND_BATCH_UNITS : CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
+        maxUnits: (pieces.cursor ?? null) === null && (this.#sizeOf(document) ?? 0) > CAPTURE_TEXT_CAPTURE_BOUND ? LAND_BATCH_UNITS
+          : run === true ? READ_RUN_UNITS_MAX : CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
     /* (fix round 9, G128c; reading-pipeline R57) the first piece of a PDF read in ranges states what the whole file's reading states, so far as its pieces
        can: the glyphs of the text it carries, and, when it is also the last, the document's words; a later piece completes them (`#continueText`) */
     if (pieces !== undefined && out && out.reading && typeof out.reading === "object") completeFirstPiece(out);
@@ -985,7 +993,7 @@ export class Extraction {
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved, stamp });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
-    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
+    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null }, run: ledger,
                                           ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages, stampUnit: stamp });
     if (out.refused) return left(out.refused.code);
     if (repair && held && (notReadAsText(out.reading) || (heldUnread && out.reading && out.reading.found === false && out.reading.held_unread))) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
@@ -1065,7 +1073,7 @@ export class Extraction {
     /* (fix round 9, G129c; K4904 (1); R101) the window at the stored cursor that killed its reader three times (the ledger's `killedCursor`) is stepped
        past, stated, and the read goes on from the next */
     const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
-    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
+    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor }, run: ledger,
                                             ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, skipKilled: skip, stampUnit: stamp });
     /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
        cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
