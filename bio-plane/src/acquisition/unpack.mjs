@@ -237,7 +237,7 @@ export const ACQUISITION_TABLES = Object.freeze([
   Object.freeze({ name: "unpack_days", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                   version_chain: false }),
   /* R131 (T53): each call sent to a keyed outside service, so its stated limits are counted across purposes and a restart does not reset the count */
-  /* R140 (T53; K5574): how many times a host answered a fetch with a challenge or CAPTCHA page, counted for the host */
+  /* K5574 (T53; K5574): how many times a host answered a fetch with a challenge or CAPTCHA page, counted for the host */
   Object.freeze({ name: "challenge_hosts", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                   version_chain: false }),
   Object.freeze({ name: "keyed_calls", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
@@ -349,15 +349,15 @@ export class Acquisition {
     return { ok: true };
   }
 
-  /* ---- R140's count of the challenge or CAPTCHA pages a host answered with ---- */
+  /* ---- K5574's count of the challenge or CAPTCHA pages a host answered with ---- */
 
-  /** R140: one more challenge from `host` at `atMs`; answers `{host, challenges, first_at, last_at}`. */
+  /** K5574: one more challenge from `host` at `atMs`; answers `{host, challenges, first_at, last_at}`. */
   challengeNote(host, atMs) {
     this.#sql.exec(`INSERT INTO challenge_hosts (host, challenges, first_at, last_at) VALUES (?,1,?,?)
                     ON CONFLICT(host) DO UPDATE SET challenges=challenges+1, last_at=excluded.last_at`, host, atMs, atMs);
     return this.#one(`SELECT host, challenges, first_at, last_at FROM challenge_hosts WHERE host=?`, host);
   }
-  /** R140: the hosts that have answered with a challenge, most first; a read. */
+  /** K5574: the hosts that have answered with a challenge, most first; a read. */
   challengeHosts() { return this.#rows(`SELECT host, challenges, first_at, last_at FROM challenge_hosts ORDER BY challenges DESC, host`); }
 
   /* ---- R131's durable count of the calls sent to a keyed service ---- */

@@ -43,6 +43,76 @@
       "line": 35
     },
     {
+      "id": "acquisition.challenge.captcha_widget",
+      "en": "a CAPTCHA widget",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 35
+    },
+    {
+      "id": "acquisition.challenge.cloudflare_browser_check",
+      "en": "Cloudflare's browser check",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 28
+    },
+    {
+      "id": "acquisition.challenge.cloudflare_captcha_block",
+      "en": "Cloudflare's CAPTCHA block page",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 29
+    },
+    {
+      "id": "acquisition.challenge.cloudflare_orchestration",
+      "en": "Cloudflare's challenge orchestration script",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 27
+    },
+    {
+      "id": "acquisition.challenge.cloudflare_script",
+      "en": "Cloudflare's challenge page script",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 26
+    },
+    {
+      "id": "acquisition.challenge.datadome",
+      "en": "DataDome's CAPTCHA page",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 30
+    },
+    {
+      "id": "acquisition.challenge.header_cf_mitigated",
+      "en": "the header cf-mitigated: challenge",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 19
+    },
+    {
+      "id": "acquisition.challenge.incapsula",
+      "en": "Incapsula's block page",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 32
+    },
+    {
+      "id": "acquisition.challenge.page_just_a_moment",
+      "en": "a page titled Just a moment...",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 25
+    },
+    {
+      "id": "acquisition.challenge.perimeterx",
+      "en": "PerimeterX's human check",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/challenge.mjs",
+      "line": 31
+    },
+    {
       "id": "acquisition.checks.at_and_the_same_condition",
       "en": "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",
       "module": "acquisition",
@@ -678,6 +748,76 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
       "line": 179
+    },
+    {
+      "id": "acquisition.member.authority_basis",
+      "en": "an attachment cut out of a message, {retrieved}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 139
+    },
+    {
+      "id": "acquisition.member.bad_member",
+      "en": "a member is named by its container's digest, its kind (archive or message) and its index; nothing was cut",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 207
+    },
+    {
+      "id": "acquisition.member.container_not_held",
+      "en": "the message is not held, so nothing was cut",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 99
+    },
+    {
+      "id": "acquisition.member.message_evidence",
+      "en": "the message's capture {sha}; the attachment cut out of it unambiguously",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 143
+    },
+    {
+      "id": "acquisition.member.message_first_hop",
+      "en": "these bytes are attachment {index} ({name}, the message's own claim) of the message {sha} held by your team's Civicsmith, cut out at {retrieved}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 142
+    },
+    {
+      "id": "acquisition.member.no_storage",
+      "en": "your team's Civicsmith has no evidence storage configured, so nothing was cut",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 56
+    },
+    {
+      "id": "acquisition.member.no_such_member",
+      "en": "the message has no attachment {index}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 105
+    },
+    {
+      "id": "acquisition.member.over_bound",
+      "en": "the attachment is larger than the most one file of its kind may be; it is listed and not filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 115
+    },
+    {
+      "id": "acquisition.member.unreadable",
+      "en": "the member could not be filed ({why})",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 230
+    },
+    {
+      "id": "acquisition.member.waiting",
+      "en": "the member is waiting for the next run",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/member.mjs",
+      "line": 192
     },
     {
       "id": "acquisition.profile.held_not_read",

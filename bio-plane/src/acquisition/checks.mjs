@@ -361,7 +361,7 @@ export const ARCHIVE_CHECKS = Object.freeze({
     where: `${at('is-refused-kind')}; ${un('is-refused-kind')}`,
     translation: localize("refusal.FILE_TYPE_REFUSED", "Your team's Civicsmith does not keep this kind of file, so nothing was saved. Send the document in another form, such as a PDF."),
   }),
-  /* R140 (T53; K5574, K3656): the source answered with a challenge or CAPTCHA page in place of the document. It is never filed as the document and
+  /* K5574 (T53; K5574, K3656): the source answered with a challenge or CAPTCHA page in place of the document. It is never filed as the document and
      never worked around; the refusal is counted for the host. New at T53 (C-139.23; BOB confirms the number at the close). */
   CHALLENGE_PAGE: Object.freeze({
     check: 'C-139.23',

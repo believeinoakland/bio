@@ -9,6 +9,7 @@ import { makeZip } from "../../make-zip.mjs";
 import { streamRegister, probeRegister, sourceChanged, civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 import { createReducer } from "../../../src/register-readers/index.mjs";
 import { get } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const PROFILE = get("test-port-ellery");
 const DEF = (key) => structuredClone(PROFILE.registers.find((r) => r.key === key));
@@ -75,7 +76,7 @@ test("R125: a piece is fetched through the governor under R9's agent, reduced as
   assert.equal(d.capture.sha256, ref.end().reduced.sha256, "the stored digest equals register-readers' reduced digest");
   assert.ok(w.held(d.capture.sha256));
   /* the first hop says reduction, not "these bytes were served" */
-  assert.match(d.provenance_chain[0].asserts, new RegExp(`this file is their reduction`));
+  assert.equal(d.provenance_chain[0].asserts, word("acquisition.register.first_hop_asserts", { locator: d.locator, retrieved: d.retrieved }), "the hop says reduction, in the word the product reads");
   assert.equal(d.provenance_chain[0].via, "direct");
   assert.equal(r.terms_basis, DEF("town_filings").terms_basis);
   assert.equal(w.prov.receipts.length, 1);

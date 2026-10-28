@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7865 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7885 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19848,6 +19848,16 @@ export const WORD_ROWS = Object.freeze([
   ["accepted-work.index.no_flag_history","the module holding another team's work keeps no flag history here, so none can be read",null,null,false,"code"],
   ["accepted-work.index.no_module_registered","no module holding another team's work is registered here, so none can be read",null,null,false,"code"],
   ["accepted-work.index.no_publisher_moves","the module holding another team's work keeps no publisher moves here, so none can be read",null,null,false,"code"],
+  ["acquisition.challenge.captcha_widget","a CAPTCHA widget",null,null,false,"code"],
+  ["acquisition.challenge.cloudflare_browser_check","Cloudflare's browser check",null,null,false,"code"],
+  ["acquisition.challenge.cloudflare_captcha_block","Cloudflare's CAPTCHA block page",null,null,false,"code"],
+  ["acquisition.challenge.cloudflare_orchestration","Cloudflare's challenge orchestration script",null,null,false,"code"],
+  ["acquisition.challenge.cloudflare_script","Cloudflare's challenge page script",null,null,false,"code"],
+  ["acquisition.challenge.datadome","DataDome's CAPTCHA page",null,null,false,"code"],
+  ["acquisition.challenge.header_cf_mitigated","the header cf-mitigated: challenge",null,null,false,"code"],
+  ["acquisition.challenge.incapsula","Incapsula's block page",null,null,false,"code"],
+  ["acquisition.challenge.page_just_a_moment","a page titled Just a moment...",null,null,false,"code"],
+  ["acquisition.challenge.perimeterx","PerimeterX's human check",null,null,false,"code"],
   ["acquisition.checks.at_and_the_same_condition","{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",null,null,false,"code"],
   ["acquisition.checks.at_and_the_same_condition_2","{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",null,null,false,"code"],
   ["acquisition.checks.at_and_the_same_condition_3","{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",null,null,false,"code"],
@@ -19939,6 +19949,16 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.keyed.the_team_s_key_for","the team's key for this service is off or not held; the caller goes on without it",null,null,false,"code"],
   ["acquisition.keyed.there_is_no_text","there is no text to look citations up in; nothing was sent",null,null,false,"code"],
   ["acquisition.keyed.this_case_was_already_checked","this case was already checked today; nothing was fetched",null,null,false,"code"],
+  ["acquisition.member.authority_basis","an attachment cut out of a message, {retrieved}",null,null,false,"code"],
+  ["acquisition.member.bad_member","a member is named by its container's digest, its kind (archive or message) and its index; nothing was cut",null,null,false,"code"],
+  ["acquisition.member.container_not_held","the message is not held, so nothing was cut",null,null,false,"code"],
+  ["acquisition.member.message_evidence","the message's capture {sha}; the attachment cut out of it unambiguously",null,null,false,"code"],
+  ["acquisition.member.message_first_hop","these bytes are attachment {index} ({name}, the message's own claim) of the message {sha} held by your team's Civicsmith, cut out at {retrieved}",null,null,false,"code"],
+  ["acquisition.member.no_storage","your team's Civicsmith has no evidence storage configured, so nothing was cut",null,null,false,"code"],
+  ["acquisition.member.no_such_member","the message has no attachment {index}",null,null,false,"code"],
+  ["acquisition.member.over_bound","the attachment is larger than the most one file of its kind may be; it is listed and not filed",null,null,false,"code"],
+  ["acquisition.member.unreadable","the member could not be filed ({why})",null,null,false,"code"],
+  ["acquisition.member.waiting","the member is waiting for the next run",null,null,false,"code"],
   ["acquisition.profile.held_not_read","held, not read: {name}",null,null,false,"code"],
   ["acquisition.register.authority_basis","the member's import {import} asked for this register piece, {retrieved}",null,null,false,"code"],
   ["acquisition.register.bad_redirect","the source redirected to an address that cannot be read; nothing was fetched",null,null,false,"code"],

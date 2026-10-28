@@ -1,5 +1,5 @@
 /* acquisition T53 (T53-98, T53-99; N1266, K5436, K5574, K3656): R138 a held-and-named file is filed whole with its reading owed, R139 a refused file
-   is not filed (a fetch before anything is stored; an archive's entry as `not_filed`), R140 a challenge or CAPTCHA page in place of the document is
+   is not filed (a fetch before anything is stored; an archive's entry as `not_filed`), K5574 a challenge or CAPTCHA page in place of the document is
    recognised at the fetch, refused, counted for the host, and never worked around. At the module's interface (`acquire`, `unpack`), over a scripted
    network. The member words are read from the word table, never copied. */
 import { test } from "node:test";
@@ -115,11 +115,11 @@ test("R138 R139: in an archive an unlisted entry is `filed`, and a refused entry
   assert.deepEqual([p.body.unpack.documents.length, p.body.unpack.not_filed.length], [2, 0]);
 });
 
-/* ---------------- R140 ---------------- */
+/* ---------------- K5574 ---------------- */
 const CF_PAGE = `<!DOCTYPE html><html><head><title>Just a moment...</title></head><body><script>window._cf_chl_opt={cvId:'3'};</script><noscript>Enable JavaScript and cookies to continue</noscript></body></html>`;
 const challenged = (body = CF_PAGE, status = 403, headers = {}) => () => new Response(body, { status, headers: { "content-type": "text/html; charset=UTF-8", server: "cloudflare", ...headers } });
 
-test("R140: a challenge page in place of the document is refused with its own reason, never filed, counted for the host, and the source is asked once", async () => {
+test("K5574: a challenge page in place of the document is refused with its own reason, never filed, counted for the host, and the source is asked once", async () => {
   const w = world();
   const url = "https://www.guarded.example/records/minutes.pdf";
   const cases = [
@@ -146,7 +146,7 @@ test("R140: a challenge page in place of the document is refused with its own re
   assert.deepEqual(challengesByHost(w.store).map((x) => [x.host, x.challenges]), [["www.guarded.example", 5], ["other.example", 1]]);
 });
 
-test("R140: other bot-protection pages are recognised from their own text; a CAPTCHA widget is a challenge only when it is all the page is", () => {
+test("K5574: other bot-protection pages are recognised from their own text; a CAPTCHA widget is a challenge only when it is all the page is", () => {
   const dd = challengeOf({ status: 403, headers: { "content-type": "text/html" }, text: `<html><script src="https://geo.captcha-delivery.com/captcha/?initialCid=1"></script></html>` });
   assert.equal(dd.kind, "datadome");
   const px = challengeOf({ status: 403, headers: { "content-type": "text/html" }, text: `<div id="px-captcha"></div>` });
@@ -163,7 +163,7 @@ test("R140: other bot-protection pages are recognised from their own text; a CAP
   assert.equal(challengeOf({ status: 403, headers: { "content-type": "text/html" }, text: "<h1>Forbidden</h1>" }), null);
 });
 
-test("R140 control: an ordinary refusal stays SOURCE_REFUSED, and a page that carries a protection script or a form widget is filed as the document", async () => {
+test("K5574 control: an ordinary refusal stays SOURCE_REFUSED, and a page that carries a protection script or a form widget is filed as the document", async () => {
   const w = world();
   const plain403 = await run(w, { [U("no")]: () => new Response("<h1>Forbidden</h1>", { status: 403, headers: { "content-type": "text/html", server: "cloudflare" } }) }, { locator: U("no") });
   assert.deepEqual([plain403.status, plain403.body.reason], [502, "SOURCE_REFUSED"]);

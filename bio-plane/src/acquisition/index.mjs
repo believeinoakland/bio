@@ -991,7 +991,7 @@ export function evidenceStorageAbsent(op, error, { code = true } = {}) {
 /* R42 (F16, K1881): the group's own hosts this act refuses, handed in by its caller (`opts.ownHosts`, else the store's
    `ownHosts`), capture-sources' one rule (its R65) deciding each. With none given, nothing is refused on this ground. */
 const ownHostsOf = (cap, given) => (Array.isArray(given) ? given : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null);
-/* R140: the first `max` bytes of a body, read to recognise a challenge page; the rest is cancelled. */
+/* K5574: the first `max` bytes of a body, read to recognise a challenge page; the rest is cancelled. */
 async function readPrefix(res, max) {
   const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return new Uint8Array(0);
@@ -1005,7 +1005,7 @@ async function readPrefix(res, max) {
   for (const c of got) { const take = Math.min(c.length, all.length - at); all.set(c.subarray(0, take), at); at += take; if (at >= all.length) break; }
   return all;
 }
-/** R140 (K5574): the hosts that have answered a fetch with a challenge or CAPTCHA page, and how many times each did: `[{host, challenges, first_at, last_at}]`,
+/** K5574 (K5574): the hosts that have answered a fetch with a challenge or CAPTCHA page, and how many times each did: `[{host, challenges, first_at, last_at}]`,
  *  the instants in milliseconds on the instance clock. A read; never throws. */
 export function challengesByHost(store) {
   try { const inst = ledgerOf(store); return inst ? inst.challengeHosts().map((r) => ({ host: r.host, challenges: Number(r.challenges), first_at: Number(r.first_at), last_at: Number(r.last_at) })) : []; }
@@ -1402,7 +1402,7 @@ async function acquireRun(cap, body0, opts0, t) {
   }
   /* END DEC-49 REGION is-drive-export */
   /* DEC-49 REGION is-challenge-page
-     R140 (T53; K5574, K3656): a challenge or CAPTCHA page in place of the document is recognised from what the fetch received, never filed as the document
+     K5574 (T53; K5574, K3656): a challenge or CAPTCHA page in place of the document is recognised from what the fetch received, never filed as the document
      and never worked around; the refusal is counted for the host. A header the service sets to say it challenged settles it; an error answer that is
      a bot-protection page is read for the page's own text, a bounded prefix of it. */
   const challengeRefusal = async (chal, status) => {

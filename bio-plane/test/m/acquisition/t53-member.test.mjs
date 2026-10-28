@@ -6,7 +6,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, sha } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
+import { heldParts, homeOfEmpty } from "../provenance/fixtures.mjs";
 import { fileMember, memberRow, unpack, ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -35,11 +37,12 @@ async function held(w, bytes, name, type) {
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 200));
   return r.body.document.capture.sha256;
 }
+// fixtures-contract: store-assembly job-registrar
+const stubbed = (w) => { const j = jobRegistrarStub(); w.store.registerJob = j.registerJob; w.store.armJobs = j.armJobs; return j; };
 const rowsOf = (j, kind) => j.rows().filter((x) => x.kind === kind);
 
 test("R136: a ZIP's entries and a message's attachments are members of the one job: R38 registers a `member` row for each entry it reaches, keyed by the capture session, once", async () => {
-  const w = world(); const j = jobRegistrarStub();
-  w.store.registerJob = j.registerJob; w.store.armJobs = j.armJobs;
+  const w = world(); const j = stubbed(w);
   const z = makeZip([{ name: "a.txt", data: "alpha" }, { name: "b.txt", data: "beta" }, { name: "c.txt", data: "gamma" }]);
   const r = await run(w, { [U("b.zip")]: () => new Response(z, { headers: { "content-type": "application/zip" } }) }, { locator: U("b.zip") });
   assert.equal(r.status, 200);
@@ -56,17 +59,17 @@ test("R136: a ZIP's entries and a message's attachments are members of the one j
   assert.equal(memberRow({ container: "x", container_kind: "archive", index: 1 }), null);
   assert.equal(memberRow({ container: sha(z), container_kind: "tar", index: 1 }), null);
   /* control: an archive entry that is a folder registers no row, and an upload that is no container registers none */
-  const w2 = world(); const j2 = jobRegistrarStub(); w2.store.registerJob = j2.registerJob;
+  const w2 = world(); const j2 = stubbed(w2);
   const withFolder = makeZip([{ name: "dir/", data: "" }, { name: "dir/x.txt", data: "x" }]);
   await run(w2, { [U("f.zip")]: () => new Response(withFolder, { headers: { "content-type": "application/zip" } }) }, { locator: U("f.zip") });
   assert.equal(rowsOf(j2, "member").length, 1, "the folder is listed, never a member");
-  const w3 = world(); const j3 = jobRegistrarStub(); w3.store.registerJob = j3.registerJob;
+  const w3 = world(); const j3 = stubbed(w3);
   await run(w3, { [U("p.pdf")]: () => new Response(PDF, { headers: { "content-type": "application/pdf" } }) }, { locator: U("p.pdf") });
   assert.deepEqual(j3.rows(), []);
 });
 
 test("R136: a message's attachments are filed by the same function: each cut out unambiguously, filed with the message's receipt route, its container block, and its own reading row", async () => {
-  const w = world(); const j = jobRegistrarStub(); w.store.registerJob = j.registerJob;
+  const w = world(); const j = stubbed(w);
   const m = message([{ name: "notice.pdf", type: "application/pdf", data: PDF }, { name: "rows.csv", type: "text/csv", data: CSV }, { name: "logo.png", type: "image/png", data: PNG, inline: true }]);
   const msha = await held(w, m, "m1.eml", "message/rfc822");
   const out = [];
@@ -144,7 +147,7 @@ test("R136: a member of a ZIP is filed by the same function: an entry R38 settle
 });
 
 test("R136: a member that is itself a container registers its own rows when it is filed: an attached message its attachments, an attached ZIP its unpack; the chain stops at the nesting bound", async () => {
-  const w = world(); const j = jobRegistrarStub(); w.store.registerJob = j.registerJob;
+  const w = world(); const j = stubbed(w);
   const inner = message([{ name: "deep.pdf", type: "application/pdf", data: PDF }], { id: "inner@x", subject: "inner" });
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const outer = message([{ name: "inner.eml", type: "message/rfc822", data: inner }, { name: "pack.zip", type: "application/zip", data: z }], { id: "outer@x" });
@@ -159,7 +162,7 @@ test("R136: a member that is itself a container registers its own rows when it i
   /* the depth is counted through the whole chain: past the bound, no rows */
   const deep = await fileMember(w.store, { container: so, container_kind: "message", index: 0, by: "m1", cls: "member", member: true, within: 5 });
   assert.equal(deep.outcome, "already_held");
-  const w2 = world(); const j2 = jobRegistrarStub(); w2.store.registerJob = j2.registerJob;
+  const w2 = world(); const j2 = stubbed(w2);
   const so2 = await held(w2, outer, "o.eml", "message/rfc822");
   const far = await fileMember(w2.store, { container: so2, container_kind: "message", index: 0, by: "m1", cls: "member", member: true, within: 5 });
   assert.equal(far.outcome, "filed");
@@ -193,11 +196,11 @@ test("R136: a message the record holds only in parts is read across its parts by
   for (const p of parts) { const s = sha(p); await ev.put(s, p); list.push({ sha256: s, bytes: p.length }); }
   const msha = sha(m);
   assert.equal(w.held(msha), false, "the whole is not held");
-  w.prov.partsOf = (s) => (s === msha ? list : null);
+  w.store.provenance = heldParts(msha, list);   /* the real provenance, the parts registered through its register path */
   const r = await fileMember(w.store, { container: msha, container_kind: "message", index: 1 });
   assert.deepEqual([r.ok, r.outcome, r.sha256], [true, "filed", sha(CSV)]);
   assert.equal(r.document.container.message_sha256, msha);
   /* a message the record names no parts for is not held */
-  w.prov.partsOf = () => null;
+  w.store.provenance = homeOfEmpty();   /* the real provenance with nothing registered: partsOf answers null */
   assert.equal((await fileMember(w.store, { container: msha, container_kind: "message", index: 0 })).reason, "CONTAINER_NOT_HELD");
 });
