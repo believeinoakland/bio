@@ -218,6 +218,7 @@ export class Events {
       t("event_aliases", { keys: [], sight: "group" }),
       t("event_changes", { keys: [], version_chain: true }),
       t("event_sources", { keys: [], export: "admin-only" }),
+      t("event_disagreements", { keys: ["bundle_id"] }),
       t("event_uses", { keys: [] }),
       t("event_unmet", { keys: [] }),
       t("event_read_optin", { keys: [], sight: "group", export: "admin-only", version_chain: true }),
@@ -696,6 +697,8 @@ export class Events {
       : this.#rows(`SELECT event_id FROM events WHERE alias_of IS NULL ORDER BY event_id`).map((r) => r.event_id);
     return ids.filter((id) => this.#one(`SELECT 1 AS x FROM events WHERE event_id=? AND alias_of IS NULL`, id)).map((id) => this.#whenRow(id));
   }
+  /* R61: who withdrew an event, when and why, or null. */
+  static #withdrawnOf(ev) { return ev.withdrawn_at ? { by: ev.withdrawn_actor, at: ev.withdrawn_at, reason: ev.withdrawn_why } : null; }
   static #whenOfRow(r) {
     return r && r.value != null ? { start: r.start, end: r.end, precision: r.precision, zone: r.zone, value: r.value } : null;
   }
@@ -837,6 +840,7 @@ export class Events {
                      stamp(by), at, localize("events.index.its_two_ends_were_merged", "its two ends were merged into one event"), k, k);
       this.#sql.exec(`UPDATE event_aliases SET event_id=? WHERE event_id=?`, k, a);
       this.#sql.exec(`UPDATE event_sources SET target_id=? WHERE target='event' AND target_id=?`, k, a);
+      this.#sql.exec(`UPDATE event_disagreements SET event_id=? WHERE event_id=?`, k, a);
       this.#sql.exec(`UPDATE events SET alias_of=? WHERE event_id=?`, k, a);
       this.#sql.exec(`DELETE FROM event_when_cache WHERE event_id=?`, a);
       for (const [e, o, kind] of [[k, a, "merged_in"], [a, k, "merged_into"]])
@@ -977,6 +981,19 @@ export class Events {
     return { ok: true, relation: this.#relationView(this.#one(`SELECT * FROM event_relations WHERE relation_id=?`, r.relation_id), "class:admin") };
   }
 
+  /** R61 (T53): an event withdrawn by a reasoned act, kept and shown withdrawn with who, when and why; nothing is deleted. */
+  withdrawEvent({ eventId, reason, by = null } = {}) {
+    if (!said(reason)) return refuse("NO_REASON", localize("events.index.a_withdrawal_says_why_the_event", "a withdrawal says why the event was wrong; it is kept beside it"));
+    const id = said(eventId) ? this.#resolve(eventId) : null;
+    /* an absent event and one the author may not see are answered alike (R40) */
+    if (!id || !this.#visibleAttestations(id, by).length) return noSuchEvent(eventId ?? null);
+    const held = this.#one(`SELECT withdrawn_at FROM events WHERE event_id=?`, id);
+    if (!held.withdrawn_at) this.#sql.exec(`UPDATE events SET withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE event_id=?`,
+                                           stamp(by), this.#instant(), reason.trim().slice(0, REASON_MAX), id);
+    const v = this.#eventView(id, by);
+    return { ok: true, ...(held.withdrawn_at ? { already: true } : {}), event_id: id, withdrawn: v ? v.withdrawn : null };
+  }
+
   /* R17, R18: a relation as read: two grades, the assertion's and its ends'; a stated cause in the source's words. */
   #relationView(r, viewer) {
     const a = this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, r.attestation_id);
@@ -1086,10 +1103,16 @@ export class Events {
     const choices = this.#rows(`SELECT attestation_id, reason, by_actor, at FROM event_choices WHERE event_id=? ORDER BY choice_id`, id)
       .filter((c) => attById.has(Number(c.attestation_id)))
       .map((c) => ({ attestation_id: Number(c.attestation_id), reason: c.reason, by: c.by_actor, at: c.at }));
+    /* R58 (3): what a later reading of a followed register's entry stated differently, beside the governing reading, with both
+       readings' captures; a disagreement whose reading the viewer may not see is not answered (R40) */
+    const disagreements = this.#rows(`SELECT * FROM event_disagreements WHERE event_id=? ORDER BY disagreement_id`, id)
+      .filter((d) => sees(d.bundle_id)).map((d) => ({ field: d.field, held: d.held_text, stated: d.stated_text, content_type: d.content_type,
+        capture_sha: d.capture_sha, held_capture_sha: d.held_capture_sha && sees(d.held_bundle_id) ? d.held_capture_sha : null,
+        ...(d.provisional ? { provisional: true } : {}), by: d.by_actor, at: d.at }));
     const view = { event_id: id, kind: ev.kind, status: ev.status, where: ev.where_text, when, ...(why ? { why } : {}),
              governing: when && when !== "undetermined" ? Number(w.governing) : null, concerns, within,
              attestations: atts.map((a) => this.#attestationView(a, viewer)), participants: parts, relations,
-             choices, merges_and_splits: changes, by: ev.by_actor, at: ev.at };
+             choices, merges_and_splits: changes, by: ev.by_actor, at: ev.at, withdrawn: Events.#withdrawnOf(ev), disagreements };
     /* R45: a use of a power answers its facet */
     const use = USE_KINDS.includes(ev.kind) ? facetOf(this.#kernel(), id, viewer, view) : null;
     return use ? { ...view, use } : view;
@@ -1116,20 +1139,31 @@ export class Events {
     if (!roles) for (const c of this.#rows(`SELECT event_id FROM event_concerns WHERE end_id=?`, entity)) entry(c.event_id).concerns = true;
     return this.#itemsFor(byEvent, viewer, kinds);
   }
+  /* R60: the events of `byEvent` read together, in parts of SLICE ids (a statement a part, not a statement an event), each
+     answer the one an event read alone gets. */
   #itemsFor(byEvent, viewer, kinds) {
+    const ids = [...byEvent.keys()], sees = this.#seer(viewer), evs = new Map(), atts = new Map();
+    for (let i = 0; i < ids.length; i += SLICE) {
+      const part = ids.slice(i, i + SLICE), marks = part.map(() => "?").join(",");
+      for (const e of this.#rows(`SELECT event_id, kind, status, alias_of, withdrawn_actor, withdrawn_at, withdrawn_why FROM events WHERE event_id IN (${marks})`, ...part)) evs.set(e.event_id, e);
+      for (const a of this.#rows(`SELECT * FROM event_attestations WHERE event_id IN (${marks}) AND serves='event' ORDER BY attestation_id`, ...part)) {
+        if (!sees(a.bundle_id)) continue;
+        if (!atts.has(a.event_id)) atts.set(a.event_id, []);
+        atts.get(a.event_id).push(a);
+      }
+    }
+    const live = ids.filter((id) => { const ev = evs.get(id); return ev && !ev.alias_of && !(kinds && !kinds.includes(ev.kind)) && atts.has(id); });
+    const whens = this.#whensRead(live);
     const out = [];
-    for (const [id, x] of byEvent) {
-      const ev = this.#one(`SELECT kind, status, alias_of FROM events WHERE event_id=?`, id);
-      if (!ev || ev.alias_of || (kinds && !kinds.includes(ev.kind))) continue;
-      const atts = this.#visibleAttestations(id, viewer);
-      if (!atts.length) continue;
-      const seen = new Set(atts.map((a) => Number(a.attestation_id)));
+    for (const id of live) {
+      const x = byEvent.get(id), ev = evs.get(id);
+      const seen = new Set(atts.get(id).map((a) => Number(a.attestation_id)));
       const roles = [...new Set(x.parts.filter(([, a]) => seen.has(a)).map(([role]) => role))];
       if (!roles.length && !x.concerns && x.parts.length) continue;
-      const w = this.#whenRead(id);
+      const w = whens.get(id);
       const when = w.when === "undetermined" || (w.governing != null && !seen.has(Number(w.governing))) ? null : w.when;
       const item = { event_id: id, kind: ev.kind, status: ev.status, when, ...(w.when === "undetermined" ? { why: reason("events.why.cache_stale") } : {}),
-                     roles: roles.sort(), concerns: x.concerns };
+                     roles: roles.sort(), concerns: x.concerns, withdrawn: Events.#withdrawnOf(ev) };
       /* R45: a use answers its facet in every list too */
       if (USE_KINDS.includes(ev.kind)) {
         const v = this.#eventView(id, viewer);
@@ -1257,15 +1291,35 @@ export class Events {
      counted (R40). Answers, for each event id, a function of its item (whose `when` says whether it is placed). */
   #drawn(eventIds, viewer) {
     const gov = this.#governingMany(eventIds), memo = new Map(), out = new Map(), sees = this.#seer(viewer);
+    /* R60: the attestations, participants and relations of all the items read in parts, never an event at a time */
+    const atts = new Map(), parts = new Map(), rels = new Map(), half = Math.max(1, Math.floor(SLICE / 2));
+    for (let i = 0; i < eventIds.length; i += SLICE) {
+      const part = eventIds.slice(i, i + SLICE), marks = part.map(() => "?").join(",");
+      for (const a of this.#rows(`SELECT * FROM event_attestations WHERE event_id IN (${marks}) AND serves='event' ORDER BY attestation_id`, ...part)) {
+        if (!sees(a.bundle_id)) continue;
+        if (!atts.has(a.event_id)) atts.set(a.event_id, new Map());
+        atts.get(a.event_id).set(Number(a.attestation_id), a);
+      }
+      for (const p of this.#rows(`SELECT * FROM event_participants WHERE event_id IN (${marks}) AND superseded_by IS NULL ORDER BY participant_id`, ...part)) {
+        if (!parts.has(p.event_id)) parts.set(p.event_id, []);
+        parts.get(p.event_id).push(p);
+      }
+    }
+    for (let i = 0; i < eventIds.length; i += half) {
+      const part = eventIds.slice(i, i + half), marks = part.map(() => "?").join(",");
+      for (const r of this.#rows(`SELECT r.relation_id, r.kind, r.from_event, r.to_event, r.withdrawn_at, a.bundle_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
+                                  WHERE r.from_event IN (${marks}) OR r.to_event IN (${marks}) ORDER BY r.relation_id`, ...part, ...part))
+        for (const end of new Set([r.from_event, r.to_event])) {
+          if (!rels.has(end)) rels.set(end, []);
+          rels.get(end).push(r);
+        }
+    }
     for (const id of eventIds) {
-      const atts = this.#visibleAttestations(id, viewer);
-      const attById = new Map(atts.map((a) => [Number(a.attestation_id), a]));
-      const live = this.#rows(`SELECT * FROM event_participants WHERE event_id=? AND superseded_by IS NULL ORDER BY participant_id`, id)
-        .filter((p) => attById.has(Number(p.attestation_id)));
+      const attById = atts.get(id) ?? new Map();
+      const live = (parts.get(id) ?? []).filter((p) => attById.has(Number(p.attestation_id)));
       const participants = live.slice(0, ITEM_PARTICIPANTS_MAX).map((p) => this.#participantView(p, viewer, attById, memo));
       /* R57: every recorded relation between this event and another, in the order recorded, withdrawn ones marked; a relation whose citation the viewer may not see is not answered (R40) */
-      const relations = this.#rows(`SELECT r.kind, r.from_event, r.to_event, r.withdrawn_at, a.bundle_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
-                                    WHERE r.from_event=? OR r.to_event=? ORDER BY r.relation_id`, id, id)
+      const relations = (rels.get(id) ?? [])
         .filter((r) => sees(r.bundle_id)).map((r) => ({ kind: r.kind, other: r.from_event === id ? r.to_event : r.from_event, withdrawn: r.withdrawn_at != null }));
       const g = gov.get(id);
       out.set(id, (item) => {
@@ -1495,6 +1549,7 @@ export function eventsOps(ev, url, body) {
     eventsplit: act((b) => ev.splitEvent(b)),
     eventrelate: act((b) => ev.relate(b)),
     eventrelationwithdraw: act((b) => ev.withdrawRelation(b)),
+    eventwithdraw: act((b) => ev.withdrawEvent(b)),
     actalias: act((b) => ev.aliasAct(b)),
     eventimport: act((b) => ev.followedImport(b)),
     registerimport: act((b) => ev.followedRegister(b)),
