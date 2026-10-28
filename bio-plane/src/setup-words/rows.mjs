@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8086 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8090 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -27929,4 +27929,8 @@ export const WORD_ROWS = Object.freeze([
   ["workbooks.declared.bind","workbook-directed: keyed by (capture, project) and a range; writes a binding and moves no bundle",null,null,false,"code"],
   ["workbooks.declared.recordcheck","workbook-directed: keyed by (capture, project); a second member's check, disclosed and never a gate",null,null,false,"code"],
   ["workbooks.index.k1447_grade_rule","K1447 (ii): each bound input at its capture grade capped by its derivation; an unbound input is testimony (D); a third-party engine's value is a derivation step, undetermined until measured; the method is disclosed, not graded",null,null,false,"code"],
+  ["workbooks.lint.cross_foot","the row totals in column {column} add to {rows}, the column totals in row {row} to {columns}, over {range}",null,null,false,"code"],
+  ["workbooks.lint.past_its_end",", past its end",null,null,false,"code"],
+  ["workbooks.lint.short_range","{fn} over {over}, while the numbers run {run}{before}{past}",null,null,false,"code"],
+  ["workbooks.lint.starting_before",", starting before it",null,null,false,"code"],
 ].map((row) => Object.freeze(row)));

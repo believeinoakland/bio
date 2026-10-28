@@ -82,7 +82,7 @@ test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method n
   for (const k of ["workbook", "bindings", "inputs", "recompute", "lint", "method_notes", "checks", "grade_facts", "disclosure"])
     assert.ok(k in r, k);
   assert.equal(r.recompute, null);
-  assert.match(r.disclosure.text, /^not recomputed here/);
+  assert.ok(r.disclosure.text.startsWith(word("workbooks.recomputed")));
   await w.wb.recompute({ ...w.at, by: V("bob") });
   assert.equal(calls, 1);
   for (let i = 0; i < 3; i++) await w.wb.readWorkbook({ ...w.at, viewer: V("carol") });

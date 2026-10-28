@@ -56601,6 +56601,34 @@
       "module": "workbooks",
       "file": "bio-plane/src/workbooks/index.mjs",
       "line": 625
+    },
+    {
+      "id": "workbooks.lint.cross_foot",
+      "en": "the row totals in column {column} add to {rows}, the column totals in row {row} to {columns}, over {range}",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/lint.mjs",
+      "line": 163
+    },
+    {
+      "id": "workbooks.lint.past_its_end",
+      "en": ", past its end",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/lint.mjs",
+      "line": 82
+    },
+    {
+      "id": "workbooks.lint.short_range",
+      "en": "{fn} over {over}, while the numbers run {run}{before}{past}",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/lint.mjs",
+      "line": 83
+    },
+    {
+      "id": "workbooks.lint.starting_before",
+      "en": ", starting before it",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/lint.mjs",
+      "line": 81
     }
   ]
 }
