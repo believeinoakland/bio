@@ -72,6 +72,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 **connections**
 - T53-147 · N1260 (K1469) · `named_in` hop end and hub `[waits: M-F1]`
 - T53-148 · K5565 · English in tests: its entry
+- T53-587 · N1200 (K5747) · registers its reader of a project's reach (the records it cites) through `membership.registerProjectReach`, so a run fenced to its project (N1186) also reads them
 - rows: `build/plan/T53-R1/connections.md`
 **observation-log**
 - T53-149 · N1219 · run log carries reads and disagreements
@@ -796,6 +797,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/journey-check.md`
 **load-check**
 - T53-501 · N1274 · `runProfile`, `seedCopy`, `report`
+- T53-590 · K5350, K5747 · `deploy-test.yml` refuses a copy without a store and never re-points the shared `agent-worker`; a fresh copy goes through the installer (`seedCopy`'s route)
 - rows: `build/plan/T53-R1/load-check.md`
 
 ## Measurements

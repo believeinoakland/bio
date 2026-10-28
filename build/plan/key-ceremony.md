@@ -29,15 +29,16 @@ Route A, in two sittings with Bob. Sitting 1 now: make both keys, store them in 
 
 ## 4. Plain steps for Bob (Route A; the page and its link come from BOB, tested first; Passwords wording to be checked on his Mac)
 
-Sitting 1, about 10 minutes.
-1. Click the link BOB gives you. Click "Download the key page". A file named `catalogue-keys.html` lands in Downloads.
-2. Turn Wi-Fi off (the Wi-Fi icon at the top of the screen, switch it off). Double-click the file; it opens in your browser. The top of the page says it works without a network.
-3. Open the Passwords app. Click "+", make an entry named "BIO catalogue signing key"; click the password box and choose the strong password Passwords suggests; save. That is its passphrase. Do the same for "BIO catalogue recovery key".
-4. Back on the page, type the first passphrase twice in the signing key's box and the second in the recovery key's box (copy each from Passwords). Click "Make the catalogue keys".
-5. Under "Signing key", click "Copy". In Passwords open the signing-key entry, paste into its Notes, save. Do the same under "Recovery key" for the recovery entry. Then put one more copy of the recovery key somewhere else you control (an email to yourself that you keep, or a note in another account).
-6. Prove it: reload the page (Cmd-R), click "Load a key", paste the signing key from Passwords, type its passphrase. The page shows its public line; it must match the one made in step 4. Do the same for the recovery key.
-7. Click "Copy the two public lines" and paste them into the chat with BOB. These are safe to show.
-8. Close the page, delete `catalogue-keys.html` from Downloads, turn Wi-Fi back on.
+Sitting 1, about 10 minutes (corrected by BOB #331 against the page: ONE passphrase locks both keys; labels as the page shows them).
+1. Open the pinned raw link (commit 09c1cbd7a8, SHA-256 87f1993c…); `catalogue-keys.html` lands in Downloads.
+2. Wi-Fi off; double-click the file.
+3. Passwords: "+", entry "BIO catalogue keys passphrase", accept the suggested strong password, save (one passphrase for both keys).
+4. Page, "Make the two keys": paste it into "Passphrase" and into "The same passphrase again"; click "Make my two keys".
+5. Copy the box "Catalogue signing key: private, keep this" into the Notes of a new entry "BIO catalogue signing key"; save.
+6. The same for "Catalogue recovery key: private, keep this" into "BIO catalogue recovery key"; a second copy of the recovery key elsewhere. Not "Download both as a file".
+7. Copy "Both public lines: paste these into the session" into the chat (before any reload: a reload clears the page).
+8. Reload; "Load a key you already have": paste the signing key, paste the passphrase, "Load this key": its public line equals the first line sent; "Forget everything"; the same for the recovery key (the second line).
+9. Close the page, delete the file, Wi-Fi on.
 
 Sitting 2 (seed), about 5 minutes: BOB shows the seed's statement rendered in words and gives the same page link. Repeat steps 1-2, click "Sign a catalogue seed", paste the statement text, check the words read the same as BOB's, load the signing key as in step 6, click "Sign", copy the signature into the chat. BOB verifies it with `verifyAiCatalogue` and stock `ssh-keygen -Y verify` before anything is embedded.
 
