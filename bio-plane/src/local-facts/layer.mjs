@@ -225,7 +225,7 @@ export class TeamLayer {
       held = { ...clone(value), government: clone(b.government), status: "researched", basis: `team:${source.captureSha}` };
       errors.push(...this.#errors(section, held));
     }
-    if (errors.length) return entryInvalidRefusal(`the entry is not valid as a ${section} entry of the team layer.`, errors);
+    if (errors.length) return entryInvalidRefusal(localize("local-facts.layer.the_entry_is_not_valid", "the entry is not valid as a {section} entry of the team layer.", { section: String(section) }), errors);
     if (bad) return noSourceRefusal("an entry", bad);
     const key = keyOf(section, value);
     for (const p of this.layers.chain(b.government)) {
@@ -261,7 +261,7 @@ export class TeamLayer {
     const needs = tier !== 1;
     if (needs && (!statement || statement.length > RULE_STATEMENT_MAX)) return needsQualificationRefusal("entry", e.entry, tier);
     const errors = this.#errors(e.section, TeamLayer.#asHeld(e));
-    if (errors.length) return entryInvalidRefusal(`the entry is not valid as a ${e.section} entry of the team layer.`, errors);
+    if (errors.length) return entryInvalidRefusal(localize("local-facts.layer.the_entry_is_not_valid", "the entry is not valid as a {section} entry of the team layer.", { section: String(e.section) }), errors);
     const at = this.instant();
     const by = str(b.by);
     return this.record.transact(() => {
@@ -391,11 +391,11 @@ export class TeamLayer {
     const believes = str(b.believes);
     /* DEC-49 REGION is-report-belief */
     if (!believes || believes.length > BELIEVES_MAX)
-      return refusal("REPORT_NO_BELIEF", `say what the entry should say, in 1 to ${BELIEVES_MAX} characters.`, { max: BELIEVES_MAX });
+      return refusal("REPORT_NO_BELIEF", localize("local-facts.layer.say_what_the_entry_should_say", "say what the entry should say, in 1 to {BELIEVES_MAX} characters.", { BELIEVES_MAX: String(BELIEVES_MAX) }), { max: BELIEVES_MAX });
     /* END DEC-49 REGION is-report-belief */
     const key = typeof b.key === "string" ? b.key.trim() : "";
     if (!key || key.length > KEY_MAX || b.said === undefined)
-      return entryInvalidRefusal("a report names the entry's path (`key`) and says what the layer gives (`said`).", [{ path: key ? "said" : "key", code: "VALUE_INVALID", detail: "required" }]);
+      return entryInvalidRefusal(localize("local-facts.layer.a_report_names_the_entrys_path", "a report names the entry's path (`key`) and says what the layer gives (`said`)."), [{ path: key ? "said" : "key", code: "VALUE_INVALID", detail: "required" }]);
     const source = held ? { captureSha: s.captureSha.trim().toLowerCase(), extent: clone(s.extent) } : { address: s.address.trim(), passage: s.passage.trim() };
     const at = this.instant();
     const by = str(b.by);

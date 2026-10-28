@@ -632,7 +632,7 @@ export class LocalFacts {
     if (!r.named && fiscalShape && b.act === "correct" && !parseFactPath(path) && !LocalFacts.#blind(b.viewer)) {
       const how = str(b.how);
       if (!how || how.length > HOW_MAX) return refusal("FACT_HOW_REFUSED", `say how you checked, in 1 to ${HOW_MAX} characters.`, { max: HOW_MAX });
-      return refusal("FACT_VALUE_REFUSED", "a stated fiscal year is about a federal, state, county or city government, `federal` with no place.",
+      return refusal("FACT_VALUE_REFUSED", localize("local-facts.index.a_stated_year_government", "a stated fiscal year is about a federal, state, county or city government, `federal` with no place."),
                      { field: "government.level", errors: [{ path: "fiscal_year[0].government.level", code: "LAYER_INVALID" }], max: SOURCE_MAX });
     }
     if (!r.named || !r.held) return noSuchFact(path);
@@ -659,10 +659,10 @@ export class LocalFacts {
       year = v ? { government: clone(parts.government), body: v.body, start: v.start, named_by: v.named_by, label: v.label } : null;
       const extra = v ? Object.keys(v).filter((k) => !["body", "start", "named_by", "label"].includes(k) && !(k === "government" && sameGov(v.government, parts.government))) : [];
       const errors = !year ? [{ path: "fiscal_year[0]", code: "VALUE_INVALID", detail: "a stated year is {body, start, named_by, label}" }]
-        : [...extra.map((k) => ({ path: `fiscal_year[0].${k}`, code: "VALUE_INVALID", detail: `${k} is not a field of a stated year` })), ...this.team.yearErrors(year)];
+        : [...extra.map((k) => ({ path: `fiscal_year[0].${k}`, code: "VALUE_INVALID", detail: localize("local-facts.index.not_a_field_of_a_stated_year", "{k} is not a field of a stated year", { k: String(k) }) })), ...this.team.yearErrors(year)];
       /* DEC-49 REGION is-fact-correction */
       if (errors.length)
-        return refusal("FACT_VALUE_REFUSED", "a stated fiscal year gives its body, start, named_by and label in the form `jurisdictions` holds them.",
+        return refusal("FACT_VALUE_REFUSED", localize("local-facts.index.a_stated_year_gives_its_body", "a stated fiscal year gives its body, start, named_by and label in the form the places' records hold them."),
                        { field: String(errors[0].path || "").split(".").pop() || null, errors: errors.slice(0, 10), max: SOURCE_MAX });
       /* END DEC-49 REGION is-fact-correction */
       /* R31: the places' own records are read first: a different own entry is R23's refusal, an equal one or one that covers it is only theirs */
@@ -675,7 +675,7 @@ export class LocalFacts {
       if (own && !equal(own.e)) return inShippedRefusal(own.x.id, "fiscal_year", year.body, records(own.e));
       /* DEC-49 REGION is-fiscal-year-new */
       if (own || star)
-        return refusal("FISCAL_YEAR_IN_RECORDS", "the places' own records already give this government's fiscal year; there is nothing to state.",
+        return refusal("FISCAL_YEAR_IN_RECORDS", localize("local-facts.index.the_records_already_give_this_year", "the places' own records already give this government's fiscal year; there is nothing to state."),
                        { layer: (own || { x: here }).x.id, ...records(own ? own.e : star) });
       /* END DEC-49 REGION is-fiscal-year-new */
       value = { body: year.body, start: year.start, named_by: year.named_by, label: year.label };

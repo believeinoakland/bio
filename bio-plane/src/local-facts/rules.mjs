@@ -88,7 +88,7 @@ export const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); 
 export const governmentErrors = (g, at = "government", levels = ["county", "city"]) => {
   if (!isObj(g) || Object.keys(g).sort().join() !== "level,place" || !levels.includes(g.level)
       || typeof g.place !== "string" || !g.place.trim() || g.place.length > 200 || /[\r\n]/.test(g.place))
-    return [{ path: at, code: "LAYER_INVALID", detail: `government is {level, place}: level ${levels.join(" or ")}, place a name of 1 to 200 characters on one line` }];
+    return [{ path: at, code: "LAYER_INVALID", detail: localize("local-facts.rules.government_is_level_place", "government is {level, place}: level {levels}, place a name of 1 to 200 characters on one line", { levels: String(levels.join(" or ")) }) }];
   return [];
 };
 export const sameGovernment = (a, b) => (!isObj(a) && !isObj(b)) || (isObj(a) && isObj(b) && a.level === b.level && (a.place ?? null) === (b.place ?? null));
@@ -514,30 +514,29 @@ export function entryInvalidRefusal(detail, errors) {
    is "a rule" or "an entry"; `bad` is `sourceRefusal`'s answer. */
 export function noSourceRefusal(what, bad) {
   /* DEC-49 REGION is-rule-source */
-  return refusal("RULE_NO_SOURCE", `${what} is drafted from a held capture extent of its primary source `
-                 + `({captureSha, extent}): ${bad.why}`, bad.code ? { source_code: bad.code } : undefined);
+  return refusal("RULE_NO_SOURCE", localize("local-facts.rules.is_drafted_from_a_held_capture", "{what} is drafted from a held capture extent of its primary source ({captureSha, extent}): {why}", { what: String(what), why: String(bad.why) }),
+                 bad.code ? { source_code: bad.code } : undefined);
   /* END DEC-49 REGION is-rule-source */
 }
 
 /* R11, R23: the drafter confirming their own rule or entry; `noun` is "rule" or "entry", the answer's field. */
 export function selfConfirmRefusal(noun, id) {
   /* DEC-49 REGION is-rule-other */
-  return refusal("RULE_SELF_CONFIRM", `a ${noun} is confirmed by a member other than its drafter.`, { [noun]: id });
+  return refusal("RULE_SELF_CONFIRM", localize("local-facts.rules.is_confirmed_by_another_member", "a {noun} is confirmed by a member other than its drafter.", { noun: String(noun) }), { [noun]: id });
   /* END DEC-49 REGION is-rule-other */
 }
 
 /* R11, R23: a rule or entry no longer in the drafted state. */
 export function notDraftedRefusal(noun, id, state) {
   /* DEC-49 REGION is-rule-drafted */
-  return refusal("RULE_NOT_DRAFTED", `the ${noun} is ${state}; only a drafted ${noun} is confirmed.`, { [noun]: id, state });
+  return refusal("RULE_NOT_DRAFTED", localize("local-facts.rules.the_noun_is_state_only_drafted", "the {noun} is {state}; only a drafted {noun} is confirmed.", { noun: String(noun), state: String(state) }), { [noun]: id, state });
   /* END DEC-49 REGION is-rule-drafted */
 }
 
 /* R11, R23: a rule or entry of tier 2, 3 or undetermined confirmed with no professional's statement. */
 export function needsQualificationRefusal(noun, id, tier) {
   /* DEC-49 REGION is-rule-qualified */
-  return refusal("RULE_NEEDS_QUALIFICATION", `a ${noun} of tier ${tier ?? "undetermined"} is confirmed by a professional, `
-                 + `who states her qualification in 1 to ${RULE_STATEMENT_MAX} characters.`,
+  return refusal("RULE_NEEDS_QUALIFICATION", localize("local-facts.rules.noun_of_tier_confirmed_by_professional", "a {noun} of tier {tier} is confirmed by a professional, who states her qualification in 1 to {max} characters.", { noun: String(noun), tier: String(tier ?? "undetermined"), max: String(RULE_STATEMENT_MAX) }),
                  { [noun]: id, tier, max: RULE_STATEMENT_MAX });
   /* END DEC-49 REGION is-rule-qualified */
 }
