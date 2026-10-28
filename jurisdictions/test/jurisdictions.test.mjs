@@ -591,8 +591,9 @@ test("R19 every held profile passes validate, and no two share an id", () => {
 
 test("R20 no service treats a profile by its identity", () => {
   for (const id of [FIRST, TEST]) {
-    const orig = get(id);
-    const renamed = { ...get(id), id: "renamed-x", name: "Renamed", covers: ["Somewhere Else"] };
+    /* the package's whole is read as a package (R114); a copy under another name is read as the one profile it is */
+    const orig = id === FIRST ? { ...get(id), name: `${get(id).name} (whole)` } : get(id);
+    const renamed = { ...orig, id: "renamed-x", name: "Renamed", covers: ["Somewhere Else"] };
     assert.deepEqual(validate(renamed), validate(orig));
     /* the profile tags go at every depth; `id`, `name` and `covers` only as the view's own, so a fact's own name (a legal
        organisation's, a template's, R87) is still compared */
@@ -642,7 +643,9 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   /* systems: every legacy entry, in order, with the same answers for their addresses */
   /* the snapshot's systems first; T33 adds the three court registers (K1514), on hosts the snapshot never named */
   assert.equal(f.systems.length, legacy.ID_SYSTEMS.length + 3);
-  assert.deepEqual(f.systems.slice(legacy.ID_SYSTEMS.length).map((s) => s.origin), ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"]);
+  /* the layers lay their systems end to end (R114), so the legacy ones are found by what they are, not by place */
+  const legacyKeys = new Set(legacy.ID_SYSTEMS.map((s) => JSON.stringify([s.origin, s.hosts])));
+  assert.deepEqual(f.systems.filter((s) => !legacyKeys.has(JSON.stringify([s.origin, s.hosts]))).map((s) => s.origin).sort(), ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"]);
   for (const address of legacy.addresses()) {
     const was = legacy.systemOfAddress(address);
     const now = systemOf(view, address);
@@ -668,9 +671,10 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.practice.minutes_due_days, { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" });
   assert.deepEqual(f.search_terms.map((t) => t.term), legacy.SEARCH_TERMS);
   /* the snapshot's records law first; T33's sourced rule set adds the City's and the federal one (R56) */
-  assert.deepEqual(f.records_laws.map((l) => [l.level, l.name]), [["state", "California Public Records Act"],
-    ["city", "Oakland Sunshine Ordinance"], ["federal", "Freedom of Information Act"]]);
-  assert.equal(f.records_laws[0].basis, "D-149");
+  /* the layers lay their laws end to end, federal first (R114) */
+  assert.deepEqual(f.records_laws.map((l) => [l.level, l.name]), [["federal", "Freedom of Information Act"],
+    ["state", "California Public Records Act"], ["city", "Oakland Sunshine Ordinance"]]);
+  assert.equal(f.records_laws.find((l) => l.level === "state").basis, "D-149");
   /* every basis names a measurement or ruling, or says UNMEASURED */
   walkFacts(f, (fact, path) => assert.match(fact.basis, /^(UNMEASURED|(M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)( [^\s,;]+)?([,;] (M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)( [^\s,;]+)?)*)$/, path));
 });
@@ -718,8 +722,8 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
   const f = get(FIRST);
   const renamed = legacy.ACTION_KINDS.map((k) => (k === "cpra_request" ? "records_request" : k));
   /* the snapshot's kinds, renamed, first and in order; Design Requirement 8's Tier 2 and 3 kinds follow (R36) */
-  assert.deepEqual(f.action_kinds.slice(0, renamed.length).map((k) => k.kind), renamed);
-  assert.ok(f.action_kinds.slice(renamed.length).every((k) => k.tier === 2 || k.tier === 3));
+  assert.deepEqual(f.action_kinds.filter((k) => renamed.includes(k.kind)).map((k) => k.kind).sort(), [...renamed].sort());
+  assert.ok(f.action_kinds.filter((k) => !renamed.includes(k.kind)).every((k) => k.tier === 2 || k.tier === 3));
   for (const k of f.action_kinds) assert.match(k.kind, /^[a-z][a-z0-9_]*$/);
   /* Roadmap v5 §8 names Tier 1 for records requests, grand jury complaints, State Controller referrals and
      media outreach, and no tier for the others; D-182 adopted §8's words. R85 (T45) adds public comment at Tier 1, on
@@ -730,7 +734,8 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
   const T45_TIERED = { public_comment: "K2785", brown_act_demand: "K2785", party_participation: "K2780" };
   for (const k of f.action_kinds) if (k.tier !== undefined) assert.equal(k.basis, T45_TIERED[k.kind] ?? "D-182", k.kind);
   const rr = f.action_kinds.find((k) => k.kind === "records_request");
-  assert.deepEqual(rr.laws, ["California Public Records Act", "Oakland Sunshine Ordinance"]);
+  /* the federal layer's records_request names FOIA (R109), so the kind's laws gain it, first (R114's one difference) */
+  assert.deepEqual(rr.laws, ["Freedom of Information Act", "California Public Records Act", "Oakland Sunshine Ordinance"]);
   const d = f.deadlines.find((x) => x.rule === "records_response");
   assert.deepEqual([d.applies_to, d.units, d.amount, d.count, d.starts, d.citation], ["records_request", "days", 10, "calendar", "received", "Cal. Gov. Code § 7922.535(a)"]);
   /* from T33 no deadline or counterparty rests on UNMEASURED: each is sourced (R44, R56; K1445) */
@@ -993,7 +998,7 @@ test("R37 locale: {value, basis}, one well-formed BCP 47 tag; one value in combi
   assert.equal(agree.view.locale.bases.length, 2);
   const c = combine([FIRST, TEST]);
   assert.equal(c.view.locale, undefined);
-  assert.deepEqual(c.conflicts.find((x) => x.at === "locale").values.map((v) => v.value), ["en-US", "en-GB"]);
+  assert.deepEqual(c.conflicts.find((x) => x.at === "locale").values.map((v) => v.value).sort(), ["en-GB", "en-US"]);
 });
 
 test("R38 systems[].links: {item, file} patterns over path and query; the first profile states REC-206's gateway shapes", () => {
@@ -1367,7 +1372,7 @@ test("R45 the test profile supplies R40–R44; the first holds the calendar only
   assert.deepEqual([fv.time_zone.status, fv.time_zone.basis, fv.time_zone.profile], ["researched", "M-187", FIRST]);
   assert.deepEqual(fv.counterparties.find((c) => c.role === "City Auditor").hours.bases, [{ profile: FIRST, basis: "M-192" }]);
   assert.deepEqual(fv.action_kinds.find((k) => k.kind === "records_petition").venue.hours.basis, "M-193");
-  assert.deepEqual(fv.holidays.filter((h) => !h.list).map((h) => [h.basis, h.status, h.profile]), [["M-189", "researched", FIRST], ["M-190", "researched", FIRST], ["M-191", "researched", FIRST]]);
+  assert.deepEqual(fv.holidays.filter((h) => !h.list).map((h) => [h.basis, h.status, h.profile]).sort(), [["M-189", "researched", FIRST], ["M-190", "researched", FIRST], ["M-191", "researched", FIRST]]);
 });
 
 test("R29 R40 R42 a kind's template, an office's hours and a venue's hours are one value per key", () => {

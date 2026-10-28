@@ -8,6 +8,10 @@
  *
  * Services: list() · get(id) · validate(profile) · combine(list) · isLocale(value). */
 import FIRST from "./profiles/oakland-alameda.mjs";
+import US_FEDERAL from "./profiles/us-federal.mjs";
+import US_CALIFORNIA from "./profiles/us-california.mjs";
+import US_ALAMEDA_COUNTY from "./profiles/us-ca-alameda-county.mjs";
+import US_OAKLAND from "./profiles/us-ca-oakland.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
 import { BASIS_GRADES, isMachineIdentity, sha256HexSync, canonicalJson } from "../bio-plane/src/record-grammar/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
@@ -678,7 +682,7 @@ function validateInto(p, errors) {
               err(`${ea}.organisation`, "VALUE_INVALID", localize("jurisdictions.index.organisation_is_a_key_the", "organisation is a key the body-variant map names, not '{String}'", { String: String(String(e.organisation)) }));
           } else { str(`${ea}.label`, e.label, "label"); str(`${ea}.citation`, e.citation, "citation"); }
           /* R77 (T45): the statuses a venue of one kind reports in (a grand jury's required responses); absent, every kind */
-          if (key === "response_statuses" && own(e, "applies_to") && !profileKinds.has(e.applies_to))
+          if (key === "response_statuses" && own(e, "applies_to") && !inheritsLists && !profileKinds.has(e.applies_to))
             err(`${ea}.applies_to`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of", "'{String}' is no kind of this profile", { String: String(String(e.applies_to)) }));
           basis(ea, e);
           return;
@@ -1054,7 +1058,7 @@ function validateInto(p, errors) {
     str(`${at}.label`, k.label, "label");
     if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
     if (own(k, "laws")) list(`${at}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at}.laws[${j}]`, "LAW_UNKNOWN", localize("jurisdictions.index.no_records_laws_or_standard", "no records_laws or standard_sources entry is named '{String}'", { String: String(String(l)) }));
+      if (!inheritsLists && !lawNames.has(l)) err(`${at}.laws[${j}]`, "LAW_UNKNOWN", localize("jurisdictions.index.no_records_laws_or_standard", "no records_laws or standard_sources entry is named '{String}'", { String: String(String(l)) }));
     });
     if (own(k, "venue")) {
       const v = k.venue;
@@ -1142,16 +1146,37 @@ function validateInto(p, errors) {
   });
   /* R26 (T33): a period as data only; civil-time counts it. An entry written `days: n` with no `units` reads as
      `units: "days", amount: n` (R26 before T33). Every entry carries `status` and a sourced basis (R44, K1445). */
+  /* R47: a body's observed practice, held beside the rule and never as it (K1504 (1)). */
+  const observedCheck = (at, d) => {
+    if (!own(d, "observed")) return;
+    const o = d.observed;
+    if (!isObj(o)) err(`${at}.observed`, "VALUE_INVALID", "observed is {closures, status, basis}");
+    else {
+      fields(`${at}.observed`, o, ["closures", "status", "basis"]);
+      if (!inheritsLists && !closureLists.has(o.closures))
+        err(`${at}.observed.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_3", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(o.closures)) }));
+      statusBasis(`${at}.observed`, o);
+    }
+  };
   if (own(p, "deadlines")) list("deadlines", p.deadlines).forEach((d, i) => {
     const at = `deadlines[${i}]`;
     if (!entry(at, d)) return;
+    /* R112 (T53): a layer within another may add its own body's observed practice to a rule the layer above states: the rule's
+       name, what it applies to and the `observed` practice, nothing else; `combine` reads it beside the rule it names. */
+    if (inheritsLists && !teamLayer && own(d, "observed") && !["units", "amount", "days", "starts", "citation", "closures", "extension"].some((k) => own(d, k))) {
+      fields(at, d, ["rule", "applies_to", "observed", "status", "basis"]);
+      str(`${at}.rule`, d.rule, "rule");
+      observedCheck(at, d);
+      statusBasis(at, d);
+      return;
+    }
     fields(at, d, ["rule", "applies_to", "units", "amount", "days", "count", "direction", "starts", "starter", "roll", "closures",
       "computation", "extension", "tolling", "observed", "applies_on", "due_at", "owed_by", "consequence", "defends", "citation",
       "status", "label", "government", "basis"]);
     str(`${at}.rule`, d.rule, "rule");
     /* R97 (T51): the rule's name in the profile's words */
     if (own(d, "label")) str(`${at}.label`, d.label, "label");
-    if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
+    if (d.applies_to !== "claim" && !inheritsLists && !kinds.has(d.applies_to))
       err(`${at}.applies_to`, "DEADLINE_KIND_UNKNOWN", localize("jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", { String: String(String(d.applies_to)) }));
     const legacy = own(d, "days") && !own(d, "units") && !own(d, "amount");
     if (legacy) { if (!isPosInt(d.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer"); }
@@ -1170,7 +1195,7 @@ function validateInto(p, errors) {
     /* R75 (T45): a third party's act starts the count: the counterparty, by role and body, whose act it is */
     if (d.starts === "third_party") {
       const st = d.starter;
-      if (!isObj(st) || Object.keys(st).some((k) => k !== "role" && k !== "body") || !offices.has(`${st.role}\u0000${st.body}`))
+      if (!isObj(st) || Object.keys(st).some((k) => k !== "role" && k !== "body") || (!inheritsLists && !offices.has(`${st.role}\u0000${st.body}`)))
         err(`${at}.starter`, "ANCHOR_UNKNOWN", "a third_party start names its starter, {role, body} of a counterparty of this profile");
     } else if (own(d, "starter")) err(`${at}.starter`, "VALUE_INVALID", "a starter is given only with starts: third_party");
     /* R75: whose duty it is, and the law's stated consequence, quoted; R87 (c): a deadline the group meets in its own defence */
@@ -1207,16 +1232,7 @@ function validateInto(p, errors) {
       str(`${ta}.when`, t.when, "when"); str(`${ta}.citation`, t.citation, "citation");
     });
     /* R47: a body's observed practice, held beside the rule and never as it (K1504 (1)). */
-    if (own(d, "observed")) {
-      const o = d.observed;
-      if (!isObj(o)) err(`${at}.observed`, "VALUE_INVALID", "observed is {closures, status, basis}");
-      else {
-        fields(`${at}.observed`, o, ["closures", "status", "basis"]);
-        if (!inheritsLists && !closureLists.has(o.closures))
-          err(`${at}.observed.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_3", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(o.closures)) }));
-        statusBasis(`${at}.observed`, o);
-      }
-    }
+    observedCheck(at, d);
     /* K1514: the anchor's weekdays a rule applies to, and the time of day it is due at */
     if (own(d, "applies_on") && (!Array.isArray(d.applies_on) || !d.applies_on.length
         || !d.applies_on.every((x) => WEEKDAYS.includes(x)) || new Set(d.applies_on).size !== d.applies_on.length))
@@ -1778,19 +1794,64 @@ const officesKey = (offices) => (Array.isArray(offices) ? [...new Set(offices.ma
 
 const deepFreeze = (o) => { if (o && typeof o === "object") { Object.values(o).forEach(deepFreeze); Object.freeze(o); } return o; };
 const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.stringify(o)));
-const HELD = new Map([FIRST, TEST].map((p) => [p.id, deepFreeze(clone(p))]));
+const HELD = new Map([FIRST, US_FEDERAL, US_CALIFORNIA, US_ALAMEDA_COUNTY, US_OAKLAND, TEST].map((p) => [p.id, deepFreeze(clone(p))]));
 /* R114: a package is a held profile of one field, the ids of its layers. */
 const PACKAGES = new Map([...HELD.values()].filter((p) => Array.isArray(p.package)).map((p) => [p.id, p.package.slice()]));
+const isPackaged = (id) => [...PACKAGES.values()].some((ids) => ids.includes(id));
 
-/** Every profile held, sorted by id: `[{id, name, covers, test}]`. Never throws. */
+/** Every profile and package held, sorted by id: `[{id, name, covers, test}]`. The layers a package stands for are listed by
+ *  `layers()`, not here: a team chooses a place, and a package is one choice. Never throws. */
 export function list() {
-  return [...HELD.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  return [...HELD.values()].filter((p) => !isPackaged(p.id)).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
     .map((p) => ({ id: p.id, name: p.name, covers: p.covers.slice(), test: p.test === true }));
+}
+
+/** R99, R101: the held layers, in level order, then by place: `[{id, name, level, place, origin, within, coverage}]`. Never throws. */
+export function layers() {
+  return [...HELD.values()].filter((p) => isObj(p.layer)).sort(layerOrder)
+    .map((p) => ({ id: p.id, name: p.name, level: p.layer.level, place: p.layer.place, origin: p.layer.origin,
+      within: p.layer.within || null, ...(p.coverage ? { coverage: copy(p.coverage) } : {}) }));
+}
+
+/* R114: a package read as one profile, the sections of its layers laid end to end: a list section lists each layer's entries in
+   the layers' order, a keyed section holds each layer's keys, the one-value sections the first layer's value (the weekend's
+   citations joined), and `records_help` one block per law with each layer's fields. It carries no `layer`, `coverage` or `package`. */
+function compose(pkg) {
+  const parts = PACKAGES.get(pkg.id).map((id) => HELD.get(id)).filter(Boolean);
+  const out = { id: pkg.id, name: pkg.name, covers: pkg.covers.slice(), test: pkg.test === true };
+  const skip = new Set(["id", "name", "covers", "test", "layer", "coverage", "package"]);
+  for (const p of parts) for (const sec of Object.keys(p)) {
+    if (skip.has(sec)) continue;
+    const v = copy(p[sec]);
+    if (!own(out, sec)) { out[sec] = v; continue; }
+    const at = out[sec];
+    if (sec === "weekend") { if (isObj(at) && isObj(v) && typeof v.citation === "string") at.citation = `${at.citation}; ${v.citation}`; }
+    else if (sec === "action_kinds") {
+      for (const k of v) {
+        const m = at.find((x) => x.kind === k.kind);
+        if (!m) at.push(k);
+        else { for (const f of Object.keys(k)) if (f === "laws") m.laws = [...new Set([...(m.laws || []), ...k.laws])]; else if (!own(m, f)) m[f] = k[f]; }
+      }
+    } else if (sec === "deadlines") {
+      for (const d of v) {
+        const m = at.find((x) => x.rule === d.rule && x.applies_to === d.applies_to);
+        if (m) { for (const f of Object.keys(d)) if (!own(m, f)) m[f] = d[f]; } else at.push(d);
+      }
+    } else if (sec === "records_help") {
+      const blocks = (x) => (Array.isArray(x) ? x : [x]);
+      const into = blocks(at);
+      for (const b of blocks(v)) { const m = into.find((x) => x.law === b.law); if (m) Object.assign(m, b); else into.push(b); }
+      out[sec] = into.length === 1 ? into[0] : into;
+    } else if (Array.isArray(at) && Array.isArray(v)) at.push(...v);
+    else if (isObj(at) && isObj(v)) for (const k of Object.keys(v)) { if (!own(at, k)) at[k] = v[k]; else if (Array.isArray(at[k]) && Array.isArray(v[k])) at[k].push(...v[k]); }
+  }
+  return out;
 }
 
 /** The held profile with that id, as the caller's own copy, or null. Never throws. */
 export function get(id) {
   if (typeof id !== "string" || !HELD.has(id)) return null;
+  if (PACKAGES.has(id)) return compose(HELD.get(id));
   return copy(HELD.get(id));
 }
 
@@ -1888,8 +1949,33 @@ function combineInner(listIn) {
   if (!Array.isArray(listIn)) return { ok: false, errors: [{ at: null, code: "NOT_A_LIST", detail: "combine takes a list of profile ids or profiles" }] };
   const { errors, profiles } = readProfiles(listIn);
   if (errors.length) return { ok: false, errors };
-  if (!profiles.some((p) => isObj(p.layer))) return { ok: true, ...merge(profiles) };
-  return mergeLayers(profiles);
+  const r = profiles.some((p) => isObj(p.layer)) ? mergeLayers(profiles) : { ok: true, ...merge(profiles) };
+  /* R114: a package named in the list is named in the view (its id, name and covers), not the layers it stands for; the facts'
+     `profile` tags and `layers` name the layers. */
+  if (r.ok && listIn.some((x) => PACKAGES.has(typeof x === "string" ? x : isObj(x) ? x.id : null))) {
+    /* a fact is tagged with the package the caller named, as it was before the split, and says in `layer` which layer holds it:
+       every caller that reads a fact's `profile` as an id it holds still finds it (`get` gives the package whole) */
+    const packageOf = new Map();
+    for (const x of listIn) { const id = typeof x === "string" ? x : isObj(x) ? x.id : null; if (PACKAGES.has(id)) for (const l of PACKAGES.get(id)) packageOf.set(l, id); }
+    const retag = (v, giver = false) => {
+      if (Array.isArray(v)) { v.forEach((x) => retag(x, giver)); return; }
+      if (!isObj(v)) return;
+      if (typeof v.profile === "string" && packageOf.has(v.profile)) {
+        /* a fact says which layer holds it; a giver in `bases` or a conflict keeps the shape it had */
+        if (!giver && !own(v, "layer")) v.layer = v.profile;
+        v.profile = packageOf.get(v.profile);
+      }
+      for (const k of Object.keys(v)) if (k !== "layers") retag(v[k], giver || k === "bases" || k === "values");
+    };
+    retag(r.view); retag(r.conflicts);
+    const named = [];
+    for (const x of listIn) { const h = typeof x === "string" ? HELD.get(x) : isObj(x) ? x : null; if (h && !named.some((n) => n.id === h.id)) named.push(h); }
+    r.view.id = named.map((n) => n.id).join("+");
+    r.view.name = named.map((n) => n.name).join("; ");
+    r.view.covers = [...new Set(named.flatMap((n) => n.covers))];
+    r.view.profiles = named.map((n) => n.id);
+  }
+  return r;
 }
 
 /* The profiles a list names, packages expanded (R114): `{errors, profiles}`. */
@@ -1901,10 +1987,20 @@ function readProfiles(listIn) {
     let p;
     if (typeof item === "string" && PACKAGES.has(item)) {
       /* R114: a package stands for its layers, in its order; each is combined as if it had been named */
+      if (seen.has(item)) return;
+      seen.set(item, get(item));
       for (const id of PACKAGES.get(item)) {
         const l = HELD.has(id) ? get(id) : null;
         if (!l) { errors.push({ at: i, code: "UNKNOWN_PROFILE", detail: localize("jurisdictions.index.no_profile_item_is_held", "no profile '{item}' is held", { item: String(id) }) }); continue; }
         if (!seen.has(l.id)) { seen.set(l.id, l); profiles.push(l); }
+      }
+      return;
+    }
+    /* R114: a profile object that is a package's own whole, as `get` gives it, is the package */
+    if (isObj(item) && typeof item.id === "string" && PACKAGES.has(item.id) && stable(item) === stable(compose(HELD.get(item.id)))) {
+      if (!seen.has(item.id)) {
+        seen.set(item.id, copy(item));
+        for (const id of PACKAGES.get(item.id)) { const l = get(id); if (l && !seen.has(l.id)) { seen.set(l.id, l); profiles.push(l); } }
       }
       return;
     }
@@ -2630,7 +2726,7 @@ function merge(profiles) {
         e[f] = f === "observed" ? keep(vals.map((v) => ({ ...v, basis: v.value.basis }))) : vals[0].value;
       }
       if (e.units === "days" && own(e, "amount")) e.days = e.amount;
-      e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
+      e.citation = [...new Set(given.map((g) => g.d.citation).filter((c) => c !== undefined))].join("; ");
       e.basis = given[0].d.basis;
       e.profile = given[0].profile;
       e.bases = given.map((g) => ({ profile: g.profile, basis: g.d.basis }));
