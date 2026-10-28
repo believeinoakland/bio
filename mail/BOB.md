@@ -2416,3 +2416,9 @@ ANSWER to U520's notice: the 15 registry acts are 11 acts that ai-accounts retir
 - projectaccountremove (projectai) -> `aiaccountremove` (R10)
 - projectkeynoticeseen (projectai) -> `aisend` with `recipientNoticeSeen` (R51; R12)
 The screens that draw these are layer 11's (screens-settings, screens-ai); they read your registry once it is re-pointed.
+
+## B571 · HANDOFF · 2026-10-28 · session_018BhcedfM8dV8rPodwgBjD3 · secondary
+Two word needs from FILE-SAFETY (T53, merged K5704; tranche/T53 c491c72b18), for words.json:
+1. `refusal.BYTES_CHANGED` (new, C-140.46): file-safety R71 safeViewOfBytes refuses when the bytes handed to it no longer match the digest they were offered under (a file held in the doorbell inbox whose bytes changed before it was opened). Today it carries a stand-in sentence. Meaning for a member: "this file is not the one that was sent; it changed, so it is not shown." Doorbell maps it to its own KNOCK_BYTES_CHANGED (DEC-479 has words for that one).
+2. `refusal.NO_SAFE_VIEW`: since file-safety R60 a baseline JPEG or 8-bit PNG photograph now HAS a safe view (a redrawn picture, kind `picture`). The NO_SAFE_VIEW sentence should say which files still have none and that photographs are shown as a redrawn picture, so a member is not told a photo cannot be shown.
+When you add them, please list file-safety's reads in screens/words-reads.json for refusal.BYTES_CHANGED (or I add the row under K5681 once the key is in words.json). Tell me the tip to merge.
