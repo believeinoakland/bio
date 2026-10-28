@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
 import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ID = "INFO-2026-0001-report";
 const hex = (b) => createHash("sha256").update(b).digest("hex");
@@ -156,7 +157,7 @@ test("R33 (K529): with no catalogue registered, runCaseGate runs no fallback and
       assert.deepEqual(Object.keys(r), ["gateVersion", "ok", "findings", "warnings"]);
       assert.deepEqual([r.ok, r.gateVersion, r.warnings], [false, GATE_VERSION, 0]);
       assert.deepEqual(r.findings.map((f) => [Object.keys(f), f.check]), [[["check", "detail"], "CASE_CATALOGUE_FAILED"]]);
-      assert.match(r.findings[0].detail, /no case-document catalogue is registered/);
+      assert.ok(r.findings[0].detail.includes(localize("promotion.gate.no_case_catalogue_registered", "no case-document catalogue is registered with this instance")));
     }
   }
 });

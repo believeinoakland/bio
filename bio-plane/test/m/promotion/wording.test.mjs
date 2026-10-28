@@ -23,7 +23,7 @@ test("R28 (gate.mjs runGate): PLANE_HELD_IN_PARTS says the acquisition receipt o
     hasCapture: async () => ({ present: false, heldInParts: true }) });
   const f = r.findings.find((x) => x.check === "PLANE_HELD_IN_PARTS");
   assert.ok(f, JSON.stringify(r.findings));
-  assert.match(f.detail, /^registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, /);
+  assert.equal(f.detail, localize("promotion.gate.registered_capture_is_held_only", "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole"));
   assert.doesNotMatch(f.detail, RETIRED);
   assert.doesNotMatch(f.detail, /\bgroup\b/i);
   assert.equal(r.ok, false);
@@ -118,16 +118,13 @@ test("R19 (index.mjs is-project-id-supplied, is-project-id-bytes): a project's c
   const { p } = makePromotion();
   const supplied = p.promote({ ...mk("Sewer Fund"), bundleId: "PROJ-2026-0001-x" });
   assert.equal(supplied.reason, "PROJECT_ID_SUPPLIED");
-  assert.equal(supplied.detail, "a new project's id is minted by the record and returned; send the creation with no "
-    + "bundleId. A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
+  assert.equal(supplied.detail, localize("promotion.index.new_project_id_minted_by_record", "a new project's id is minted by the record and returned; send the creation with no bundleId. A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created."));
   const unreadable = p.promote({ ...mk("x"), files: [{ path: "bundle.md", text: "no fm" }], meta: { object_type: "project" } });
   assert.equal(unreadable.reason, "PROJECT_DOCUMENT_UNREADABLE");
-  assert.equal(unreadable.detail, "the new project's bundle.md must arrive as inline text beginning with a --- front matter "
-    + "block, because the record writes the minted id into it. Nothing was created.");
+  assert.equal(unreadable.detail, localize("promotion.index.new_project_document_unreadable", "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, because the record writes the minted id into it. Nothing was created."));
   const inBytes = p.promote({ ...mk("x"), files: [{ path: "bundle.md", text: pd("x", { id: "PROJ-1" }) }] });
   assert.equal(inBytes.reason, "PROJECT_ID_IN_BYTES");
-  assert.equal(inBytes.detail, "the new project's bundle.md already carries a top-level id: line. The record writes the id "
-    + "it mints; remove the line and send it again. Nothing was created.");
+  assert.equal(inBytes.detail, localize("promotion.index.new_project_document_has_id", "the new project's bundle.md already carries a top-level id: line. The record writes the id it mints; remove the line and send it again. Nothing was created."));
   for (const x of [supplied, unreadable, inBytes]) assert.doesNotMatch(x.detail, RETIRED);
 });
 
@@ -135,7 +132,7 @@ test("R41 (index.mjs is-project-fork-id-supplied): PROJECT_FORK_ID_SUPPLIED says
   const { p } = makePromotion();
   const r = p.forkProject({ projectId: "PROJ-2026-0001-x", newId: "PROJ-2026-0002-y", title: "Fork", by: "bob" });
   assert.equal(r.reason, "PROJECT_FORK_ID_SUPPLIED");
-  assert.equal(r.detail, "a fork's id is minted by the record and returned as newId; send the fork with no newId. Nothing was forked.");
+  assert.equal(r.detail, localize("promotion.index.fork_id_minted_by_record", "a fork's id is minted by the record and returned as newId; send the fork with no newId. Nothing was forked."));
   assert.doesNotMatch(r.detail, RETIRED);
 });
 

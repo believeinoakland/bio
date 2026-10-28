@@ -8,6 +8,7 @@
 
 import { parseFrontmatter, canonicalJson, normalizeType, STATES } from "../record-grammar/index.mjs";
 import { EMPTY_STRING_SHA } from "../record-core/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairs } : {}) });
 const asText = (v) => (typeof v === "string" ? v : new TextDecoder().decode(v));
@@ -119,7 +120,7 @@ export async function checkMechanicalConformance({ files, raw = null, sha256 }, 
   if (!man.value) return;
   const { order, entries } = historyWriteOrder(man.value.entries);
   if (order !== "write" && entries.length > 1)
-    findings.push(f("C-20.1", "info", "the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: \"prior\" may not be the snapshot written before (I-20)",
+    findings.push(f("C-20.1", "info", localize("promotion.history.manifest_no_write_order_audit", "the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: \"prior\" may not be the snapshot written before (I-20)"),
       ["re-export the record from a plane that writes seq into _history/manifest.json"]));
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
@@ -235,11 +236,11 @@ export async function checkDivergence({ files, sha256 }, findings) {
   if (!live || typeof man.base !== "string" || await sha256(live) === man.base) return;
   const cls = classifyDivergence(man, files);
   if (cls.order === "key" && cls.walked > 1)
-    findings.push(f("C-17.2", "info", "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)",
+    findings.push(f("C-17.2", "info", localize("promotion.history.manifest_no_write_order_divergence", "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)"),
       ["re-export the record from a plane that writes seq into _history/manifest.json"]));
   const names = Array.isArray(man.files) ? man.files.map((e) => e && e.name) : [];
   if (cls.rung === "disjoint-auto")
-    findings.push(f("C-17.2", "info", `divergence classified disjoint-auto: base found in history at ${cls.baseKey}; intervening promotion(s) [${cls.intervening.join(", ")}] touched {${[...cls.interveningFiles].join(", ")}}, package touches {${names.join(", ")}}, sets disjoint; apply in sequence recording both bases`,
+    findings.push(f("C-17.2", "info", localize("promotion.history.divergence_disjoint_auto", "divergence classified disjoint-auto: base found in history at {base}; intervening promotion(s) [{intervening}] touched {{touched}}, package touches {{package}}, sets disjoint; apply in sequence recording both bases", { base: cls.baseKey, intervening: cls.intervening.join(", "), touched: [...cls.interveningFiles].join(", "), package: names.join(", ") }),
       ["apply-disjoint: promote in sequence, recording base and applied-over in the history manifest entry"]));
   else
     findings.push(f("C-17.2", "warn", `divergence classified adjudicated: ${cls.reason}`,
@@ -317,7 +318,7 @@ export function checkStateHistory({ fm, files }, findings) {
         && typeof m.date === "string" && m.date.slice(0, 10) <= fence);
       if (k >= 0) {
         const m = corroborating.splice(k, 1)[0];
-        findings.push(f("C-4.2", "info", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge: made by a path the current rules do not allow (at or before ${fence}); the record's own history holds the same move (promotion ${m.key}), dated by its writer ${m.date}`));
+        findings.push(f("C-4.2", "info", localize("promotion.history.transition_earlier_rules", "transition {from} -> {to} is not a legal {type} edge: made by a path the current rules do not allow (at or before {fence}); the record's own history holds the same move (promotion {key}), dated by its writer {date}", { from: e.from_state, to: e.to_state, type: ot, fence, key: m.key, date: m.date })));
       } else findings.push(f("C-4.2", "error", `transition ${e.from_state} -> ${e.to_state} is not a legal ${ot} edge`));
     }
   }
@@ -328,6 +329,6 @@ export function checkStateHistory({ fm, files }, findings) {
       if (fm.prior_state !== last.from_state) findings.push(f("C-4.2", "error", `prior_state '${fm.prior_state}' disagrees with last transition from '${last.from_state}'`));
     }
   } else if (fm.prior_state !== null && fm.prior_state !== undefined) {
-    findings.push(f("C-4.2", "error", `prior_state is '${fm.prior_state}' but state_history is empty (expected null)`));
+    findings.push(f("C-4.2", "error", localize("promotion.history.prior_state_but_history_empty", "prior_state is '{prior}' but state_history is empty (expected null)", { prior: fm.prior_state })));
   }
 }

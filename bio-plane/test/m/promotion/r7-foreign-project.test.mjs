@@ -41,8 +41,6 @@ test("R53 G74: the refusal's sentence is the keyed row's and states the conditio
   const { p, project } = projectEnv();
   const r = p.promote(filing(project, "INFO-2026-0011", "dee"));
   assert.equal(r.detail, localize("refusal.PROMOTE_NOT_A_PARTICIPANT", "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.", { project: "Sewer Fund" }));
-  assert.match(r.detail, /Nothing was filed\./);
-  assert.match(r.detail, /invite you/);
 });
 
 test("R53 G74 control: a joined member files into the project", () => {

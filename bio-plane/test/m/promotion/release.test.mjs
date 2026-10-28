@@ -7,6 +7,7 @@ import { webcrypto, createHash } from "node:crypto";
 import { runGate, recordChecks } from "../../../src/promotion/index.mjs";
 import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { releaseMessage } from "../../../src/promotion/release.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ID = "INFO-2026-0001-report";
 const T_REL = "2026-08-01T10:00:00Z";
@@ -122,13 +123,13 @@ test("R31: it fails closed — every way a release can fail is an error naming i
   assert.match((await c188(await bundle({ reg: windowed }), windowed))[0], /no_valid_key_for_principal/);
   /* A registry that does not prove itself resolves no principal. */
   const unsigned = await registry({ rootSigned: false });
-  assert.match((await c188(await bundle({ reg: unsigned }), unsigned))[0], /does not prove itself \(root_signature_missing\)/);
+  assert.equal((await c188(await bundle({ reg: unsigned }), unsigned))[0], localize("promotion.release.registry_does_not_prove_itself", "the key registry does not prove itself ({reason}); it is treated as absent, so no principal in it resolves", { reason: "root_signature_missing" }));
   const forged = { ...reg, rootSignature: await sign(OTHER, "bio-registry", latin1(reg.signers)) };
   assert.match((await c188(await bundle({ reg: forged }), forged))[0], /root_signature_invalid:key_not_registered_for_principal/);
   /* Below information@2 a post-migration release is an error; an unreadable registry is an error at every schema. */
-  assert.match((await c188(await bundle({ reg, schema: "information@1" }), reg))[0], /cannot carry a signature/);
+  assert.equal((await c188(await bundle({ reg, schema: "information@1" }), reg))[0], localize("promotion.release.cannot_carry_a_signature", "release at {at} is at or after the migration instant {migration}, but this record is {schema}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check", { at: T_REL, migration: "2026-07-15T00:00:00Z", schema: "information@1" }));
   for (const schema of ["information@1", "information@2"])
-    assert.match((await c188(await bundle({ schema }), { unavailable: true, reason: "down" }))[0], /unreadable at this call site \(down\)/);
+    assert.equal((await c188(await bundle({ schema }), { unavailable: true, reason: "down" }))[0], localize("promotion.release.registry_unreadable_here", "the key registry is declared present but unreadable at this call site ({reason}); the gate cannot check signatures and will not pass them", { reason: "down" }));
   /* Releases before the migration instant are not asked. */
   const later = await registry({ migration: "2026-09-01T00:00:00Z" });
   assert.deepEqual(await c188(await bundle({ reg: later, tamper: true }), later), []);
@@ -152,7 +153,7 @@ test("R31: the signature is checked over the released bytes, the bundle.md the r
   /* A signature over the live (later) bytes is not one over what was released. */
   const overLive = await c188(await bundle({ reg, text: released, later: [edit1], signed: edit1 }), reg);
   assert.equal(overLive.length, 1);
-  assert.match(overLive[0], /does not verify \(bad_signature\)/);
+  assert.equal(overLive[0], localize("promotion.release.does_not_verify", "release at {at} does not verify ({reason}) for signer '{signer}'", { at: T_REL, reason: "bad_signature", signer: "member:ann" }));
   /* Write order (seq), never key order: keys whose lexical order runs backwards find the same released bytes. */
   assert.deepEqual(await c188(await bundle({ reg, text: released, later: [edit1, edit2], keys: ["z1", "m2", "a3"] }), reg), []);
 });
@@ -211,7 +212,7 @@ test("R31: a character the signer's one-byte encoding cannot carry is never mask
   const reg = await registry({ signers: `${wideSigner} ${ANN.line}`, rootSigned: false, enforce: null });
   const got = await c188(await bundle({ reg, author: wideSigner, signer: wideSigner }), reg);
   assert.equal(got.length, 1);
-  assert.match(got[0], /cannot carry/);
+  assert.equal(got[0], localize("promotion.release.character_cannot_be_carried", "release at {at}: its release message holds a character the signer's one-byte encoding cannot carry, so no signature over it can be checked", { at: T_REL }));
   /* A signer inside Latin-1 but outside ASCII (U+00E5) verifies as before: its message is one byte per code unit. */
   const latinSigner = "member:ånn";
   const latinReg = await registry({ signers: `${latinSigner} ${ANN.line}` });

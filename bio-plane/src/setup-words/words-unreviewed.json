@@ -42740,105 +42740,182 @@
       "en": "creates a NEW project; gated on the create_projects shape, not on the source object's state",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 1290
+      "line": 1287
     },
     {
       "id": "promotion.declared.promote",
       "en": "substrate: the one write path every act rides",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 1296
+      "line": 1293
     },
     {
       "id": "promotion.gate.capture_absent_from_bucket",
       "en": "registered capture is absent from the working bucket",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1444
+      "line": 1458
     },
     {
       "id": "promotion.gate.capture_bytes_differ",
       "en": "capture bytes differ from the register",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1447
+      "line": 1461
+    },
+    {
+      "id": "promotion.gate.no_case_catalogue_registered",
+      "en": "no case-document catalogue is registered with this instance",
+      "module": "promotion",
+      "file": "bio-plane/src/gate.mjs",
+      "line": 1337
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in",
       "en": "registered capture is held in parts, and {why}, so no part could be verified",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1418
+      "line": 1432
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_2",
       "en": "registered capture is held in parts, and {length} of the {length_2} parts the record names are not in the working bucket: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1422
+      "line": 1436
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_3",
       "en": "registered capture is held in parts, and the stored size or digest of {length} disagrees with the record: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1427
+      "line": 1441
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_4",
       "en": "registered capture is held in parts, all present, but the digest of {length} could not be verified: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1429
+      "line": 1443
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_5",
       "en": "registered capture is held in parts, and the parts the record names sum to {sum} bytes where the register says {bytes}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1430
+      "line": 1444
     },
     {
       "id": "promotion.gate.registered_capture_is_held_only",
       "en": "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1441
+      "line": 1455
     },
     {
       "id": "promotion.gate.the_case_document_catalogue_could",
       "en": "the case-document catalogue could not judge this document, so it is not passed: {String}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1313
+      "line": 1327
+    },
+    {
+      "id": "promotion.history.divergence_disjoint_auto",
+      "en": "divergence classified disjoint-auto: base found in history at {base}; intervening promotion(s) [{intervening}] touched {{touched}}, package touches {{package}}, sets disjoint; apply in sequence recording both bases",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/history.mjs",
+      "line": 243
+    },
+    {
+      "id": "promotion.history.manifest_no_write_order_audit",
+      "en": "the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: \"prior\" may not be the snapshot written before (I-20)",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/history.mjs",
+      "line": 123
+    },
+    {
+      "id": "promotion.history.manifest_no_write_order_divergence",
+      "en": "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/history.mjs",
+      "line": 239
+    },
+    {
+      "id": "promotion.history.prior_state_but_history_empty",
+      "en": "prior_state is '{prior}' but state_history is empty (expected null)",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/history.mjs",
+      "line": 332
+    },
+    {
+      "id": "promotion.history.transition_earlier_rules",
+      "en": "transition {from} -> {to} is not a legal {type} edge: made by a path the current rules do not allow (at or before {fence}); the record's own history holds the same move (promotion {key}), dated by its writer {date}",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/history.mjs",
+      "line": 321
     },
     {
       "id": "promotion.index.cut_was_produced_by_cut",
       "en": "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 778
+      "line": 775
     },
     {
       "id": "promotion.index.empty_neither_text_a_string",
       "en": "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 525
+      "line": 522
+    },
+    {
+      "id": "promotion.index.fork_id_minted_by_record",
+      "en": "a fork's id is minted by the record and returned as newId; send the fork with no newId. Nothing was forked.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 1037
     },
     {
       "id": "promotion.index.machine_cannot_reopen",
       "en": "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 1177
+      "line": 1174
+    },
+    {
+      "id": "promotion.index.mechanical_promotion_names_one_of",
+      "en": "a mechanical promotion names one of: {operations}",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 440
+    },
+    {
+      "id": "promotion.index.new_project_document_has_id",
+      "en": "the new project's bundle.md already carries a top-level id: line. The record writes the id it mints; remove the line and send it again. Nothing was created.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 498
+    },
+    {
+      "id": "promotion.index.new_project_document_unreadable",
+      "en": "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, because the record writes the minted id into it. Nothing was created.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 495
+    },
+    {
+      "id": "promotion.index.new_project_id_minted_by_record",
+      "en": "a new project's id is minted by the record and returned; send the creation with no bundleId. A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 489
     },
     {
       "id": "promotion.index.not_set_down",
       "en": "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 1208
+      "line": 1205
     },
     {
       "id": "promotion.index.project_name_taken",
@@ -42852,28 +42929,42 @@
       "en": "a project needs a name, and it must be unique across your team's Civicsmith",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 725
+      "line": 722
     },
     {
       "id": "promotion.index.the_base_this_revision_names",
       "en": "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 752
+      "line": 749
     },
     {
       "id": "promotion.index.the_sha256_sent_for_map",
       "en": "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 576
+      "line": 573
     },
     {
       "id": "promotion.index.this_store_records_no_producing",
       "en": "this store records no producing team, and this creation names none — neither a group: line in its bundle.md nor a team in its meta. The record does not supply one. Nothing was created.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 598
+      "line": 595
+    },
+    {
+      "id": "promotion.info2.stored_bytes_hash_differs",
+      "en": "provenance documents[{index}]: stored bytes hash {actual}… but the register records {registered}…; silent content mutation fails the gate (@2)",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/info2.mjs",
+      "line": 92
+    },
+    {
+      "id": "promotion.info2.stored_content_could_not_be_decoded",
+      "en": "provenance documents[{index}]: stored content could not be decoded for hash verification ({reason}) (@2)",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/info2.mjs",
+      "line": 84
     },
     {
       "id": "promotion.names.give_project_title_unique",
@@ -42881,6 +42972,41 @@
       "module": "promotion",
       "file": "bio-plane/src/promotion/names.mjs",
       "line": 85
+    },
+    {
+      "id": "promotion.release.cannot_carry_a_signature",
+      "en": "release at {at} is at or after the migration instant {migration}, but this record is {schema}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/release.mjs",
+      "line": 151
+    },
+    {
+      "id": "promotion.release.character_cannot_be_carried",
+      "en": "release at {at}: its release message holds a character the signer's one-byte encoding cannot carry, so no signature over it can be checked",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/release.mjs",
+      "line": 213
+    },
+    {
+      "id": "promotion.release.does_not_verify",
+      "en": "release at {at} does not verify ({reason}) for signer '{signer}'",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/release.mjs",
+      "line": 220
+    },
+    {
+      "id": "promotion.release.registry_does_not_prove_itself",
+      "en": "the key registry does not prove itself ({reason}); it is treated as absent, so no principal in it resolves",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/release.mjs",
+      "line": 164
+    },
+    {
+      "id": "promotion.release.registry_unreadable_here",
+      "en": "the key registry is declared present but unreadable at this call site ({reason}); the gate cannot check signatures and will not pass them",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/release.mjs",
+      "line": 140
     },
     {
       "id": "promotion.text.rel_rel_target_target_status",
