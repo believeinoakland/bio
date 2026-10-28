@@ -53,7 +53,7 @@ export function storage() {
   };
 }
 
-export function world({ events = true, lines = true, calculations = true, now = null } = {}) {
+export function world({ events = true, lines = true, calculations = true, now = null, localFacts = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const record = recordOf(host);
@@ -79,7 +79,7 @@ export function world({ events = true, lines = true, calculations = true, now = 
   const bindings = new Map();
   const calc = calculations ? { bindingOf: (key) => bindings.get(key) ?? null } : null;
   let clock = 0;
-  const m = new Money(st, { record, membership, entities: e, provenance: prov, events: events ? ev : null, lines: lines ? ln : null, calculations: calc,
+  const m = new Money(st, { record, membership, entities: e, provenance: prov, events: events ? ev : null, lines: lines ? ln : null, calculations: calc, ...(localFacts ? { localFacts } : {}),
     now: now || (() => new Date(Date.UTC(2026, 9, 6, 0, 0, clock++)).toISOString().replace(/\.\d{3}Z$/, "Z")) });
   m.migrate();
   const w = {
