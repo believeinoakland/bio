@@ -7,6 +7,8 @@ import { fresh, bucket } from "./fixture.mjs";
 import { DISCARD_DAYS } from "../../../src/doorbell/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { fileSafetyOf } from "../../../src/file-safety/index.mjs";
+import { scanner, pdf as fsPdf, enc } from "../file-safety/fixture.mjs";
 
 const setup = (opts = {}) => {
   const b = bucket();
@@ -215,6 +217,57 @@ test("R31 control: a refused look leaves the knock pullable as R13 states", asyn
   assert.equal(rows(`SELECT status FROM inbox WHERE knock_id = ?`, k.knockId)[0].status, "new");
 });
 
-/* waiting on file-safety R71 (`safeViewOfBytes`, K5692): BOB's CHANGE merges the tranche and these become the seam tests over file-safety's real code */
-test.todo("R31: a knock holding a PDF answers the safe view's pages and the inbox row is unchanged afterwards (status new, no receipt, no capture)");
-test.todo("R31: a CSV answers its figures as data; an encrypted file, a kind with no safe view each refuse as stated; a member's look leaves no row naming the member");
+/* the seam, over file-safety's real code (R71) on the same storage, its scripted scanner and its own fixtures (K4990) */
+function seamed() {
+  const w = setup();
+  const scanBinding = scanner({});
+  const fs = fileSafetyOf(w.ctx, { record: w.core, env: { CAPTURES: w.b, FILE_SCANNER: scanBinding }, now: () => NOW });
+  fs.migrate();
+  w.c.fileSafety = fs;
+  return { ...w, fs };
+}
+const knockWith = (c, bytes, extra = {}) => c.knock({ contentB64: Buffer.from(bytes).toString("base64"), sourceAddress: `5.5.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`, ...extra });
+const withoutFileSafety = (rows) => everything(rows).filter(([t]) => !t.startsWith("fs_"));
+
+test("R31: a knock holding a PDF answers the safe view's pages, and afterwards the inbox row is unchanged (status new, no receipt, no capture) and no row names the member", async () => {
+  const { c, rows, b } = seamed();
+  const bytes = fsPdf(false, "knock");
+  const k = await knockWith(c, bytes, { fileName: "notice.pdf", mediaType: "application/pdf" });
+  assert.equal(k.ok, true, JSON.stringify(k));
+  const before = JSON.stringify(rows(`SELECT * FROM inbox WHERE knock_id = ?`, k.knockId));
+  const others = withoutFileSafety(rows).filter(([t]) => t !== "inbox");
+  const heldBefore = new Set(b.held.keys());
+  const v = await c.inboxView({ knockId: k.knockId, viewer: MEMBER });
+  assert.deepEqual([v.ok, v.kind, v.knockId], [true, "pdf", k.knockId], JSON.stringify({ ...v, bytes: undefined }));
+  assert.ok(v.pages >= 0 && v.statement && v.statement.key, "stated as a view");
+  assert.equal(JSON.stringify(rows(`SELECT * FROM inbox WHERE knock_id = ?`, k.knockId)), before, "the inbox row is as it was");
+  assert.equal(rows(`SELECT status FROM inbox WHERE knock_id = ?`, k.knockId)[0].status, "new");
+  assert.deepEqual(withoutFileSafety(rows).filter(([t]) => t !== "inbox"), others, "no receipt, capture, bundle, actor or job row");
+  assert.deepEqual(new Set(b.held.keys()), heldBefore, "no bytes left behind");
+  assert.ok(!JSON.stringify(everything(rows)).includes(MEMBER), "no row names the member");
+  assert.equal((await c.pullKnock({ knockId: k.knockId, by: "m1", at: "2026-11-01T10:00:00Z" })).ok, true, "control: R13 still files the knock");
+});
+
+test("R31: a CSV answers its figures as data", async () => {
+  const { c } = seamed();
+  const k = await knockWith(c, enc("n,label\n1,one\n2,two\n"));
+  const v = await c.inboxView({ knockId: k.knockId, viewer: MEMBER });
+  assert.deepEqual([v.ok, v.kind], [true, "data"]);
+  assert.ok(v.sheets[0].cells.length >= 6);
+});
+
+test("R31: an encrypted file, a kind with no safe view and bytes altered in storage each refuse as stated, in the words by key, and write nothing", async () => {
+  const { c, rows, b } = seamed();
+  const locked = await knockWith(c, enc("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R/Encrypt 2 0 R>>\n%%EOF"));
+  const tiff = await knockWith(c, new Uint8Array([0x49, 0x49, 0x2a, 0x00, 8, 0, 0, 0, 9]));
+  const plain = await knockWith(c, enc("what was handed in"));
+  const before = everything(rows);
+  const e = await c.inboxView({ knockId: locked.knockId, viewer: MEMBER });
+  assert.deepEqual([e.ok, e.reason, e.renderer_reason, e.translation], [false, "SAFE_VIEW_FAILED", "ENCRYPTED", word("file-safety.index.the_file_is_encrypted_so_no_safe_view")]);
+  const n = await c.inboxView({ knockId: tiff.knockId, viewer: MEMBER });
+  assert.deepEqual([n.ok, n.reason, n.translation], [false, "NO_SAFE_VIEW", word("screen.inbox.view.nokind")]);
+  b.held.set(`bio/inbox/${plain.sha256}`, enc("something else"));
+  const ch = await c.inboxView({ knockId: plain.knockId, viewer: MEMBER });
+  assert.deepEqual([ch.ok, ch.reason, ch.check, ch.translation], [false, "KNOCK_BYTES_CHANGED", "C-85.6", word("screen.inbox.view.changed")]);
+  assert.deepEqual(everything(rows), before);
+});
