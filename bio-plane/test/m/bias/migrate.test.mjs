@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, S, WHY } from "./world.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 import { BIAS_TABLES, BIAS_ADDITIVE_COLUMNS } from "../../../src/bias/index.mjs";
 
@@ -33,7 +34,7 @@ test("R45: a bias_debts built without settled_kind, holding a settled debt, and 
      viewer's gate admits; the founder's does not */
   const d = w.bias.biasDebt({ run: "RUN-OLD", viewer: "class:daemon" });
   assert.deepEqual([d.found, d.open, d.settled.settled, d.settled.kind, d.settled.kind_state], [true, false, true, null, "undetermined"]);
-  assert.match(d.settled.stated, /before the record kept which act settled it/);
+  assert.match(d.settled.stated, wordRx("bias.index.this_debt_was_settled_before"));
   assert.deepEqual(w.bias.settled({ gate: viewerPredicate("class:daemon"), since: "2026-01-01T00:00:00Z" }).debts.map((x) => [x.run, x.settled_kind]),
     [["RUN-OLD", null]]);
   /* the column is live: a debt settled after the migration records its kind */

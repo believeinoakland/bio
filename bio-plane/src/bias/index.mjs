@@ -372,11 +372,7 @@ class Bias {
              pins_proposed: h.currentState === "proposed",
              note: h.currentState === "adopted"
                ? word("bias.note.set_force_scope")
-               : "PINS A PROPOSED REVISION: this adoption froze bytes the team has offered and not "
-                 + "yet accepted, so it REPLACES this scope's lens with them rather than "
-                 + "pre-authorising whatever the proposal becomes; a lens is in force once the "
-                 + "revision THIS ROW PINS stands at 'adopted', which is a member-authored "
-                 + "transition through op=promote" };
+               : word("bias.note.pins_proposed_revision") };
   }
 
   /* ---------------------------------------------------------------- R13–R18, R24, R25: the manifest */

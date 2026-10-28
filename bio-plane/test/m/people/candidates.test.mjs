@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, doc, ANN, OUT } from "./fixture.mjs";
 import { People, CANDIDATES_MAX } from "../../../src/people/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const day = (from, to) => ({ from, to, precision: "day", zone: "UTC" });
 
@@ -38,7 +39,7 @@ test("R7 candidates share a name's fold or a scheme identifier, are explained fi
   for (const f of Object.values(by[twin])) assert.ok("this" in f.rows && "candidate" in f.rows, "the rows compared");
   const text = JSON.stringify(r);
   for (const word of ["score", "probability", "rank", "likelihood", "confidence"]) assert.ok(!text.toLowerCase().includes(`"${word}`), word);
-  assert.match(r.detail, /candidates are not claims/);
+  assert.equal(r.detail, word("people.index.candidates_detail"));
   assert.equal(r.limit, 50);
   assert.equal(w.p.samePersonCandidates({ entityId: p, limit: 1, viewer: ANN }).truncated, true);
   assert.equal(w.p.samePersonCandidates({ entityId: p, limit: 5000, viewer: ANN }).limit, CANDIDATES_MAX);
