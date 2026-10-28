@@ -105,3 +105,33 @@ Seed A (1b) and the screens on a team with data; Project and Document screens (t
 
 Deploy: BOB #325, `proto/levels-2-3-all` `03a5c65e`, ~22:41Z 2026-10-27 (hashes in §1d). **Screens, 5 runs, net ms medians:** administrator Home 3,393, Queue 3,334, Held 857, Inbox 546, Add 2,525, Projects 533, Project 3,911, Document 976; member 515-649 on every screen. Against the flags-off baseline (§1d: 2,822 / 2,915 / 847 / 562 / 3,217 / 1,020 / 4,126 / 1,773) there is **no clear gain**: the cache removes an op's own second wait but every request first makes a `session` room call that queues behind the heavy read (PROTO-C-SPEC caveat 1). `protocprobe` read later after light traffic: 0 hits, 9 misses (one isolate), so it says nothing about the cache's value under load. **The mixed ramp with C on did not run**: the driver exited within a minute with no output; not measured. Next: re-run it and read `protocprobe` after the ramp.
 
+
+## Upload stages, C=1 against C=3 (PLATFORM #3, 2026-10-28, BOB #330's ask for CAPTURE T53-108)
+
+**What ran.** `plat-s1` with `proto/levels-2-3-stages` d9abfdaa live (`PROTO_STAGES=1`, `PROTO_C=1`, `PROTO_C_HELD=1`; alpha 0.87.0, Level 1, Seed A of 503 documents, reading idle at the start). Driven **through the real Add door in Chromium** (`study/door-stages.cjs`): the project's Add door, "A file or photo", a text file of 250 KB-1.9 MB with 8 random trailing bytes (so none is a second sighting), then the page's own `captureupload` and `promote`; each response's `Server-Timing` read. C=1 (control) and C=3 uploaders, 6 files per batch, each run twice, alternating (c1, c3, c1, c3): **12 uploads at C=1, 12 at C=3**. Signed in as the **administrator** (`plat-s1-admin`; no member was enrolled yet, so the uploader is not a plain member). Raw times, proxy in. Also run: `scripts/upload-stages.mjs` (API call only, `study/upload-stages-fixed.mjs`: it called `/?op=` where the page calls `/api/?op=`, and its statement lacked the three lines), n=6: wall p50 2.6 s at C=1, 3.8 s at C=3, no failure.
+
+| stage (median, ms) | C=1 | C=3 |
+|---|---|---|
+| whole page wait, click to "Captured" | 4,398 (max 7,417) | 5,405 (one 16 s; one never) |
+| `captureupload` call, page's view | 1,992 | 2,392 |
+| door admission (`up-door`) | 48 | 53 |
+| room wait (`up-room-wait`) | 15 | 0 |
+| body read (`up-body-read`) | 51 | 83 |
+| hash and put (`up-hash-put`) | 304 | 366 |
+| profile, registrar, promote-within | 0 | 0 |
+| door's read of the upload (`up-read`) = answered | 670 | 942 |
+| in the room, whole `captureupload` (`do-captureupload`) | 877 | 988 |
+| gap between the two calls (page work) | about 490 | about 565 |
+| `promote` call, page's view | 1,319 | 1,574 |
+| `promote` in the room (`do-promote`) | 1,000 | 1,185 |
+
+(Zeros are synchronous stages: workerd's clock does not advance in them; they are marked, not measured.)
+
+**Reading.**
+1. **On this copy, now, an upload takes 4.4 s at C=1 and 5.4 s at C=3, not 11-13 s.** About 2 s is `captureupload` (0.3 s hash and put, 0.7-0.9 s the door's read of what the object answered, the rest the proxy and the hop), then 0.5 s of the page's own work, then 1.3 s `promote`. No stage grows much with three uploaders: door admission and the room wait stay under 0.1 s. **The earlier 11-13 s did not recur**; what differed then was the reading of 380 just-landed files behind every upload, which is not what was running now (reading had finished; each of this study's files adds a little). So the 11-13 s is the reading backlog's wait, not a stage of the upload itself: **not shown by this run, it needs the same study during a bulk load**.
+2. **The "timeout at 120 s" is, in the one case seen, not a slow upload.** One C=3 upload (410 KB) got **a 502 from `captureupload` after 2.8 s**, its stages stopping in `up-hash-put` (3,302 ms, the longest of any; no `up-read`, no `up-answered`): the object failed in the hash-and-put stage (the write of the bytes). The page then showed no "Captured" and my driver waited 150 s. So a small file "timing out at 120 s with three uploaders" may be **a fast failure that the page does not report**, which the earlier study read as a wait. I did not look at what the page printed; the driver waited only for the success text. **To confirm:** one C=3 run that also records the page's text at the failure (next).
+3. One `promote` took 12.6 s (C=3, file 5), the only slow tail; its time inside the room (`promote-within`) cannot be timed (synchronous). One in twelve at C=3 failed; none at C=1. Twelve uploads each is a small sample.
+
+**Caveats.** The uploader was an administrator; reading was idle; 24 uploads in all; the 502's cause (a write error from the object's store call, or the object's overload answer) is not known: the stages say only that it came in hash-and-put.
+
+**Follow-up, the failures (same session, more C=3 batches; driver now waits 45 s and records the page's text).** C=3 in all: **54 uploads, 5 failed (9 %)**; C=1: 12, none. The five, none ended by a slow wait: `captureupload` 502 after 2.8 s (stopped in `up-hash-put`, 3.3 s), `captureupload` 500 after 1.8 s, `captureupload` 502 after 2.6 s (stopped with `up-body-read` 2.5 s and `up-hash-put` 1.0 s, neither near the others' 0.05 and 0.3 s), and **two `promote` calls that answered 502 after 2.7 and 1.6 s, after a good `captureupload`** (so the file was held, the document was not made). **In all five the page stayed on the Add screen and showed no result line and no words of an error that my check found (the first 400 characters of its text; the rest was not read)**; the success text never came. So the failure is **a quick 5xx from the room, shown to the member as nothing**, and any 2 minute wait in the earlier study was the driver waiting for text that never came. The admission, the room wait and the other stages do not grow with three uploaders; what does is the chance that a call in the object fails. `object-age` (the room object's age at the call) is 0-10 s on both the good and the failed calls (failed: 4.4-7.0 s), so the object is young at nearly every call and its age does not separate them; the cause of the 5xx is **not found by these stages** (a candidate to check: the object's memory with three bodies in hand, or an overload answer; the cron every 5 minutes is not the cause, the failures came within seconds of one another). Medians over all C=3 runs: page wait 5.9 s, `captureupload` call 3.0 s, `promote` call 1.5 s.
