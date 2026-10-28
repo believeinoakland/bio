@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7626 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7627 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22877,6 +22877,7 @@ export const WORD_ROWS = Object.freeze([
   ["doc-clean.pdf.object_num_a_jbig2_image","object {num}: a JBIG2 image under another filter",null,null,false,"code"],
   ["doc-clean.pdf.object_num_a_v1_image","object {num}: a {v1} image under another filter",null,null,false,"code"],
   ["doc-clean.pdf.object_num_an_inline_jpeg","object {num}: an inline JPEG image",null,null,false,"code"],
+  ["doc-clean.pdf.object_num_gen_is_larger_than","object {num} {gen} is a single value larger than the {figure} bytes this module reads of one",null,null,false,"code"],
   ["doc-clean.pdf.object_num_gen_is_referred","object {num} {gen} is referred to and cannot be read",null,null,false,"code"],
   ["doc-clean.pdf.object_num_is_a_type","object {num} is a {type} stream reached from the catalog",null,null,false,"code"],
   ["doc-clean.pdf.object_num_is_an_embedded","object {num} is an embedded file",null,null,false,"code"],

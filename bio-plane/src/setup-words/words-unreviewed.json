@@ -21754,126 +21754,133 @@
       "en": "a number the PDF writer cannot write",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 237
+      "line": 239
     },
     {
       "id": "doc-clean.pdf.a_string_the_pdf_reader",
       "en": "a string the PDF reader answered without its bytes",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 253
+      "line": 255
     },
     {
       "id": "doc-clean.pdf.a_value_the_pdf_reader",
       "en": "a value the PDF reader could not read ({String})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 184
+      "line": 186
     },
     {
       "id": "doc-clean.pdf.a_value_the_pdf_writer_cannot",
       "en": "a value the PDF writer cannot write",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 269
+      "line": 271
     },
     {
       "id": "doc-clean.pdf.get_0_obj_ser_endobj",
       "en": "{get} 0 obj\n{ser}\nendobj\n",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 293
+      "line": 295
     },
     {
       "id": "doc-clean.pdf.object_num_a_file_specification",
       "en": "object {num}: a file specification carrying an embedded file",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 168
+      "line": 170
     },
     {
       "id": "doc-clean.pdf.object_num_a_jbig2_image",
       "en": "object {num}: a JBIG2 image under another filter",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 79
+      "line": 81
     },
     {
       "id": "doc-clean.pdf.object_num_a_v1_image",
       "en": "object {num}: a {v1} image under another filter",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 84
+      "line": 86
     },
     {
       "id": "doc-clean.pdf.object_num_an_inline_jpeg",
       "en": "object {num}: an inline JPEG image",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 200
+      "line": 202
+    },
+    {
+      "id": "doc-clean.pdf.object_num_gen_is_larger_than",
+      "en": "object {num} {gen} is a single value larger than the {figure} bytes this module reads of one",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 45
     },
     {
       "id": "doc-clean.pdf.object_num_gen_is_referred",
       "en": "object {num} {gen} is referred to and cannot be read",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 44
+      "line": 46
     },
     {
       "id": "doc-clean.pdf.object_num_is_a_type",
       "en": "object {num} is a {type} stream reached from the catalog",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 67
+      "line": 69
     },
     {
       "id": "doc-clean.pdf.object_num_is_an_embedded",
       "en": "object {num} is an embedded file",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 68
+      "line": 70
     },
     {
       "id": "doc-clean.pdf.object_num_is_referred_to",
       "en": "object {num} is referred to and cannot be read",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 61
+      "line": 63
     },
     {
       "id": "doc-clean.pdf.object_num_its_coded_data",
       "en": "object {num}: its {coded} data is not an image file",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 86
+      "line": 88
     },
     {
       "id": "doc-clean.pdf.object_num_jbig2_globals_that",
       "en": "object {num}: JBIG2 globals that cannot be decoded",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 95
+      "line": 97
     },
     {
       "id": "doc-clean.pdf.object_num_s_content_stream",
       "en": "object {num}'s content stream cannot be decoded",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 191
+      "line": 193
     },
     {
       "id": "doc-clean.pdf.object_num_s_stream_cannot",
       "en": "object {num}'s stream cannot be read",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 71
+      "line": 73
     },
     {
       "id": "doc-clean.pdf.object_num_v1_object",
       "en": "object {num}: {v1} object",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 167
+      "line": 169
     },
     {
       "id": "doc-clean.pdf.the_pdf_cannot_be_opened",
@@ -21908,7 +21915,7 @@
       "en": "the trailer's /Root is not a catalog dictionary",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
-      "line": 49
+      "line": 51
     },
     {
       "id": "doc-clean.xml.where_has_a_tag_of_more",
