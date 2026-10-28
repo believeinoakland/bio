@@ -10116,6 +10116,34 @@
       "line": 881
     },
     {
+      "id": "capture-sources.browserrender.binding_acquired_no_session_id",
+      "en": "the Browser Rendering binding acquired a session with no sessionId",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 183
+    },
+    {
+      "id": "capture-sources.browserrender.binding_did_not_upgrade",
+      "en": "the Browser Rendering binding did not upgrade session {sessionId} to a websocket (HTTP {status})",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 187
+    },
+    {
+      "id": "capture-sources.browserrender.binding_gave_no_session",
+      "en": "the Browser Rendering binding gave no session within the {ms} ms navigation bound",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 294
+    },
+    {
+      "id": "capture-sources.browserrender.binding_refused_a_session",
+      "en": "the Browser Rendering binding refused a session: HTTP {status} {text}",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 178
+    },
+    {
       "id": "capture-sources.browserrender.it_is_not_a_public",
       "en": "it is not a public https address",
       "module": "capture-sources",
@@ -10130,11 +10158,39 @@
       "line": 150
     },
     {
+      "id": "capture-sources.browserrender.no_serialised_document",
+      "en": "the browser returned no serialised document after the render",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 671
+    },
+    {
+      "id": "capture-sources.browserrender.phase_bound_spent",
+      "en": "the render's {phase} bound was spent before it finished",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 405
+    },
+    {
       "id": "capture-sources.browserrender.the_browser_could_not_navigate",
       "en": "the browser could not navigate to {String}: {refusedSentence}",
       "module": "capture-sources",
       "file": "bio-plane/src/browserrender.mjs",
       "line": 395
+    },
+    {
+      "id": "capture-sources.browserrender.would_not_hold_interception",
+      "en": "the browser would not hold this render's requests (request interception could not be enabled: {err}), so nothing was rendered",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 600
+    },
+    {
+      "id": "capture-sources.browserrender.would_not_hold_network_domain",
+      "en": "the browser would not hold this render's requests (its network domain would not enable: {err}), so nothing was rendered",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 471
     },
     {
       "id": "capture-sources.cdx.cdx_record_timestamp_timestamp_digest",
@@ -10347,6 +10403,13 @@
       "line": 256
     },
     {
+      "id": "capture-sources.drive.convert_source",
+      "en": "unmeasured: Google's export is a conversion made at fetch time of a stored original nobody outside Google has seen, and its text stability and fidelity across fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the byte instability is D-351's)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/drive.mjs",
+      "line": 304
+    },
+    {
       "id": "capture-sources.drive.export_format_format_mimetype",
       "en": "export format {format} ({mimetype})",
       "module": "capture-sources",
@@ -10414,7 +10477,7 @@
       "en": "your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}",
       "module": "capture-sources",
       "file": "bio-plane/src/drive.mjs",
-      "line": 428
+      "line": 425
     },
     {
       "id": "capture-sources.memento.datetime_stringify_is_not_an",
@@ -10422,6 +10485,13 @@
       "module": "capture-sources",
       "file": "bio-plane/src/capture-sources/memento.mjs",
       "line": 149
+    },
+    {
+      "id": "capture-sources.memento.entry_does_not_begin",
+      "en": "entry {n} does not begin with \"<\" at character {i}",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 91
     },
     {
       "id": "capture-sources.memento.memento_datetime_stringify_is_not",

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7811 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7821 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21287,9 +21287,17 @@ export const WORD_ROWS = Object.freeze([
   ["capture-requests.index.under_the_question"," under {target}",null,null,false,"code"],
   ["capture-requests.index.v1_is_not_a_public","'{v1}' is not a public https locator. DEC-47 scopes what a session may reach to \"areas that anybody can go through\", and this address is not one on its face.",null,null,false,"code"],
   ["capture-requests.index.v1_is_not_one_of","'{v1}' is not one of the purposes your team's Civicsmith can truthfully name: {CAPTURE_PURPOSES}. DEC-47 requires an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.",null,null,false,"code"],
+  ["capture-sources.browserrender.binding_acquired_no_session_id","the Browser Rendering binding acquired a session with no sessionId",null,null,false,"code"],
+  ["capture-sources.browserrender.binding_did_not_upgrade","the Browser Rendering binding did not upgrade session {sessionId} to a websocket (HTTP {status})",null,null,false,"code"],
+  ["capture-sources.browserrender.binding_gave_no_session","the Browser Rendering binding gave no session within the {ms} ms navigation bound",null,null,false,"code"],
+  ["capture-sources.browserrender.binding_refused_a_session","the Browser Rendering binding refused a session: HTTP {status} {text}",null,null,false,"code"],
   ["capture-sources.browserrender.it_is_not_a_public","it is not a public https address",null,null,false,"code"],
   ["capture-sources.browserrender.its_host_is_one_of","its host is one of your team's own (where your team's Civicsmith or its fleet is reached)",null,null,false,"code"],
+  ["capture-sources.browserrender.no_serialised_document","the browser returned no serialised document after the render",null,null,false,"code"],
+  ["capture-sources.browserrender.phase_bound_spent","the render's {phase} bound was spent before it finished",null,null,false,"code"],
   ["capture-sources.browserrender.the_browser_could_not_navigate","the browser could not navigate to {String}: {refusedSentence}",null,null,false,"code"],
+  ["capture-sources.browserrender.would_not_hold_interception","the browser would not hold this render's requests (request interception could not be enabled: {err}), so nothing was rendered",null,null,false,"code"],
+  ["capture-sources.browserrender.would_not_hold_network_domain","the browser would not hold this render's requests (its network domain would not enable: {err}), so nothing was rendered",null,null,false,"code"],
   ["capture-sources.cdx.cdx_record_timestamp_timestamp_digest","CDX record: timestamp {timestamp}, digest {digest} (base32 SHA-1, over the body as they stored it)",null,null,false,"code"],
   ["capture-sources.cdx.digest_is_the_empty_body","digest is the empty-body digest: the capture holds nothing",null,null,false,"code"],
   ["capture-sources.cdx.no_digest","no digest",null,null,false,"code"],
@@ -21320,6 +21328,7 @@ export const WORD_ROWS = Object.freeze([
   ["capture-sources.declared.capturecredentialsupply","credential-directed: stores a login a member supplies for one source host, sealed, so a refused capture can be retried; the secret is never shown again or exported, and a machine cannot supply one",null,null,false,"code"],
   ["capture-sources.declared.capturecredentialwithdraw","credential-directed: destroys a stored source login, its sealed secret included; the source's requests are turned away again until a new one is supplied",null,null,false,"code"],
   ["capture-sources.drive.confirmed_from_the_bytes_format","confirmed from the bytes: {format} ({confidence}) — {signals}",null,null,false,"code"],
+  ["capture-sources.drive.convert_source","unmeasured: Google's export is a conversion made at fetch time of a stored original nobody outside Google has seen, and its text stability and fidelity across fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the byte instability is D-351's)",null,null,false,"code"],
   ["capture-sources.drive.export_format_format_mimetype","export format {format} ({mimetype})",null,null,false,"code"],
   ["capture-sources.drive.not_confirmed_from_the_bytes","NOT confirmed from the bytes: {format} was asked for and the bytes detect as {format_2} ({confidence}) — {signals}. The capture is filed with the disagreement stated rather than refused; what is refused by name is the application shell, and these bytes are not it.",null,null,false,"code"],
   ["capture-sources.drive.the_bytes_were_not_sniffed","the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed",null,null,false,"code"],
@@ -21331,6 +21340,7 @@ export const WORD_ROWS = Object.freeze([
   ["capture-sources.drive.though_the_link_named",", though the link named {host}",null,null,false,"code"],
   ["capture-sources.drive.your_teams_civicsmith_recorded_fetching","your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}",null,null,false,"code"],
   ["capture-sources.memento.datetime_stringify_is_not_an","datetime {stringify} is not an RFC 1123 date",null,null,false,"code"],
+  ["capture-sources.memento.entry_does_not_begin","entry {n} does not begin with \"<\" at character {i}",null,null,false,"code"],
   ["capture-sources.memento.memento_datetime_stringify_is_not","Memento-Datetime {stringify} is not an RFC 1123 date",null,null,false,"code"],
   ["capture-sources.memento.no_memento_datetime_was_recorded","no Memento-Datetime was recorded with this hop",null,null,false,"code"],
   ["capture-sources.memento.sha_256_digest_computed_by","SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated",null,null,false,"code"],

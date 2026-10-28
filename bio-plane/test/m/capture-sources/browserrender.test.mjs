@@ -76,11 +76,11 @@ test("R19: a session is opened over the binding's two calls and the answer is R1
   assert.equal(via.ok, true);
   assert.equal(browserBindingRenderer({}).kind, "browser-binding");
   /* Every failure is an answer naming what failed; nothing rejects. */
-  const fail = async (mode, re) => { const x = await render("/same", {}, { binding: fakeBinding(PAGES, mode) }); assert.equal(x.ok, false); assert.match(x.error, re); };
-  await fail({ noacquire: true }, /refused a session: HTTP 503 no capacity/);
-  await fail({ nosessionid: true }, /acquired a session with no sessionId/);
-  await fail({ noupgrade: true }, /did not upgrade session sess-1 to a websocket \(HTTP 200\)/);
-  await fail({ throws: true }, /binding exploded/);
+  const fail = async (mode, expected) => { const x = await render("/same", {}, { binding: fakeBinding(PAGES, mode) }); assert.equal(x.ok, false); assert.ok(x.error.includes(expected), x.error); };
+  await fail({ noacquire: true }, word("capture-sources.browserrender.binding_refused_a_session", { status: "503", text: "no capacity" }));
+  await fail({ nosessionid: true }, word("capture-sources.browserrender.binding_acquired_no_session_id"));
+  await fail({ noupgrade: true }, word("capture-sources.browserrender.binding_did_not_upgrade", { sessionId: "sess-1", status: "200" }));
+  await fail({ throws: true }, "binding exploded");
   const none = await renderWithBinding(null, { url: "https://x.example/" });
   assert.equal(none.ok, false);
   assert.equal(typeof none.error, "string");
@@ -96,7 +96,7 @@ test("R20: each phase holds its bound (nav default 30000, min 1000; wait default
     assert.equal(a.ok, false);
     return a.error;
   };
-  assert.match(await navBound(undefined), /the render's navigation \(30000 ms\) bound was spent before it finished/);
+  assert.ok((await navBound(undefined)).includes(word("capture-sources.browserrender.phase_bound_spent", { phase: "navigation (30000 ms)" })));
   assert.match(await navBound(10000), /navigation \(10000 ms\) bound/);
   assert.match(await navBound(10), /navigation \(1000 ms\) bound/);
   /* A navigation that never commits fails inside the navigation bound, not the wait's. */
@@ -154,7 +154,7 @@ test("R22: every request the page made, typed and by outcome; scripts by URL; nu
   const nb = fakeBinding(PAGES, { refuse: ["Network.enable"] });
   const noNet = await render("/same", {}, { binding: nb });
   assert.equal(noNet.ok, false);
-  assert.match(noNet.error, /would not hold this render's requests \(its network domain would not enable: CDP Network\.enable unavailable\), so nothing was rendered/);
+  assert.ok(noNet.error.includes(word("capture-sources.browserrender.would_not_hold_network_domain", { err: "CDP Network.enable unavailable" })));
   assert.ok(!nb.stats.calls.includes("Page.navigate"));
   const noDbg = await render("/same", {}, { binding: fakeBinding(PAGES, { refuse: ["Debugger.enable"] }) });
   assert.deepEqual([noDbg.ok, noDbg.scripts, noDbg.requests.length], [true, null, 4]);
@@ -184,7 +184,7 @@ test("R24: the document and its address from one evaluation, the doctype the doc
   assert.match(nav.error, new RegExp(`could not navigate to https://${HOST}/navfail: net::ERR_NAME_NOT_RESOLVED`));
   const doc = await render("/noserialise");
   assert.equal(doc.ok, false);
-  assert.match(doc.error, /no serialised document/);
+  assert.ok(doc.error.includes(word("capture-sources.browserrender.no_serialised_document")));
 });
 
 test("R25: each completed load's body is collected or its absence stated, nothing hashed, the session closed on every path", async () => {
@@ -192,7 +192,7 @@ test("R25: each completed load's body is collected or its absence stated, nothin
   const by = Object.fromEntries(a.requests.map((r) => [r.url, r]));
   assert.equal(by[`https://${HOST}/app.js`].body_base64, Buffer.from("x()").toString("base64"));
   assert.equal(by[`https://${HOST}/same`].body_text, "<html>shell</html>");
-  assert.match(by[`https://${HOST}/api.json`].body_unavailable, /the browser would not give the body: CDP No resource with given identifier found/);
+  assert.ok(by[`https://${HOST}/api.json`].body_unavailable.includes(word("browserrender.body_unavailable.browser_would_give", { err: "CDP No resource with given identifier found" })));
   assert.ok(a.requests.every((r) => !("sha256" in r)));
   const m = await render("/mixed");
   assert.equal(m.requests.find((r) => r.status === 301).body_unavailable, word("browserrender.body_unavailable.redirect_hop_whose"));
@@ -230,7 +230,7 @@ test("R25: each completed load's body is collected or its absence stated, nothin
   const slow = fakeBinding(PAGES, { slowUpgradeMs: 1500 });
   const s = await renderWithBinding(slow, { url: `https://${HOST}/same`, navigation_timeout_ms: 1000 }, { now: () => Date.now() });
   assert.equal(s.ok, false);
-  assert.match(s.error, /gave no session within the 1000 ms navigation bound/);
+  assert.ok(s.error.includes(word("capture-sources.browserrender.binding_gave_no_session", { ms: "1000" })));
   await new Promise((r) => setTimeout(r, 1000));
   assert.equal(slow.stats.lateCloses, 1);
 });
@@ -351,7 +351,8 @@ test("R64: a refused navigation fails naming the address; a render whose hold ca
     const b = fakeBinding(HOSTILE, { refuse: [method] });
     const a = await render("/hostile", { own_hosts: OWN }, { binding: b });
     assert.equal(a.ok, false, method);
-    assert.match(a.error, /^the browser would not hold this render's requests \(request interception could not be enabled: .*\), so nothing was rendered$/, method);
+    const err = a.error.slice(a.error.indexOf("enabled: ") + 9, a.error.indexOf("), so nothing"));
+    assert.equal(a.error, word("capture-sources.browserrender.would_not_hold_interception", { err }), method);
     assert.ok(!b.stats.calls.includes("Page.navigate"), method);
     assert.deepEqual(b.stats.sent, [], method);
     assert.deepEqual([b.stats.closeTargets, b.stats.browserCloses, b.stats.socketCloses], [1, 1, 1], method);
@@ -475,7 +476,7 @@ test("R69: every failed answer carries elapsed_ms (the close included), failure_
     assert.equal((await failed("/same", fakeBinding(PAGES, mode))).failure_class, "transient", JSON.stringify(mode));
   const slow = await failed("/same", fakeBinding(PAGES, { slowUpgradeMs: 1500 }), { navigation_timeout_ms: 1000 }, { now: () => Date.now() });
   assert.equal(slow.failure_class, "transient");
-  assert.match(slow.detail, /gave no session within the 1000 ms navigation bound/);
+  assert.ok(slow.detail.includes(word("capture-sources.browserrender.binding_gave_no_session", { ms: "1000" })));
   /* permanent: a session with no id, no websocket, a throwing binding, a page crash, an unreachable host, no document, the hold refused */
   for (const [url, mode] of [["/same", { nosessionid: true }], ["/same", { noupgrade: true }], ["/same", { throws: true }],
     ["/navfail", {}], ["/noserialise", {}], ["/same", { refuse: ["Network.enable"] }], ["/hostile", { refuse: ["Fetch.enable"] }]])
