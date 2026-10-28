@@ -8,6 +8,7 @@ import { normalizeType } from "../../../src/record-grammar/types.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const V = "class:member";
+const exact = (key, vars) => new RegExp(word(key, vars).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 const UNDETERMINED = "undetermined";
 const sorted = (a) => [...a].sort();
 
@@ -38,7 +39,7 @@ test("R1 the grammar: implicit AND/OR, capital operators, negation, parentheses,
   assert.deepEqual(ids("water -budget"), ["A"], "a leading - negates");
   assert.deepEqual(ids("(main OR sewer) -fund"), ["A"]);
   const unclosed = compile({ q: "(main OR sewer", viewer: V });
-  assert.ok(unclosed.warnings.some((x) => /unclosed parenthesis/.test(x)));
+  assert.ok(unclosed.warnings.includes(word("query.unclosed_parenthesis_read")));
   assert.deepEqual(ids("(main OR sewer"), ["A", "C"], "an unclosed parenthesis is read to the end");
   assert.deepEqual(ids('"main broke"'), ["A"], "a quoted run is one phrase");
   assert.deepEqual(ids('"broke main"'), []);
@@ -59,7 +60,7 @@ test("R1 the grammar: implicit AND/OR, capital operators, negation, parentheses,
   assert.deepEqual(ids("fm:n"), ["A"], "fm:path asks presence");
   assert.deepEqual(ids("fm:a.b=x"), ["B"]);
   const bad = compile({ q: "fm:a;DROP", viewer: V });
-  assert.ok(bad.warnings.some((x) => /fm: path "a;DROP" is not a frontmatter path/.test(x)));
+  assert.ok(bad.warnings.includes(word("query-language.query.fm_path_stringify_is_not", { stringify: '"a;DROP"' })));
   assert.equal(bad.ast, null, "a bad path is dropped");
   assert.equal(compile({ q: `fm:${"a".repeat(121)}`, viewer: V }).ast, null, "a path over 120 characters is dropped");
   assert.deepEqual(ids("text:state"), [], "text: forces free text over a field name");
@@ -153,7 +154,7 @@ test("R5 meaning selectors: bare words from record-grammar, qualified sub-fields
     "leg:grade>=": /compares grade against nothing/,
     "passage:>=bar": /compares a full-text field/,
     "passage:text>=bar": /compares a full-text field/,
-    "passage:---": /has no word in it to match/,
+    "passage:---": exact("query-language.query.arm_stringify_has_no_word", { arm: "passage", stringify: '"---"' }),
   };
   for (const [q, re] of Object.entries(drops)) {
     const p = compile({ q: `${q} leg:*`, viewer: V });
@@ -277,7 +278,7 @@ test("R24 NEAR: proximity in free text, text: and passage:, capitals only, with 
   const p = compile({ q: "NEAR(alpha beta, 3)", viewer: V });
   assert.deepEqual(p.warnings, []);
   const clamp = compile({ q: "NEAR(alpha beta, 500)", viewer: V });
-  assert.ok(clamp.warnings.some((x) => /distance 500 is outside 0–100; read as 100/.test(x)));
+  assert.ok(clamp.warnings.includes(word("query.distance_outside_read", { source: "NEAR(alpha beta, 500)", clamped: "500", near_max: "100", n: "100" })));
   assert.deepEqual(ids("NEAR(alpha beta, 500)"), ["A", "B"]);
   assert.ok(compile({ q: "NEAR(alpha beta, -2)", viewer: V }).warnings.some((x) => /read as 0/.test(x)));
   for (const [q, whyKey, vars] of [["NEAR(alpha)", "query.why.proximity_needs_two", { kept: "one term" }],
