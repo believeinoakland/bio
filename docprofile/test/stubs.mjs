@@ -25,6 +25,10 @@ import {
 const ROW = /<tr><td><a href="MeetingDetail\.aspx\?ID=(\d+)[^"]*">([^<]*?)(?: - ([A-Z]+))?<\/a><\/td><td>([^<]*)<\/td><td>(?:<a href="View\.ashx\?M=A&amp;ID=(\d+)">)?[^<]*(?:<\/a>)?<\/td><td>(?:<a href="View\.ashx\?M=M&amp;ID=(\d+)">)?/g;
 const isoOf = (mdy) => { const [m, d, y] = mdy.split("/").map(Number); return new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10); };
 
+// The reasons the stubs give, exported so a test asserts the stub's own input, never a copy of the sentence.
+export const STUB_MEETINGS_UNREAD = "one side's meetings could not be read: a reading that found nothing is a failed reader";
+export const STUB_NO_PROFILE_WHY = "no active jurisdiction profile describes a file number, so none was read";
+
 export const stubMeetings = { // fixtures-own: harness a test reader registered through this module's own registerDoctype seam; no module provides it
   key: "stub_meetings", label: "stub: a list of meetings", version: 1, contract: CONTRACT.MEMBERSHIP,
   detect(ctx) {
@@ -44,7 +48,7 @@ export const stubMeetings = { // fixtures-own: harness a test reader registered 
   assess(a, b) {
     if (!a.entities.length || !b.entities.length)
       return { meaningful: null, events: [], confirmed: null,
-               why: "one side's meetings could not be read: a reading that found nothing is a failed reader" };
+               why: STUB_MEETINGS_UNREAD };
     const d = diffEntities(a.entities, b.entities);
     const events = [];
     for (const g of d.gone) events.push(event("delisted", { entity: g.key }));
@@ -99,7 +103,7 @@ export const stubItems = { // fixtures-own: harness a test reader registered thr
     const shapes = vocabulary(ctx, "file_numbers").map((e) => vocabRegex(e.pattern, IN_PROSE, "g")).filter(Boolean);
     if (!shapes.length)
       return { entities: [], facts: { also: alsoSatisfies(ctx, "stub_items") },
-               references_why: "no active jurisdiction profile describes a file number, so none was read" };
+               references_why: STUB_NO_PROFILE_WHY };
     const byKey = new Map();
     const hits = [];
     for (const re of shapes) { re.lastIndex = 0; for (const m of text.matchAll(re)) hits.push(m); }

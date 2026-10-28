@@ -14,7 +14,7 @@ import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { combine, list } from "../../jurisdictions/index.mjs";
 import { PORT_ALDER, LAKEMONT, view, HELD, PA_BYLAW, PA_CODE, withCodeSections, PA_SECTIONS } from "./fixtures.mjs";
 import { servedDocuments, textOf, CODIFIER } from "./codifier.mjs";
-import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/codifier-answers.json", import.meta.url), "utf8")).documents;
 const FW18 = JSON.parse(fs.readFileSync(new URL("./fixtures/fw18-doctypes.json", import.meta.url), "utf8")).documents;
@@ -66,7 +66,7 @@ test("R9 form is instrument or code; a code section is CERTAIN only on a heading
   // neither: a stated null
   const none = regulation.parse({ text: "a letter", view: PA });
   assert.equal(none.form, null);
-  assert.equal(none.form_why, localize("doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section"));
+  assert.equal(none.form_why, word("doctypes.regulation.no_form"));
 });
 
 /* --------------------------------------------------------------------- R10 */
@@ -126,8 +126,8 @@ test("R11 numbers, separators and marker order come from the view; SECTION n. is
   }
   // nothing divides: empty, with why, never one section standing for the whole
   for (const [t, v, want] of [["DOES ORDAIN that the harbor opens.", PA, /SECTION 1/],
-                              [PA_CODE, LK, localize("doctypes.sections.neither_form_no_codes", "this text was read as neither an instrument nor a code section, so it is not divided into sections; and no active jurisdiction profile gives a section-number form for any code")],
-                              ["a letter", PA, localize("doctypes.sections.neither_form", "this text was read as neither an instrument nor a code section, so it is not divided into sections")]]) {
+                              [PA_CODE, LK, word("doctypes.sections.neither_form_no_codes")],
+                              ["a letter", PA, word("doctypes.sections.neither_form")]]) {
     const p = regulation.parse({ text: t, view: v });
     assert.deepEqual(p.sections, []);
     if (want instanceof RegExp) assert.match(p.sections_why, want);
@@ -244,16 +244,16 @@ test("R16 a section whose heading, text, definitions or exceptions moved, or pre
   assert.ok(e4.some((e) => e.section.join(".") === "2.20.030" && e.moved.includes("heading")));
   // a subsection gone, and one new: each named, which side
   const e5 = evs(reread(c.text.replace(/\nJ\.\n[^\n]*/, "")));
-  assert.ok(e5.some((e) => e.section.join(".") === "2.20.030.J" && e.now === null && /not read now/.test(e.why)));
+  assert.ok(e5.some((e) => e.section.join(".") === "2.20.030.J" && e.now === null && e.why === word("doctypes.regulation.section_gone", { number: String(e.was) })));
   const e6 = regulation.assess(reread(c.text.replace(/\nJ\.\n[^\n]*/, "")), a, { view: CODE_VIEW }).events.filter((e) => e.key === "section");
-  assert.ok(e6.some((e) => e.section.join(".") === "2.20.030.J" && e.was === null && e.why === localize("doctypes.regulation.section_added", "section {number} is read now and was not read before", { number: e.now })));
+  assert.ok(e6.some((e) => e.section.join(".") === "2.20.030.J" && e.was === null && e.why === word("doctypes.regulation.section_added", { number: e.now })));
   for (const e of [...e1, ...e2, ...e3, ...e4, ...e5, ...e6]) assert.equal(e.type, "instrument_changed");
   // no sections on either side: nothing about sections, and why
   const i = regulation.parse({ text: PA_BYLAW.replace("SECTION 1. ", ""), view: PA });
   assert.equal(i.instrument, "bylaw");
   const r = regulation.assess(i, structuredClone(i), { view: PA });
   assert.equal(r.sections_compared, false);
-  assert.equal(r.sections_why, localize("doctypes.regulation.sections_none_read", "no section was read from either reading, so nothing is said about sections: {why}", { why: String(i.sections_why) }));
+  assert.equal(r.sections_why, word("doctypes.regulation.sections_none_read", { why: String(i.sections_why) }));
   assert.ok(!r.events.some((e) => e.key === "section"));
   // the article: one section of thirty changed, one event
   const art = CORPUS.find((x) => /ARTICLE II/.test(x.doc.Title));
@@ -337,10 +337,10 @@ test("R19 sections, definitions and exceptions each carry a stated count, and an
   assert.equal(p.form, "code");
   const d = p.definitions.find((x) => x.term === "Harbor");
   assert.equal(d.section, null);
-  assert.match(d.why, /before the first heading/);
+  assert.equal(d.why, word("doctypes.sections.unplaced"));
   const e = p.exceptions.find((x) => x.start === 0 || t.slice(x.start).startsWith("This chapter"));
   assert.equal(e.section, null);
-  assert.match(e.why, /before the first heading/);
+  assert.equal(e.why, word("doctypes.sections.unplaced"));
   assert.equal(p.counts.definitions_unplaced, 1);
   assert.equal(p.counts.exceptions_unplaced, 1);
   // undivided text: every passage listed, none dropped, each saying why
@@ -348,5 +348,5 @@ test("R19 sections, definitions and exceptions each carry a stated count, and an
   assert.deepEqual(u.sections, []);
   assert.equal(u.definitions.length, 1);
   assert.equal(u.exceptions.length, 1);
-  for (const x of [...u.definitions, ...u.exceptions]) { assert.equal(x.section, null); assert.match(x.why, /not divided into sections/); }
+  for (const x of [...u.definitions, ...u.exceptions]) { assert.equal(x.section, null); assert.equal(x.why, word("doctypes.sections.not_divided")); }
 });

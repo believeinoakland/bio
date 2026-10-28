@@ -52,7 +52,8 @@ const isHit = (r, format, confidence) => {
 };
 
 test("R23: SCAN A12 — a JPEG with %PDF-1.4 in a COM segment, <html in its EXIF, and a PNG with %PDF- in tEXt are read as pictures, pictures are asked first", () => {
-  assert.deepEqual(listFormats().slice(0, 4), ["jpeg", "png", "html", "pdf"]);
+  assert.deepEqual(listFormats().slice(0, 11), ["jpeg", "png", "gif", "tiff", "webp", "bmp", "jp2", "heic", "heif", "avif", "html"]);
+  assert.ok(listFormats().indexOf("html") < listFormats().indexOf("pdf"));
   const jpegCom = cat(JPEG_SIG, [0xfe, 0x00, 0x0c], "%PDF-1.4\n", [0xff, 0xd9]);
   const jpegExif = cat(JPEG_SIG, [0xe1, 0x00, 0x30], "Exif\0\0<html><head><title>x</title></head>", [0xff, 0xd9]);
   const pngText = cat(PNG_SIG, [0, 0, 0, 20], "tEXt", "Comment\0%PDF-1.7 a polyglot", [0, 0, 0, 0]);
@@ -71,8 +72,8 @@ test("R9: the name is the third argument, provided only as a non-empty string; b
   // a name that is not a non-empty string is not provided: the CSV bytes are not claimed
   for (const bad of [undefined, null, "", 0, 5, true, {}, [], ["a.csv"], new String("a.csv"), Symbol("n")]) {
     const r = detectFormat(CSV, "application/octet-stream", bad);
-    assert.equal(r.format, "undetermined", String(bad));
-    assert.equal(r.confidence, "none");
+    assert.equal(r.format, "text", String(bad));
+    assert.equal(r.confidence, "certain");
   }
   // the same bytes with a provided name are claimed
   isHit(detectFormat(CSV, "application/octet-stream", "budget.csv"), "csv", "likely");
@@ -96,18 +97,18 @@ test("R31: SHEET C32 C33 C23 C24 — a delimited text declared ms-excel, octet-s
     }
   }
   // a type outside csv-reader's R21 list, or none, is not judged a sheet by name alone
-  assert.equal(detectFormat(CSV, "application/x-unknown", "budget.csv").format, "undetermined");
-  assert.equal(detectFormat(CSV, null, "budget.csv").format, "undetermined");
+  assert.equal(detectFormat(CSV, "application/x-unknown", "budget.csv").format, "text");
+  assert.equal(detectFormat(CSV, null, "budget.csv").format, "text");
   // a .tsv declared text/tab-separated-values is the csv entry's own pass-2 answer, unchanged
   assert.deepEqual(detectFormat(TSV, "text/tab-separated-values", "rows.tsv"), getFormat("csv").detect(null, "text/tab-separated-values"));
   // negative controls: the name's extension, the shape of the head and a binary signature all matter
-  assert.equal(detectFormat(CSV, "application/octet-stream", "budget.xls").format, "undetermined", ".xls is not a delimited-text name");
-  assert.equal(detectFormat(CSV, "application/octet-stream", "budget.pdf").format, "undetermined");
-  assert.equal(detectFormat(CSV, "application/octet-stream", "budget").format, "undetermined");
-  assert.equal(detectFormat(NOTE, "text/plain", "note.txt").format, "undetermined", "a plain note has no delimiter and is read as text");
-  assert.equal(detectFormat(enc("just words"), "application/octet-stream", "words.csv").format, "undetermined");
-  // a head of NULs, or a NUL inside a decoded 8-bit head, is not text
-  assert.equal(detectFormat(cat("a,b\n1,2\n", [0, 0, 0, 0]), "application/octet-stream", "data.csv").format, "undetermined");
+  assert.equal(detectFormat(CSV, "application/octet-stream", "budget.xls").format, "csv", "R34: an .xls whose content is a delimited table is the table");
+  assert.equal(detectFormat(CSV, "application/octet-stream", "budget.pdf").format, "text");
+  assert.equal(detectFormat(CSV, "application/octet-stream", "budget").format, "text");
+  assert.equal(detectFormat(NOTE, "text/plain", "note.txt").format, "text", "a plain note has no delimiter and is read as text");
+  assert.equal(detectFormat(enc("just words"), "application/octet-stream", "words.csv").format, "text");
+  // a head of NULs, or a NUL inside a decoded 8-bit head, is not text (R35): it is a file of a kind this list does not name (R38)
+  assert.equal(detectFormat(cat("a,b\n1,2\n", [0, 0, 0, 0]), "application/octet-stream", "data.csv").format, "unlisted");
 });
 
 test("R31: bytes never override a binary format — a ZIP, office, PDF, picture or HTML named .csv keeps its own format; a pass-2 type wins over the name", () => {
@@ -123,13 +124,16 @@ test("R31: bytes never override a binary format — a ZIP, office, PDF, picture 
   for (const [format, bytes] of cases) {
     for (const ct of ["application/octet-stream", "application/vnd.ms-excel", "text/plain"]) {
       assert.equal(detectFormat(bytes, ct, "budget.csv").format, format, `${format} / ${ct}`);
-      assert.deepEqual(detectFormat(bytes, ct, "budget.csv"), detectFormat(bytes, ct));
+      /* R34: the name's disagreement is the one signal added to the content's own answer */
+      const named = detectFormat(bytes, ct, "budget.csv"), plain = detectFormat(bytes, ct);
+      assert.deepEqual({ ...named, signals: named.signals.slice(0, plain.signals.length) }, plain);
+      assert.ok(named.signals.length <= plain.signals.length + 1);
     }
   }
-  // an OLE compound file (a legacy .xls) has no entry: it is undetermined, never a sheet, whatever it is named
+  // an OLE compound file whose directory names no kind of the list is unlisted (R38), never a sheet, whatever it is named
   const ole = cat([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1], noise(600, 7));
-  assert.equal(detectFormat(ole, "application/vnd.ms-excel", "legacy.csv").format, "undetermined");
-  assert.equal(detectFormat(ole, "application/vnd.ms-excel", "legacy.xls").format, "undetermined");
+  assert.equal(detectFormat(ole, "application/vnd.ms-excel", "legacy.csv").format, "unlisted");
+  assert.equal(detectFormat(ole, "application/vnd.ms-excel", "legacy.xls").format, "unlisted");
   // pass 2 comes before pass 3: a declared type that an entry claims is that entry's answer
   assert.equal(detectFormat(CSV, "text/html", "budget.csv").format, "html");
   assert.equal(detectFormat(CSV, "text/csv", "budget.csv").confidence, "likely");
@@ -142,7 +146,7 @@ test("R31: the head is the first 1 MiB — a delimited head is a sheet whatever 
   const tail = cat(noise(MIB, 11));
   isHit(detectFormat(cat(head, tail), "application/octet-stream", "big.csv"), "csv", "likely");
   const sparse = cat(enc("x".repeat(MIB)), enc("a,b,c\n1,2,3\n".repeat(50)));
-  assert.equal(detectFormat(sparse, "application/octet-stream", "big.csv").format, "undetermined");
+  assert.equal(detectFormat(sparse, "application/octet-stream", "big.csv").format, "text");
 });
 
 test("R13: with the name pass the only answers are an entry's verbatim result, the csv answer of R31 or the stated undetermined", () => {
@@ -158,13 +162,13 @@ test("R13: with the name pass the only answers are an entry's verbatim result, t
       continue;
     }
     const own = b ? getFormat(r.format).detect(b, null) : getFormat(r.format).detect(null, c);
-    if (own) assert.deepEqual(r, own, "an entry's own verbatim result");
+    if (own) assert.deepEqual({ ...r, signals: r.signals.slice(0, own.signals.length) }, own, "an entry's own result, the name's disagreement (R34) apart");
     else { assert.equal(r.format, "csv"); assert.equal(r.confidence, "likely"); assert.equal(own, null); }
   }
   // the name pass names csv only while a csv entry is registered (a format is never named that nothing can read)
   const zip = unregisterFormat("zip"), csv = unregisterFormat("csv");
   try {
-    assert.equal(detectFormat(CSV, "application/octet-stream", "a.csv").format, "undetermined");
+    assert.equal(detectFormat(CSV, "application/octet-stream", "a.csv").format, "text");
   } finally { registerFormat(csv); registerFormat(zip); }
   assert.equal(detectFormat(CSV, "application/octet-stream", "a.csv").format, "csv");
 });
@@ -250,7 +254,8 @@ test("R32: the head decides the signatures and the name pass — a big picture, 
   // declared types are pass 2 as ever
   assert.equal((await detectFormat(source(noise(3 * MIB, 41)), "application/pdf")).format, "pdf");
   const und = await detectFormat(source(noise(3 * MIB, 42)), null);
-  assert.equal(und.format, "undetermined");
+  assert.equal(und.format, "unlisted", "R38: bytes of no determinable type are unlisted, with no name and the reasons");
+  assert.equal(und.named, null);
   assert.equal(und.confidence, "none");
   assert.equal(und.signals.length, 2);
   // a ZIP-looking head with no readable end is not a container: the tail decides, not the first KiB
@@ -303,8 +308,10 @@ test("R17: DOCS T13 — a note that mentions <html> or <!DOCTYPE html> in its fi
       assert.notEqual((await detectFormat(source(b), ct)).format, "html", n);
     }
     // the declared type still decides when no entry claims the bytes (pass 2), and a real page is still a page
-    assert.equal(detectFormat(b, "text/html").format, "html");
-    assert.equal(detectFormat(b, "text/html").confidence, "likely");
+    /* a note laid out as a mail message is `eml` by its headers (mail-reader, R33), and bytes outrank the declared type */
+    const claimed = n.startsWith("From: ") ? "eml" : "html";
+    assert.equal(detectFormat(b, "text/html").format, claimed);
+    if (claimed === "html") assert.equal(detectFormat(b, "text/html").confidence, "likely");
   }
   isHit(detectFormat(enc("<!DOCTYPE html>\n<html><body>The page</body></html>"), "text/plain"), "html", "certain");
 });
