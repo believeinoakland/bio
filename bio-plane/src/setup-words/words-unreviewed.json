@@ -8919,6 +8919,13 @@
       "line": 241
     },
     {
+      "id": "calc-grammar.no_resolver_space",
+      "en": "no resolver for the space \"{space}\"",
+      "module": "calc-grammar",
+      "file": "bio-plane/src/calc-grammar/recipe.mjs",
+      "line": 535
+    },
+    {
       "id": "calc-grammar.recipe.field_shape",
       "en": "each field states its name and its type, the type one of {types}",
       "module": "calc-grammar",
@@ -8938,6 +8945,13 @@
       "module": "calc-grammar",
       "file": "bio-plane/src/calc-grammar/recipe.mjs",
       "line": 475
+    },
+    {
+      "id": "calc-grammar.rows_first_pass",
+      "en": "it answered {size} rows on its first pass and {n} on a later one",
+      "module": "calc-grammar",
+      "file": "bio-plane/src/calc-grammar/tables.mjs",
+      "line": 84
     },
     {
       "id": "calc-grammar.tables.the_input_name_why",

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7619 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7621 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21035,9 +21035,11 @@ export const WORD_ROWS = Object.freeze([
   ["budget-doctypes.tables.no_text_layer_and_no_ocr","no text layer, and no OCR transcription of the page was supplied: any table printed on it is not read",null,null,false,"code"],
   ["budget-doctypes.tables.only_v1_of_the_length","only {v1}% of the {length} rows holding two or more figures have the table's modal {modal} cells (at least {v2}% needed)",null,null,false,"code"],
   ["budget-doctypes.tables.the_table_s_headers","the table's headers are not in the text read",null,null,false,"code"],
+  ["calc-grammar.no_resolver_space","no resolver for the space \"{space}\"",null,null,false,"code"],
   ["calc-grammar.recipe.field_shape","each field states its name and its type, the type one of {types}",null,null,false,"code"],
   ["calc-grammar.recipe.the_input_name_why","the input \"{name}\": {why}",null,null,false,"code"],
   ["calc-grammar.recipe.why_its_groups_sum_is","{why}; its group's sum is undetermined",null,null,false,"code"],
+  ["calc-grammar.rows_first_pass","it answered {size} rows on its first pass and {n} on a later one",null,null,false,"code"],
   ["calc-grammar.tables.the_input_name_why","the input \"{name}\": {why}",null,null,false,"code"],
   ["calculations.application.a_recipe_of_application_runs","a recipe of application runs over a frozen uses table (R32), its columns {USES_HEADER}; this input lacks {missing}. Nothing was written.",null,null,false,"code"],
   ["calculations.application.the_share_of_each","the share of each outcome in each group, with the group's size",null,null,false,"code"],
