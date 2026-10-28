@@ -1,4 +1,4 @@
-Round R1, layer 1, module jurisdictions, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+Round R1, layer 1, module jurisdictions, tranche T53. Your depth: 2. BOB: BOB #327 (session_018Bhcee9DRsThq3toTorHkE).
 The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module jurisdictions`. Start with `<command>` = `job start --session <your session id> --depth 2`.
 Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
 
