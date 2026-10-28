@@ -95,6 +95,8 @@ const rawReplayOf = (archived) => {
 /* R68: a co-archive's replay larger than any capture this surface keeps cannot be the capture, so the comparison reads no more than `CAPTURE_MAX` (R111's figure). */
 const REPLAY_MAX = CAPTURE_MAX;
 
+/* PROTO STAGES (throwaway; env PROTO_STAGES=1 installs the hook in the object; unset, `stage` does nothing): states a stage's milliseconds to the plane's collector. */
+const stage = (name, ms, desc) => { try { const f = globalThis.__protoStage; if (typeof f === "function") f(name, ms, desc); } catch { /* a measure is status */ } };
 /* N380: the tag a throw of R86's `within` is carried out of the transaction under. */
 const WITHIN_FAULT = Symbol("within's fault");
 /* R87: `declareTables`' answers: declared, and not yet (its tables not all created), each the same on every call. */
@@ -831,7 +833,8 @@ export class Capture {
     /* R103 (fix round 7; G79): the buffers of the parts as they are stored, while the file can still be kept whole by this module
        (up to `MULTIPART_KEEP_MAX`), so `keepWhole` puts the whole from them and reads no part back; dropped once the file is larger. */
     let partBytes = [], keptBytes = 0;
-    const flush = async (all) => {
+    let tRead = 0, tFlush = 0;   /* PROTO STAGES */
+    const flush0 = async (all) => {
       while (heldBytes >= UPLOAD_PART || (all && heldBytes > 0)) {
         const n = Math.min(UPLOAD_PART, heldBytes);
         const buf = new Uint8Array(n);
@@ -850,9 +853,12 @@ export class Capture {
         if (partBytes) { partBytes.push(buf); keptBytes += n; } else tally.release(n);
       }
     };
+    const flush = async (all) => { const t = Date.now(); try { await flush0(all); } finally { tFlush += Date.now() - t; } };
     try {
       for (;;) {
+        const tr = Date.now();
         const { done, value } = await reader.read();
+        tRead += Date.now() - tr;
         if (done) break;
         if (!value) throw new Error("not bytes");
         total += value.length;
@@ -872,6 +878,7 @@ export class Capture {
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
     }
+    stage("up-body-read", tRead); stage("up-hash-put", tFlush);   /* PROTO STAGES: waiting on the body's chunks; hashing is synchronous (not timed), the digest, head and put are awaited */
     if (total === 0) return { ok: false, reason: "EMPTY", status: 400, detail: localize("capture.index.file_no_bytes", "the file has no bytes; nothing was written") };
     const sha = whole.hex();
     const multipart = parts.length > 1;
@@ -881,7 +888,10 @@ export class Capture {
        reading, its vouch box and OCR find it; where it cannot be kept the upload is refused and nothing is written. R103 (fix round 7;
        G79): the buffers of the parts just stored are handed to `keepWhole`, so no part is read back or hashed again: the whole is put
        once. */
-    if (multipart && !(await keepWhole(ev, { sha, parts, total, bytes: partBytes })).ok)
+    const tKeep = Date.now();
+    const kept = multipart ? await keepWhole(ev, { sha, parts, total, bytes: partBytes }) : null;
+    if (multipart) stage("up-hash-put", Date.now() - tKeep);
+    if (multipart && !kept.ok)
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
     /* a file in one part is judged as text from the buffer just stored, not read back (it is at most one 8 MiB part); the ledger counts it until then */
@@ -932,7 +942,9 @@ export class Capture {
     const reg = typeof this.registerJob === "function" ? (e) => this.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
     const arm = async () => {
       const f = typeof this.armJobs === "function" ? () => this.armJobs() : typeof armJobs === "function" ? armJobs : null;
+      const tArm = Date.now();
       if (reg && f) { try { await f(); } catch { /* an alarm not armed is the backstop's, never the upload's */ } }
+      stage("up-registrar", Date.now() - tArm, "arm");   /* PROTO STAGES: the registration itself (`reg(e)`) is synchronous, inside the filing transaction: not timed */
     };
     return { reg, arm };
   }
@@ -975,16 +987,20 @@ export class Capture {
     const profileThe = async (ct) => {
       /* a declared text type over bytes the one rule judged not text (`ct` null) is no declaration of a format: the declaration never contradicts the bytes (R107) */
       const declaredFor = (judged) => (typeof type === "string" && type !== "" && !(judged == null && profilesAsText(type, 0, false)) ? type : null);
+      const tProf = Date.now();
       const profile = await profileOf({ ev: held ? Capture.#holding(ev, sha, held) : ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
                                         retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart,
                                         /* R107 (fix round 9, G170): the file's name and the declared type reach the format, as for a fetched file (acquisition R17) */
                                         name: typeof name === "string" && name !== "" ? name : null, declaredType: declaredFor(ct) });
+      stage("up-profile", Date.now() - tProf);
       if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
       else if (ct) profile.source_content_type = null;
       return profile;
     };
     let holds = null;
+    const tHolds = Date.now();
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
+    stage("up-holds", Date.now() - tHolds);
     /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
        the store are not enough: an upload rolled back (by `within`, or a receipt not written) leaves its bytes there,
        content-addressed and named by nothing, and its retry must file them. */
@@ -1028,6 +1044,7 @@ export class Capture {
       return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), document, ...pending, ...jobsNote(profile) };
     }
     let done;
+    const tTx = Date.now();
     try {
       done = this.#tx(() => {
         const r = writeReceipt();
@@ -1045,6 +1062,7 @@ export class Capture {
         return { ok: false, reason: "UPLOAD_WITHIN_FAILED", status: 500, detail: UPLOAD_WITHIN_FAILED_DETAIL };
       throw e;
     }
+    stage("up-promote-within", Date.now() - tTx, "sync");   /* PROTO STAGES: receipt, actor, registrar rows and `within` run in one synchronous transaction: the clock is frozen, reads 0 */
     if (!done.ok) return done;
     await arm();
     return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending, ...jobsNote(profile),

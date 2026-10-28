@@ -12,6 +12,7 @@ import { aiRunsOf } from "../ai-runs/index.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
 import { deliverOwedRender } from "../control-plane/index.mjs";
 import { protobProbe } from "../proto-b/probe.mjs";   /* PROTO-B (throwaway): behind env PROTO_B=1 */
+import { stagesOn, installStages, collect } from "./stages.mjs";   /* PROTO STAGES (throwaway): behind env PROTO_STAGES=1 */
 
 /** R78 (K4530, B34; fix round 6, G12e): the response header `server-timing: object;dur=<ms>`, the milliseconds of I/O time the object spent on a
  *  route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. It is I/O time and nothing more: workerd freezes `Date.now()` during
@@ -98,12 +99,17 @@ export class Store extends DurableObject {
       return new Response(JSON.stringify(body), { headers: { "content-type": "application/json", [OBJECT_TIMING_HEADER]: objectTiming(t0, this.#startedAt) } });
     }
     const req = await traceStamped(req0);   /* store-assembly R60: `acquire`'s trace, from the header capture sends */
-    const res = await this.#assembled.dispatch(req);
+    /* PROTO STAGES: with PROTO_STAGES=1 the upload's stages ride in the answer's Server-Timing; unset, the one line below is the original */
+    let stagesHeader = "";
+    let res;
+    if (stagesOn(this.env)) { installStages(); [res, stagesHeader] = await collect(() => this.#assembled.dispatch(req), req0); }
+    else res = await this.#assembled.dispatch(req);
+    const timing = (t0_, at_) => objectTiming(t0_, at_) + (stagesHeader ? `, ${stagesHeader}` : "");
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
        byte), whole milliseconds, as `server-timing: object;dur=<ms>`, which the door reads; compute is not in it. The object sets it; a value carried in is replaced. */
     const rv1 = this.#recordVersion();
-    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); if (rv0) { res.headers.set("x-record-version", rv0); res.headers.set("x-record-version-end", rv1); } return res; }
-    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); if (rv0) { headers.set("x-record-version", rv0); headers.set("x-record-version-end", rv1); } return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+    try { res.headers.set(OBJECT_TIMING_HEADER, timing(t0, this.#startedAt)); if (rv0) { res.headers.set("x-record-version", rv0); res.headers.set("x-record-version-end", rv1); } return res; }
+    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, timing(t0, this.#startedAt)); if (rv0) { headers.set("x-record-version", rv0); headers.set("x-record-version-end", rv1); } return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
   }
   /** PROTO C: `<instance>.<write counter>` (record-core R89), or "" when PROTO_C is unset; the instance part changes when the object restarts, as the counter restarts at 0. */
   #instance = Math.random().toString(36).slice(2, 10);

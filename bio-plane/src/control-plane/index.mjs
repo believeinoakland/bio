@@ -1872,11 +1872,23 @@ export function makeFetch(hooks = {}) {
     }
     if (op === "captureupload") {
       requestStart(seen, op);   /* R129: before the object is asked */
+      /* PROTO STAGES (env PROTO_STAGES=1; unset: none of this runs): the door's window (arrival to the call to the object, admission included), the instant sent (for the room's wait), the read after the upload, the answer */
+      const stg = env && env.PROTO_STAGES === "1";
+      if (stg) stateTiming("up-door", seen.clock.elapsed());
       const uploaded = await stub.fetch(new Request(inner, withGrant({ method: "POST", body: req.body,
         headers: { "content-type": "application/octet-stream",
+                   ...(stg ? { "x-up-sent": String(Date.now()) } : {}),
                    ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length") } : {}) },
         ...(req.body ? { duplex: "half" } : {}) })));
-      return tieToStep(await readUploaded(await forwarded(uploaded)), url.searchParams.get("step"));
+      if (!stg) return tieToStep(await readUploaded(await forwarded(uploaded)), url.searchParams.get("step"));
+      const tA = Date.now();
+      const fw = await forwarded(uploaded);
+      const tR = Date.now();
+      const rd = await readUploaded(fw);
+      stateTiming("up-read", Date.now() - tR);
+      const answered = await tieToStep(rd, url.searchParams.get("step"));
+      stateTiming("up-answered", Date.now() - tA);   /* from the object's answer in hand to the member's answer made */
+      return answered;
     }
 
     /* PL-11 / IS-5 / D-199 — THE MINT, AND IT IS NOT A PLAIN FORWARD FOR ONE
@@ -1984,7 +1996,11 @@ export function makeFetch(hooks = {}) {
     /* R23 (K421), R30, REC-52: the reply is read through `doAnswer`. The store's own refusal (`BAD_JSON`, an unknown
        route) is relayed at its status; anything that is not JSON carrying a boolean `ok`, or the store's catch, is a
        silence, never relayed (a store's stack included). */
-    const out = await doAnswer(stub.fetch(new Request(inner, withGrant({ method: req.method, body: passBody }))));
+    const stgP = op === "promote" && env && env.PROTO_STAGES === "1";   /* PROTO STAGES: the same marks for `promote` */
+    if (stgP) stateTiming("up-door", seen.clock.elapsed());
+    const out = await doAnswer(stub.fetch(new Request(inner, withGrant({ method: req.method, body: passBody,
+      ...(stgP ? { headers: { "x-up-sent": String(Date.now()) } } : {}) }))));
+    const tPost = stgP ? Date.now() : 0;
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
@@ -2034,7 +2050,9 @@ export function makeFetch(hooks = {}) {
     /* R123 (fix round 4b; D3): the reading follows the promotion and the pull. The act stands as the store answered it; when a reading is
        owed it is written down and the answer's `result` says `reading_pending`. */
     if (((op === "promote" && followed.length) || op === "inboxpull") && body.result && body.result.ok === true) {
+      const tFollow = Date.now();
       const followedNow = await followEntries(op === "promote" ? followed : pulledEntries(body.result));
+      if (stgP) { stateTiming("up-registrar", Date.now() - tFollow, "follow"); stateTiming("up-answered", Date.now() - tPost); }
       if (followedNow.pending || followedNow.refused.length)
         return json({ ...body, result: followedAnswer(body, followedNow), store: storeName, tokenClass: cls }, status);
     }
