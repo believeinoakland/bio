@@ -94,16 +94,16 @@ test("R10 an ordinary member with one administrator, or an administrator below t
 test("R3 R33 the endorsement's invitation expires after the days chosen at memberAdd, or 7", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-10-06T12:00:00.000Z") });
   const w = await world().group();
-  rowOf(await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", expiresInDays: 99, by: "admin" }), "BAD_EXPIRY");
-  assert.equal((await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", expiresInDays: 4, by: "admin" })).reason,
+  rowOf(await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", expiresInDays: 99, by: "second" }), "BAD_EXPIRY");
+  assert.equal((await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", expiresInDays: 4, by: "second" })).reason,
     "CONSENSUS_REQUIRED");
-  assert.equal((await w.m.memberAdd({ memberId: "fourth", cover: "c", role: "admin", by: "admin" })).reason, "CONSENSUS_REQUIRED");
+  assert.equal((await w.m.memberAdd({ memberId: "fourth", cover: "c", role: "admin", by: "second" })).reason, "CONSENSUS_REQUIRED");
   const r = roster(w, "third");
   assert.deepEqual([r.status, r.invitation, r.expires], ["proposed", null, null], "a proposal holds no invitation yet");
   t.mock.timers.tick(DAY);
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
+  const e = await w.m.adminEndorse({ memberId: "third", by: "admin" });
   assert.equal(e.expires, "2026-10-11T12:00:00.000Z", "4 days from the endorsement that made it");
-  const f = await w.m.adminEndorse({ memberId: "fourth", by: "second" });
+  const f = await w.m.adminEndorse({ memberId: "fourth", by: "admin" });
   assert.equal(f.expires, "2026-10-14T12:00:00.000Z", "7 by default");
   assert.equal(roster(w, "third").invitation, "live");
 });
@@ -114,8 +114,8 @@ test("R9 R10 R11 DEC-134: with one administrator, ordinary members are invited f
   assert.deepEqual(w.m.activeAdmins(), ["admin"]);
   for (const id of ["ann", "bob"]) assert.equal((await w.enrol(id)).ok, true, id);
   assert.equal((await w.enrol("second", "admin")).ok, true, "the sole administrator adds a second alone");
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "admin" });
-  assert.deepEqual([p.reason, p.awaiting], ["CONSENSUS_REQUIRED", ["second"]], "beyond two, consensus as before (DEC-134 (5))");
+  const p = await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "second" });
+  assert.deepEqual([p.reason, p.awaiting], ["CONSENSUS_REQUIRED", ["admin"]], "beyond two, consensus as before (DEC-134 (5)), the founder's endorsement alone completing it (K5563)");
   const ops = await w.ops("by=admin", { memberId: "cal", cover: "c" }).memberadd();
   assert.equal(ops.ok, true);
 });
@@ -127,7 +127,7 @@ test("R34 inviteWithdraw: NOT_AN_ADMIN (R28), NO_SUCH_MEMBER, NO_UNUSED_INVITATI
   const w = await world().group("ann");
   const live = await w.m.memberAdd({ memberId: "liv", cover: "c", by: "admin" });
   const old = await w.m.memberAdd({ memberId: "old", cover: "c", expiresInDays: 1, by: "admin" });
-  await w.m.memberAdd({ memberId: "prop", cover: "c", role: "admin", by: "admin" });
+  await w.m.memberAdd({ memberId: "prop", cover: "c", role: "admin", by: "second" });
   t.mock.timers.tick(2 * DAY);
   for (const by of ["ann", null, "ghost", `${MACHINE_CLASS_PREFIX}admin`]) {
     const before = snapshot(w);

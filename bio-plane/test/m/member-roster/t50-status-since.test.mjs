@@ -34,10 +34,10 @@ test("R64 the other status writes record it: an endorsed invitation, a withdrawa
   assert.equal(w.m.inviteWithdraw({ memberId: "bob", by: "admin" }).ok, true);
   assert.equal(w.m.memberStatusSince("bob"), at, "withdrawal");
   void a;
-  const third = await w.m.memberAdd({ memberId: "cat", cover: "c", role: "admin", by: "admin" });
+  const third = await w.m.memberAdd({ memberId: "cat", cover: "c", role: "admin", by: "second" });
   assert.equal(third.reason, "CONSENSUS_REQUIRED");
   t.mock.timers.tick(1000);
-  const e = await w.m.adminEndorse({ memberId: "cat", by: "second" });
+  const e = await w.m.adminEndorse({ memberId: "cat", by: "admin" });
   assert.equal(w.m.memberStatusSince("cat"), new Date(Date.now()).toISOString(), "proposed to invited");
   assert.equal(e.ok, true);
 });

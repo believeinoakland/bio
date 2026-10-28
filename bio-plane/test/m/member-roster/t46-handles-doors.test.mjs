@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { world, V, snapshot } from "./fixture.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 import { notAnAdmin, MEMBER_EXEMPT_TABLES, MEMBER_DECLARED_TABLES } from "../../../src/member-roster/index.mjs";
 import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
 const { MEMBERSHIP_CHECKS } = MEMBER_ROSTER_ROWS;
@@ -34,7 +34,7 @@ test("R53 handleChange refuses every call HANDLE_FIXED, whoever asks and whateve
   assert.deepEqual(Object.keys(first).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);
   assert.deepEqual([first.ok, first.reason, first.code, first.check, first.translation],
     [false, "HANDLE_FIXED", "HANDLE_FIXED", "C-96.52", row.translation]);
-  assert.match(first.detail, /never changed[\s\S]*Nothing was written\.$/);
+  assert.equal(first.detail, word("member-roster.index.a_handle_is_chosen_when_a"));
   const callers = [null, "", "ann", "bob", "cal", "second", "admin", V("ann"), `${MACHINE_CLASS_PREFIX}admin`, "nobody", 7, {}];
   const handles = ["ann-x", "ann", "bob", "Bad!", "", "  ", null, undefined, "a".repeat(80), 3, ["x"]];
   for (const by of callers) for (const handle of handles)

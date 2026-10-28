@@ -834,7 +834,9 @@ export class Members {
     const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
       .map((r) => r.voter).filter((v) => admins.includes(v));
     const awaiting = admins.filter((a) => !have.includes(a));
-    if (awaiting.length)
+    /* K5563-R1 (R87): the founder's endorsement alone issues the invitation; the others are not waited for. */
+    const founder = by === Members.ROOT_ADMIN;
+    if (awaiting.length && !founder)
       return { ok: false, reason: "CONSENSUS_REQUIRED", memberId, have: have.sort(), awaiting: awaiting.sort(),
                detail: localize("member-roster.index.every_existing_administrator_must_endorse", "every existing administrator must endorse an addition beyond the second") };
     /* Consensus reached: the invitation is issued now, and the plaintext code
@@ -848,7 +850,7 @@ export class Members {
        the consensus, so `status_by` names `by` — not the proposer the row carried from `memberAdd`. */
     this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, invite_expires=?, status_by=?, status_at=?, updated=? WHERE member_id=?`,
       hash, expires, by, now, now, memberId);
-    return { ok: true, memberId, invite, expires, endorsedBy: have.sort() };
+    return { ok: true, memberId, invite, expires, endorsedBy: have.sort(), ...(founder ? { issuedBy: "founder" } : {}) };
   }
 
   /** Vote to remove an administrator. Section 4.7. */
@@ -873,11 +875,27 @@ export class Members {
        what NOT_AN_ADMIN says at every other site, so it carries its own code and its own canned sentence. */
     const refusal = (code, detail, extra) => Members.#custodialRefusal(code, detail, extra);
     /* DEC-49 REGION is-remove-target-admin */
-    if (m.role !== "admin")
+    if (m.role !== "admin" || m.status !== "active")   /* K5566 (R84): an administrator removed already is none */
       return refusal("TARGET_NOT_AN_ADMIN",
         "this member is not an administrator, so there is no administrator to remove; an ordinary member "
       + "is deactivated with op=memberset", { memberId });
     /* END DEC-49 REGION is-remove-target-admin */
+    /* K5562-R1 (R84): the founder removes alone, at any number of administrators; no vote is asked and the target is
+       counted for nothing. Her refusals stop at the reason: the vote's own are never answered to her. */
+    if (by === Members.ROOT_ADMIN) {
+      const why = String(reason ?? "").trim();
+      if (!why) return { ok: false, reason: "NO_REASON", detail: localize("member-roster.index.removals_are_recorded_with_a_reason", "removals are recorded with a reason") };
+      const math = Members.adminMath(admins.length);
+      const now = this.#instant();
+      /* R85 (1): one row of a kind R4's count and R75 never read. A target removed, reactivated and removed again
+         replaces its earlier row (the key is kind, target, voter; R67 adds no column). */
+      this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove_founder',?,?,?,?)`,
+        memberId, by, why, now);
+      this.sql.exec(`UPDATE members SET status='revoked', status_by=?, status_at=?, updated=? WHERE member_id=?`, by, now, now, memberId);
+      this.#announceRevoked(memberId, by, now);   /* N123, R5 */
+      return { ok: true, memberId, removed: true, alone: true, by, reason: why, ...math,
+               deciders: [by], reasons: [why], alsoDo: word("membership.also_do") };
+    }
     if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
       detail: localize("member-roster.index.the_target_is_counted_in_the", "the target is counted in the denominator but does not vote") };
     const why = String(reason ?? "").trim();
@@ -981,7 +999,8 @@ export class Members {
        that ejects the honest ones. */
     /* D-134 (BOB #35): the stamped actor is the INVITER, on every path. */
     const inviter = by || null;
-    if (wantAdmin && admins.length >= 2) {
+    /* K5563-R1 (R87 (2)): the founder's own proposal is issued at once, as the one administrator's is. */
+    if (wantAdmin && admins.length >= 2 && by !== Members.ROOT_ADMIN) {
       this.sql.exec(
         `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
                               invite_days,door)
@@ -1503,6 +1522,34 @@ export class Members {
     return "spent";
   }
 
+  /* ---- R89 (K5563): cancelling a waiting proposal ---- */
+
+  /** `adminProposalCancel({memberId, by})`: the founder, or the administrator who proposed, withdraws a proposal still
+   *  waiting for its endorsements. The row is never deleted (R21): it becomes `revoked`, the endorsements stay in
+   *  `admin_votes`, and R25's listeners are told. */
+  adminProposalCancel({ memberId, by = null } = {}) {
+    const admins = this.activeAdmins();
+    if (!by || !admins.includes(by)) return notAnAdmin(by, localize("member-roster.index.cancelling_a_waiting_proposal", "cancelling a waiting proposal"));   /* R28 */
+    const m = this.#one(`SELECT status, invited_by FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    /* DEC-49 REGION is-proposal-waiting */
+    if (m.status !== "proposed")
+      return Members.#rowRefusal("NO_WAITING_PROPOSAL",
+        localize("member-roster.index.only_a_proposal_still_waiting", "only an administrator proposal still waiting for its endorsements is cancelled, and this member has none: it was cancelled, an invitation was issued, or none was made. Nothing was written."), { memberId, status: m.status });
+    /* END DEC-49 REGION is-proposal-waiting */
+    /* DEC-49 REGION is-proposal-yours */
+    if (by !== Members.ROOT_ADMIN && m.invited_by !== by)
+      return Members.#rowRefusal("NOT_YOUR_PROPOSAL",
+        localize("member-roster.index.only_the_founder_or_the_proposer", "only the founder, or the administrator who made the proposal, cancels it. Nothing was written."), { memberId });
+    /* END DEC-49 REGION is-proposal-yours */
+    const now = this.#instant();
+    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, status_at=?, updated=? WHERE member_id=?`, by, now, now, memberId);
+    this.#announceRevoked(memberId, by, now);
+    const endorsedBy = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
+      .map((r) => r.voter).sort();
+    return { ok: true, memberId, status: "revoked", proposal: "cancelled", by, at: now, endorsedBy };
+  }
+
   /* ---- R98 (DEC-133 (3)): withdrawing an unused invitation ---- */
 
   inviteWithdraw({ memberId, by = null } = {}) {
@@ -1823,6 +1870,46 @@ export class Members {
     } catch { return { ok: true, removals: [] }; }
   }
 
+  /* ---- R85 (K5562, K5568): the removals completed, read ---- */
+
+  static REMOVALS_LIMIT = 200;
+
+  /** `adminRemovals({by, limit})` answers an active member or the founder `{ok: true, removals, limit, truncated}`: each
+   *  completed removal, newest first, `{target, handle, how, deciders, reasons, at}`; `how` is `founder` for her act alone
+   *  and `vote` for one carried by R4's count. Any other caller is answered `{ok: true, removals: []}`. Reads this
+   *  module's tables only, writes nothing and never throws. */
+  adminRemovals(args = {}) {
+    const { by = null, limit = null } = isObj(args) ? args : {};
+    const cap = Math.max(1, Math.min(Number(limit) || Members.REMOVALS_LIMIT, Members.REMOVALS_LIMIT));
+    try {
+      const mine = typeof by === "string" && by
+        ? (by === Members.ROOT_ADMIN ? this.#claimed() : this.#one(`SELECT status FROM members WHERE member_id=?`, by)?.status === "active")
+        : false;
+      if (!mine) return { ok: true, removals: [] };
+      const found = this.#rows(
+        `SELECT v.target AS target, m.handle AS handle, v.reason AS reason, v.created AS at
+           FROM admin_votes v LEFT JOIN members m ON m.member_id = v.target WHERE v.kind='remove_founder'`)
+        .map((r) => ({ target: r.target, handle: r.handle ?? null, how: "founder", deciders: [Members.ROOT_ADMIN],
+                       reasons: [r.reason], at: r.at }));
+      const founderTargets = new Set(found.map((e) => e.target));
+      for (const t of this.#rows(`SELECT member_id, handle, status_at FROM members WHERE role='admin' AND status='revoked'`)) {
+        if (founderTargets.has(t.member_id)) continue;
+        /* the votes R4 counted (R5's order: by voter): the target's own never, and a voter already removed before it was carried not */
+        const votes = this.#rows(`SELECT v.voter AS voter, v.reason AS reason FROM admin_votes v
+                                   LEFT JOIN members w ON w.member_id = v.voter
+                                  WHERE v.kind='remove' AND v.target=? AND v.voter<>?
+                                    AND NOT (w.status='revoked' AND w.status_at < ?)
+                                  ORDER BY v.voter`, t.member_id, t.member_id, t.status_at ?? "");
+        if (!votes.length) continue;
+        found.push({ target: t.member_id, handle: t.handle ?? null, how: "vote", deciders: votes.map((v) => v.voter),
+                     reasons: votes.map((v) => v.reason).filter(Boolean), at: t.status_at });
+      }
+      found.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : a.target < b.target ? -1 : 1));
+      const truncated = found.length > cap;
+      return { ok: true, removals: truncated ? found.slice(0, cap) : found, limit: cap, truncated };
+    } catch { return { ok: true, removals: [] }; }
+  }
+
   /* ---- R72 (T51; K624; split map §3 seam 5): who currently holds an expertise ---- */
 
   /** Every active member whose latest entry for `label` is declared or confirmed (a withdrawn one is neither, R19), each
@@ -1887,7 +1974,8 @@ export class Members {
                                    ORDER BY created, member_id`)) {
         const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, r.member_id)
           .map((v) => v.voter).filter((v) => admins.includes(v)).sort();
-        if (have.includes(by) || r.invited_by === by) continue;
+        /* R90: her own old-rule proposal is owed her too, since her endorsement now issues it */
+        if (have.includes(by) || (r.invited_by === by && by !== Members.ROOT_ADMIN)) continue;
         found.push({ memberId: r.member_id, handle: r.handle ?? null, proposed_by: Members.#statusBy(r.invited_by),
                      proposed_at: r.created, have, awaiting: admins.filter((a) => !have.includes(a)).sort() });
         if (found.length > Members.OWED_LIMIT) break;
@@ -2100,6 +2188,9 @@ export function membersOps(m, url, body, env) {
         membercaps: () => m.memberCaps({ ...(body || {}), by: url.searchParams.get("by") }),
         adminendorse: () => m.adminEndorse({ ...(body || {}), by: url.searchParams.get("by") }),
         adminremove: () => m.adminRemove({ ...(body || {}), by: url.searchParams.get("by") }),
+        /* R89, R85 (K5563, K5562): the cancelling of a waiting proposal and the read of the completed removals; `by` the stamp. */
+        adminproposalcancel: () => m.adminProposalCancel({ ...(body || {}), by: url.searchParams.get("by") }),
+        adminremovals: () => m.adminRemovals({ by: url.searchParams.get("by"), limit: url.searchParams.get("limit") }),
         adminarith: () => m.adminArithmetic(),
         /* R75 (N1248): the removals under way; `by` the stamp. Its op is declared by `op-declarations`, routed by `plane`. */
         adminremovalsopen: () => m.adminRemovalsOpen({ by: url.searchParams.get("by") }),
@@ -2153,6 +2244,10 @@ export function membersOps(m, url, body, env) {
 export const DECLARED_OPS = Object.freeze({
   adminendorse: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.adminendorse", "section 4.7 governance — the subject is a proposed administrator, not a bundle"),
     fields: { accepts: ["memberId"], requires: ["memberId"] } },
+  adminproposalcancel: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.adminproposalcancel", "section 4.7 governance — the subject is a waiting administrator proposal, not a bundle"), stamps: ["viewer", "by"], needs: null,
+    fields: { accepts: ["memberId"], requires: ["memberId"] } },
+  adminremovals: { classes: ["admin", "member", "probe"], machineClasses: [], mutating: false, weight: "read", description: localize("member-roster.declared.adminremovals", "read: the administrators removed, by the founder or by vote, with who decided and why"), stamps: ["by"], needs: null,
+    fields: { accepts: ["limit"], requires: [] } },
   adminremove: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned", description: localize("member-roster.declared.adminremove", "section 4.7 governance — the subject is an administrator's standing, not a bundle"), refusal: "NO_REASON",
     fields: { accepts: ["memberId", "reason"], requires: ["memberId", "reason"] } },
   courtnoticeset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "substrate", description: localize("member-roster.declared.courtnoticeset", "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object"),

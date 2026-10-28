@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { notAnAdmin } from "../../../src/member-roster/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
 const { MEMBERSHIP_CHECKS } = MEMBER_ROSTER_ROWS;
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
@@ -32,11 +32,12 @@ const TABLES = ["members", "admin_votes", "hosting_access"];
 const snapshot = (w) => Object.fromEntries(TABLES.map((t) => [t, w.rows(`SELECT * FROM ${t}`)]));
 
 test("R28 notAnAdmin: {ok, reason, code, check, translation, by, detail}, the row C-96.1, by as stamped (null when none), one fixed sentence naming the act", () => {
-  const r = notAnAdmin("ann", localize("member-roster.index.setting_a_members_status", "setting a member's status"));
+  const act = word("member-roster.index.setting_a_members_status");
+  const r = notAnAdmin("ann", act);
   assert.deepEqual(r, { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: "C-96.1",
                         translation: ROW.translation, by: "ann", detail: r.detail });
-  assert.ok(r.detail.startsWith("setting a member's status "), "names the act");
-  assert.match(r.detail, /Nothing was changed\.$/, "says nothing was changed");
+  assert.ok(r.detail.startsWith(`${act} `), "names the act");
+  assert.equal(r.detail, word("membership.index.what_is_an_administrators_act", { what: act }), "the word table's sentence for the act");
   for (const by of [null, undefined]) assert.equal(notAnAdmin(by, "x").by, null, "null when none stamped");
   assert.equal(notAnAdmin(`${MACHINE_CLASS_PREFIX}member`, "x").by, `${MACHINE_CLASS_PREFIX}member`, "as stamped");
   /* One sentence for every caller: it varies with the act's phrase only. */
@@ -75,7 +76,7 @@ test("R28 its one row is this module's C-96.1, its where naming notAnAdmin", () 
 
 test("R28 R3 R4 R6 R7 R8 R9 R16: each act's refusal of a caller who is not an administrator is notAnAdmin's, byte for byte, and writes nothing", async () => {
   const w = await world().group("ann");
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
+  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "second" });
   assert.equal(p.reason, "CONSENSUS_REQUIRED");
   await w.m.memberAdd({ memberId: "gone", cover: "cg", by: "admin" });
   assert.equal(w.m.memberSet({ memberId: "gone", status: "revoked", by: "admin" }).ok, true);
@@ -113,5 +114,6 @@ test("R28: who is admitted stays each act's own rule: the founder's resignation 
   assert.equal((await w.m.memberAdd({ memberId: "carl", cover: "cc", by: `${MACHINE_CLASS_PREFIX}admin` })).ok, true);
   assert.equal(w.m.memberCaps({ memberId: "ann", capabilities: ["publish"], by: "second" }).ok, true);
   assert.equal(w.m.hostingAccessSet({ holders: "the two of us", by: "admin" }).ok, true);
-  assert.equal(w.m.adminRemove({ memberId: "second", by: "admin", reason: "r" }).reason, "IMPOSSIBLE_AT_TWO");
+  /* K5562 (R84): at two, where a vote could not, the founder's own act removes alone */
+  assert.equal(w.m.adminRemove({ memberId: "second", by: "admin", reason: "r" }).alone, true);
 });

@@ -5895,361 +5895,564 @@
       "line": 26
     },
     {
-      "id": "ai-accounts.declared.accountreferenceremove",
-      "en": "credential governance: a member removes their own account reference; the subject is a credential, not a bundle",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1770
-    },
-    {
-      "id": "ai-accounts.declared.accountreferenceset",
-      "en": "credential governance: a member's own assistant account reference, never answered; the subject is a credential, not a bundle",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1768
-    },
-    {
       "id": "ai-accounts.declared.accountusesset",
       "en": "the account's configuration: an owner sets one of its uses' switches (explore no, ask or yes); it moves no document, claim or grade",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1772
+      "line": 143
     },
     {
-      "id": "ai-accounts.declared.projectaccountremove",
-      "en": "credential governance: an owner removes the project's account; the subject is who pays for the assistant, not a bundle",
+      "id": "ai-accounts.declared.aiaccountadd",
+      "en": "credential governance: the team's or a project's AI account, an administrator's or an owner's; a secret is sealed and never answered",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1778
+      "line": 146
     },
     {
-      "id": "ai-accounts.declared.projectaccountswitch",
-      "en": "the account's configuration: whether the project's account is on; an owner's; moves no document, claim or grade",
+      "id": "ai-accounts.declared.aiaccountremove",
+      "en": "credential governance: an owner removes an AI account; the subject is who pays for the assistant, not a bundle",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1780
+      "line": 148
+    },
+    {
+      "id": "ai-accounts.declared.aiaccountswitch",
+      "en": "the account's configuration: whether an AI account is on; its owner's; moves no document, claim or grade",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 149
+    },
+    {
+      "id": "ai-accounts.declared.aicheckset",
+      "en": "the checks' configuration: whether the team requires a check of every AI; an administrator's",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 155
+    },
+    {
+      "id": "ai-accounts.declared.aicreditsclear",
+      "en": "the account's configuration: its manager clears a payer stop and turns the account back on; recorded with name and time",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 164
+    },
+    {
+      "id": "ai-accounts.declared.aikeycloudflare",
+      "en": "credential governance: confirms that a key was entered in the Cloudflare dashboard; the key never reaches here",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 159
+    },
+    {
+      "id": "ai-accounts.declared.aikeyenter",
+      "en": "credential governance: a key handed to the gateway and kept nowhere here; never answered",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 158
+    },
+    {
+      "id": "ai-accounts.declared.aikeyseal",
+      "en": "credential governance: a key kept sealed in your team's Civicsmith; never answered",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 160
+    },
+    {
+      "id": "ai-accounts.declared.aimemberallow",
+      "en": "the offered AIs' configuration: the team's ceiling of which AIs may be offered; an administrator's",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 152
+    },
+    {
+      "id": "ai-accounts.declared.aimineuse",
+      "en": "the offered AIs' configuration: a member's own ceiling, or one of their accounts' entries",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 154
+    },
+    {
+      "id": "ai-accounts.declared.aimycheckset",
+      "en": "the checks' configuration: whether a member requires a check of the AIs used for their own work",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 157
+    },
+    {
+      "id": "ai-accounts.declared.aioptinset",
+      "en": "the account's configuration: whether its owner level shares it with lists; moves no document, claim or grade",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 166
+    },
+    {
+      "id": "ai-accounts.declared.aiorderset",
+      "en": "the account list's configuration: an administrator or a member moves one account to a place in their own list; moves no document, claim or grade",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 150
+    },
+    {
+      "id": "ai-accounts.declared.aiownadd",
+      "en": "credential governance: a member's own AI account, never answered; the subject is a credential, not a bundle",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 147
+    },
+    {
+      "id": "ai-accounts.declared.aipersonalchoose",
+      "en": "credential governance: a member chooses to connect their own subscription; recorded with who, when, plan and terms version",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 163
+    },
+    {
+      "id": "ai-accounts.declared.aiprojectcheckset",
+      "en": "the checks' configuration: whether a project requires a check of the AIs used in it; an owner's",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 156
+    },
+    {
+      "id": "ai-accounts.declared.aiprojectorder",
+      "en": "the account list's configuration: a project's list of accounts, an owner's act; moves no document, claim or grade",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 151
+    },
+    {
+      "id": "ai-accounts.declared.aiprojectuse",
+      "en": "the offered AIs' configuration: a project's ceiling, or one of its accounts' entries; an owner's",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 153
+    },
+    {
+      "id": "ai-accounts.declared.aisend",
+      "en": "personal state, keyed by member: the notice of what a provider and host receive, seen by them",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 165
+    },
+    {
+      "id": "ai-accounts.declared.aitermsaccept",
+      "en": "the account's configuration: its owner accepts a free plan's warning; recorded with who and when",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 161
+    },
+    {
+      "id": "ai-accounts.declared.aitermswithdraw",
+      "en": "the account's configuration: its owner withdraws a free plan's acceptance",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 162
     },
     {
       "id": "ai-accounts.declared.projectaikeepaway",
       "en": "setting: whether a project keeps its material away from the assistant, an owner's act with a reason; moves no bundle",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1782
+      "line": 144
     },
     {
-      "id": "ai-accounts.declared.projectkeynoticeseen",
-      "en": "personal state, keyed (member, project): the notice of the project's account seen by them",
+      "id": "ai-accounts.index.a_members_account_is_acted",
+      "en": "a member's AI account is acted on only by that member; another member, an administrator or the founder cannot. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1784
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 196
     },
     {
-      "id": "ai-accounts.declared.projectkeyset",
-      "en": "credential governance: an owner holds the project's API key, never answered; the subject is who pays for the assistant, not a bundle",
+      "id": "ai-accounts.index.a_members_account_serves_only",
+      "en": "a member's AI account serves only that member's own acts. Nothing was used.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1774
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 355
     },
     {
-      "id": "ai-accounts.declared.projectsigninset",
-      "en": "credential governance: the sole participant's own sign-in made the project's account; the subject is who pays for the assistant, not a bundle",
+      "id": "ai-accounts.index.a_members_ai_account_is",
+      "en": "a member's AI account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1776
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 193
     },
     {
-      "id": "ai-accounts.declared.subscriptiondisconnect",
-      "en": "credential governance: a member clears their own subscription fact; the subject is a credential, not a bundle",
+      "id": "ai-accounts.index.accepting_a_free_plans_warning",
+      "en": "accepting a free plan's warning",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1758
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 176
     },
     {
-      "id": "ai-accounts.index.a_members_claude_account_is",
-      "en": "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.",
+      "id": "ai-accounts.index.an_ai_account_serves_only",
+      "en": "an AI account serves only a member's own asks, runs and standing questions. Nothing was used.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 214
+      "file": "bio-plane/src/ai-accounts/serving.mjs",
+      "line": 32
     },
     {
-      "id": "ai-accounts.index.a_members_own_sign_in",
-      "en": "a member's own sign-in serves a project only while that member is its only participant, and this project has others (owners included); it can hold an Anthropic API key instead. Nothing was written.",
+      "id": "ai-accounts.index.an_ai_account_serves_only_active",
+      "en": "an AI account serves only acts of active members. Nothing was used.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1424
+      "file": "bio-plane/src/ai-accounts/serving.mjs",
+      "line": 34
     },
     {
-      "id": "ai-accounts.index.a_sign_ins_token_is",
-      "en": "a sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.",
+      "id": "ai-accounts.index.attesting_an_ai_accounts_key",
+      "en": "confirming an AI account's key",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 777
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 505
+    },
+    {
+      "id": "ai-accounts.index.changing_an_accounts_entries",
+      "en": "changing an AI account's list of AIs",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 232
+    },
+    {
+      "id": "ai-accounts.index.changing_an_owners_list",
+      "en": "changing the order of an owner's AI accounts",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/lists.mjs",
+      "line": 25
+    },
+    {
+      "id": "ai-accounts.index.clearing_a_payer_stop",
+      "en": "clearing an AI account's payer stop",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/serving.mjs",
+      "line": 307
+    },
+    {
+      "id": "ai-accounts.index.disconnecting_an_ai_account",
+      "en": "disconnecting an AI account's sign-in",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 581
+    },
+    {
+      "id": "ai-accounts.index.entering_an_ai_accounts_key",
+      "en": "entering an AI account's key",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 489
+    },
+    {
+      "id": "ai-accounts.index.holding_an_ai_account",
+      "en": "holding an AI account",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 92
     },
     {
       "id": "ai-accounts.index.keeping_material_away_from_the",
       "en": "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1199
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 61
     },
     {
       "id": "ai-accounts.index.keeping_the_teams_material_away",
       "en": "keeping the team's material away from every assistant",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1208
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 70
     },
     {
-      "id": "ai-accounts.index.no_claude_account_serves_this",
-      "en": "no Claude account serves this member: they hold no reference of their own, they are not connected through their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was used.",
+      "id": "ai-accounts.index.no_ai_account_serves_this",
+      "en": "no AI account serves this act: its member, its project and the team hold none that is on and held. Nothing was used.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 241
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 101
     },
     {
       "id": "ai-accounts.index.no_key_or_token_was",
       "en": "no key or token was given. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 249
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 109
     },
     {
       "id": "ai-accounts.index.only_an_active_member_holds",
       "en": "only an active member holds a Claude account reference. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 220
-    },
-    {
-      "id": "ai-accounts.index.only_an_active_member_is",
-      "en": "only an active member is connected through their subscription. Nothing was recorded.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 746
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 357
     },
     {
       "id": "ai-accounts.index.only_an_active_member_or",
       "en": "only an active member, or the founder, holds a sign-in. Nothing was recorded.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 774
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 534
     },
     {
-      "id": "ai-accounts.index.only_that_the_member_is",
-      "en": "only that the member is connected is recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded.",
+      "id": "ai-accounts.index.reading_a_personal_choice",
+      "en": "reading a personal subscription's record",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 741
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 210
     },
     {
-      "id": "ai-accounts.index.reading_the_team_keys_assistant",
-      "en": "reading the team key's assistant settings",
+      "id": "ai-accounts.index.reading_an_ai_accounts_uses",
+      "en": "reading an AI account's settings",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 616
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 423
     },
     {
-      "id": "ai-accounts.index.switching_the_team_keys",
-      "en": "switching the team key's assistant settings",
+      "id": "ai-accounts.index.reading_the_checks",
+      "en": "reading the checks an AI must meet",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 340
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 73
+    },
+    {
+      "id": "ai-accounts.index.removing_an_ai_account",
+      "en": "removing an AI account",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 250
+    },
+    {
+      "id": "ai-accounts.index.sealing_an_ai_accounts_key",
+      "en": "keeping an AI account's key sealed",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 606
+    },
+    {
+      "id": "ai-accounts.index.setting_an_ai_accounts_uses",
+      "en": "setting an AI account's settings",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 393
+    },
+    {
+      "id": "ai-accounts.index.setting_the_checks",
+      "en": "setting the checks an AI must meet",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 33
+    },
+    {
+      "id": "ai-accounts.index.setting_which_ais_may_be_offered",
+      "en": "setting which AIs may be offered",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/lists.mjs",
+      "line": 203
+    },
+    {
+      "id": "ai-accounts.index.sharing_an_ai_account",
+      "en": "sharing an AI account",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/lists.mjs",
+      "line": 145
+    },
+    {
+      "id": "ai-accounts.index.switching_an_ai_account",
+      "en": "switching an AI account on or off",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 272
+    },
+    {
+      "id": "ai-accounts.index.that_account_is_not_held",
+      "en": "no such account is held, or it is not the one asked for. Nothing was changed.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 99
+    },
+    {
+      "id": "ai-accounts.index.that_account_is_not_this_owners",
+      "en": "that account is not this owner's account of this plan. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 98
+    },
+    {
+      "id": "ai-accounts.index.that_account_is_not_yours",
+      "en": "that account is not yours to read. Nothing was read.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 289
+    },
+    {
+      "id": "ai-accounts.index.that_is_not_a_gateway_account",
+      "en": "that is not an account reached through a gateway. Nothing was checked.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/serving.mjs",
+      "line": 281
+    },
+    {
+      "id": "ai-accounts.index.that_is_not_a_personal_subscription",
+      "en": "that account is not a personal subscription. Nothing was read.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 213
+    },
+    {
+      "id": "ai-accounts.index.that_is_not_an_issued_account",
+      "en": "that is not an account that holds a sign-in token. Nothing was recorded.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 531
+    },
+    {
+      "id": "ai-accounts.index.that_is_not_the_acts_account",
+      "en": "that is not the account that serves this act. Nothing was served.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/serving.mjs",
+      "line": 231
+    },
+    {
+      "id": "ai-accounts.index.that_owner_is_not_yours",
+      "en": "that owner is not yours to read. Nothing was read.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 314
     },
     {
       "id": "ai-accounts.index.the_account_used_for_this",
       "en": "the account used for this act is {name} Claude account, and its switch for {use} is off; the act does not move to another account. Nothing was used.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 309
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 161
     },
     {
-      "id": "ai-accounts.index.the_claude_sign_in_that",
-      "en": "the Claude sign-in that serves this act is not held: it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. Nothing was used.",
+      "id": "ai-accounts.index.the_checks_could_not_be_read",
+      "en": "the checks could not be read, so nothing was changed.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 843
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 66
+    },
+    {
+      "id": "ai-accounts.index.the_credential_does_not_open",
+      "en": "the credential does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 371
     },
     {
       "id": "ai-accounts.index.the_key_could_not_be",
       "en": "the key could not be sealed by your team's Civicsmith. Nothing was stored or read.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1612
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 336
     },
     {
       "id": "ai-accounts.index.the_key_does_not_open",
       "en": "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1624
-    },
-    {
-      "id": "ai-accounts.index.the_kind_your_teams_civicsmith",
-      "en": "the kind your team's Civicsmith holds is {ACCOUNT_KINDS}; a Claude subscription is connected through Claude Code's own sign-in, never held as a token. Nothing was written.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 423
-    },
-    {
-      "id": "ai-accounts.index.the_projects_key_does_not",
-      "en": "the project's key does not open under the seal secret of your team's Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1087
-    },
-    {
-      "id": "ai-accounts.index.the_reference_does_not_open",
-      "en": "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 882
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 348
     },
     {
       "id": "ai-accounts.index.the_request_gives_no_on",
       "en": "the request gives no on to set; {what} takes {map}. Nothing was changed.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 295
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 136
+    },
+    {
+      "id": "ai-accounts.index.the_request_names_no_account",
+      "en": "the account_id {account_id} is not an account of yours, so nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/accounts.mjs",
+      "line": 76
     },
     {
       "id": "ai-accounts.index.the_request_names_no_owner",
       "en": "the request names no owner: the account is group, project:<id> or member:<id>. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 368
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 256
     },
     {
       "id": "ai-accounts.index.the_request_names_no_switch",
       "en": "the request names no switch; the switches are {names}. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 259
-    },
-    {
-      "id": "ai-accounts.index.the_sign_in_does_not",
-      "en": "the sign-in does not open under the seal secret of your team's Civicsmith, which has changed; its member signs in again. Nothing was used.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 837
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 118
     },
     {
       "id": "ai-accounts.index.the_switches_are_names_nothing",
       "en": "the switches are {names}. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 261
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 120
     },
     {
       "id": "ai-accounts.index.the_team_keeps_its_material",
       "en": "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1252
-    },
-    {
-      "id": "ai-accounts.index.the_teams_key_does_not",
-      "en": "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1092
-    },
-    {
-      "id": "ai-accounts.index.the_teams_key_serves_only",
-      "en": "the team's key serves only acts of active members. Nothing was used.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1141
-    },
-    {
-      "id": "ai-accounts.index.this_member_has_not_yet",
-      "en": "this member has not yet read the notice that their questions go to Anthropic under the team's API account. Nothing was sent.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1035
-    },
-    {
-      "id": "ai-accounts.index.this_member_has_not_yet_2",
-      "en": "this member has not yet read the notice that their questions go to Anthropic under this project's API account. Nothing was sent.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1515
-    },
-    {
-      "id": "ai-accounts.index.this_member_holds_no_claude",
-      "en": "this member holds no Claude account reference of their own. Nothing was used or written.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 238
-    },
-    {
-      "id": "ai-accounts.index.this_member_holds_no_claude_key",
-      "en": "this member holds no Claude account of their own: no key and no connected sign-in. Nothing was written.",
-      "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 239
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 111
     },
     {
       "id": "ai-accounts.index.this_one_has",
       "en": "; this one has {length}",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1199
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 61
     },
     {
-      "id": "ai-accounts.index.this_project_holds_no_claude",
-      "en": "this project holds no Claude account. Nothing was written.",
+      "id": "ai-accounts.index.this_owner_holds_no_ai",
+      "en": "this owner holds no AI account. Nothing was written.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 240
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 100
     },
     {
       "id": "ai-accounts.index.this_project_keeps_its_material",
       "en": "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1276
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 134
     },
     {
       "id": "ai-accounts.index.what_takes_map_nothing_was",
       "en": "{what} takes {map}. Nothing was changed.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 286
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 128
     },
     {
       "id": "ai-accounts.index.whether_the_team_keeps_its",
       "en": "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1253
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 112
     },
     {
       "id": "ai-accounts.index.whether_this_project_keeps_its",
       "en": "whether this project keeps its material away from the assistant could not be read, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1277
+      "file": "bio-plane/src/ai-accounts/limits.mjs",
+      "line": 135
     },
     {
-      "id": "ai-accounts.index.you_are_not_connected_through",
-      "en": "you are not connected through your Claude subscription, so there is no sign-in of yours to serve the project. Nothing was written.",
+      "id": "ai-accounts.index.withdrawing_a_free_plans_warning",
+      "en": "withdrawing a free plan's acceptance",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1428
+      "file": "bio-plane/src/ai-accounts/offering.mjs",
+      "line": 194
     },
     {
       "id": "ai-accounts.index.you_have_not_yet_been",
       "en": "you have not yet been shown what connecting your own Claude account means, so nothing was connected or sent. Read it, then try again.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 479
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 461
     },
     {
       "id": "ai-accounts.index.your_teams_civicsmith_has_no",
       "en": "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read.",
       "module": "ai-accounts",
-      "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 395
+      "file": "bio-plane/src/ai-accounts/base.mjs",
+      "line": 307
     },
     {
       "id": "ai-runs.declared.airunclose",
@@ -6880,6 +7083,251 @@
       "module": "ai-use",
       "file": "bio-plane/src/ai-use/index.mjs",
       "line": 203
+    },
+    {
+      "id": "ai.refused.accountnotlisted",
+      "en": "The account {account} is not on this list, or is named twice. Nothing was changed.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 113
+    },
+    {
+      "id": "ai.refused.aicredentialnotserved",
+      "en": "An account's credential is served only to the assistant's own worker, for its own call. Nothing was served.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 175
+    },
+    {
+      "id": "ai.refused.checklocked",
+      "en": "The check {check} is held on by the {level}, so it cannot be turned off here. Nothing was changed.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 121
+    },
+    {
+      "id": "ai.refused.checknotmet",
+      "en": "The AI {entry} does not meet the check {check}, which is in force here. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 124
+    },
+    {
+      "id": "ai.refused.checkopen",
+      "en": "Whether the AI {entry} meets the check {check}, which is in force here, is not yet known. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 126
+    },
+    {
+      "id": "ai.refused.entriesempty",
+      "en": "An account must allow at least one AI. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 147
+    },
+    {
+      "id": "ai.refused.entrylapsed",
+      "en": "The AI {entry} has lapsed and is not offered for new work; what it made earlier stands. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 138
+    },
+    {
+      "id": "ai.refused.entrynotallowed",
+      "en": "The AI {entry} is not on this account's list, or is outside what the team, the project or the member allows. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 135
+    },
+    {
+      "id": "ai.refused.entryretired",
+      "en": "The AI {entry} has been retired and is not offered for new work; what it made earlier stands. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 140
+    },
+    {
+      "id": "ai.refused.freetier",
+      "en": "{plan} is a free plan whose provider may train on what is sent, and it serves only once its warning is accepted. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 154
+    },
+    {
+      "id": "ai.refused.gatewaykeyabsent",
+      "en": "The gateway holds no key for this account yet: enter it in the Cloudflare dashboard, then confirm. Nothing was recorded.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 169
+    },
+    {
+      "id": "ai.refused.gatewaylogunreadable",
+      "en": "The gateway's record of the call could not be read, so who paid for it cannot be shown. The call's answer is kept.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 163
+    },
+    {
+      "id": "ai.refused.gatewaystorerefused",
+      "en": "The gateway did not take the key. Nothing was stored.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 167
+    },
+    {
+      "id": "ai.refused.gatewayunavailable",
+      "en": "Your team's Civicsmith cannot reach the gateway for AI keys: whoever holds your team's Cloudflare account can grant it. The built-in AI, a sealed key and a reference work without it. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 165
+    },
+    {
+      "id": "ai.refused.hopnotatstepboundary",
+      "en": "An account is changed only between the steps of a run, and this is in the middle of one. Nothing moved.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 119
+    },
+    {
+      "id": "ai.refused.hopreasonrefused",
+      "en": "'{reason}' is not a reason to move down the list of accounts. Nothing moved.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 117
+    },
+    {
+      "id": "ai.refused.issuedtokenmalformed",
+      "en": "A sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 171
+    },
+    {
+      "id": "ai.refused.listexhausted",
+      "en": "No other account on the list can take over: raise a limit, add an account, or change the order. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 115
+    },
+    {
+      "id": "ai.refused.meansnotallowed",
+      "en": "The plan {plan} cannot be reached by the means '{means}'. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 106
+    },
+    {
+      "id": "ai.refused.narrowingonly",
+      "en": "The AI {entry} is outside what the level above allows, and a level may only narrow the one above it. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 149
+    },
+    {
+      "id": "ai.refused.needsnewerrelease",
+      "en": "The AI {entry} needs a newer release of your team's Civicsmith than the one running. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 143
+    },
+    {
+      "id": "ai.refused.noentryoffered",
+      "en": "No AI on the account's list is offered for this use ({why}). Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 152
+    },
+    {
+      "id": "ai.refused.noplanoffered",
+      "en": "No plan that reaches the AI {entry} is offered now. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 145
+    },
+    {
+      "id": "ai.refused.optinmissing",
+      "en": "The account {account} is not shared with this list: the one who holds it turns sharing on first. Nothing was changed.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 110
+    },
+    {
+      "id": "ai.refused.optinnotoffered",
+      "en": "The account {account} cannot be shared: a project's account carries no share flag. Nothing was changed.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 177
+    },
+    {
+      "id": "ai.refused.orderpositioninvalid",
+      "en": "Position {position} is outside the list, which holds {count} accounts. Nothing was changed.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 179
+    },
+    {
+      "id": "ai.refused.partnotpassed",
+      "en": "The AI {entry} has not passed the {part} test, so it is not offered for this use. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 129
+    },
+    {
+      "id": "ai.refused.partnotrated",
+      "en": "The AI {entry} has not yet been rated for the {part} test, so it is not offered for this use. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 132
+    },
+    {
+      "id": "ai.refused.payernotverified",
+      "en": "The account's own key was not the one that paid for its last call ({cause}), so it is stopped until its manager clears it. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 160
+    },
+    {
+      "id": "ai.refused.personallevel",
+      "en": "{plan} is a personal subscription: only a member may hold it, for their own use, never the {level}. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 101
+    },
+    {
+      "id": "ai.refused.personalsubscriptionnotshared",
+      "en": "A personal subscription serves only the member who holds it, so it is on no one else's list and is never shared. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 104
+    },
+    {
+      "id": "ai.refused.planscope",
+      "en": "The plan {plan} cannot be held at the {level} level: the plan's own scope allows only a lower one. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 98
+    },
+    {
+      "id": "ai.refused.recipientnotice",
+      "en": "You have not yet read what {host} ({provider}) receives when it is used. Read it, then try again. Nothing was sent.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 157
+    },
+    {
+      "id": "ai.refused.referencemalformed",
+      "en": "A reference is a store and a locator, each a short piece of text, and this was not one. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 108
+    },
+    {
+      "id": "ai.refused.unknownplan",
+      "en": "The provider {provider} has no plan {plan} in the list of AIs. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/checks.mjs",
+      "line": 173
     },
     {
       "id": "answer-envelope.checks.this_teams_civicsmith_keeps_a",
@@ -37784,147 +38232,161 @@
       "en": "section 4.7 governance — the subject is a proposed administrator, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2154
+      "line": 2245
+    },
+    {
+      "id": "member-roster.declared.adminproposalcancel",
+      "en": "section 4.7 governance — the subject is a waiting administrator proposal, not a bundle",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 2247
+    },
+    {
+      "id": "member-roster.declared.adminremovals",
+      "en": "read: the administrators removed, by the founder or by vote, with who decided and why",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 2249
     },
     {
       "id": "member-roster.declared.adminremove",
       "en": "section 4.7 governance — the subject is an administrator's standing, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2156
+      "line": 2251
     },
     {
       "id": "member-roster.declared.courtnoticeset",
       "en": "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2158
+      "line": 2253
     },
     {
       "id": "member-roster.declared.enroll",
       "en": "an invitee becoming a member",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2160
+      "line": 2255
     },
     {
       "id": "member-roster.declared.expertiseconfirm",
       "en": "administrator act on a declaration, class-gated",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2162
+      "line": 2257
     },
     {
       "id": "member-roster.declared.expertisedeclare",
       "en": "a member's own declaration, not a corpus act",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2164
+      "line": 2259
     },
     {
       "id": "member-roster.declared.founderhandleset",
       "en": "member-directed: the founder's own handle, the one she signs in and is known by, chosen once and never changed (`HANDLE_FIXED`); writes no record and moves no bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2168
+      "line": 2263
     },
     {
       "id": "member-roster.declared.groupdescriptionset",
       "en": "the group's description of itself — the subject is the group's identity, not a bundle; an administrator's",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2170
+      "line": 2265
     },
     {
       "id": "member-roster.declared.handlecheck",
       "en": "read: whether a handle is free, taken or not allowed, never who holds it",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2172
+      "line": 2267
     },
     {
       "id": "member-roster.declared.hostingaccessset",
       "en": "operator record of who holds hosting access — the subject is the instance's operators, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2174
+      "line": 2269
     },
     {
       "id": "member-roster.declared.invitelook",
       "en": "read: what a live invitation offers the invitee (the cover, the role, the capabilities and the declared expertise), never the member's id",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2176
+      "line": 2271
     },
     {
       "id": "member-roster.declared.invitewithdraw",
       "en": "roster governance: an administrator's withdrawal of an invitation; the subject is who may join, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2178
+      "line": 2273
     },
     {
       "id": "member-roster.declared.joinlinkenable",
       "en": "roster governance: the join link, an administrator's; the subject is who may join, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2180
+      "line": 2275
     },
     {
       "id": "member-roster.declared.joinlinkinvite",
       "en": "a person holding the join link asks to be invited under a cover name (membership R104)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2182
+      "line": 2277
     },
     {
       "id": "member-roster.declared.memberadd",
       "en": "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2184
+      "line": 2279
     },
     {
       "id": "member-roster.declared.membercaps",
       "en": "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2186
+      "line": 2281
     },
     {
       "id": "member-roster.declared.memberpairingset",
       "en": "a member's published cover-and-handle pairing — the subject is how a member is shown, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2188
+      "line": 2283
     },
     {
       "id": "member-roster.declared.memberset",
       "en": "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2190
+      "line": 2285
     },
     {
       "id": "member-roster.declared.websitekeycreate",
       "en": "roster governance: the website's key, an administrator's; the subject is who may join, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2192
+      "line": 2287
     },
     {
       "id": "member-roster.index.a_cover_is_the_label_you",
       "en": "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 945
+      "line": 963
     },
     {
       "id": "member-roster.index.a_handle_is_chosen_when_a",
       "en": "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1342
+      "line": 1361
     },
     {
       "id": "member-roster.index.a_listener_names_the_module",
@@ -37945,14 +38407,21 @@
       "en": "adding a member",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 917
+      "line": 935
     },
     {
       "id": "member-roster.index.an_administrator_is_removed_by",
       "en": "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1401
+      "line": 1420
+    },
+    {
+      "id": "member-roster.index.cancelling_a_waiting_proposal",
+      "en": "cancelling a waiting proposal",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1532
     },
     {
       "id": "member-roster.index.capabilities_is_an_array",
@@ -37966,42 +38435,42 @@
       "en": "changing the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1707
+      "line": 1754
     },
     {
       "id": "member-roster.index.changing_the_teams_join_link",
       "en": "changing the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1706
+      "line": 1753
     },
     {
       "id": "member-roster.index.changing_the_teams_website_key",
       "en": "changing the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1608
+      "line": 1655
     },
     {
       "id": "member-roster.index.changing_the_website_key",
       "en": "changing the website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1609
+      "line": 1656
     },
     {
       "id": "member-roster.index.choose_the_name_the_team_will",
       "en": "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1748
+      "line": 1795
     },
     {
       "id": "member-roster.index.choosing_whether_members_are_told",
       "en": "choosing whether members are told what a court can reach",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1929
+      "line": 2017
     },
     {
       "id": "member-roster.index.confirming_or_withdrawing_a_members_declared",
@@ -38015,7 +38484,7 @@
       "en": "creating the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1592
+      "line": 1639
     },
     {
       "id": "member-roster.index.declared_and_unconfirmed_which_costs_nothing",
@@ -38029,7 +38498,7 @@
       "en": "describing the team",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2002
+      "line": 2090
     },
     {
       "id": "member-roster.index.endorsing_a_proposed_administrator",
@@ -38043,14 +38512,14 @@
       "en": "every existing administrator must endorse an addition beyond the second",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 839
+      "line": 841
     },
     {
       "id": "member-roster.index.lowercase_letters_digits_and_dashes",
       "en": "lowercase letters, digits and dashes, 2 to 41 characters",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 930
+      "line": 948
     },
     {
       "id": "member-roster.index.module_has_already_registered_its_listener",
@@ -38060,18 +38529,32 @@
       "line": 173
     },
     {
+      "id": "member-roster.index.only_a_proposal_still_waiting",
+      "en": "only an administrator proposal still waiting for its endorsements is cancelled, and this member has none: it was cancelled, an invitation was issued, or none was made. Nothing was written.",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1538
+    },
+    {
+      "id": "member-roster.index.only_the_founder_or_the_proposer",
+      "en": "only the founder, or the administrator who made the proposal, cancels it. Nothing was written.",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1543
+    },
+    {
       "id": "member-roster.index.reading_the_administrator_removals_under_way",
       "en": "reading the administrator removals under way",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1806
+      "line": 1853
     },
     {
       "id": "member-roster.index.reading_the_teams_website_key_and",
       "en": "reading the team's website key and join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1771
+      "line": 1818
     },
     {
       "id": "member-roster.index.recording_who_holds_hosting_access",
@@ -38085,21 +38568,21 @@
       "en": "removals are recorded with a reason",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 884
+      "line": 887
     },
     {
       "id": "member-roster.index.replacing_the_join_link",
       "en": "replacing the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1720
+      "line": 1767
     },
     {
       "id": "member-roster.index.replacing_the_teams_join_link",
       "en": "replacing the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1719
+      "line": 1766
     },
     {
       "id": "member-roster.index.resigning_administrator_status",
@@ -38120,42 +38603,42 @@
       "en": "setting a member's status",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1388
+      "line": 1407
     },
     {
       "id": "member-roster.index.switching_off_the_join_link",
       "en": "switching off the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1731
+      "line": 1778
     },
     {
       "id": "member-roster.index.switching_off_the_teams_join_link",
       "en": "switching off the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1730
+      "line": 1777
     },
     {
       "id": "member-roster.index.switching_off_the_teams_website_key",
       "en": "switching off the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1621
+      "line": 1668
     },
     {
       "id": "member-roster.index.switching_off_the_website_key",
       "en": "switching off the website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1622
+      "line": 1669
     },
     {
       "id": "member-roster.index.switching_on_the_teams_join_link",
       "en": "switching on the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1690
+      "line": 1737
     },
     {
       "id": "member-roster.index.the_registration_could_not_be_read",
@@ -38169,7 +38652,7 @@
       "en": "the target is counted in the denominator but does not vote",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 882
+      "line": 900
     },
     {
       "id": "member-roster.index.this_listener_is_already_registered",
@@ -38197,7 +38680,7 @@
       "en": "voting to remove an administrator",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 859
+      "line": 861
     },
     {
       "id": "member-roster.index.withdrawing_a_members_confirmed_expertise",
@@ -38211,7 +38694,7 @@
       "en": "withdrawing an invitation",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1509
+      "line": 1556
     },
     {
       "id": "member-roster.order-build.line_have_the_file_gives",
@@ -38239,35 +38722,35 @@
       "en": "roster act on a project, position-enforced by the store",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1450
+      "line": 1452
     },
     {
       "id": "membership.declared.projectjoin",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1452
+      "line": 1454
     },
     {
       "id": "membership.declared.projectleave",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1454
+      "line": 1456
     },
     {
       "id": "membership.declared.projectremove",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1456
+      "line": 1458
     },
     {
       "id": "membership.index.a_door_makes_at_most",
       "en": "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1472
+      "line": 1491
     },
     {
       "id": "membership.index.a_member_joins_a_project",
@@ -38281,21 +38764,21 @@
       "en": "a member row already holds the id '{memberId}'; nothing was written",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 947
+      "line": 965
     },
     {
       "id": "membership.index.act_acts_on_the_teams",
       "en": "{act} acts on the team's live website key, and there is none. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1577
+      "line": 1624
     },
     {
       "id": "membership.index.act_acts_on_the_teams_2",
       "en": "{act} acts on the team's join link, and it is off. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1586
+      "line": 1633
     },
     {
       "id": "membership.index.act_on_string_is_work",
@@ -38309,7 +38792,7 @@
       "en": "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1001
+      "line": 1020
     },
     {
       "id": "membership.index.adding_an_owner_to_a_project_whose_owners",
@@ -38337,7 +38820,7 @@
       "en": "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1461
+      "line": 1480
     },
     {
       "id": "membership.index.an_owner_is_not_removed",
@@ -38351,14 +38834,14 @@
       "en": "choose a handle. It is what the record shows: the author of a promotion, the attestor of a ratification, the participant list of a project. It is yours, not the label the administrator used to invite you.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1105
+      "line": 1124
     },
     {
       "id": "membership.index.detail_nothing_was_written",
       "en": "{detail} Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2003
+      "line": 2091
     },
     {
       "id": "membership.index.gate_mark_outside_or_participant",
@@ -38372,7 +38855,7 @@
       "en": "{name} is at most {max} characters.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2014
+      "line": 2102
     },
     {
       "id": "membership.index.name_who_holds_hosting_access",
@@ -38421,7 +38904,7 @@
       "en": "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1515
+      "line": 1562
     },
     {
       "id": "membership.index.only_an_owner_of_this",
@@ -38442,14 +38925,14 @@
       "en": "`other` was chosen, and the kind it describes was left empty.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2010
+      "line": 2098
     },
     {
       "id": "membership.index.reactivated_as_an_ordinary_member",
       "en": "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1432
+      "line": 1451
     },
     {
       "id": "membership.index.recorded_as_a_request_to",
@@ -38463,7 +38946,7 @@
       "en": "removal takes {votesNeeded} of {administrators} administrators and only {eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 889
+      "line": 907
     },
     {
       "id": "membership.index.resigned_an_ordinary_member_now",
@@ -38477,7 +38960,7 @@
       "en": "'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 940
+      "line": 958
     },
     {
       "id": "membership.index.stringify_is_not_a_setting",
@@ -38519,28 +39002,28 @@
       "en": "the choice is `tell` or `dont`, and nothing else. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1933
+      "line": 2021
     },
     {
       "id": "membership.index.the_description_is_seen_by",
       "en": "the description is seen by `members` or by the `public` too.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2017
+      "line": 2105
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen",
       "en": "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1374
+      "line": 1393
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen_2",
       "en": "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1377
+      "line": 1396
     },
     {
       "id": "membership.index.the_founding_administrator_holds_admin",
@@ -38554,21 +39037,21 @@
       "en": "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 869
+      "line": 871
     },
     {
       "id": "membership.index.the_join_link_has_let",
       "en": "the join link has let in its daily number of people in the last 24 hours. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1752
+      "line": 1799
     },
     {
       "id": "membership.index.the_kinds_are_a_list",
       "en": "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2006
+      "line": 2094
     },
     {
       "id": "membership.index.the_member_named_holds_no",
@@ -38582,21 +39065,21 @@
       "en": "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1119
+      "line": 1138
     },
     {
       "id": "membership.index.the_team_holds_one_live",
       "en": "the team holds one live website key at a time (DEC-133). Nothing was created.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1596
+      "line": 1643
     },
     {
       "id": "membership.index.the_team_holds_one_live_2",
       "en": "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1694
+      "line": 1741
     },
     {
       "id": "membership.index.the_team_would_be_left",
@@ -38610,35 +39093,35 @@
       "en": "the website key has made its daily number of invitations in the last 24 hours. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1681
+      "line": 1728
     },
     {
       "id": "membership.index.the_website_names_the_person",
       "en": "the website names the person by the cover the team will know them by. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1677
+      "line": 1724
     },
     {
       "id": "membership.index.this_invitation_is_not_live",
       "en": "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1035
+      "line": 1054
     },
     {
       "id": "membership.index.this_key_opens_no_door",
       "en": "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1673
+      "line": 1720
     },
     {
       "id": "membership.index.this_link_opens_no_door",
       "en": "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1744
+      "line": 1791
     },
     {
       "id": "membership.index.this_project_has_no_owner_rows",
@@ -38666,7 +39149,7 @@
       "en": "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1305
+      "line": 1324
     },
     {
       "id": "membership.index.what_is_an_administrators_act",
