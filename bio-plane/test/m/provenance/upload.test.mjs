@@ -44,8 +44,6 @@ test("R63: a capture brought in by a member's upload is graded exactly as R51 gr
   assert.deepEqual(Object.keys(g), Object.keys(d), "the same fields, in the same order");
   assert.equal(d.route, "doorbell");
   /* Stated as authored, never as measured; existence proven by the upload's own receipt and its timestamp. */
-  assert.match(g.why, /never fetched/);
-  assert.match(g.why, /stated as authored/);
   assert.match(g.why, wordRx("provenance.brought_member_holds"));
   assert.match(g.why, /2026-10-09T04:05:06Z/);
   assert.match(g.why, new RegExp(up(s)));
@@ -245,16 +243,16 @@ test("R63, R42: C-18.1 admits capture R86's upload document: no letter on R51's 
   assert.deepEqual(runUp([{ ...doc, capture: { ...doc.capture, grade: null } }]), [], "grade null stated is no letter too");
   /* Negative controls, each the one finding its rule names. A letter; the basis absent or another. */
   for (const g of ["B", "A", "C", "D", ""])
-    assert.match(one({ ...doc, capture: { ...doc.capture, grade: g } }), new RegExp(`member's upload and carries capture.grade '${g}'`));
-  assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: undefined } }), /upload and its capture.grade_basis is 'undefined', not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
-  assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: "CAPTURE_ROUTE_UNRECORDED" } }), /not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
+    assert.equal(one({ ...doc, capture: { ...doc.capture, grade: g } }), word("provenance.register.upload_has_letter", { i: "0", grade: g }));
+  assert.equal(one({ ...doc, capture: { ...doc.capture, grade_basis: undefined } }), word("provenance.register.upload_basis_wrong", { i: "0", stated: "undefined", basis: RECEIVED_NOT_FETCHED }));
+  assert.equal(one({ ...doc, capture: { ...doc.capture, grade_basis: "CAPTURE_ROUTE_UNRECORDED" } }), word("provenance.register.upload_basis_wrong", { i: "0", stated: "CAPTURE_ROUTE_UNRECORDED", basis: RECEIVED_NOT_FETCHED }));
   /* The method is `uploaded`. */
   assert.match(one({ ...doc, capture: { ...doc.capture, method: "knock-received-fixture" } }),
                /capture.method is 'knock-received-fixture', not 'uploaded'/);
   /* Her statement: present, an object, its text and whose words they are not blank, never evidence of truth. */
   const { origin_statement: _s, ...noStatement } = doc;
-  assert.match(one(noStatement), /carries no origin_statement/);
-  for (const st of [null, "the clerk", ["the clerk"]]) assert.match(one({ ...doc, origin_statement: st }), /carries no origin_statement/);
+  assert.equal(one(noStatement), word("provenance.register.upload_no_statement", { i: "0" }));
+  for (const st of [null, "the clerk", ["the clerk"]]) assert.equal(one({ ...doc, origin_statement: st }), word("provenance.register.upload_no_statement", { i: "0" }));
   const bad = (patch) => one({ ...doc, origin_statement: { ...doc.origin_statement, ...patch } });
   for (const t of [undefined, "", "   ", 7]) assert.match(bad({ text: t }), /origin_statement is malformed: text/);
   for (const t of [undefined, "", " "]) assert.match(bad({ words_of: t }), /origin_statement is malformed: words_of/);
@@ -272,7 +270,7 @@ test("R63, R42: C-18.1 admits capture R86's upload document: no letter on R51's 
                /states capture.method 'uploaded' but its origin.kind is not 'upload'/);
   /* A kind the register does not know is no upload: it owes a letter, and the list of kinds names upload. */
   assert.ok(runUp([{ ...doc, origin: { kind: "uploads" } }]).map((x) => x.message)
-    .includes("provenance documents[0].origin.kind must be one of: named_request, sweep, member, doorbell, upload"));
+    .includes(word("provenance.register.origin_kind_one_of", { i: "0", kinds: "named_request, sweep, member, doorbell, upload, email" })));
   /* An upload is not a member's authored observation: an authored claim keeps the authored arm's rules. */
   assert.match(runUp([{ ...doc, authored: true }]).map((x) => x.message).join("\n"), /origin.kind is 'upload', not 'member'/);
 });
@@ -291,12 +289,12 @@ test("R63, R42: at the write, an upload's bundle is filed with its register row;
   const lettered = uploadDoc({ bytes });
   const refused = w.promotion.promote(file({ ...lettered, capture: { ...lettered.capture, grade: "B" } }));
   assert.deepEqual([refused.ok, refused.reason, refused.findings.map((x) => x.check)], [false, "PROVENANCE_REGISTER_REFUSED", ["C-18.1"]]);
-  assert.match(refused.findings[0].detail, /member's upload/);
+  assert.equal(refused.findings[0].detail, word("provenance.register.upload_has_letter", { i: "0", grade: "B" }));
   const unstated = uploadDoc({ bytes });
   delete unstated.origin_statement;
   const refused2 = w.promotion.promote(file(unstated));
   assert.deepEqual([refused2.ok, refused2.findings.map((x) => x.check)], [false, ["C-18.1"]]);
-  assert.match(refused2.findings[0].detail, /no origin_statement/);
+  assert.equal(refused2.findings[0].detail, word("provenance.register.upload_no_statement", { i: "0" }));
   assert.deepEqual(w.snapshot(), before, "nothing written");
   const doc = uploadDoc({ bytes });
   const r = w.promotion.promote(file(doc));

@@ -1,6 +1,6 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 OPEN · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
-**Status** · OPEN · BOB #329 · session_018BhcefYrW3vwL3mYqzy8xd · depth 1
+**Status** · OPEN · BOB #330 · session_018BhcedfM8dV8rPodwgBjD3 · depth 1
 **Jobs** · provenance: PROVENANCE #1 session_018BhcefG3xsWrytnAQMJzis; attestation: ATTESTATION #1 session_018BhceerNw6TRu4VtRrAAth; provenance-routes: PROVENANCE-ROUTES #1 session_018BhcegtWj2ri2s4WYU5iNP; capture-sources: CAPTURE-SOURCES #1 session_018Bhcef6NZJ89Tvrn2YSfS2; acquisition: ACQUISITION #1 session_018BhcefbymZskaMPXAgDmRQ; capture: CAPTURE #1 session_018BhcegWsU96peK7X9pCQCk; file-safety: FILE-SAFETY #1 session_018Bhcef6MZXe2rVPpsmTu8D; doorbell: DOORBELL #1 session_018BhcecgyadihJwzejgvKmY; mail-door: MAIL-DOOR #1 session_018Bhced233u828vot13hTyX; sources: SOURCES #1 session_018BhcegmVJVqgECaQJcGU5q
 **Owed** · none
 
@@ -482,8 +482,10 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-317 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/link-sweep.md`
 **scheduler**
+- T53-561 · K5693, doorbell R30 · R35 calls `clearDiscarded`, `discardClearDue` and `discardClearWake`; while a hold is in place the wake instant stays past (the due read ignores holds)
 - T53-318 · K4403, N824 · CAPABILITIES rows
 - T53-319 · K5565 · English in tests: its entry
+- T53-564 · mail-door R6 · the `mail-clear` consumer calls `clearWaitingMail`, `mailClearDue` and `mailClearWake`, as R35 does doorbell's
 - rows: `build/plan/T53-R1/scheduler.md`
 ## Layer 11
 
@@ -494,6 +496,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-321 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/wizard-scripts.md`
 **op-grades**
+- T53-559 · K5693, doorbell R31 · `inboxview` graded (a read)
 - T53-322 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-323 · N1220 · every machine result labelled with its AI
 - T53-324 · BOB · R57 AI op grades confirmed `[owed: BOB writes]`
@@ -502,6 +505,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-325 · K4168, N824, N858 · CAPABILITIES rows
 - T53-326 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-327 · K5565 · English in tests: its entry
+- T53-565 · mail-door R12 · the member acts `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` graded from mail-door's `DECLARED_OPS`
 - rows: `build/plan/T53-R1/op-grades.md`
 **affordances**
 - T53-328 · N1260 (DEC-447) · "Follow from here" in this module
@@ -534,6 +538,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-343 · K5571 · ai-accounts' and ai-use's notices to owners are reads it calls; owed lines (R45, R72, R75-R77, termsNoticesDue)
 - T53-344 · K5565 · English in tests: its entry
 - T53-549 · K5670, record-core R92 · read settings through `getSetting`, not its own SQL (index.mjs ~1595, 1600)
+- T53-566 · mail-door R6 · the member told when unconfirmed mail is removed after 14 days: a notice per removed row's owner, read from `clearWaitingMail`'s answer (`owners`)
 - rows: `build/plan/T53-R1/notice-producers.md`
 **queue**
 - T53-345 · K5480, K5478 · `retesting-off`, `ai-credits-stop`
@@ -556,6 +561,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-354 · K4168, N824, N858 · CAPABILITIES rows
 - rows: `build/plan/T53-R1/op-capabilities.md`
 **op-declarations**
+- T53-558 · K5693, doorbell R31 · `inboxview` declared (a read, member session only)
 - T53-556 · K5678, ai-accounts R35 and the ops K5457 retired · the tests of retired ops (R19, R20, R24, R30, R34, R41, R47, R68) re-pointed to the nineteen new ops, red on the tranche until then
 - T53-355 · K4599 · `screenread`, budget class per op
 - T53-356 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
@@ -566,6 +572,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-360 · K4354, P24 · `heldcaptures` out of each screen's first wave
 - T53-361 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-362 · K5565 · English in tests: its entry
+- T53-567 · mail-door R12 · mail-door's five member acts declared from its `DECLARED_OPS` (member session only)
 - rows: `build/plan/T53-R1/op-declarations.md`
 **admission**
 - T53-363 · N1264 · `admit` in the room, parity
@@ -575,6 +582,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 **answer-envelope**
 - T53-365 · K4168, N824, N858 · CAPABILITIES rows
 - T53-366 · K5565 · English in tests: its entry
+- T53-563 · K5692, mail-door (C-157) · `families.mjs` registers family C-157 (mail-door's codes C-157.1-.9) so its refusals carry their envelope
 - rows: `build/plan/T53-R1/answer-envelope.md`
 **store-door**
 - T53-553 · K5677, credentials R72 retired · `routes.test.mjs` calls `aiAccountsOf(ctx)` and reads `ai-accounts`' `AI_ACCOUNT_CHECKS`, never credentials' delegates or its `ACCOUNT_CHECKS` view
@@ -589,6 +597,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-371 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/signin-door.md`
 **store-assembly**
+- T53-557 · K5693, doorbell R31 · `t42.test.mjs`'s `DOORBELL_METHODS` gains `inboxview: "inboxView"` (ten routes)
 - T53-552 · K5677, credentials R72 retired · `ask.test.mjs` calls `aiAccountsOf(ctx)`, never credentials' R72 delegates
 - C T52-46
 - C T52-47
@@ -596,6 +605,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-373 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-374 · K5565 · English in tests: its entry
 - T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
+- T53-576 · K5705, file-safety R1, R60 · the `safe_view` job is registered for `.png`/`.jpg` names, as file-safety R1's name rule reads them
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
@@ -667,6 +677,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-414 · K4354, P24 · `heldcaptures` out of Add's first wave
 - T53-415 · K5006 · reds: first settle, then fix
 - T53-416 · K5565 · English in tests: its entry
+- T53-575 · K5705, file-safety R60 · `open-file.test.mjs` (F-B15) pins a PNG photograph as having no safe view: it now reads kind `picture` and `safeview?picture=1`, and the screen draws it
 - rows: `build/plan/T53-R1/screens-intake.md`
 **screens-daily**
 - T53-417 · A6 · a line and two acts per key
@@ -684,6 +695,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-424 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/screens-daily.md`
 **screens-inquiry**
+- T53-562 · K5698, provenance's word `provenance.testify.provenance_notes` · `document.mjs` (~176, ~1735) tells testimony by its English (`/Authored through op=testify/`): read provenance's own mark instead; `fr28-document.test.mjs:438`, `fr3-document.test.mjs:184` copy the sentence (the words check's testcopy 2, red until this entry)
 - T53-425 · A1 · subject at opening and its change
 - T53-426 · A7 · the pickers
 - T53-427 · N1260 · "Follow from here" outside Document
@@ -755,6 +767,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-545 · K5650, jurisdictions R105 · `help-records.mjs:33-35` reads `view.records_help` as a list
 - rows: `build/plan/T53-R1/screens-action.md`
 **control-plane**
+- T53-560 · K5693, doorbell R31 · routes `inboxview` to doorbell
 - T53-554 · K5677, credentials R72 retired · `r53-routes.test.mjs` as T53-553
 - T53-461 · N1264, K4599 · routes `screenread`, folded admission
 - T53-462 · K5425 (b) · fixtures-run lines 23, 29 orphans: delete or name stand-in
@@ -767,6 +780,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-465 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-466 · K5565 · English in tests: its entry
 - T53-536 · reader-container's report · the routing of `reader-container` as a fleet member
+- T53-568 · mail-door R12 · routes the five member acts to mail-door (`mailDoorOps`)
 - rows: `build/plan/T53-R1/control-plane.md`
 **plane**
 - T53-467 · N1264, K4599 · routes `screenread`, folded admission
@@ -777,6 +791,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-469 · K5438 · per-week counts kept per copy: record bytes, members at once, share of screens over class (PL26)
 - T53-470 · K5565 · English in tests: its entry
 - T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
+- T53-569 · mail-door R12 and its composition note · composes `mailDoorOf(ctx, {capture, settings})`, `settings()` from instance-setup R114 (the mail domain and switch); the `email()` export waits on M1 (K5692 (3))
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses

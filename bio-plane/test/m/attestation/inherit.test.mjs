@@ -89,7 +89,7 @@ test("R7: a file cut out of an archive answers the archive's timestamp and co-ar
     /* The archive's own answer is unchanged: nothing inherited, the note as before. */
     const z = w.att.attestationsOf(zip.sha);
     assert.deepEqual(z.attestations, stated(za, "INFO-2026-0001-records", null));
-    assert.doesNotMatch(z.note, /inherited|cut out/);
+    assert.equal(z.note.includes(word("attestation.capture_cut_captured")), false);
     /* An archive with nothing recorded: the file inherits nothing, and that is the earned empty answer. */
     const bare = w.cap("bare-zip", "an archive never attested");
     w.promoteInfo("INFO-2026-0004-bare", { captures: [bare], replay: true });
@@ -180,7 +180,7 @@ test("R7: an archive whose register cannot be read, an archive no register names
     const b = w.att.attestationsOf(m2.sha);
     assert.deepEqual([b.registered, b.attestations], [true, []]);
     assert.match(b.undetermined, new RegExp(`for the archive ${ghost.sha}`));
-    assert.match(b.undetermined, /no register row names/);
+    assert.ok(b.undetermined.includes(word("attestation.register_row_names")));
     /* A container block naming no archive digest, or none at all: whose attestations it carries cannot be read. */
     const m3 = w.cap("m3", "a file whose container names no archive");
     const bad = unpackedDoc(m3, { sha: "not a digest", path: "x" }, 1);

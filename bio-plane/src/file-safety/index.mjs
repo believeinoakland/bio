@@ -40,11 +40,15 @@ import { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./che
 import { describe, readActive, activeFromDirectory, sheetsOf, sheetWindow, structureFlags, safeViewRoute, ACTIVE_FORMATS, PLAIN_FORMATS, CONTAINER_FORMATS,
          READ_IMAGES, SAFE_VIEW_TEXT_MAX, HEAD_MAX, needsWholeFile, wholeCharacters, textView, SAFE_VIEW_CELLS_MAX } from "./formats.mjs";
 import { rowKey, SENTENCE_KEYS } from "./words.mjs";
+import { makePicture, digestOf, COVER_MAX_BYTES } from "./picture.mjs";
+import { detectFormat } from "../formats.mjs";
 export { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./checks.mjs";
 export { SAFE_VIEW_TEXT_MAX, SAFE_VIEW_CELLS_MAX, SAFE_VIEW_SHEETS_MAX, SAFE_VIEW_TOTAL_CELLS_MAX, SAFE_VIEW_INLINE_CELLS_MAX_BYTES,
          SAFE_VIEW_ODS_DECLARED_MAX, sheetsOf } from "./formats.mjs";
 export { SCREEN_WORDS, SCREEN_WORD_KEYS } from "./screen-words.mjs";
 export { SENTENCE_KEYS } from "./words.mjs";
+export { FILE_SAYS_FIELDS, HELD_BACK, LEFT_OUT_KINDS as PICTURE_LEFT_OUT_KINDS } from "./picture.mjs";
+export { PICTURE_IMAGES } from "./formats.mjs";
 export { FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } from "./kinds.mjs";
 export { FILE_SAFETY_TABLES } from "./schema.mjs";
 import { findingKind } from "./kinds.mjs";
@@ -108,6 +112,14 @@ export const onOwnServers = (recipient) => typeof recipient === "string"
   && (/^the organization\b/i.test(recipient.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(recipient.trim()));
 /* R11, R12, R33: where a derived file is kept, under its own digest and outside `captures/`. */
 export const derivedKey = (store, sha) => `${store}/derived/${sha}`;
+/* R69 (T53; JOURNEYS R-28): the extension a download falls back to when the record holds no name, by what the bytes are. */
+const FORMAT_EXTENSION = Object.freeze({ pdf: "pdf", docx: "docx", xlsx: "xlsx", pptx: "pptx", odt: "odt", ods: "ods", odp: "odp", csv: "csv", rtf: "rtf",
+  eml: "eml", text: "txt", html: "html", svg: "svg", zip: "zip" });
+const IMAGE_EXTENSION = Object.freeze({ jpeg: "jpg", png: "png", gif: "gif", webp: "webp", tiff: "tif", heic: "heic", bmp: "bmp" });
+/* R70 (T53; JOURNEYS R-64): a file is a table to draw as cells only when what the record says it is, by its type or its name, is CSV. */
+const isCsvRecord = (rec) => !!rec && ((!!rec.type && /\bcsv\b/.test(rec.type)) || (!!rec.name && /\.csv$/i.test(rec.name)));
+/* R60 (T53): the JSON a picture's description header carries holds only ASCII (a header is bytes): every other character is escaped. */
+const asciiJson = (o) => JSON.stringify(o).replace(/[^\u0020-\u007e]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const LIST = Object.freeze({ default: 200, max: 1000 });
@@ -396,6 +408,42 @@ export class FileSafety {
       if (size === null || size > GRADE_READ_MAX) return null;
       return await this.#range(sha, 0, size);
     } catch { return null; }
+  }
+
+  /* R69, R70 (T53; JOURNEYS R-28, R-64): what the record says a capture is called and what type it is, never what its bytes look like. The name
+     and type are the document's own (`data/provenance.json` of the capture's home: the file name the source or the upload gave, else the name a
+     member stated, else the path inside the archive it was cut from, and the content type); a file cut from an archive whose document states no
+     name has the name the archive's listing gives it. `{name, type}`, each null when the record holds none. Reads only; never throws. */
+  async #recordedOf(sha) {
+    const clean = (v) => (typeof v === "string" ? v.replace(/\\/g, "/").split("/").pop().replace(/[\u0000-\u001f\u007f]/g, "").trim() : "");
+    let name = "", type = "";
+    try {
+      const home = this.#home(sha);
+      const f = home ? this.record.readFile(home, "data/provenance.json") : null;
+      const reg = f && typeof f.text === "string" ? parse(f.text, null) : null;
+      const doc = (Array.isArray(reg && reg.documents) ? reg.documents : []).find((d) => d && typeof d === "object" && d.capture && shaOf(d.capture.sha256) === sha);
+      if (doc) {
+        name = clean(doc.capture.file_name) || clean(doc.name_stated && doc.name_stated.text) || clean(doc.container && doc.container.path);
+        type = typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
+      }
+    } catch { /* the record states nothing */ }
+    if (!name) {
+      try {
+        const from = (await this.#fetched(sha)).archive;
+        const l = from ? await this.#listing(from) : null;
+        const e = l && l.ok ? l.entries.find((x) => shaOf(x.sha256) === sha) : null;
+        if (e) name = clean(e.name ?? e.path);
+      } catch { /* the archive states nothing */ }
+    }
+    return { name: name.slice(0, 200) || null, type: type.trim().toLowerCase() || null };
+  }
+  /* R70: the format a safe view is made by. A file whose bytes are text is drawn as cells only when its recorded type is CSV (R70), and as text
+     otherwise, a member of an archive included; the threat grade (R6) is of the bytes and does not read this. */
+  async #viewFormat(sha, look) {
+    if (!look) return "unknown";
+    if (look.format !== "csv" && look.format !== "text") return look.format;
+    if (isCsvRecord(await this.#recordedOf(sha))) return "csv";
+    return look.format === "csv" && look.encoding !== "utf-8" ? "csv" : "text";
   }
 
   /* R45, R56: what a file is, decided from its structure and read no further than it need be. The first `HEAD_MAX` bytes (four for
@@ -764,6 +812,46 @@ export class FileSafety {
     return { ok: true, archive: head, entries };
   }
 
+  /* R68: what `format-registry` says of bytes this module cannot name: `{format: "unlisted" | "refused", named}`, else null (a listed kind, or none). */
+  static #registryOf(bytes) {
+    try {
+      const r = detectFormat(bytes, null, null);
+      return r && (r.format === "unlisted" || r.format === "refused") ? { format: r.format, named: typeof r.named === "string" ? r.named : typeof r.kind === "string" ? r.kind : null } : null;
+    } catch { return null; }
+  }
+
+  /* T53-111 (DEC-454): the reason a scan was partial, in plain words by key beside the code the note holds (`LIMIT:<name>`, `UNOPENABLE:<type>`): which
+     limit the scanner reached, or which kind of file it cannot open. A name it does not know reads the general words. Every sentence is written once,
+     here, at its use. */
+  static #partialScanWords(reason) {
+    const text = typeof reason === "string" ? reason : "";
+    const open = /^UNOPENABLE:(.+)$/.exec(text);
+    if (open) return { reason_key: "file-safety.index.unscannable_unopenable",
+      reason_words: localize("file-safety.index.unscannable_unopenable", "It is a {type} file, which the file scanner cannot open.", { type: open[1].slice(0, 40).toUpperCase() }) };
+    const name = (/^LIMIT:(.+)$/.exec(text) || [null, ""])[1].toLowerCase().replace(/^max/, "").replace(/[^a-z]/g, "");
+    switch (name) {
+      case "filesize": return { reason_key: "file-safety.index.unscannable_limit_filesize",
+        reason_words: localize("file-safety.index.unscannable_limit_filesize", "The file is larger than the file scanner reads in one piece.") };
+      case "scansize": return { reason_key: "file-safety.index.unscannable_limit_scansize",
+        reason_words: localize("file-safety.index.unscannable_limit_scansize", "The file, with everything inside it, is larger than the file scanner reads in all.") };
+      case "files": return { reason_key: "file-safety.index.unscannable_limit_files",
+        reason_words: localize("file-safety.index.unscannable_limit_files", "The file holds more files than the file scanner opens.") };
+      case "recursion": return { reason_key: "file-safety.index.unscannable_limit_recursion",
+        reason_words: localize("file-safety.index.unscannable_limit_recursion", "The file holds files inside files inside files, deeper than the file scanner opens.") };
+      case "scantime": return { reason_key: "file-safety.index.unscannable_limit_time",
+        reason_words: localize("file-safety.index.unscannable_limit_time", "The scan took longer than the time the file scanner is given for one file.") };
+      case "zipdirectory": return { reason_key: "file-safety.index.unscannable_limit_directory",
+        reason_words: localize("file-safety.index.unscannable_limit_directory", "The list of what the file holds is larger than the file scanner reads.") };
+      default: return { reason_key: "file-safety.index.unscannable_limit_other",
+        reason_words: localize("file-safety.index.unscannable_limit_other", "The file reached one of the limits the file scanner keeps, so it was not read to its end.") };
+    }
+  }
+
+  /* Whether acquisition's records say an unpack opened this archive (a read of its own table, never of the archive). */
+  #openedArchive(sha) {
+    try { return !!this.acquisition && typeof this.acquisition.openedAmong === "function" && this.acquisition.openedAmong([sha]).has(sha); } catch { return false; }
+  }
+
   /* R6: the grade at this call, from the record's facts alone; `path` the archives above (R6's `archive_cycle`), `cache`
      each member's grade for this call. Never stored (R7). */
   async #grade(sha, path, cache) {
@@ -775,8 +863,20 @@ export class FileSafety {
     const look = await this.#look(sha, cache);
     const bytes = look ? look.bytes : null;
     const format = look ? look.format : "unknown";
+    /* R68 (T53; N1266, K5436): a file `format-registry` holds and names but does not list (`unlisted`), or does not keep (`refused`), is graded as any
+       format with no structure check is: `format_unchecked`, never `low` for want of a check, and never read as an archive or a document its container
+       might suggest. It is scanned, noted and held like any other file. Only a file this module itself leaves unread (an archive, a compound file, or
+       no known kind) is put to the registry: the kinds it reads are its own. */
+    const registry = look && look.bytes && !look.tooLarge && (format === "zip" || format === "unknown" || format === "ole") ? FileSafety.#registryOf(look.bytes) : null;
     let active = null, archive = null;
-    if (format === "zip") {
+    if (registry) add("format_unchecked", { why: registry.format, named: registry.named });
+    else if (format === "zip" && look && look.tooLarge && !this.#openedArchive(sha)) {
+      /* T53-510 (K5704): an archive above `GRADE_READ_MAX` that no unpack has opened is graded by its central directory, read by ranges: acquisition lists
+         an archive it has not opened by profiling it whole, which the isolate does not hold at that size. It is not opened, so it is high as any unopened
+         archive is; an encrypted member shows in the directory. Its members are graded when the unpack has filed them. */
+      archive = { opened: false, entries: look.directory && Array.isArray(look.directory.entries) ? look.directory.entries.length : 0, members_low: 0, members_high: 0 };
+      add("archive_not_opened");
+    } else if (format === "zip") {
       const l = await this.#listing(sha);
       archive = { opened: false, entries: 0, members_low: 0, members_high: 0 };
       if (!l.ok) add("archive_not_opened", { refusal: l.code });
@@ -823,7 +923,7 @@ export class FileSafety {
     const clam = this.#one(`SELECT result, reason FROM fs_notes WHERE capture_sha = ? AND kind = 'scan' AND tool = 'clamav' AND result <> 'not_scanned'
                             ORDER BY seq DESC LIMIT 1`, sha);
     if (clam && clam.result === "encrypted") add("encrypted");
-    if (clam && clam.result === "unscannable") add("unscannable", { limit: clam.reason ?? null });
+    if (clam && clam.result === "unscannable") add("unscannable", { limit: clam.reason ?? null, ...FileSafety.#partialScanWords(clam.reason) });
     /* R45 (B2): a file longer than the start `#look` reads, judged by that start alone, is never graded lower for its unread rest; a
        picture, an archive and an office package are judged by their structure, whatever their size (R56) */
     if (look && !look.whole && !(look.format === "image" || look.format === "zip" || (look.tooLarge && CONTAINER_FORMATS.includes(look.format)))) add("unread");
@@ -836,6 +936,7 @@ export class FileSafety {
     const copy = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, sha);
     const g = { threat: reasons.length ? "high" : "low", reasons, source, format, active, scan_hold: hold,
                 ...(look && look.format === "image" && look.image ? { image: { type: look.image, read: READ_IMAGES.includes(look.image) } } : {}),
+                ...(registry ? { registry: { format: registry.format, named: registry.named } } : {}),
                 latest_scan: latest("scan"), latest_deeper: latest("deeper"),
                 safe_view: view ? { state: view.render_state, route: view.render_route, sha256: view.render_sha } : null,
                 safe_copy: copy ? { state: copy.state, sha256: copy.copy_sha } : null, archive };
@@ -945,7 +1046,9 @@ export class FileSafety {
     const ev = this.#evidence();
     if (!ev) return json(refusal("FILE_NOT_HELD", localize("file-safety.index.your_teams_civicsmith_holds_no", "Your team's Civicsmith holds no evidence store, so no bytes can be served."), { captureSha: sha }), 404);
     const env = { CAPTURES: { get: (k) => ev.get(k), head: (k) => ev.head(k), put: () => null } };
-    const res = await captureObjectOp(new Request(`http://x/?sha256=${sha}`), new URL(`http://x/?sha256=${sha}`), env,
+    const dl = await this.#downloadName(sha);
+    const at = `http://x/?sha256=${sha}${dl ? `&dl=${encodeURIComponent(dl)}` : ""}`;
+    const res = await captureObjectOp(new Request(at), new URL(at), env,
       { json, storageAbsent: (op, d) => json({ ok: false, reason: "STORAGE_ABSENT", detail: d }, 503),
         requiredArgument: (op, a, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", error }), key: (s) => s,
         storeName: this.store, cls: null });
@@ -953,6 +1056,21 @@ export class FileSafety {
     const headers = new Headers(res.headers);
     headers.set("x-file-safety-not-scanned", stated.not_scanned);
     return new Response(res.body, { status: res.status, headers });
+  }
+
+  /* R69 (T53; JOURNEYS R-28): the name the original is saved under: the document's recorded name, as `capture` R21's get sanitises one; a document with
+     no recorded name, the digest with the extension its bytes call for. */
+  async #downloadName(sha) {
+    try {
+      const own = (await this.#recordedOf(sha)).name;
+      const name = own ? own.replace(/[^\w.\- ]/g, "").slice(0, 120).trim() : "";
+      if (name) return name;
+      const cache = new Map();
+      try {
+        const look = await this.#look(sha, cache);
+        return `${sha}.${(look && (look.format === "image" ? IMAGE_EXTENSION[look.image] : FORMAT_EXTENSION[look.format])) || "bin"}`;
+      } finally { this.#letGo(cache, sha); }
+    } catch { return `${sha}.bin`; }
   }
 
   /** R8: the original's bytes, or the first refusal that applies. `warned` is never stored (R10). */
@@ -1008,15 +1126,16 @@ export class FileSafety {
   /** R11: the safe view by route: a rendered PDF of page images (its bytes, the description in `x-file-safety`), a
    *  spreadsheet's cells as data, from `fromRow` of `sheet` (G137b: following `next_row` call by call reaches the last row), or (R45) a
    *  plain-text file's own characters; a file under a scan hold still gets it (K1892). */
-  async safeView({ captureSha = null, viewer = undefined, sheet = null, fromRow = null } = {}) {
+  async safeView({ captureSha = null, viewer = undefined, sheet = null, fromRow = null, picture = false } = {}) {
     try {
       const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const sha = h.sha;
       const cache = new Map();
       const look = await this.#look(sha, cache);
-      const format = look ? look.format : "unknown";
-      const route = safeViewRoute(format);
+      /* R70: a text file is drawn as text unless its recorded type is CSV; R60: a baseline JPEG or PNG is drawn as its safe picture */
+      const format = await this.#viewFormat(sha, look);
+      const route = safeViewRoute(format, look ? look.image : null);
       /* R51 (F3b): bytes not held yet, and a view queued or waiting for them: it is on its way, not a file of no route */
       if (!look) {
         const q = this.#one(`SELECT render_state FROM fs_files WHERE capture_sha = ?`, sha);
@@ -1032,7 +1151,7 @@ export class FileSafety {
         return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_file_is_above_what_a_safe_view_reads", "The file is above what a safe view reads. Nothing was read."), { captureSha: sha, renderer_reason: "TOO_LARGE", size: look.tooLarge, bound: GRADE_READ_MAX, format });
       /* DEC-49 REGION is-safe-view-route */
       if (!route && !(format === "text" && look.encoding === "utf-8"))
-        return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only."), { captureSha: sha, format });
+        return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets, plain text and photographs only."), { captureSha: sha, format });
       /* END DEC-49 REGION is-safe-view-route */
       const original = await this.#stateOf(sha, cache);
       if (!route) {
@@ -1057,6 +1176,7 @@ export class FileSafety {
       }
       if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no", "Your team's Civicsmith has no safe view installed. Nothing was rendered."), { captureSha: sha });
       const row = this.#ensureQueued(sha);
+      if (route === "picture") return await this.#pictureView(sha, row, original, picture === true);
       /* DEC-49 REGION is-safe-view-made */
       if (row.render_state === "failed")
         return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { captureSha: sha, renderer_reason: row.render_reason, renderer_detail: row.render_detail });
@@ -1074,6 +1194,95 @@ export class FileSafety {
     } catch { return refusal("SAFE_VIEW_FAILED", "The safe view could not be read.", { captureSha: captureSha ?? null }); }
   }
 
+  /** R71 (T53; DEC-479 (45); doorbell R31): the safe view of bytes the record does not hold, for modules only (no op). The bytes' SHA-256 must be `sha256`, else
+   *  `BYTES_CHANGED`. The same format check and route as `safeView` run on the given bytes (never a type taken on trust: a text file is a table when its
+   *  bytes are one, as no record is asked); R11's shapes and limits answer, with the view's own bytes in `bytes` for a page view or a picture. It writes no
+   *  row, note, receipt or count and keeps no record of who looked (R10); the renderer reads a page view's source from a derived-area object that exists only
+   *  for the call and is removed after (one that was there before is left). Refusals are R11's and R54's. */
+  async safeViewOfBytes({ bytes = null, sha256 = null, viewer = undefined, sheet = null, fromRow = null } = {}) {
+    void viewer;
+    let planted = null;
+    try {
+      /* DEC-49 REGION is-bytes-unchanged */
+      const want = shaOf(sha256);
+      if (!(bytes instanceof Uint8Array) || !HEX64.test(want) || (await digestOf(bytes)) !== want)
+        return refusal("BYTES_CHANGED", localize("file-safety.index.the_bytes_are_not_the_bytes_fingerprinted", "The bytes are not the bytes whose fingerprint was stated. Nothing was shown."), { sha256: want || null });
+      /* END DEC-49 REGION is-bytes-unchanged */
+      const d = await describe({ size: bytes.length, read: async (o, n) => bytes.subarray(o, o + n) }, { head: bytes.subarray(0, Math.min(bytes.length, HEAD_MAX)), bytes });
+      const format = d.format, route = safeViewRoute(format, d.image);
+      if (d.encrypted)
+        return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_file_is_encrypted_so_no_safe_view", "The file is encrypted, so no safe view can be made of it."),
+                       { sha256: want, renderer_reason: "ENCRYPTED", final: true, format });
+      if (!route && !(format === "text" && d.encoding === "utf-8"))
+        return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets, plain text and photographs only."), { sha256: want, format });
+      if (!route) {
+        const t = textView(bytes, false);
+        return t.ok ? { ok: true, kind: "text", derived: true, of: want, text: t.text, truncated: t.truncated, original: null }
+          : refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_text_could_not_be", "The text could not be read."), { sha256: want, renderer_reason: "NOT_TEXT" });
+      }
+      if (route === "data") {
+        if (bytes.length > GRADE_READ_MAX)
+          return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { sha256: want, renderer_reason: "TOO_LARGE", size: bytes.length, bound: GRADE_READ_MAX, format });
+        const windowed = (sheet !== null && sheet !== undefined && sheet !== "") || (fromRow !== null && fromRow !== undefined);
+        const row1 = Number.isInteger(Number(fromRow)) && Number(fromRow) >= 1 ? Number(fromRow) : 1;
+        const s = windowed ? await sheetWindow(format, bytes, { sheet: sheet === "" ? null : sheet, fromRow: row1 }) : await sheetsOf(format, bytes);
+        if (!s.ok) return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { sha256: want, renderer_reason: s.why, ...(s.size !== undefined ? { size: s.size, bound: s.bound, format } : {}) });
+        return { ok: true, kind: "data", derived: true, of: want, sheets: s.sheets, sheets_total: s.sheets_total, sheets_truncated: s.sheets_truncated, original: null };
+      }
+      if (route === "picture") {
+        const m = await makePicture(bytes);
+        if (!m.ok) return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_photographs_picture_could_not_be_made", "The photograph's safe picture could not be made."), { sha256: want, renderer_reason: m.reason, renderer_detail: m.detail, final: true });
+        return { ok: true, kind: "picture", derived: true, of: want, sha256: await digestOf(m.png), content_type: m.content_type, width: m.width, height: m.height,
+                 file_says: m.file_says, file_says_held: m.file_says_held, left_out: m.left_out, original: null, bytes: m.png };
+      }
+      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no", "Your team's Civicsmith has no safe view installed. Nothing was rendered."), { sha256: want });
+      const bucket = this.#bucket();
+      if (!bucket || typeof bucket.delete !== "function") return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { sha256: want, renderer_reason: "R2_NOT_CONFIGURED" });
+      const key = derivedKey(this.store, want);
+      if (!(await bucket.head(key))) { await bucket.put(key, bytes, { sha256: want, customMetadata: { derived: "true", of: want, kind: "view-source" } }); planted = key; }
+      const r = await this.#scanner("/render", { store: this.store, target: { capture_sha: want, parts: null, area: "derived" }, route }, { stream: true });
+      if (r.unreachable || r.absent || !r.stream || r.status !== 200) {
+        if (r.stream) await FileSafety.#drop(r.stream);
+        return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { sha256: want, renderer_reason: r.unreachable || r.absent ? "SCANNER_UNREACHABLE" : (r.body && r.body.code) || "RENDER_FAILED" });
+      }
+      const got = await FileSafety.#heldStream(r.stream, SAFE_VIEW_BYTES_MAX);
+      if (!got.ok) return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { sha256: want, renderer_reason: got.reason });
+      const pages = Number(r.headers.get("x-pages")) || 0, source = Number(r.headers.get("x-source-pages")) || 0, truncated = r.headers.get("x-truncated") === "true";
+      return { ok: true, kind: "pdf", derived: true, of: want, sha256: r.headers.get("x-derived-sha256") || null, pages, source_pages: source, truncated, original: null,
+               statement: FileSafety.#viewStatement(pages, source, truncated), bytes: got.bytes };
+    } catch { return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_safe_view_could_not_be_made", "The safe view could not be made."), { renderer_reason: "RENDER_FAILED" }); }
+    finally { if (planted) { try { await this.#bucket().delete(planted); } catch { /* the source object is left to the store's own cleaning */ } } }
+  }
+
+  /* R60, R63, R64 (T53; DEC-460): the safe picture of a photograph, once it is made. Its description (R60) is the answer; with `picture` the picture's
+     own bytes are served, `image/png`, under their digest, with a short description in `x-file-safety` (what the file says is the answer's, not a
+     header's). While it is not yet made the view is pending, and when it cannot be made it has failed, final (R63). Counted once as a safe view. */
+  async #pictureView(sha, row, original, bytesOnly) {
+    if (row.render_state === "failed")
+      return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_photographs_picture_could_not_be_made", "The photograph's safe picture could not be made."),
+                     { captureSha: sha, renderer_reason: row.render_reason, renderer_detail: row.render_detail, final: true });
+    const meta = row.render_state === "done" && row.render_sha ? parse(row.picture, null) : null;
+    if (!meta) {
+      /* a photograph this module put aside before it made pictures (no route, `none`) is queued now */
+      if (row.render_state === "none" || row.render_state === "data" || (row.render_state === "done" && !row.picture)) {
+        this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_route = NULL, render_sha = NULL, render_wait_at = NULL, render_started_at = NULL WHERE capture_sha = ?`, sha);
+        this.#arm("render", () => this.renderWake(this.now()));
+      }
+      return refusal("SAFE_VIEW_PENDING", localize("file-safety.index.the_safe_picture_is_queued", "The safe picture is queued."), { captureSha: sha });
+    }
+    const description = { ok: true, kind: "picture", derived: true, of: sha, sha256: row.render_sha, content_type: meta.content_type, width: meta.width, height: meta.height,
+                          file_says: meta.file_says, file_says_held: meta.file_says_held, left_out: meta.left_out, original };
+    if (!bytesOnly) { this.#count("safe_views"); return description; }
+    const bucket = this.#bucket();
+    const bytesOut = bucket ? await FileSafety.#bytesOf(await bucket.get(derivedKey(this.store, row.render_sha))) : null;
+    if (!bytesOut) {
+      this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_wait_at = NULL, render_started_at = NULL WHERE capture_sha = ? AND render_state = 'done'`, sha);
+      return refusal("SAFE_VIEW_PENDING", localize("file-safety.index.the_safe_pictures_bytes_are_not_held", "The safe picture's bytes are not held; it is made again."), { captureSha: sha });
+    }
+    return new Response(bytesOut, { status: 200, headers: { "content-type": meta.content_type, "x-derived-sha256": row.render_sha, "x-of": sha,
+      "x-file-safety": asciiJson({ kind: "picture", derived: true, of: sha, sha256: row.render_sha, content_type: meta.content_type, width: meta.width, height: meta.height }) } });
+  }
+
   /* R12, G136b: one file's render, after its capture: the image-only PDF stored once under its own digest outside `captures/`, labeled
      derived and naming its original; never registered, graded or chained. The renderer's PDF is read as a stream held to
      `SAFE_VIEW_BYTES_MAX` and put once. The row is marked in flight (`rendering`) before the call and the whole of this work, the call
@@ -1086,7 +1295,7 @@ export class FileSafety {
     /* R51 (F3b): bytes not held yet (the keep, after the receipt that queued this render) are waited for, not failed: the view is
        made once they are held (`#releaseRenderWaits`), and the member's call meanwhile answers `SAFE_VIEW_PENDING` */
     if (!look) return this.#renderWaits(sha);
-    const format = look.format, route = safeViewRoute(format);
+    const format = await this.#viewFormat(sha, look), route = safeViewRoute(format, look.image);
     if (!route || route === "data") {
       this.sql.exec(`UPDATE fs_files SET render_state = ?, render_route = ? WHERE capture_sha = ?`, route ? "data" : "none", route, sha);
       return route ? "data" : "none";
@@ -1094,11 +1303,34 @@ export class FileSafety {
     /* R54: an encrypted file is refused without a call to the renderer, so it does not use the tick */
     if (look.encrypted || this.#scanNoteEncrypted(sha)) { this.#renderFinal(sha, route, "ENCRYPTED", null); return "refused"; }
     this.sql.exec(`UPDATE fs_files SET render_state = 'rendering', render_started_at = ? WHERE capture_sha = ?`, iso(this.now()), sha);
-    try { return await this.#renderCall(sha, route, release); } catch (e) {
+    try { return route === "picture" ? await this.#renderPicture(sha, look.size) : await this.#renderCall(sha, route, release); } catch (e) {
       /* a fault after the mark: the file is queued again, not left marked in flight */
       try { this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_started_at = NULL WHERE capture_sha = ? AND render_state = 'rendering'`, sha); } catch { /* the stale mark is released */ }
       throw e;
     }
+  }
+  /* R60, R63 (T53; DEC-460): the safe picture of one photograph, made in this object by `image-cover`, stored once under its own digest outside
+     `captures/` (labelled derived, naming its original), never registered. A photograph this maker refuses is final, with the maker's reason. What the
+     file says is kept in the file's row and nowhere else (R63): no log, note, count or scanner request holds it. */
+  async #renderPicture(sha, size) {
+    if (!Number.isFinite(size) || size > COVER_MAX_BYTES)
+      return this.#renderFinal(sha, "picture", "PHOTO_TOO_LARGE", null);
+    const bucket = this.#bucket();
+    if (!bucket) return this.#renderFinal(sha, "picture", "R2_NOT_CONFIGURED", null);
+    let held = 0;
+    try {
+      const bytes = await this.#range(sha, 0, size);
+      if (this.ledger) { this.ledger.hold(bytes.length, "file-safety.picture"); held = bytes.length; }
+      const made = await makePicture(bytes);
+      if (!made.ok) return this.#renderFinal(sha, "picture", made.reason, made.detail ? String(made.detail).slice(0, 300) : null);
+      const picSha = await digestOf(made.png);
+      await bucket.put(derivedKey(this.store, picSha), made.png, { sha256: picSha, customMetadata: { derived: "true", of: sha, kind: "safe-picture" } });
+      const meta = { content_type: made.content_type, width: made.width, height: made.height, orientation: made.orientation,
+                     file_says: made.file_says, file_says_held: made.file_says_held, left_out: made.left_out };
+      this.sql.exec(`UPDATE fs_files SET render_state = 'done', render_route = 'picture', render_sha = ?, picture = ?, rendered_at = ?, render_reason = NULL,
+                     render_detail = NULL, render_wait_at = NULL, render_started_at = NULL WHERE capture_sha = ?`, picSha, JSON.stringify(meta), iso(this.now()), sha);
+      return "rendered";
+    } finally { if (held && this.ledger) this.ledger.release(held, "file-safety.picture"); }
   }
   async #renderCall(sha, route, release) {
     const r = await this.#scanner("/render", { store: this.store, target: this.#target(sha), route }, { stream: true });
@@ -1148,8 +1380,9 @@ export class FileSafety {
       return v && v.body && v.body.ok === true && typeof v.body.renderer_version === "string" && v.body.renderer_version ? v.body.renderer_version : null;
     } catch { return null; }
   }
-  /* R59: the SQL naming the files a release could change: failed by a renderer's refusal (not ENCRYPTED, which no release reads) */
-  static RENDER_RETRYABLE = `render_state = 'failed' AND COALESCE(render_reason, '') <> 'ENCRYPTED'`;
+  /* R59: the SQL naming the files a release could change: failed by a renderer's refusal (not ENCRYPTED, which no release reads, and not a picture,
+     which the renderer never made: the picture maker's refusal of a photograph is final, R63) */
+  static RENDER_RETRYABLE = `render_state = 'failed' AND COALESCE(render_reason, '') <> 'ENCRYPTED' AND COALESCE(render_route, '') <> 'picture'`;
   /* R59: a file failed finally by another release (or one not recorded) is queued once more; one failed by this release stays failed. */
   #requeueForRelease(release) {
     this.#keep("renderrel", { checked: this.now() });
@@ -2311,7 +2544,8 @@ export function fileSafetyOps(fs, url, body, env) {
     originalstate: () => fs.originalState({ captureSha: sha(), viewer: viewer() }),
     openoriginal: () => fs.openOriginal({ captureSha: sha(), viewer: viewer(), override: b.override === true || q("override") === "1" }),
     openwithwarning: () => fs.openOriginal({ captureSha: sha(), viewer: viewer(), warned: b.warned ?? null }),
-    safeview: () => fs.safeView({ captureSha: sha(), viewer: viewer(), sheet: q("sheet") ?? b.sheet ?? null, fromRow: q("fromRow") ?? b.fromRow ?? null }),
+    safeview: () => fs.safeView({ captureSha: sha(), viewer: viewer(), sheet: q("sheet") ?? b.sheet ?? null, fromRow: q("fromRow") ?? b.fromRow ?? null,
+      picture: q("picture") === "1" || b.picture === true }),
     safecopyrequest: () => fs.requestSafeCopy({ captureSha: sha(), viewer: viewer() }),
     safecopy: () => fs.safeCopy({ captureSha: sha(), viewer: viewer() }),
     scanbatch: () => fs.scanBatch({ limit: b.limit ?? q("limit") ?? undefined, at: b.at ?? q("at") ?? null }),
@@ -2350,7 +2584,7 @@ export const DECLARED_OPS = Object.freeze({
   releasescanhold: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("file-safety.declared.releasescanhold", "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one member's reasoned act of two, never a machine's; moves no bundle"),
     fields: { accepts: ["capture","captureSha","reason"], requires: [["capture","captureSha"],"reason"] } },
   safeview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("file-safety.declared.safeview", "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing"),
-    fields: { accepts: ["capture","captureSha","sheet","fromRow"], requires: [["capture","captureSha"]] } },
+    fields: { accepts: ["capture","captureSha","sheet","fromRow","picture"], requires: [["capture","captureSha"]] } },
   scanmirror: { classes: ["admin","member"], machineClasses: [], mutating: true, stamps: ["viewer"], needs: null, weight: "substrate", description: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"),
     fields: { accepts: ["at"], requires: [] } },
   securitytooladd: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle"),

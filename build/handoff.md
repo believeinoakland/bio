@@ -1,53 +1,66 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #328 (`session_018BhcefyAzc8476i2q7nQ5q`, depth 1, parent ROOT #10 `session_01XHjMEPkzmkLycoWtxb4yn6`; Bob's primary account) for BOB #329, 2026-10-28 ~03:35Z, at about 38 % of its window (refresh.md). No step is half done. **T53 round R1 is OPEN** (the one build round, K5567). **Layer 1 is closed** (K5663; its 38 sessions archived with their rows). **Layer 2 is running**: 8 jobs started 03:21Z, PROJECT-ROSTER already merged (K5665). Layers 3-11 not started. Read whole: K5645, K5657, K5663, K5666 (`build/rulings.md`), then `build/plan/current.md`'s Layer 2 and 3 blocks.
+**Status** · Replaced whole at each handoff. Written by BOB #329 (`session_018BhcefYrW3vwL3mYqzy8xd`, depth 1, parent ROOT #10 `session_01XHjMEPkzmkLycoWtxb4yn6`; Bob's primary account) for BOB #330, 2026-10-28 ~06:45Z, at 39 % of its window (refresh.md). No step is half done. **T53 round R1 is OPEN** (the one build round, K5567). **Layers 1 and 2 are closed** (layer 2: 67352bb1ba, its 8 sessions archived with their rows, its plan block in `plan/archive/T53-R1-layer2-merged.md`). **Layer 3 is running**: 10 jobs started 06:13Z (K5690); 3 merged. Read whole: K5681, K5690, K5691, K5692, K5693, K5694 (`build/rulings.md`), then `build/plan/current.md`'s Layer 3 block.
 
 ## Bob's direction now
 
 - **One round, R1** (K5567). Work found goes to its module's open job, else a not-started layer's START, else the completion round.
-- **The AI catalogue key ceremony waits for Bob** (Bob, 2026-10-27 ~23:10Z: "We can do the key ceremony when I get back."). Route ruled (K5625): the offline page `bio-plane/scripts/catalogue-keys.html` (signatures R57, met, K5634; SHA-256 87f1993cb4e726ecaed5d7101b05ef8ad018fe55cbea17496421e9c89738fcf5). When Bob is back: publish one rendered page with the download link, the SHA-256 and the plain steps of sitting 1 (steps and reasoning: `build/plan/key-ceremony.md`; K5625 overrides it where they differ). The public lines then replace the test lines in `CATALOGUE_KEYS` by a signatures change (completion round), R50's test run. Sitting 2 (sign the seed) once AI-CATALOGUE's seed payload exists (T53-75 `[waits: key ceremony]`).
-- Questions page https://claude.ai/artifact/SrK7xHyWMbW8TJntxkKzkv: **none open**. Watch it (`ArtifactComments watch`; I registered a durable watch on it).
+- **New this session, Bob's (K5681, 2026-10-28: "yes, option 2"):** BOB adds a module's entry to `docs/development/ux-substrate/screens/words-reads.json` itself, only for a key whose words are already in the UX stream's `words.json`, and tells the stream; never wording. In `rulings-active.md` §4 and the manifest. Used twice (member-roster, ai-catalogue).
+- **The AI catalogue key ceremony waits for Bob** (Bob, 2026-10-27 ~23:10Z: "We can do the key ceremony when I get back."). Route K5625: the offline page `bio-plane/scripts/catalogue-keys.html` (SHA-256 87f1993cb4e726ecaed5d7101b05ef8ad018fe55cbea17496421e9c89738fcf5); steps in `build/plan/key-ceremony.md` (K5625 overrides it where they differ). When Bob is back: one rendered page with the download link, the SHA-256 and the plain steps of sitting 1. Sitting 2 once ai-catalogue's seed payload exists (T53-75 `[waits: key ceremony]`; ai-catalogue merged K5673, R39 unmet by that wait).
+- Questions page https://claude.ai/artifact/SrK7xHyWMbW8TJntxkKzkv: **none open**.
 
 ## Your takeover
 
-`proc takeover --tranche T53 …` owes a `TAKEN OVER` message to me; I delete my routines (backstop `trig_01ATbm8Ev2jVL7mchEaVUBuP`, 04:03Z, and any later) and reply. In this checkout before any merge: `git fetch -q --deepen=2000 origin tranche/T53`, `npm ci` where `node_modules` is missing (`build/situations/job.md`), and **for a merge that brings a new lockfile** (a new fleet member), install that member's `node_modules` from the job branch's lockfile first (`git show origin/<jb>:<dir>/package-lock.json` into a scratch dir, `npm ci`, move `node_modules` in; K5659), else the bundles regenerate stale and the merge is undone. A batch of merges runs as ONE background command; never write the tranche while it runs, nor while a worker runs `proc` there.
+`proc takeover --tranche T53 …` owes a `TAKEN OVER` message to me; I delete my routines (backstop `trig_01ASF55RnFZHrUukX2n3endM`, 07:14Z) and reply. In this checkout: `git fetch -q --deepen=2000 origin tranche/T53` (run it in the background: it can pass 2 minutes), `npm ci` where `node_modules` is missing (`site/` and `reader-container/` were missing here; reader-container's lack makes fleetbundles SKIP-fail). A batch of merges runs as ONE command; never write the tranche while it runs, nor while a worker runs there. **A worker never runs in `/home/user/bio`**: give it its own `git worktree add --detach <scratch>` (a UX checker rewrote `registry.json` in place here; restored before any commit).
 
-## Process changes this session (civicos-process main @ 9665746)
+## Layer 3: state (`proc status` for each)
 
-- PR #24 (RD37, K5645): `proc merge --module <m> --with <m2>` merges jobs that must land together (each red alone) as one commit, each gated as if alone. Used for bundler + reader-container (K5658).
-- PR #25 (RD37b, K5657): `proc job complete --with <m2>` tests a job on its branch merged with its COMPLETE partner's for the run only.
-- Both certified by fixture (red on the old code), 258/258. Known quirk still open (from #327): after `job archived`, `job route` titles a successor `#1` (nextK should read the job branch's record); title as printed, record `--name "<M> #2"`.
+| module | session | state |
+| --- | --- | --- |
+| provenance, attestation, provenance-routes | (live to the close) | merged K5695, K5696, K5697 |
+| capture-sources | `session_018Bhcef6NZJ89Tvrn2YSfS2` (haiku) | WORKING: told to do its whole K5565 entry incl. B sites (a key given in source, no behaviour change); BLOCKED on a real judgement means restart it on sonnet (`proc job route`) |
+| acquisition | `session_018BhcefbymZskaMPXAgDmRQ` | WORKING |
+| capture | `session_018BhcegWsU96peK7X9pCQCk` | **WAITING: a question** (T53-102, T53-105 name no requirement line of capture). Answer it first: read its record's WAITING line and `build/plan/T53-R1/capture.md` |
+| file-safety | `session_018Bhcef6MZXe2rVPpsmTu8D` | WORKING; carries K5691's CHANGE: new R71 `safeViewOfBytes` for doorbell; it asked to name its export and codes in its report |
+| doorbell | `session_018BhcecgyadihJwzejgvKmY` | WAITING on file-safety's merge: then send it a CHANGE (merge the tranche, R31 seam tests real, complete). Its push form: bare `git push origin job/T53/doorbell` (K5694) |
+| mail-door | `session_018Bhced233u828vot13hTyX` (default model, new module) | WAITING on capture's merge (R5 calls capture R116): then a CHANGE. R12's email() entry stays a todo naming M1 (a P19 deferral unless M1 is made); its codes are family C-157 (next new family C-158) |
+| sources | `session_018BhcegmVJVqgECaQJcGU5q` | COMPLETE, held: merge after capture and doorbell (upstream first, K1965) |
 
-## Layer 2: running (all sessions live; `proc status` for each)
+- Merge order (`modules.json`): capture-sources, acquisition, capture, file-safety, doorbell, mail-door, sources.
+- At each merge lower `build/tests-english-baseline.json` for the module's converted files (a file the words check still counts stays: run the check after removing; never raise). Owed: sources' `consent.test.mjs`; doorbell removed its own two.
+- **A job that sets "WAITING: COMPLETE … available for a CHANGE"** is refused by `proc merge`: tell it to run `proc job complete` again and leave COMPLETE (happened twice: credentials, provenance).
+- At the close: `proc layer close --layer 3`, archive its 10 sessions with rows (`proc job archived` each), move the Layer 3 block to `plan/archive/T53-R1-layer3-merged.md`.
 
-MEMBER-ROSTER `session_018BhcefiiLZYzriCJJmrdXE`, RECORD-CORE `session_018Bhcefjn5o22km4fr7kbme`, MEMBERSHIP `session_018BhcefgcLdaAA53reT314Q`, AI-CATALOGUE `session_018BhceegGiraj92rsxu2cuC` (default model, new module), AI-ACCOUNTS `session_018Bhceei38Q79BHcdtVPMFz`, CREDENTIALS `session_018Bhceesg4XYzpL7ZX32uiC`, PROMOTION `session_018BhcegYHK2EwFjRJE5A3Md` (all sonnet). PROJECT-ROSTER (haiku) merged K5665; its session stays to the layer close.
-- Answered (K5666): CREDENTIALS `aicredential` in AI_GRANT_OPS (carried to answers T53-548), R84's id `ca-officers` (acquisition T53-547), told "merge the tranche". AI-CATALOGUE check family C-156 (next new family C-157, BOB assigns), its START parameters as proposed: fold them into `ai-catalogue.md` when it merges (it names each in its record).
-- MEMBER-ROSTER: DEC-485's two keys (`refusal.NO_WAITING_PROPOSAL`, `refusal.NOT_YOUR_PROPOSAL`) are not on the tranche; it writes them once with localize() (C-96.56, C-96.57) until BOB lands U512-U519 (DEC-479 to DEC-486), then a CHANGE to switch to rowWord() (completion round if its layer has closed). Consider landing U512-U519 now, at layer 2, rather than waiting for layer 3. MEMBERSHIP merged K5667.
-- RECORD-CORE merged K5669 (R92 met). R92's check (1), no settings rows lost before R25, needs a read-only look at biosmoke8's live store (BOB's under K5120): do it once and record the result, or name it in the round's report.
-- PROMOTION COMPLETE (e6a4557d, stamp 1.81.0, 1974 rows): hold its merge until every other layer-2 job is merged (K1965). At its merge: `git rm -q -- bio-plane/test/fixtures/row-census-1.80.0.jsonl` (no module owns it since K5671; a standing approval), and lower the baseline by its 7 files (gate, grammar, history, moved, r7-foreign-project, release, wording).
-- RECORD-CORE T53-68 is `[waits: study S1-S4, Bob's decision]`; AI-CATALOGUE T53-75 `[waits: key ceremony]`: a COMPLETE leaving them unmet is right (name them in the round's report as P19 deferrals).
-- Merge order: `modules.json` order, upstream first; promotion last in its layer (K1965). At the close: `proc layer close --layer 2`, then archive its sessions (a sonnet worker did layer 1's 38 in 5 min, one `proc job archived` at a time).
+## Before layer 4's START (BOB writes these lines)
 
-## Before each later layer's START (BOB writes these lines)
+- Layer 4: content R63-R64 from `build/plan/beta/planning/lines-A8-typed-page.md` (T53-529). Check `origin/bob/T53-req-l2-3` and the planning drafts for any other layer-4 lines; apply three-way just before the START (`git diff <merge-base> <branch> -- <files> | git apply -3`, K5377).
+- Layer 5: events, confirm N1259-c R38's keys of `followedRegister` (T53-530). Layer 6: reading-guides' line for jurisdictions R126 (T53-531). Layer 9: filing-templates R15, R35 reworded to cite jurisdictions R126 (T53-532). Layer 11: plane T53-546.
+- New modules in later layers: set `paths`/`tests` in `modules.json` at their START by a text edit of the one line (never re-serialise the file: it is hand-formatted).
+- Models (K3518): haiku only where an entry is truly test-only with every key already in the words (check the rows file's model line first: it names sonnet where B sites need source keys); sonnet otherwise; the default for a new module.
 
-- **Layer 3**: its requirement lines from `origin/bob/T53-req-l2-3` (c2614164; capture, acquisition, doorbell, file-safety, sources, mail-door, provenance) applied three-way just before its START (`git diff <merge-base> origin/bob/T53-req-l2-3 -- <files> | git apply -3`), never earlier (K5377); review the owed drafts first: sources R23, doorbell R31 `inboxView`, DEC-455 `previewmore` (capture). U512-U519 (DEC-479 to DEC-486) merge with layer 3's first job, file-safety before doorbell.
-- Layer 4: content R63-R64 from `build/plan/beta/planning/lines-A8-typed-page.md` (T53-529).
-- Layer 5: events, confirm N1259-c R38's keys of `followedRegister` (T53-530).
-- Layer 6: reading-guides' line for jurisdictions R126's `attributionLacks`/`countedReview` (T53-531; R18 vs R19 is BOB's). JURISDICTIONS met R126 (K5654): check its text carries K5527's `countedReview` before writing the line.
-- Layer 9: filing-templates R15, R35 reworded to cite jurisdictions R126 (T53-532).
-- Layer 11: plane T53-546 (g41 probe sized from `boundOf`, K5655).
-- New modules in later layers: set `paths`/`tests` in `modules.json` at their START (K5578 (1)), as ai-catalogue's (K5663).
+## Process changes owed (civicos-process; P3: each certified by a fixture red on the old code)
 
-## Lanes
+1. `tools/hooks.mjs` PUSH reads a redirect after `git push` as a ref (`git push origin <own branch> 2>&1` refused; bare form passes; K5694). Strip redirections before reading refs.
+2. `roles/JOB.md` line 23 ("your record must name the wait") leads jobs to replace COMPLETE with WAITING; say COMPLETE is itself an allowed end state and is never replaced.
+3. `proc ruling --files` fails on a path already `git rm`ed (it `git add`s it): stage deletions first, or accept them.
+4. Still open from #327: after `job archived`, `job route` titles a successor `#1`.
 
-PLATFORM #2 working (its folder merged at d908b67898); it will ask BOB to deploy plat-s1 steps 1d-1f (`deploy-plane-only.mjs plat-s1`, account 20b5…7f72 only; BOB #325's handoff item 5). JOURNEYS #4 idle: the walkers' leftovers on biosmoke8 stay until its re-walk (BOB's); a redeploy before the re-walk after this round's fixes. PLANNING #5 stopped. AI-DESIGN, CAPABILITIES, FILES ready, nothing owed. Design channel: BOB's writer line is this session's (`mail.mjs xwriter`); unread U512-U519 (above). At 03:05Z nothing new from any lane.
+## Lanes and the design stream
 
-## Rulings this session (K5642-K5666)
+- UX-DESIGN #45 (`session_018BhceeRn5Di4Q4kwmEsXF9`) answered and is merged through U521 (K5672, K5685: DEC-479 to DEC-488). B570 answered its question on the 15 registry acts ai-accounts retired (10 re-pointed to R61's ops, `projectsigninset` retired). Nothing owed by BOB.
+- Other lanes: nothing new since 03:05Z (last commits all before 01:00Z). PLATFORM #2 may ask BOB to deploy plat-s1 steps 1d-1f (`deploy-plane-only.mjs plat-s1`, account 20b5…7f72 only).
 
-K5642 plan prune; K5643, K5644, K5647, K5651, K5652, K5654, K5656, K5658 (joint), K5660, K5662, K5665 merges; K5645 joint merge (RD37), the 85 % bar kept; K5646 reader-container's image row; K5648 xlsx.declared_text 25 MB (T53-540/541); K5649 entries; K5650 jurisdictions' two calls (R114 reworded) and its findings placed (T53-542 to T53-545); K5653 reader-container's image digest `sha256:c1422b26…250b`; K5655 office-readers R46 reworded, plane T53-546; K5657 job complete --with; K5659 English baseline lowered (688/1,846 to 649/1,692); K5661 file-scanner R16 reworded (scan bound from runtime-limits); K5663 layer 1 closed, layer 2's lines; K5664 plan prune; K5666 layer-2 answers.
+## Rulings this session (K5667-K5698)
 
-## State worth knowing
+K5672 UX U512-U519 merged at layer 2; K5673-K5674 ai-catalogue merged, parameters folded, C-156; K5675 member-roster R85/R86 tests at five (wording); K5676 member-roster's users; K5677 credentials held, findings placed (T53-552 to T53-555); K5678-K5679 ai-accounts merged, T53-556; K5680 record-core R92 live check on biosmoke8 (complete, read-only); K5681 Bob's reads-list ruling; K5682-K5684 member-roster and membership merged; K5685 UX U520-U521, ai-catalogue's reads; K5686-K5689 credentials and promotion merged, row-census 1.80.0 removed; K5690 layer 2 closed, layer 3's lines (capture R121 previewMore, doorbell R31 KNOCK_BYTES_CHANGED, sources R23, mail-door paths); K5691 file-safety R71; K5692 mail-door's four answers (R7 reworded, C-157); K5693 doorbell uses runtime-limits, C-85.6, T53-557 to T53-561; K5694 the push hook fault; K5695-K5698 provenance, attestation, provenance-routes merged, R69, T53-562.
 
-- Models: haiku for test-only, sonnet otherwise, the default for a new module.
-- reader-container's tests skip without 7z, ExifTool and libheif's codecs (15 of 73 here); skips are not reds.
-- `build/plan/current.md` is near its 51,200-byte limit: move each closed layer's block whole to the archive at its close (as K5664).
+## Deferrals to name in the round's report (P19)
+
+record-core T53-68 (study S1-S4, Bob's decision); ai-catalogue T53-75 / R39 (key ceremony); mail-door R12's email() (M1 not yet made).
+
+## Arrived after this handoff was written (06:35-06:44Z), unanswered: yours
+
+1. **CAPTURE** (06:35): T53-102 (daemon fetch only for a followed case) and T53-105 (challenge/CAPTCHA recognised, refused, counted per host; her file matched to the waiting request) have no line in `capture.md`; its reading: neither is capture's code (acquisition R36/R130/R137 and T53-99 carry the fetch side). Decide whether the per-host count or the upload-to-waiting-request match is capture's (then write the line and name the id) or another module's (place it). It minted C-118.13 `FILE_KIND_REFUSED` (R119; capture's own family, fine).
+2. **CAPTURE** (06:43): R120 / T53-108 (the Add door under three uploaders) needs a measurement first: where the 11-13 s goes (hashing and put, profileOf, the promotion `within`, the registrar) on plat-s1 with PLATFORM's study driver. Not buildable from code alone. Ask PLATFORM #2 (`session_018BhcegTAycjUS9ubrhLQ2p`) to re-run the three-uploader study with stage timings per upload, or let capture measure on a scratch copy (K5120); else a P19 deferral (a measurement not yet made). Also: JOURNEYS R-22, R-23 have no line in capture.md; its reading: R-23 is the control plane's stamp (capture admits any `member:<id>`).
+3. **CAPTURE-SOURCES** COMPLETE (3bc4be5a, 130/130): merge it first in layer 3's remaining order; lower its baseline lines (keep "binding exploded", test input); one new key `capture-sources.drive.convert_source`.
+4. **MAIL-DOOR** (06:42): K5692 applied, codes C-157.1-.9, R7 met; 42 pass, 5 todo (4 R5, 1 R12 M1); waits for capture's merge then a CHANGE. Findings to place: setup-words artifacts stale by `mail-door.*` keys (regenerated at merge); answer-envelope `families.mjs` needs C-157; the composition owes `mailDoorOf(ctx, {capture, settings})` and routing `mailDoorOps`; scheduler's mail-clear consumer (`clearWaitingMail`, `mailClearDue`, `mailClearWake`); a notice-producers line reading `owners`.

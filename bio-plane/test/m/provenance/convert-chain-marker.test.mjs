@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { provDoc, infoMd } from "./fixture.mjs";
 import { registerChecks } from "../../../src/provenance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const cap = { path: "snapshots/a.txt", text: "bytes of a" };
 /* The register's C-18.9 findings over one document, at `state`. */
@@ -26,11 +27,10 @@ test("R46: C-18.9's absent, not-an-array and empty chain findings each say which
   for (const f of [absent, notArray, empty]) assert.equal(f.length, 1, JSON.stringify(f));
   const [a, n, e] = [absent[0], notArray[0], empty[0]];
   assert.equal(new Set([a.message, n.message, e.message]).size, 3, "the three no longer read alike");
-  assert.match(a.message, /records no provenance_chain at all/);
+  assert.equal(a.message, word("provenance.register.chain_absent", { i: "0" }));
   assert.match(n.message, /provenance_chain is null, not an array of hops: whatever wrote this did not write a chain/);
   assert.match(c189({ ...good, provenance_chain: "x" })[0].message, /provenance_chain is string, not an array of hops/);
-  assert.match(e.message, /records an EMPTY provenance_chain/);
-  assert.match(e.message, /different fact from never having recorded one and must not be repaired by assuming a route/);
+  assert.equal(e.message, word("provenance.register.chain_empty", { i: "0" }));
   /* The repairs, each finding its own. */
   assert.deepEqual(a.repairs, ["record the chain of custody for this capture, one hop per party, from us back to the source",
     "or, where the capture record already holds the route, derive it from that evidence with op=provenancechain"]);
@@ -39,7 +39,7 @@ test("R46: C-18.9's absent, not-an-array and empty chain findings each say which
     "or state plainly that the route is undetermined rather than leaving an empty chain standing at verified"]);
   assert.equal(e.repairs.some((r) => /undetermined/.test(r)), true, "the empty case's repair states undetermined");
   /* Nothing weakened beside it: an unattributed hop is still refused, a named one passes. */
-  assert.match(c189({ ...good, provenance_chain: [{ asserts: "y", bound: false }] })[0].message, /names no attestor/);
+  assert.equal(c189({ ...good, provenance_chain: [{ asserts: "y", bound: false }] })[0].message, word("provenance.register.hop_no_attestor", { i: "0", h: "0" }));
   assert.deepEqual(c189({ ...good, provenance_chain: [{ who: "instance x", asserts: "y", bound: false, via: "direct" }] }), []);
 });
 
