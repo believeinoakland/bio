@@ -20795,105 +20795,105 @@
       "en": "claims an instance at bootstrap",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2227
+      "line": 2247
     },
     {
       "id": "credentials.declared.passwordreset",
       "en": "credential: a reset link and a new password, reached with no session; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2231
+      "line": 2251
     },
     {
       "id": "credentials.declared.passwordresetlink",
       "en": "credential: an administrator's reset link for one member, answered once; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2233
+      "line": 2253
     },
     {
       "id": "credentials.declared.reauth",
       "en": "session-directed: the caller's own session, its password asked again for five minutes; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2235
+      "line": 2255
     },
     {
       "id": "credentials.declared.recover",
       "en": "credential: a recovery code and a new password, reached with no session; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2237
+      "line": 2257
     },
     {
       "id": "credentials.declared.recoverycodesissue",
       "en": "credential: an administrator's own recovery codes, shown once; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2239
+      "line": 2259
     },
     {
       "id": "credentials.declared.setpassword",
       "en": "session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2243
+      "line": 2263
     },
     {
       "id": "credentials.declared.signeradd",
       "en": "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2245
+      "line": 2265
     },
     {
       "id": "credentials.declared.signerknown",
       "en": "signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2251
+      "line": 2271
     },
     {
       "id": "credentials.declared.signerregisterown",
       "en": "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2247
+      "line": 2267
     },
     {
       "id": "credentials.declared.signerrevokeown",
       "en": "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2249
+      "line": 2269
     },
     {
       "id": "credentials.declared.signerset",
       "en": "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2253
+      "line": 2273
     },
     {
       "id": "credentials.declared.signout",
       "en": "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2255
+      "line": 2275
     },
     {
       "id": "credentials.declared.signouteverywhere",
       "en": "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2257
+      "line": 2277
     },
     {
       "id": "credentials.declared.unlock",
       "en": "session-directed: the caller's own locked session, cleared with their password; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2259
+      "line": 2279
     },
     {
       "id": "credentials.index.a_member_changes_their_own",

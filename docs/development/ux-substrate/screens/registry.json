@@ -625,6 +625,11 @@
      ]
     },
     {
+     "op": "owed:adminproposalcancel K5563",
+     "label": "Cancel this proposal",
+     "status": "owed"
+    },
+    {
      "op": "expertiseconfirm",
      "label": "Confirm declared expertise",
      "status": "declared",
@@ -5459,6 +5464,16 @@
      ]
     },
     {
+     "op": "owed:mailnameshow K5534",
+     "label": "Show a name, with why it is material",
+     "status": "owed"
+    },
+    {
+     "op": "owed:mailnamewithhold K5534",
+     "label": "Withhold a name again",
+     "status": "owed"
+    },
+    {
      "op": "signerregisterown",
      "label": "Register a signing key in this browser",
      "status": "function",
@@ -5735,6 +5750,11 @@
    "frame": "working",
    "purpose": "Material handed in through the doorbell.",
    "acts": [
+    {
+     "op": "owed:inboxview DEC-479",
+     "label": "Show it safely",
+     "status": "owed"
+    },
     {
      "op": "inboxpull",
      "label": "Move into the record",
