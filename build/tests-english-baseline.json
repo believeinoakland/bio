@@ -212,6 +212,8 @@
   "bio-plane/test/m/corpus-export/render.test.mjs": 1,
   "bio-plane/test/m/corpus-export/tables.test.mjs": 1,
   "bio-plane/test/m/docket/reads.test.mjs": 2,
+  "bio-plane/test/m/doorbell/doorbell.test.mjs": 2,
+  "bio-plane/test/m/doorbell/knocker.test.mjs": 1,
   "bio-plane/test/m/duties/acts.test.mjs": 2,
   "bio-plane/test/m/duties/exports.test.mjs": 1,
   "bio-plane/test/m/duties/occurrences.test.mjs": 4,
