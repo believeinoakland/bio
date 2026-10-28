@@ -2875,7 +2875,7 @@ W.append(dict(key='screen.members.how.it.changes.with.the', en='How it changes w
 W.append(dict(key='screen.members.no.majority.that.leaves.out', en='no majority that leaves out the one facing removal can be reached', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
 W.append(dict(key='screen.members.removal.takes.a.majority.of', en='Removal takes a majority of all administrators.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
 W.append(dict(key='screen.members.the.one.facing.removal.is', en="The one facing removal is counted but doesn't vote, and a tie removes no one.", protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
-W.append(dict(key='screen.members.a.lone.administrator.can.never', en='Apart from the founder, a lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
+W.append(dict(key='screen.members.a.lone.administrator.can.never', en='A lone administrator can never remove anyone by vote, at any size; removal by vote only gets easier as the team grows.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
 W.append(dict(key='screen.members.removing.teo.as.an.administrator', en='Removing {member} as an administrator', protected=False, note='DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal (adminremovalsopen target)'))
 W.append(dict(key='screen.members.four.administrators.rosa.dev.ana', en='{n} administrators: {members}.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} every administrator counted, the one facing removal included; {members} their names as one list in the language\'s own list form (Intl.ListFormat, conjunction); who voted and who is awaited are the rows below it, one per member (screen.members.removal.*)'))
 W.append(dict(key='screen.members.this.takes.3.of.4', en="This takes {n} of {total} administrators' votes.", protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
@@ -5466,7 +5466,7 @@ W.append(dict(key='screen.doorbell.consent.no', en='I take back my agreement', p
 W.append(dict(key='screen.doorbell.consent.permanent1', en='Agreeing is permanent for anything published under it: what is published stays published, even if you later take your agreement back.', protected=False, note='DEC-375: B398 C17 (sources): sits on screen doorbell'))
 W.append(dict(key='screen.doorbell.consent.permanent2', en='Taking it back binds only what is published afterward.', protected=False, note='DEC-375: B398 C17 (sources): sits on screen doorbell'))
 W.append(dict(key='screen.doorbell.consent.refused.summary', en='When your answer is not accepted', protected=False, note='DEC-375: B398 C17 (sources): sits on screen doorbell'))
-W.append(dict(key='screen.doorbell.consent.refused.secret', en='That secret was not recognised, so nothing was recorded.', protected=False, note='DEC-375: B398 C17 (knockerconsent): refusal, first sentence (the plane answers every failure alike)'))
+W.append(dict(key='screen.doorbell.consent.refused.secret', en='That secret was not recognized, so nothing was recorded.', protected=False, note='DEC-375: B398 C17 (knockerconsent): refusal, first sentence (the plane answers every failure alike)'))
 W.append(dict(key='screen.doorbell.consent.refused.rate', en='Too many tries have come from here lately.', protected=False, note='DEC-375: B398 C17 (sources): sits on screen doorbell'))
 W.append(dict(key='screen.doorbell.consent.refused.rate.next', en='Wait a while, then try again.', protected=False, note='DEC-375: B398 C17 (sources): sits on screen doorbell'))
 W.append(dict(key='screen.about-knocker.intro1', en='Someone who handed material to your team.', protected=False, note='DEC-375: B398 C17 (sources): subtitle, first sentence'))
@@ -6247,7 +6247,7 @@ W.append(dict(key='screen.watching.sweepdef.refd', en='When it is refused', prot
 REWRITE.update({
   'screen.held.ineligible.alone': "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
   'screen.inbox.ladder.basis': "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
-  'screen.doorbell.received': "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  'screen.doorbell.received': "Received on {at}. A member of the team will read it. Keep what this receipt shows: this page does not know who you are, so that is all you have to ask about it.",
   'screen.capture.address.existed': "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
   'screen.document.cite.question': 'Cite in which question',
   'screen.finder.widen': 'Documents holding at least one of the words: {n}.',
@@ -8718,9 +8718,10 @@ w484('screen.members.founder.removes', "The team's founder can remove any other 
 w484('screen.members.founder.remove.summary', 'When the founder removes an administrator', "members: the fold with the founder's own removal (K5562)")
 w484('screen.members.removed.byfounder', '{founder}, the team\'s founder, removed {handle} as an administrator on {date}: “{reason}”', 'members, and the team\'s updates: the removal and its reason, shown to the team (K5562)')
 w484('screen.members.endorse.founder', "{handle} is proposed as an administrator. As the team's founder, your endorsement alone makes them one.", "members: endorse.what's line for the founder (K5563)")
-w484('screen.members.proposal.summary', 'When the founder endorses, or the proposal is cancelled', "members: the design page's fold for a proposed administrator's two outcomes")
-w484('screen.members.proposal.cancelled', '{handle}\'s proposal is cancelled. They stay a member, without an administrator\'s powers; the endorsements given so far stay in the history.', 'members: after Cancel this proposal (K5563)')
-REWRITE.update({'refusal.CONSENSUS_REQUIRED': "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}."})
+w484('screen.members.proposal.summary', 'When the founder endorses, or the proposal is canceled', "members: the design page's fold for a proposed administrator's two outcomes")
+w484('screen.members.proposal.cancelled', '{handle}\'s proposal is canceled. They stay a member, without an administrator\'s powers; the endorsements given so far stay in the history.', 'members: after Cancel this proposal (K5563)')
+REWRITE.update({'refusal.CONSENSUS_REQUIRED': 'Your endorsement is recorded. Still to endorse: {awaiting}.'})
+REWRITE.update({'screen.members.founder': "the team's founder"})
 
 def w485(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-485: ' + note))
@@ -8732,7 +8733,7 @@ w485('screen.members.removed.voter', '{member}: “{reason}”', 'members: one v
 w485('screen.members.founder.remove.now', 'Remove {member} now, as the founder', 'members: the founder\'s act inside a removal vote under way; it removes at once (K5562; members.mjs:284 drew Agree)')
 w485('screen.members.founder.seen', "Seen by the team's founder", "members: the design page's fold for the founder's act inside a vote")
 w485('screen.members.founder.remove.now.what', "As the team's founder, you can remove {member} now, without waiting for the vote. Your reason is shown to the team.", 'members: above the founder\'s act inside a vote')
-w485('refusal.NO_WAITING_PROPOSAL', 'There is no waiting proposal to cancel: it was already accepted or cancelled. Nothing was changed.', 'adminproposalcancel (K5566)')
+w485('refusal.NO_WAITING_PROPOSAL', 'There is no waiting proposal to cancel: it was already accepted or canceled. Nothing was changed.', 'adminproposalcancel (K5566)')
 w485('refusal.NOT_YOUR_PROPOSAL', "Only the team's founder or the member who proposed it can cancel this proposal. Nothing was changed.", 'adminproposalcancel (K5566)')
 REWRITE.update({'screen.members.remove.reason': "Why remove their administrator's powers? (everyone on the team will see this)"})
 
