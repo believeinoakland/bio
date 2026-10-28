@@ -223,7 +223,10 @@ function periodFor(y, f) {
   return { label, start: dayText(start), end: dayText(next - 1), startN: start, endN: next - 1 };
 }
 
-/** R21. */
+/* R31: a body the caller did not name is "", whitespace or `*` (the view's stand-in for every body); a reason never holds it. */
+const unnamed = (body) => body.trim() === "" || body === "*";
+
+/** R21, R31. */
 export function fiscalPeriod(args) {
   if (!args || typeof args !== "object") throw new TypeError("fiscalPeriod takes {date, body, view}");
   const { date, body, view } = args;
@@ -232,11 +235,11 @@ export function fiscalPeriod(args) {
   const list = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
   const f = list.find((x) => x && x.body === body) || list.find((x) => x && x.body === "*");
   if (!f) {
-    const m = missing(view, "fiscal_year", "fiscal_year", { body: String(body) });
-    return { undetermined: true, code: m.code, why: m.why };
+    const m = missing(view, "fiscal_year", "fiscal_year", { body });
+    return { undetermined: true, code: m.code, why: unnamed(body) ? reason("civil-time.missing.fiscal_year_no_body") : m.why };
   }
   if (typeof f.start !== "string" || !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(f.start) || (f.named_by !== "start" && f.named_by !== "end"))
-    return { undetermined: true, code: "FACT_INVALID", why: reason("civil-time.recurrence.fiscal_year_form", { body: String(body) }) };
+    return { undetermined: true, code: "FACT_INVALID", why: unnamed(body) ? reason("civil-time.missing.fiscal_year_no_body") : reason("civil-time.recurrence.fiscal_year_form", { body }) };
   const s = typeof date === "string" && date.length === 10 ? spanOf({ value: date, precision: "day", zone: "UTC" }) : spanOf(date);
   if (isNo(s)) return s;
   if (s.lo === null || s.hi === null) return undetermined(reason("civil-time.date_open_unknown"));
@@ -245,7 +248,11 @@ export function fiscalPeriod(args) {
   const hi = s.dt.precision === "day" ? lo : Math.floor((s.hi - 1 + offsetAt(s.hi - 1, z)) / 86400);
   const yearOf = (n) => { const y = civil(n).y; const p = periodFor(y, f); return n >= p.startN ? p : periodFor(y - 1, f); };
   const a = yearOf(lo), b = yearOf(hi);
-  const out = (p) => ({ label: p.label, start: p.start, end: p.end });
+  /* R31: whose entry it was: the layer's profile tag and its origin, as the view gives them */
+  const from = {};
+  if (f.profile !== undefined) from.profile = f.profile;
+  if (f.origin !== undefined) from.origin = f.origin;
+  const out = (p) => ({ label: p.label, start: p.start, end: p.end, ...(Object.keys(from).length ? { from: { ...from } } : {}) });
   if (a.startN !== b.startN) return undetermined(reason("civil-time.spans_two_fiscal", { value: String(s.dt.value), label: String(a.label), label_2: String(b.label) }), [out(a), out(b)]);
   return out(a);
 }
