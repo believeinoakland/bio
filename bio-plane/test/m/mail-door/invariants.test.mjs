@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, mailDoorOps } from "../../../src/mail-door/index.mjs";
-import { fresh, addressFor, plain, T0 } from "./fixture.mjs";
+import { fresh, addressFor, plain, eml, STANDARD, T0 } from "./fixture.mjs";
 
 const SRC = new URL("../../../src/mail-door/", import.meta.url);
 
@@ -36,7 +36,26 @@ test("R11 no network call is made across receiving, listing, reading, deleting a
   assert.deepEqual(calls, []);
 });
 
-test.todo("R7 a published copy shows From, To, Cc, Date and Subject without any address or technical header, a name only where marked material, the marks recorded: `publication`'s filter (N1259), not this module's");
+test("R7 after a message with addresses in From, To, Cc and Received is received and read, no list answer and no table row holds them or the private address; control: the owner's own view shows all headers", async () => {
+  const { d, rows, b } = fresh();
+  const to = await addressFor(d, "ann");
+  const people = ["ada@example.org", "clerk@example.gov", "ben@example.org", "relay-user@example.net"];
+  const bytes = eml(["Received: from relay.example.org by mx.example.org for <relay-user@example.net>; Tue, 6 Oct 2026 09:31:00 -0700", ...STANDARD], "body");
+  const r = await d.receiveMail({ raw: bytes, envelope_to: to, now: T0 });
+  assert.equal(r.ok, true);
+  const listed = JSON.stringify(d.mailWaiting({ viewer: "member:ann" }));
+  const tables = JSON.stringify(rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((t) => rows(`SELECT * FROM ${t.name}`)));
+  for (const a of [...people, to]) {
+    assert.equal(listed.includes(a), false, `the list holds ${a}`);
+    assert.equal(tables.includes(a), false, `a row holds ${a}`);
+  }
+  assert.equal(JSON.parse(listed).mail[0].headers.from, "Ada Lane", "a display name stays");
+  assert.deepEqual([...b.held.values()].map((x) => Buffer.from(x).equals(Buffer.from(bytes))), [true], "the stored bytes are the raw message whole");
+  const own = (await d.mailRead({ id: r.id, viewer: "member:ann" })).mail;
+  assert.equal(own.headers.from, "Ada Lane <ada@example.org>");
+  assert.match(own.headers.received[0], /relay-user@example\.net/);
+  assert.equal(JSON.stringify(own).includes(to), false, "not even the owner's view answers the private address");
+});
 
 test.todo("R12 the mail entry is the plane's `email()` export calling `receiveMail`, not an op and not a public route: waits on the measurement M1 and `plane`");
 

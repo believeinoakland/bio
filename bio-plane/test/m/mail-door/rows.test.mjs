@@ -1,4 +1,4 @@
-/* mail-door R13: every refusal this module raises has its C-156 row and its words by key; the codes it relays are
+/* mail-door R13: every refusal this module raises has its C-157 row and its words by key; the codes it relays are
    another module's rows. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -8,11 +8,11 @@ import { fresh, addressFor, plain } from "./fixture.mjs";
 
 const RAISED = ["MAIL_OFF", "MAIL_NOT_SET_UP", "MAIL_NO_SUCH_ADDRESS", "MAIL_TOO_LARGE", "MAIL_EMPTY", "MAIL_RATE_MEMBER", "MAIL_RATE_TEAM", "MAIL_ALREADY_IN", "NO_SUCH_MAIL"];
 
-test("R13 the table holds one C-156 row for each code mail-door raises, and no relayed code", () => {
+test("R13 the table holds one C-157 row for each code mail-door raises, and no relayed code", () => {
   assert.deepEqual(Object.keys(MAIL_CHECKS).sort(), [...RAISED].sort());
   const ids = Object.values(MAIL_CHECKS).map((r) => r.check);
   assert.equal(new Set(ids).size, RAISED.length);
-  for (const id of ids) assert.match(id, /^C-156\.\d+$/);
+  for (const id of ids) assert.match(id, /^C-157\.\d+$/);
   for (const code of ["MAIL_NO_STATEMENT", "MAIL_WITHIN_FAILED", "MAIL_TOO_NESTED"]) assert.equal(MAIL_CHECKS[code], undefined, `${code} is not this module's row`);
 });
 

@@ -30,6 +30,17 @@ const te = new TextEncoder();
 const hexOf = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const HOUR = 3600000, DAY = 86400000;
 
+/* R4: the header fields a row and the owner's view answer. */
+const FIELDS = ["from", "to", "cc", "date", "date_utc", "subject", "message_id", "received", "authentication_results"];
+/* R7 (K5692): a header's text with every email address taken out, and the brackets left empty by it; a display name
+   stays. An array is cleaned item by item; null stays null. */
+const ADDRESS = /<?\s*(?:mailto:)?[^\s<>"'(),;:@\[\]]+@[^\s<>"'(),;:@\[\]]+\s*>?/gi;
+export function withoutAddresses(v) {
+  if (v == null) return null;
+  if (Array.isArray(v)) return v.map(withoutAddresses);
+  return String(v).replace(ADDRESS, " ").replace(/\(\s*\)|<\s*>/g, " ").replace(/\s+([,;])/g, "$1").replace(/\s{2,}/g, " ").trim() || null;
+}
+
 /* The figures, each read from `runtime-limits` (its R37, R46) when it is needed, never written here (R6, R8). */
 const MAIL_BOUND = () => boundOf("mail", "message_bytes");
 const PER_MEMBER_HOUR = () => boundOf("mail", "per_member_hour");
@@ -385,10 +396,11 @@ export class MailDoor {
     return { ...answer, bytes: bytes.length, sha256: sha, automatic: facts.automatic };
   }
 
-  /* R4, R10: what a row keeps of mail-reader's answer: the headers as the message states them, the reason any could not
-     be read, and whether the message says it is automatic. */
+  /* R4, R7, R10: what a row keeps of mail-reader's answer: the headers as the message states them with every email
+     address taken out (a display name stays; R7, K5692: no row but the stored bytes holds a person's address), the reason
+     any could not be read, and whether the message says it is automatic. The owner's own view reads the whole headers
+     from the stored bytes (`mailRead`). */
   static #factsOf(read) {
-    const FIELDS = ["from", "to", "cc", "date", "date_utc", "subject", "message_id", "received", "authentication_results"];
     if (!read || !read.ok) {
       return { automatic: false, stated: { headers: Object.fromEntries(FIELDS.map((f) => [f, null])), unreadable: { message: read?.reason ?? "MAIL_MALFORMED" }, attachments: [] } };
     }
@@ -396,9 +408,8 @@ export class MailDoor {
     const auto = (h.auto_submitted != null && String(h.auto_submitted).trim().toLowerCase().split(/[;\s]/)[0] !== "no")
       || /^(bulk|junk)$/i.test(String(h.precedence ?? "").trim()) || h.list_id != null || h.return_path === "<>";
     return { automatic: !!auto,
-             stated: { headers: Object.fromEntries(FIELDS.map((f) => [f, h[f] ?? null])), unreadable: read.unreadable || {},
-                       attachments: (read.attachments || []).map((a) => ({ index: a.index, name_stated: a.name_stated ?? null, type_stated: a.type_stated ?? null, size: a.size ?? null })),
-                       auto: { auto_submitted: h.auto_submitted ?? null, precedence: h.precedence ?? null, list_id: h.list_id ?? null, return_path: h.return_path ?? null } } };
+             stated: { headers: Object.fromEntries(FIELDS.map((f) => [f, f === "message_id" ? h[f] ?? null : withoutAddresses(h[f])])), unreadable: read.unreadable || {},
+                       attachments: (read.attachments || []).map((a) => ({ index: a.index, name_stated: withoutAddresses(a.name_stated), type_stated: a.type_stated ?? null, size: a.size ?? null })) } };
   }
 
   /* ==================================================================== *
@@ -458,7 +469,8 @@ export class MailDoor {
     const read = bytes ? await readMessage(bytes, { route: "address" }) : null;
     let stated = null;
     try { stated = JSON.parse(r.headers); } catch { stated = null; }
-    return { ok: true, mail: { ...view,
+    const whole = read && read.ok ? { headers: Object.fromEntries(FIELDS.map((f) => [f, read.headers[f] ?? null])), unreadable: read.unreadable || {} } : {};
+    return { ok: true, mail: { ...view, ...whole,
       text: read && read.ok ? read.body.text : null,
       text_basis: read && read.ok ? null : bytes ? localize("mail-door.index.text_unreadable", "the message's text could not be read; it is kept whole as received")
         : localize("mail-door.index.text_in_record", "the message is in the record now; read it there"),
@@ -509,7 +521,9 @@ export class MailDoor {
                                           WHERE mail_id = ? AND status = 'waiting'`, r.sha256, me, at, r.mail_id);
     const at = new Date(this.nowMs()).toISOString();
     const inner = (document) => { mark(at); return typeof within === "function" ? within(document) : undefined; };
-    const answer = await this.capture.emailCapture({ bytes, headers: stated ? stated.headers : null, statement, by, within: inner });
+    const read = await readMessage(bytes, { route: "address" });
+    const headers = read.ok ? Object.fromEntries(FIELDS.map((f) => [f, read.headers[f] ?? null])) : stated ? stated.headers : null;
+    const answer = await this.capture.emailCapture({ bytes, headers, statement, by, within: inner });
     if (!answer || answer.ok !== true) return answer;
     /* bytes the record already held: capture did not call `within`, so the row is marked here */
     if (this.#one(`SELECT status FROM mail_waiting WHERE mail_id = ?`, r.mail_id)?.status === "waiting") this.#tx(() => mark(at));
