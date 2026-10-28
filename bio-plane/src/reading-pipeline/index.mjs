@@ -1238,6 +1238,52 @@ const clampPieceUnits = (env, maxUnits) => {
   const n = pieceUnitsOf(env);
   return n === null ? maxUnits : (Number.isInteger(maxUnits) && maxUnits > 0 ? Math.min(maxUnits, n) : n);
 };
+/* PROTO_WINDOW_BYTES (throwaway measuring prototype): env.PROTO_WINDOW_BYTES, a positive integer n, makes n (clamped to [16 KiB, 1 MiB]) the bytes a later piece
+   of a text reads as its window; "auto" sizes it to the piece: clamp(the piece's unit budget x 256 bytes, 64 KiB, 1 MiB). Unset or invalid = WINDOW_BYTES as today
+   (behaviour identical). The cursor arithmetic is untouched: the window is only the ask `windowBytes`, which textWindowTick already doubles or cuts to whole runs. */
+export const WINDOW_MIN = 16 * 1024, WINDOW_MAX = 1024 * 1024, WINDOW_AUTO_MIN = 64 * 1024, WINDOW_AUTO_PER_UNIT = 256;
+export const protoWindowBytes = (env, pieceUnits) => {
+  const v = env && typeof env === "object" ? env.PROTO_WINDOW_BYTES : undefined;
+  if (typeof v === "string" && v.trim().toLowerCase() === "auto") {
+    const u = Number.isInteger(pieceUnits) && pieceUnits > 0 ? pieceUnits : PIECE_UNITS_MAX;
+    return Math.min(WINDOW_MAX, Math.max(WINDOW_AUTO_MIN, u * WINDOW_AUTO_PER_UNIT));
+  }
+  const n = typeof v === "number" ? v : (typeof v === "string" && /^[1-9][0-9]{0,9}$/.test(v.trim()) ? Number(v.trim()) : NaN);
+  return Number.isInteger(n) && n > 0 ? Math.min(WINDOW_MAX, Math.max(WINDOW_MIN, n)) : null;
+};
+/* PROTO_CHAIN_BYTES / PROTO_CHAIN_REST_MS (throwaway): per ISOLATE (module-level) the bytes the reading consumer has read, and the isolate's start. `pending-work`
+   starts no further read piece once the count passes PROTO_CHAIN_BYTES; it rests PROTO_CHAIN_REST_MS (default 20000) and then resets the count (same isolate), so
+   reading always advances. Unset = nothing is counted or logged. */
+export const protoChain = {
+  start: Date.now(), bytes: 0, restUntil: null, justRested: false,
+  limitOf(env) { const v = env && typeof env === "object" ? env.PROTO_CHAIN_BYTES : undefined;
+    const n = typeof v === "number" ? v : (typeof v === "string" && /^[1-9][0-9]{0,12}$/.test(v.trim()) ? Number(v.trim()) : NaN); return Number.isInteger(n) && n > 0 ? n : null; },
+  restOf(env) { const v = env && typeof env === "object" ? env.PROTO_CHAIN_REST_MS : undefined;
+    const n = typeof v === "number" ? v : (typeof v === "string" && /^[0-9]{1,9}$/.test(v.trim()) ? Number(v.trim()) : NaN); return Number.isInteger(n) && n >= 0 ? n : 20000; },
+  add(n) { if (Number.isFinite(n) && n > 0) this.bytes += n; },
+  /* the evidence store, its `get` counted (the bytes the reader takes out of an object, whole or by range) */
+  counted(ev) {
+    const self = this;
+    return new Proxy(ev, { get: (t, k) => {
+      if (k !== "get") return typeof t[k] === "function" ? t[k].bind(t) : t[k];
+      return async (...a) => {
+        const o = await t.get(...a);
+        if (!o || typeof o.arrayBuffer !== "function") return o;
+        return new Proxy(o, { get: (ot, ok) => {
+          if (ok === "arrayBuffer") return async () => { const b = await ot.arrayBuffer(); self.add(b.byteLength); return b; };
+          return typeof ot[ok] === "function" ? ot[ok].bind(ot) : ot[ok];
+        } });
+      };
+    } });
+  },
+  line(env, extra = {}) {
+    try {
+      const pu = effectivePieceUnits(env);
+      const wb = protoWindowBytes(env, pu) ?? WINDOW_BYTES;
+      console.log(JSON.stringify({ proto_chain: { chain_bytes: this.bytes, window_bytes: wb, piece_units: pu, isolate_age_ms: Date.now() - this.start, rested: this.justRested, ...extra } }));
+    } catch { /* logged where it can be */ }
+  },
+};
 /* G26 (fix round 6): a PDF is read in pieces by page ranges (pdf-reader's `extractPdfRange`, R43), the cursor a page. A range's
    structures are dropped before the next is read, so a tick holds the bytes and one range, and the whole is one parse, not one
    per piece. G56 (K4693, K4700): a range is sized by work as well as by pages: at most `PDF_RANGE_PAGES` pages and at most
@@ -2720,6 +2766,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
                                         killedPages, stampUnit, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
   maxUnits = clampPieceUnits(env, maxUnits); // PROTO_PIECE_UNITS
+  { const pw = protoWindowBytes(env, Number.isInteger(maxUnits) && maxUnits > 0 ? maxUnits : PIECE_UNITS_MAX); if (pw !== null) windowBytes = pw; } // PROTO_WINDOW_BYTES
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   if (skipKilled === true && typeof cursor === "string") {

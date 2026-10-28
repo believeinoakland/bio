@@ -61,7 +61,7 @@
    detail}` or `{ok: true, owed: true}` (a stage ended, the rest follows), `{final: true, why}` (ended, stated), anything else (tried
    again). */
 import { recordOf } from "../record-core/index.mjs";
-import { extractionOf } from "../extraction/index.mjs";
+import { extractionOf, protoChain } from "../extraction/index.mjs";
 import { acquisitionOf, owedRun } from "../acquisition/index.mjs";
 import * as acquisitionModule from "../acquisition/index.mjs";   /* `owedFetch` is read from the namespace: an instance's own, else the module's */
 import { captureOf } from "../capture/index.mjs";
@@ -788,6 +788,22 @@ export function pendingOf(ctx, deps = {}) {
           /* a due keep goes first: it makes the whole its digest's reading then reads in the same tick */
           const heavy = due.filter((r) => HEAVY.includes(r.kind)).sort((a, b) => (a.kind === "keep" ? 0 : 1) - (b.kind === "keep" ? 0 : 1)).slice(0, 1);
           for (const row of [...light, ...heavy]) {
+            /* PROTO_CHAIN_BYTES (throwaway): once this isolate has read past the bound, no read piece starts; the row stays owed, due after the rest, with no work between */
+            const limit = (row.kind === "reading" || row.kind === "ocr") ? protoChain.limitOf(env) : null;
+            if (limit !== null && protoChain.bytes > limit) {
+              const t = Date.now();
+              if (protoChain.restUntil === null) {
+                protoChain.restUntil = t + protoChain.restOf(env);
+                protoChain.line(env, { event: "rest_begin", rest_ms: protoChain.restOf(env) });
+              }
+              if (t < protoChain.restUntil) {
+                sql.exec(`UPDATE keeps_pending SET due_at=? WHERE sha=? AND kind=?`, now() + (protoChain.restUntil - t), row.sha, row.kind);
+                out.results.push({ sha: row.sha, kind: row.kind, outcome: "rest" });
+                continue;
+              }
+              protoChain.bytes = 0; protoChain.restUntil = null; protoChain.justRested = true;
+              protoChain.line(env, { event: "rest_end" });
+            }
             out.asked++;
             const done = await run(row, at);
             out[done === "finished" ? "finished" : done === "final" ? "final" : "retried"]++;

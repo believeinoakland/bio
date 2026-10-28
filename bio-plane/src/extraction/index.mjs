@@ -56,6 +56,7 @@ const roMem = () => {
   try { if (typeof process !== "undefined" && typeof process.memoryUsage === "function") { const m = process.memoryUsage(); return { rss: m.rss ?? null, heapUsed: m.heapUsed ?? null }; } } catch { /* none */ }
   return null;
 };
+export const protoChain = pipeline.protoChain;   // PROTO_CHAIN_BYTES: pending-work's gate reads it
 const roLog = (tag, o) => { try { console.log(JSON.stringify({ [tag]: o })); } catch { /* logged where it can be */ } };
 /* PROTO_PIECE_UNITS: the piece size in force (reading-pipeline's pieceUnitsOf: the env's positive integer, else 4096), as the log lines state it */
 const roPieceUnits = (env) => pipeline.effectivePieceUnits(env);
@@ -763,7 +764,8 @@ export class Extraction {
       ...(Array.isArray(killedPages) && killedPages.length ? { killedPages } : {}),
       /* (fix round 9, G165; R109) the plane's `stampUnit`, handed to the reader as it was given */
       ...(typeof stampUnit === "function" ? { stampUnit } : {}),
-      evidence: this.#evidenceOf(document && document.capture && document.capture.sha256),
+      evidence: (() => { const ev0 = this.#evidenceOf(document && document.capture && document.capture.sha256);
+        return ev0 && pipeline.protoChain.limitOf(e) !== null ? pipeline.protoChain.counted(ev0) : ev0; })(), // PROTO_CHAIN_BYTES
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
       ...(pieces === undefined ? {} : { cursor: pieces.cursor ?? null,
@@ -774,6 +776,7 @@ export class Extraction {
     /* (fix round 9, G128c; reading-pipeline R57) the first piece of a PDF read in ranges states what the whole file's reading states, so far as its pieces
        can: the glyphs of the text it carries, and, when it is also the last, the document's words; a later piece completes them (`#continueText`) */
     if (pieces !== undefined && out && out.reading && typeof out.reading === "object") completeFirstPiece(out);
+    if (pieces !== undefined && pipeline.protoChain.limitOf(e) !== null) { pipeline.protoChain.line(e, { event: "step" }); pipeline.protoChain.justRested = false; } // PROTO_CHAIN_BYTES
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     /* (fix round 9, G126a; R102) the OCR pages this read left are owed before it answers, through the registrar (`registrar` false: the caller owes
        them in its own write, as `readHeld` does) */
