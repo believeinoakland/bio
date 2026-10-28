@@ -1,6 +1,6 @@
 # credentials (T53)
 
-**Status** · session_018Bhceesg4XYzpL7ZX32uiC · depth 2 · COMPLETE
+**Status** · session_018Bhceesg4XYzpL7ZX32uiC · depth 2 · WAITING: COMPLETE; staying available for a CHANGE (ai-accounts' R26, R51 paths)
 **Sessions** · 1
 
 ## Completion (2026-10-28)
