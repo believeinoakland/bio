@@ -3,6 +3,7 @@
    PROJECT_GUARD_UNCHECKED and its row. Every test drives the module at its interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V } from "./fixture.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
@@ -138,7 +139,7 @@ test("R128 a guard that throws, answers a promise or anything but null or a refu
       assert.equal(r.translation, row.translation);
       assert.equal(r.project, P);
       assert.equal(r.act, act);
-      assert.match(r.detail, /could not be read.*Nothing was written\.$/);
+      assert.equal(r.detail, word("membership.index.whether_this_projects_own_rules"));
     }
     assert.equal(w.state(), before, `${what}: nothing written`);
     assert.deepEqual(w.heard, { invited: [], hidden: [] }, `${what}: no notice`);
