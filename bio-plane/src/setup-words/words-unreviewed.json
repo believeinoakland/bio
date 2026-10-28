@@ -27158,7 +27158,7 @@
       "en": "libreoffice {versionOf}; poppler-utils {versionOf_2}",
       "module": "file-scanner",
       "file": "file-scanner/src/handler.mjs",
-      "line": 27
+      "line": 35
     },
     {
       "id": "file-scanner.render.the_first_page_is_over_the_limit",

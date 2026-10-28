@@ -10,11 +10,19 @@ import { reputationLists } from './providers/reputation.mjs';
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS, CATALOGUE_READ_ON } from './providers/catalogue.mjs';
 import scanner from '../packages-scanner.json' with { type: 'json' };
 import renderer from '../packages-renderer.json' with { type: 'json' };
+import marker from '../fleet-member.json' with { type: 'json' };
 import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 const reply = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const UNKNOWN = () => reply(404, { ok: false, code: 'UNKNOWN' });
 const versionOf = (list, name) => (list.packages.find((p) => p.name === name) || {}).version || 'not reported';
+
+/** R36: names the `SafeViewRenderer`'s own code beside its packages: the image's published digest, else the marker's
+ *  `source_sha256` of the files the image is built from (bundler R36), so a renderer fix moves it whatever its packages do. */
+export const rendererBuild = (m = marker) => {
+  const image = (m.containers || []).find((c) => c.class_name === 'SafeViewRenderer')?.image || {};
+  return image.digest || (image.source_sha256 ? `sha256:${image.source_sha256}` : 'not reported');
+};
 
 /** R8. */
 async function version(deps) {
@@ -24,7 +32,7 @@ async function version(deps) {
     providers: { catalogue_read_on: CATALOGUE_READ_ON, offered: PROVIDERS.map((d) => d.provider_id),
       refused: REFUSED_PROVIDERS.map((d) => d.provider_id), held: HELD_PROVIDERS.map((d) => d.provider_id) },
     reputation_lists: await reputationLists(deps.bucket),
-    renderer_version: localize('file-scanner.handler.libreoffice_versionof_poppler_utils_versionof', 'libreoffice {versionOf}; poppler-utils {versionOf_2}', { versionOf: String(versionOf(renderer, 'libreoffice-core')), versionOf_2: String(versionOf(renderer, 'poppler-utils')) }),
+    renderer_version: localize('file-scanner.handler.libreoffice_versionof_poppler_utils_versionof', 'libreoffice {versionOf}; poppler-utils {versionOf_2}', { versionOf: String(versionOf(renderer, 'libreoffice-core')), versionOf_2: String(versionOf(renderer, 'poppler-utils')) }) + `; ${rendererBuild()}`,
     bounds: BOUNDS });
 }
 
