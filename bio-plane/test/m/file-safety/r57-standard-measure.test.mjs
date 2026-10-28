@@ -49,6 +49,11 @@ test("R57 R56 R51 (T53-510): at GRADE_READ_MAX less a byte, a PDF and an office 
   assert.equal(typeof s.may_open, "boolean");
   const d = await measured(t, "docx-at-the-bound.docx", DOCX(GRADE_READ_MAX - 4 * MIB), "grade");
   assert.deepEqual([d.format, d.threat], ["docx", "low"]);
+  /* T53-510 (K5704): above the bound a container is graded by its directory, read by ranges, up to the upload ceiling */
+  const over = await measured(t, "docx-over-the-bound.docx", DOCX(GRADE_READ_MAX + 4 * MIB), "grade");
+  assert.deepEqual([over.format, over.threat], ["docx", "low"]);
+  const zip = await measured(t, "zip-over-the-bound.zip", makeZip([{ name: "a.bin", data: new Uint8Array(GRADE_READ_MAX + 4 * MIB), method: 0 }, { name: "b.txt", data: "hello" }]), "grade");
+  assert.deepEqual([zip.format, zip.threat, zip.reasons], ["zip", "high", ["archive_not_opened"]]);
   const rows = 1_000_000;
   const csv = await measured(t, "csv-at-its-rows.csv", new TextEncoder().encode(Array.from({ length: rows }, (_, i) => `${i + 1},"label ${(i + 1) % 10007} of the row",${i + 1}.5`).join("\n") + "\n"), "view");
   assert.deepEqual([csv.ok, csv.kind], [true, "data"]);
