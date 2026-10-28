@@ -33,10 +33,12 @@ test("R1: every receipt (direct, web archive, doorbell, and each member of an un
   /* the scan queue: every file is due once (R4's batch sends them all) */
   const s = await w.fs.scanBatch({});
   assert.equal(s.scanned, 6);
-  /* the render queue: only files with a safe-view route reach /render; the image and the archive's text files do not */
-  for (let i = 0; i < 3; i++) await w.fs.renderBatch({ limit: 50 });   /* R12 (G136b): one render is begun per tick */
+  /* the render queue: only files with a safe-view route reach /render; the image (made in this module, R60) and the archive's text files do not */
+  for (let i = 0; i < 6; i++) await w.fs.renderBatch({ limit: 50 });   /* R12 (G136b): one render is begun per tick, and a picture's is one */
   assert.deepEqual(w.calls("/render").map((x) => x.body.target.capture_sha).sort(), [a, b].sort());
-  assert.equal(w.row("SELECT render_state FROM fs_files WHERE capture_sha = ?", c).render_state, "none");
+  /* T53 (R60): a picture is the safe picture's route and is made in this module, not by the renderer; these bytes are a PNG signature and nothing
+     else, so the picture maker refuses them, final, with its own reason, and `/render` is never asked */
+  assert.deepEqual(w.row("SELECT render_state, render_route FROM fs_files WHERE capture_sha = ?", c), { render_state: "failed", render_route: "picture" });
   /* the receipt and its answer are provenance's alone; the listener ran inside it */
   const r = w.prov.recordReceipt({ address: "https://files.example/x", addressNorm: "https://files.example/x", captureSha: sha("x"),
                                    retrieved: "2026-10-08T12:00:00Z", via: "direct" });

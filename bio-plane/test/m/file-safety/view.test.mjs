@@ -52,12 +52,12 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   assert.deepEqual([v.sheets_total, v.sheets_truncated], [1, false]);
   assert.deepEqual(v.original, { may_open: true, path: "warned", why: null, reading: readingStatement() }, "the external link makes it high; nothing was followed");
   assert.equal(w.calls("/render").filter((c) => c.body.target.capture_sha === x).length, 0, "no render is asked for data");
-  const c = await w.capture(enc("year,amount\n2025,310000\n"));
+  const c = await w.capture(enc("year,amount\n2025,310000\n"), { type: "text/csv" });   /* R70: cells when the recorded type is CSV */
   assert.deepEqual((await w.fs.safeView({ captureSha: c, viewer: "member:m1" })).sheets, [{ name: "csv", cells: [
     { ref: "A1", value: "year", type: "text" }, { ref: "B1", value: "amount", type: "text" }, { ref: "A2", value: "2025", type: "text" }, { ref: "B2", value: "310000", type: "text" }],
     rows: { from: 1, to: 2 }, total_rows: 2, truncated: false, next_row: null }]);
   /* no safe view for another format */
-  refused(await w.fs.safeView({ captureSha: await w.capture(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), viewer: "member:m1" }), "NO_SAFE_VIEW");
+  refused(await w.fs.safeView({ captureSha: await w.capture(new Uint8Array([0x49, 0x49, 0x2a, 0x00, 8, 0, 0, 0])), viewer: "member:m1" }), "NO_SAFE_VIEW");
   refused(await w.fs.safeView({ captureSha: await w.capture(makeZip([{ name: "a", data: "a" }])), viewer: "member:m1" }), "NO_SAFE_VIEW");
   /* R8's first two */
   refused(await w.fs.safeView({ captureSha: sha("nothing"), viewer: "member:m1" }), "FILE_NOT_HELD");
@@ -96,8 +96,8 @@ test("R12: `renderBatch` renders queued files after their capture, never inside 
   const ct = await k.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   k.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
   /* queued a second apart, so the queue's order is the capture's */
-  for (const bytes of [pdf(false, "k1"), pdf(false, "k2"), pdf(false, "k3"), enc("a,b\n1,2\n"), new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7])]) {
-    await k.capture(bytes); k.tick(1000);
+  for (const bytes of [pdf(false, "k1"), pdf(false, "k2"), pdf(false, "k3"), enc("a,b\n1,2\n"), new Uint8Array([0x49, 0x49, 0x2a, 0x00, 8, 0, 0, 0, 7])]) {
+    await k.capture(bytes, bytes.length === 8 || bytes[0] === 0x61 ? { type: "text/csv" } : {}); k.tick(1000);
   }
   /* R12 (G136b): one render is begun per tick; a file that takes no renderer (cells, no route) does not use the tick */
   const first = await k.fs.renderBatch({ limit: 2 });

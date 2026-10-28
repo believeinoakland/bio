@@ -159,7 +159,7 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
 test("R26: no place is named in its behaviour or outward text: its source, every row, reason and finding kind it holds, and the answers its services build", async () => {
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
   const files = readdirSync(SRC).filter((f) => f.endsWith(".mjs")).sort();
-  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "schema.mjs", "screen-words.mjs", "words.mjs", "zipdir.mjs"]);
+  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "picture.mjs", "schema.mjs", "screen-words.mjs", "words.mjs", "zipdir.mjs"]);
   for (const f of files) assert.doesNotMatch(readFileSync(new URL(f, SRC), "utf8"), PLACES, f);
   for (const t of [FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS]) assert.doesNotMatch(JSON.stringify(t), PLACES);
   const w = world();
@@ -214,7 +214,9 @@ test("R2, R24 (K231, K2103): no refusal code of this module shares a code anothe
   for (const m of modules.filter((x) => x.id !== "file-safety")) {
     for (const p of m.paths || []) {
       if (!p.startsWith("bio-plane/src/")) continue;
-      const files = p.endsWith("/") ? readdirSync(new URL(p, repo)).filter((f) => f.endsWith(".mjs")).map((f) => p + f) : p.endsWith(".mjs") ? [p] : [];
+      /* a module the tranche has not written yet (its job has not started) has no path to read and no codes to share */
+      const listed = (dir) => { try { return readdirSync(new URL(dir, repo)); } catch { return []; } };
+      const files = p.endsWith("/") ? listed(p).filter((f) => f.endsWith(".mjs")).map((f) => p + f) : p.endsWith(".mjs") ? [p] : [];
       for (const f of files) {
         if (!/_CHECKS\b/.test(readFileSync(new URL(f, repo), "utf8"))) continue;
         let ns;
