@@ -360,6 +360,7 @@ const lettersOf = (str, a, b) => str.slice(a, b).replace(/[^\p{L}]/gu, "").toLow
 
 /** Is a short line a unit's label: its last word, or its first before "of", a kind of unit? */
 export function isUnitLine(s) {
+  if (LEAN_LINES) return isUnitLineLean(s);
   const str = String(s);
   /* The words that hold a letter: counted in place, the first two and the last stripped to their letters. */
   let n = 0, first = "", second = "", lastA = 0, lastB = 0;
@@ -379,5 +380,29 @@ export function isUnitLine(s) {
   return n >= 3 && UNIT_WORDS.has(first) && second === "of";
 }
 const LETTER_IN = /\p{L}/u;
+
+/* PROTO_LEAN_FLAT (throwaway measuring prototype): `setLeanLines(env)` makes `isUnitLine` keep the first two words' and the last word's POSITIONS and take their
+   letters only when the answer needs them (a line of more than TITLE_WORDS words answers false before any of them is, and most lines of running text are such);
+   the same answer, the same checks in the same order, none of the three string copies a line that is not a unit label. Unset = as it was. */
+let LEAN_LINES = false;
+export const setLeanLines = (env) => { LEAN_LINES = !!env && typeof env === "object" && env.PROTO_LEAN_FLAT === "1"; };
+function isUnitLineLean(s) {
+  const str = String(s);
+  let n = 0, fa = 0, fb = 0, sa = 0, sb = 0, lastA = 0, lastB = 0;
+  let i = 0;
+  while (i < str.length) {
+    while (i < str.length && isSpaceCode(str.charCodeAt(i))) i++;
+    const a = i;
+    while (i < str.length && !isSpaceCode(str.charCodeAt(i))) i++;
+    if (i === a) break;
+    if (!hasLetter(str, a, i)) continue;
+    if (++n > TITLE_WORDS) return false;
+    if (n === 1) { fa = a; fb = i; } else if (n === 2) { sa = a; sb = i; }
+    lastA = a; lastB = i;
+  }
+  if (!n) return false;
+  if (UNIT_WORDS.has(lettersOf(str, lastA, lastB))) return true;
+  return n >= 3 && lettersOf(str, sa, sb) === "of" && UNIT_WORDS.has(lettersOf(str, fa, fb));
+}
 
 export const wordCount = (s) => countWords(String(s));

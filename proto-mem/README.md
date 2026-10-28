@@ -80,3 +80,10 @@ token from `seed.mjs` stops working after about half an hour).
 Forced GC: Miniflare has no option for workerd's `v8Flags`; a copy of Miniflare's `dist/src/index.js` with one line added (`make-patched-miniflare.sh`) (`MF_V8_FLAGS` -> `config.v8Flags`) in a directory of symlinks
 (`/home/user/mfp`, see `lib.mjs` `MF_PATH`) starts workerd with `--expose-gc`, and `meas-entry.mjs` `measGc` mode `direct` calls `globalThis.gc()`. It worked (`gc_fn: function`).
 Results are in the hand-off report; the tables are rebuilt by `summarize-chain.mjs`.
+
+## Landing and doctype-detection garbage (branch `proto/levels-2-3-lean2`, THROWAWAY)
+
+Two env flags, each unset = the base's behaviour (tests: `bio-plane/test/m/extraction/proto-lean-land.test.mjs`).
+* `PROTO_LEAN_LAND=1`: `canonicalExtent` builds the common arms' string directly (`textchain.mjs`, same bytes as `canonicalJson`; any other shape takes the old path); one `json_each` lookup per batch and kind in place of a `SELECT 1` per unit when appending (addresses with a NUL or a surrogate keep the per-unit SELECT); `utf8Bytes` by a charCode loop; the units filtered/mapped in one pass, the sort skipped when the seqs are already in order, the batches cut in the extent pass, `chain.some` asked once.
+* `PROTO_LEAN_FLAT=1`: the detect pass's types share one flat view of the text (`doctypes/windows.mjs`, held by the pass's ctx in a WeakMap); `isUnitLine` (`roster-reader/lines.mjs`) takes the letters of its words only when the answer needs them.
+Both are set by `read()` / the reading path from the env (module-level, like `PROTO_LEAN`). `alloc-compare.mjs <tick> <name>...` prints the phase table of several `alloc-*.json` side by side; results: `results/alloc-l2-*.json`, `l2chain-*.json`, `l2gc-*.json`.

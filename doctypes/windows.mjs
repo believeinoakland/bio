@@ -30,6 +30,11 @@ let WORK = null;
  * flat string; the string is dropped when the call ends. A longer text (a `parse` of a whole reading) is still read a window
  * at a time. The answers are the same: a window is a piece of the flatten and one window holds it all. */
 let FLAT = null;
+/* PROTO_LEAN_FLAT (throwaway measuring prototype): `setLeanFlat(env)` (called by `read()` with its env) makes the flat view above shared by all the types of one
+   detect pass (below, `counted`) instead of one per type. Unset = as it was. */
+let LEAN_FLAT = false;
+const PASS_FLAT = new WeakMap();
+export const setLeanFlat = (env) => { LEAN_FLAT = !!env && typeof env === "object" && env.PROTO_LEAN_FLAT === "1"; };
 /** Adds `n` characters to the work counter now running, if one is. */
 export function spend(n) {
   if (WORK !== null && n > 0) WORK.chars += n;
@@ -45,6 +50,12 @@ export function counted(type) {
     const mine = once ? { chars: 0 } : w;
     if (counting) WORK = mine;
     FLAT = { text: ctx && ctx.text, flat: null };
+    if (LEAN_FLAT && ctx && typeof ctx === "object") {
+      /* PROTO_LEAN_FLAT: the detect pass hands every type the same `ctx`; the flat view is made once for that ctx and shared by all of them. It is
+         held by the ctx (a WeakMap entry) and goes with it when the pass ends. */
+      const held = PASS_FLAT.get(ctx);
+      if (held !== undefined && held.text === FLAT.text) FLAT = held; else PASS_FLAT.set(ctx, FLAT);
+    }
     try { return fn.call(this, ctx, ...rest); } finally {
       WORK = prev;
       FLAT = prevFlat;

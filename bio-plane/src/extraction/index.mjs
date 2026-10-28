@@ -22,7 +22,7 @@ import { getFormat, detectFormat } from "../formats.mjs";
 import { readText } from "../../../docprofile/registry.mjs";
 import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap, describeChain, glyphCount,
          readingSource, readingSourceJson, readingOccurrenceKey, readingSourceFromColumns, chainKindFor, mergedChain,
-         STEP_KINDS, canonicalExtent, describeExtent } from "../textchain.mjs";
+         STEP_KINDS, canonicalExtent, describeExtent, setLeanExtent } from "../textchain.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { contentMintState } from "../record-grammar/labels.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
@@ -67,7 +67,28 @@ const roContext = (env, storeName) => {
 };
 
 /** (G41; R96) The UTF-8 bytes of a string, counted in slices so a large string is never encoded whole (an 11 MB reading is not copied to count it). */
+/* PROTO_LEAN_LAND (throwaway): the exact byte count by a charCode loop, with no encoder and no copy; the same count as `TextEncoder` (a lone surrogate is U+FFFD, 3 bytes). */
+let LEAN_LAND = false;
+function utf8BytesLean(s) {
+  let n = 0;
+  const len = s.length;
+  for (let i = 0; i < len; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < len) {
+      const d = s.charCodeAt(i + 1);
+      if (d >= 0xdc00 && d <= 0xdfff) { n += 4; i++; } else n += 3;
+    } else n += 3;
+  }
+  return n;
+}
+export const utf8BytesOf = utf8BytesLean;
+const ODD_ADDRESS = /[\u0000\ud800-\udfff]/;
+const NOTHING_HELD = new Set();
+export const setLeanLand = (env) => { LEAN_LAND = !!env && typeof env === "object" && env.PROTO_LEAN_LAND === "1"; setLeanExtent(LEAN_LAND); };
 function utf8Bytes(s) {
+  if (LEAN_LAND) return utf8BytesLean(s);
   let n = 0;
   for (let at = 0; at < s.length;) {
     let end = Math.min(at + 65536, s.length);
@@ -981,6 +1002,7 @@ export class Extraction {
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
+    setLeanLand(e); // PROTO_LEAN_LAND
     const ro = roContext(e, storeName);
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved, stamp });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
@@ -1070,6 +1092,7 @@ export class Extraction {
     /* (fix round 9, G129c; K4904 (1); R101) the window at the stored cursor that killed its reader three times (the ledger's `killedCursor`) is stepped
        past, stated, and the read goes on from the next */
     const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
+    setLeanLand(env); // PROTO_LEAN_LAND
     const ro = roContext(env, storeName);
     const roT0 = Date.now(), roM0 = ro ? roMem() : null;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
@@ -1864,7 +1887,24 @@ export class Extraction {
       this.#sql.exec(`DELETE FROM job_batches WHERE sha=? AND kind='reading'`, captureSha);
     }
     const list = Array.isArray(units) ? units : [];
-    const ordered = list
+    const lean = LEAN_LAND;  /* PROTO_LEAN_LAND: fixed for this landing */
+    let ordered;
+    if (lean) {
+      /* one pass for filter + map; the sort (stable) only when the seqs are not already in order, which gives the same order */
+      ordered = [];
+      let sorted = true;
+      for (let i = 0; i < list.length; i++) {
+        const u = list[i];
+        if (!(u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0)) continue;
+        const seq = Number.isInteger(u.seq) ? u.seq : i;
+        if (sorted && ordered.length && ordered[ordered.length - 1].seq > seq) sorted = false;
+        ordered.push({ extent: u.extent, text: u.text, seq, wireCut: u.truncated === true,
+                       kind: typeof u.kind === "string" && u.kind ? u.kind : null,
+                       lineRows: Array.isArray(u.lineRows) && u.lineRows.every(Number.isInteger) ? u.lineRows : null,
+                       undetermined: Array.isArray(u.undetermined) && u.undetermined.length ? u.undetermined : null });
+      }
+      if (!sorted) ordered.sort((a, b) => a.seq - b.seq);
+    } else ordered = list
       .filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0)
       .map((u, i) => ({ extent: u.extent, text: u.text, seq: Number.isInteger(u.seq) ? u.seq : i, wireCut: u.truncated === true,
                         kind: typeof u.kind === "string" && u.kind ? u.kind : null,
@@ -1872,7 +1912,13 @@ export class Extraction {
                         undetermined: Array.isArray(u.undetermined) && u.undetermined.length ? u.undetermined : null }))
       .sort((a, b) => a.seq - b.seq);
     const docKind = checkChain(chain) ? null : terminalStep(chain);
-    const kindOf = (extent) => {
+    /* PROTO_LEAN_LAND: `chain.some(...)` (a closure and a walk) asked once, not per unit; the chain is not changed here */
+    const noStepExtent = lean && docKind ? !chain.some((s) => s && s.extent) : false;
+    const kindOf = lean ? (extent) => {
+      const k = extent && extent.kind === "pdf-page" && Number.isInteger(extent.page)
+        ? chainKindFor(chain, extent.page) : (docKind && noStepExtent ? docKind : null);
+      return k || "undetermined";
+    } : (extent) => {
       const k = extent && extent.kind === "pdf-page" && Number.isInteger(extent.page)
         ? chainKindFor(chain, extent.page) : (docKind && !chain.some((s) => s && s.extent) ? docKind : null);
       return k || "undetermined";
@@ -1880,18 +1926,23 @@ export class Extraction {
     let bytes = 0, written = 0, truncatedUnits = 0, unaddressable = 0;
     const kinds = new Set(), unaddressed = [];
     /* the addresses to write, in order, each checked against this write and (appending) the capture's earlier units */
-    const seen = new Set(), rows = [];
+    const seen = new Set(), rows = [], batches = [];
     for (const u of ordered) {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
       if (!kind) { unaddressable++; unaddressed.push({ seq: u.seq, why: say("extraction.why.unit_names_extent") }); continue; }
       const extent = canonicalExtent(u.extent);
       if (seen.has(extent)) { unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue; }
       seen.add(extent);
-      rows.push({ u, kind, extent, size: utf8Bytes(u.text) });
+      const r = { u, kind, extent, size: utf8Bytes(u.text) };
+      rows.push(r);
+      if (lean) {   /* PROTO_LEAN_LAND: the batches are cut in this same pass, by the same rule as below */
+        const last = batches[batches.length - 1];
+        if (last && last.size + r.size <= LAND_BATCH_BYTES && last.rows.length < LAND_BATCH_UNITS) { last.rows.push(r); last.size += r.size; }
+        else batches.push({ rows: [r], size: r.size });
+      }
     }
     /* R99: whole units, in order, at most LAND_BATCH_BYTES of text a batch */
-    const batches = [];
-    for (const r of rows) {
+    if (!lean) for (const r of rows) {
       const last = batches[batches.length - 1];
       if (last && last.size + r.size <= LAND_BATCH_BYTES && last.rows.length < LAND_BATCH_UNITS) { last.rows.push(r); last.size += r.size; }
       else batches.push({ rows: [r], size: r.size });
@@ -1906,8 +1957,30 @@ export class Extraction {
         /* a piece read while the state moved lands nothing more (the caller's guard, asked in each batch) */
         if (typeof guard === "function" && guard() === false) { stopped = true; return; }
         if (this.#one(`SELECT 1 AS x FROM job_batches WHERE sha=? AND kind='reading' AND batch=?`, captureSha, id)) { already++; return; }
+        /* PROTO_LEAN_LAND: ONE lookup for the batch (the batch's addresses against the capture's rows, by the primary key) in place of a SELECT a unit. The addresses
+           inside this piece are already unique (`seen`), so the rows that can hold an address are those landed before this piece; this is read inside the batch's
+           transaction, as each unit's SELECT was. */
+        let heldBefore = null;
+        if (lean && append) {
+          /* an address holding a NUL or any surrogate is left to the unit's own SELECT (SQLite's text and JSON functions treat them their own way) */
+          const byKind = new Map();
+          let plain = true;
+          for (const r of b.rows) {
+            if (ODD_ADDRESS.test(r.extent) || ODD_ADDRESS.test(r.kind)) { plain = false; break; }
+            const list = byKind.get(r.kind);
+            if (list) list.push(r.extent); else byKind.set(r.kind, [r.extent]);
+          }
+          if (plain) {
+            heldBefore = NOTHING_HELD;
+            for (const [kind, list] of byKind)
+              for (const h of this.#sql.exec(`SELECT extent AS x FROM capture_text WHERE capture_sha=? AND extent_kind=? AND extent IN (SELECT value FROM json_each(?))`, captureSha, kind, JSON.stringify(list))) {
+                if (heldBefore === NOTHING_HELD) heldBefore = new Set();
+                heldBefore.add(kind + "\u0000" + h.x);
+              }
+          }
+        }
         for (const { u, kind, extent } of b.rows) {
-          if (append && this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? AND extent_kind=? AND extent=?`, captureSha, kind, extent)) {
+          if (append && (heldBefore !== null ? (heldBefore.size !== 0 && heldBefore.has(kind + "\u0000" + extent)) : this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? AND extent_kind=? AND extent=?`, captureSha, kind, extent))) {
             unaddressable++; held.add(u); unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue;
           }
           const chainKind = kindOf(u.extent);

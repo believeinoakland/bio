@@ -1631,6 +1631,33 @@ const intOrNull = (n) => (Number.isInteger(n) ? n : null);
    keeps the bytes it always had and every content id already minted stays. */
 const runOf = (e) => (Number.isInteger(e.run) ? { run: e.run } : {});
 
+/* PROTO_LEAN_LAND (throwaway measuring prototype): `setLeanExtent(true)` makes `canonicalExtent` build the string of the common arms directly, key by key in
+   `canonicalJson`'s order (the keys sorted by UTF-16 code unit), with the same value spellings (`JSON.stringify` for a string, `String` for a finite number), in
+   place of an object, `Object.keys`, a filter, a sort, a map and a join. A shape it does not recognise (an arm not listed, an image, a rect that is not four
+   finite numbers) returns null and the caller takes the unchanged path. Unset = the code as it was. */
+let LEAN_EXTENT = false;
+export const setLeanExtent = (on) => { LEAN_EXTENT = on === true; };
+const ji = (n) => (Number.isInteger(n) ? String(n) : "null");
+const jstr = (s) => (typeof s === "string" && s.trim() ? JSON.stringify(s.trim()) : "null");
+const jrect = (r) => {
+  if (!isFourFinite(r)) return "null";
+  const m = minMaxRect(r);
+  return "[" + m[0] + "," + m[1] + "," + m[2] + "," + m[3] + "]";
+};
+const jrun = (e) => (Number.isInteger(e.run) ? ',"run":' + e.run : "");
+function leanCanonicalExtent(e) {
+  switch (e.kind) {
+    case "document": return '{"kind":"document"}';
+    case "doc-para": return '{"kind":"doc-para","para":' + ji(e.para) + ',"run":' + ji(e.run) + "}";
+    case "pdf-page": return '{"kind":"pdf-page","page":' + ji(e.page) + ',"rect":' + jrect(e.rect) + jrun(e) + "}";
+    case "sheet-cell": { const c = canonicalCell(e.cell); return '{"cell":' + (c === null ? "null" : JSON.stringify(c)) + ',"kind":"sheet-cell","sheet":' + jstr(e.sheet) + "}"; }
+    case "slide-shape": return '{"kind":"slide-shape"' + jrun(e) + ',"shape":' + ji(e.shape) + ',"slide":' + ji(e.slide) + "}";
+    case "doc-table": { const c = canonicalCell(e.cell); return '{"cell":' + (c === null ? "null" : JSON.stringify(c)) + ',"kind":"doc-table","table":' + ji(e.table) + "}"; }
+    case "doc-part": return '{"kind":"doc-part","part":' + jstr(e.part) + ',"ref":' + jstr(e.ref) + "}";
+    default: return null;
+  }
+}
+
 /** The CANONICAL form of an extent — the bytes the content address is taken over (R97). Two members who mean
  *  the same passage must produce the same string, or dedup-by-construction is a claim rather than a
  *  mechanism: the fields are fixed per arm, absent is null rather than missing, a rect is normalised, a cell
@@ -1640,6 +1667,7 @@ const runOf = (e) => (Number.isInteger(e.run) ? { run: e.run } : {});
  *  unchanged. An extent nobody can evaluate still gets a form (the function is total); nothing mints one. */
 export function canonicalExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
+  if (LEAN_EXTENT) { const fast = leanCanonicalExtent(e); if (fast !== null) return fast; }
   if (e.kind === "document") return canonicalJson({ kind: "document" });
   if (e.kind === "pdf-page")
     return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null, ...runOf(e) });

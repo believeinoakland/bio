@@ -89,5 +89,5 @@ try {
   out.finished = done; out.wall_ms = Date.now() - T0;
 } finally { rmSync(t, { recursive: true, force: true }); }
 mkdirSync("/home/user/wt-alloc/proto-mem/results", { recursive: true });
-writeFileSync(`/home/user/wt-alloc/proto-mem/results/${arg.out || "chain"}.json`, JSON.stringify(out, null, 1));
+writeFileSync(new URL(`./results/${arg.out || "chain"}.json`, import.meta.url).pathname, JSON.stringify(out, null, 1));
 console.log(JSON.stringify({ out: arg.out, finished: out.finished, wall_ms: out.wall_ms, segments: out.segments.map((s) => ({ wall_ms: s.wall_ms, rss: s.rss, heap: { ...s.heap, floors: undefined }, rests: s.rests.length })) }));
