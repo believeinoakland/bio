@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odtEntry, odsEntry, odpEntry } from "../../../src/odf.mjs";
 import { buildZip, members, withCd, contentXml, OVER_BOUND } from "./pkg.mjs";
+import { ODF_REPEAT_EXPANSION_MAX } from "../../../src/odf.mjs";
 
 const ENTRIES = { odt: odtEntry, ods: odsEntry, odp: odpEntry };
 const FLAVOURS = ["odt", "ods", "odp"];
@@ -190,7 +191,7 @@ test("R47 read, never run: no listener target is fetched or resolved, and the li
   const calls = [];
   globalThis.fetch = (...a) => { calls.push(a); throw new Error("network"); };
   try {
-    const body = `<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string" table:number-columns-repeated="262145"><text:p>v</text:p></table:table-cell></table:table-row></table:table>`;
+    const body = `<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string" table:number-columns-repeated="${ODF_REPEAT_EXPANSION_MAX + 1}"><text:p>v</text:p></table:table-cell></table:table-row></table:table>`;
     const content = scripted("ods", listener("dom:load", "https://example.org/payload"), body);
     const bytes = buildZip(members("ods", { content, extra: [{ name: "Basic/Standard/Module1.xml", data: "Sub Main\nEnd Sub" }] }));
     const t = await odsEntry.text(bytes);
