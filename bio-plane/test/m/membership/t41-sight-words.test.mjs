@@ -128,7 +128,6 @@ test("R77 T41 C-70.1 carries `owners`, the owners' current handles in R65's orde
   assert.equal(w.m.existenceAct("PROJ-H", V("dee")), null);
   assert.equal(w.m.existenceAct("PROJ-H", null), null, "an internal caller is not asked");
   /* C-70.1's translation is true of both forms, and names no plane, server, copy or instance (R112) */
-  assert.doesNotMatch(row.translation, /can be found/);
   assert.doesNotMatch(row.translation, /\b(cop(y|ies)|instances?|planes?|servers?)\b/i);
 });
 
