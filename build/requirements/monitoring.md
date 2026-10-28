@@ -150,6 +150,10 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R79** (K5157; walk-T51-final 06 §1) A copy the tick files (R9) is filed with its provenance document entry (locator, content type, digest) and a `reading` job owed for it through the capture's registrar, as an entry by `promote` is (control-plane R123), so the newer copy is read and its notice graded.
 - **R80** (T51 fix round 10; CONTROL-PLANE #63 J64 (2), (3); K5186; amends R79; `provenance` R46, `reading-pipeline` R1) The copy's provenance document entry (R79) carries what acquisition's entry for the same capture carries (`acquisition/index.mjs` ~1853): its `provenance_chain` (one hop, the monitor tick's fetch) and the capture's `profile`, so the register files a vouched document's copy (never `PROVENANCE_REGISTER_REFUSED`, C-18.9 `chain-absent`) and a textual copy is read as text, the reading owed and registered after Check now.
 
+#### T53 additions
+
+- **R81** (T53; N1259; K4403 (2), (7); amends R30) *(not yet met: T53)* **The administrator's pause also stops register slices and keyed alert polls.** R30's pause (which already stops the docket watch's reads, R67) stops the fetches of `registers.importTick` (through the host's `paused()`, R65, handed in by `scheduler` R34) and of every `docket-entries` poll (`following` R41); the answers say `paused`; resuming lets them continue from their cursors; a member's own acts (`importStart`, `registerRefresh`) are accepted and queued as at any time, their slices waiting for the resume, and a member's `citationLookup` is not a daemon read and is not stopped (UNVERIFIED: R30 says nothing of a member's act under a pause; this sentence states it, BOB's to confirm). Test: paused, a queued import runs no slice and a due docket is not polled (zero requests); resumed, both continue; the pause by a non-administrator is `NOT_AN_ADMIN`. Control: unpaused behaviour is unchanged.
+
 ## Private
 
 ### Uses
