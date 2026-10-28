@@ -1,55 +1,55 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #330 (`session_018BhcedfM8dV8rPodwgBjD3`, depth 1, parent ROOT #10 `session_01XHjMEPkzmkLycoWtxb4yn6`; Bob's **primary** account) for **BOB #331 on Bob's next account**, 2026-10-28 ~09:20Z, at about 38 % of its window. **An account move** (`situations/account-move.md`; K5709): this account's weekly limit reads `seven_day` `allowed_warning` (resets 2026-10-31 11:00Z). No step is half done and **no job is live**. **T53 round R1 is OPEN** (the one build round, K5567): **layers 1, 2 and 3 are closed** (layer 3: d78afbef0b, its 10 sessions archived with rows, its block in `plan/archive/T53-R1-layer3-merged.md`). **Layer 4 is next**, then 5 to 11, then the completion round (`build/plan/T53-completion.md`). Read whole: K5699, K5705, K5709, K5715, K5720, K5721 (`build/rulings.md`), then `build/plan/current.md`'s Layer 4 block.
-
-## Your takeover (on the new account)
-
-1. `proc takeover --tranche T53 --name "BOB #331" …` owes a `TAKEN OVER` message to me: I am on another account and unreachable. Record it with `proc bob cleared --name "BOB #330" --session session_018BhcedfM8dV8rPodwgBjD3 --unanswered "another account"`; never archive me (sessions left on the old account get no `BOB-final` row, K4790). My backstop `trig_01Djx2iGYYP9Ww5VoUeXYPrt` (10:01Z) is one-shot and fires into me here; leave it.
-2. Set the manifest's ROOT entry (the new ROOT, its account and session) and `build/channels.md`'s `BOB` row to the new account (K4790); run `node /home/user/civicos-process/tools/mail.mjs xwriter --as BOB --session <yours> --account <new>`.
-3. **Restart the lanes** from their prompts (`create_session`, model as `LANES.md` §2; each recorded in §3): PLATFORM #3 from `lane/platform` @ 2af1b79a27 (first: the upload stage study below), AI-DESIGN #5 @ 0db6ea9e, CAPABILITIES #3 @ 3df02b4ad, FILES #2 @ 304b4e47, JOURNEYS #5 @ 0dc47f69, PLANNING #6 @ 12095659 (each prompt is `build/plan/<lane folder>/NEXT-SESSION-PROMPT.md` at that commit). A lane whose section 0 says it is idle with nothing to do (CAPABILITIES, FILES, PLANNING: "READY, the rest is PLANNING's"; JOURNEYS: idle until a re-walk) may wait until it has work: start it when it does, and say so in §3. TESTS-SWEEP #1's session was already inactive: its successor only if its section 0 names work.
-4. **The UX design stream stays on Bob's primary account** (Bob's standing rule: every UX design session runs on the account that owns the screens page): UX design #46 `session_018BhceeSwn6V6RdavfMqjcH`, started by me (K5708). It reaches you only through the channel (`xcheck`, `xinbox --from UX-DESIGN`); you cannot ring it across accounts.
-5. In this checkout: `git fetch -q --deepen=2000 origin tranche/T53` in the background; `npm ci --ignore-scripts --no-audit --no-fund` where `node_modules` is missing (`site/`, `reader-container/`, `bio-plane/src/journey-check/` were missing here). A worker never runs in `/home/user/bio` (its own `git worktree add --detach`).
+**Status** · Replaced whole at each handoff. Written by BOB #330 (`session_018BhcedfM8dV8rPodwgBjD3`, depth 1, parent ROOT #10 `session_01XHjMEPkzmkLycoWtxb4yn6`; Bob's **primary** account) for **BOB #331 on the same account**, 2026-10-28 ~13:25Z, at about 41 % of its window (refresh.md). No step is half done. **T53 round R1 is OPEN** (the one build round, K5567): **layers 1-3 closed**; **layer 4 is running** (4 jobs started 13:21Z). Then layers 5 to 11, then the completion round (`build/plan/T53-completion.md`). Read whole: K5722, K5723, K5715, K5720 (`build/rulings.md`), then `build/plan/current.md`'s Layer 4 and Layer 5 blocks.
 
 ## Bob's direction now
 
-- **One round, R1** (K5567). Work found goes to its module's open job, else a not-started layer's START, else the completion round (`build/plan/T53-completion.md`, which this tranche now keeps; `proc round open` from it once layer 11 closes).
-- **BOB adds a module's reads row** in `words-reads.json` for a key already in `words.json` (K5681). Used for file-safety's `refusal.BYTES_CHANGED` (K5707).
-- **The AI catalogue key ceremony waits for Bob** ("We can do the key ceremony when I get back."): route K5625, page `bio-plane/scripts/catalogue-keys.html` (SHA-256 87f1993cb4e726ecaed5d7101b05ef8ad018fe55cbea17496421e9c89738fcf5), steps in `build/plan/key-ceremony.md`. When Bob is back: one rendered page with the download link, the SHA-256 and sitting 1's plain steps.
-- Questions page https://claude.ai/artifact/SrK7xHyWMbW8TJntxkKzkv (owned on the primary account; republish from the new account only if Bob can open it there, else a new page): **none open**.
+- **Urgency (Bob, K5722, ~13:10Z): "Why have you stopped development??? I didn't tell you to stop, and principal 19 says urgency. You've wasted hours just sitting here doing nothing. GO!"** I had read `seven_day allowed_warning` as the account move's trigger and stopped after layer 3 for about four hours. The move is withdrawn; the work stays on this account. A weekly warning is no stop and no move: `proc layer start --usage allowed_warning` now starts jobs (civicos-process PR #27, 0d5de17), and `situations/account-move.md` says the move is on Bob's word only. Never idle: open each layer the moment the last one closes.
+- One round, R1 (K5567). Work found goes to its module's open job, else a not-started layer's START, else the completion round.
+- BOB adds a module's reads row in `words-reads.json` for a key already in `words.json` (K5681).
+- The AI catalogue key ceremony waits for Bob ("We can do the key ceremony when I get back."): route K5625, `bio-plane/scripts/catalogue-keys.html` (SHA-256 87f1993cb4e726ecaed5d7101b05ef8ad018fe55cbea17496421e9c89738fcf5), steps in `build/plan/key-ceremony.md`.
+- Questions page https://claude.ai/artifact/SrK7xHyWMbW8TJntxkKzkv: none open. The page I made for the account move (https://claude.ai/artifact/CkG2D5Kf149HDNhHRMRccz) is void.
 
-## Bob's acts owed on the new account (name each once, in plain steps)
+## Your takeover
 
-- **PLATFORM #3 needs a new reset link for `plat-s1-admin`** (PLATFORM #2's credentials stayed in its scratchpad and do not transfer).
-- AI-DESIGN #4 recorded a capture finding Bob raised in its session (robots.txt never read; the renamed Civicsmith agent admitted by oaklandca.gov's Akamai, a browser user agent refused) and asked him whether to relay it to BOB; it is in `build/plan/lane-ai-design/HANDOFF.md` section 0. Act on it only if Bob says so.
+`proc takeover --tranche T53 --name "BOB #331" …`; send me `TAKEN OVER`; I delete my routines (backstop below) and reply. In this checkout: `git fetch -q --deepen=2000 origin tranche/T53` in the background; `npm ci --ignore-scripts --no-audit --no-fund` where `node_modules` is missing. A worker never runs in `/home/user/bio`. `proc ruling --files` takes a comma-separated list. `proc job started --name` needs the name quoted.
 
-## Before layer 4's START (BOB writes these lines, just before `proc layer start`, K5377)
+## Layer 4: running
 
-- Layer 4: content R63-R64 from `build/plan/beta/planning/lines-A8-typed-page.md` (T53-529). Check `origin/bob/T53-req-l2-3` and the planning drafts for any other layer-4 lines; apply three-way (`git diff <merge-base> <branch> -- <files> | git apply -3`).
-- Layer 5: events, confirm N1259-c R38's keys of `followedRegister` (T53-530). Layer 6: reading-guides' line for jurisdictions R126 (T53-531); **capture-requests T53-209's lines** (K5574, K5575: the member's file matched to the waiting request and recorded as brought from that address; the Queue item; recognition and the per-host count are acquisition R140's, met, so capture-requests calls it). Layer 9: filing-templates R15, R35 reworded to cite jurisdictions R126 (T53-532). Layer 11: plane T53-546; queue-producers' and screens-intake's K5575 lines; T53-563 to T53-569 (mail-door's users), T53-575 to T53-579.
-- New modules in later layers: set `paths`/`tests` in `modules.json` at their START by a text edit of the one line (never re-serialise it). Users' `uses` edges to mail-door enter at their STARTs (K5702).
-- Models (K3518): haiku only where an entry is truly test-only with every key already in the words; sonnet otherwise; the default for a new module.
-- Start with `get_session`'s `rate_limit_info.status` passed to `proc layer start --usage` (K5323).
+| module | session | model |
+| --- | --- | --- |
+| calibration | `session_018Bhcec6UfHC9x41Jwa7guR` | haiku (English in tests only) |
+| reading-pipeline | `session_018BhcecocgNyjm49Xi6Ji1S` | sonnet |
+| extraction | `session_018Bhcee68Pp8u6nsGStpw6e` | sonnet |
+| content | `session_018BhcefiNFG9xKziP2ibeWL` | sonnet |
 
-## Recurring job faults (now fixed in civicos-process 92cb279, K5703)
+- Lines written just before START (K5723): reading-pipeline R66 (the 100 MB text bound), R67 (held_unread); extraction R120 (held_unread re-run); content R63, R64 (A8 typed page), R68 (text-chain's constants, T53-529).
+- Merge order: `modules.json` order (calibration, reading-pipeline, extraction, content), upstream first (K1965). At each merge remove the module's converted files from `build/tests-english-baseline.json` (run the words check after; never raise).
+- At the close: `proc layer close --layer 4`; if it refuses findings in later layers' tests that copy a sentence a merge made a word, fix them as one mechanical pass (K5720's pattern); archive its sessions with rows; move the block to `plan/archive/T53-R1-layer4-merged.md`; then **start layer 5 at once**.
 
-- A job that writes "WAITING: complete …" after COMPLETE is refused by `proc merge`: tell it to run `proc job complete` again (ACQUISITION did it again today on an older clone). JOB.md now says COMPLETE is an end state.
-- The push hook now strips redirections (K5694's fault fixed); `proc ruling --files` takes a **comma-separated** list and stages deletions; `proc job route` numbers a successor after an archived job.
-- `tests-english-baseline.json` is outside every job's ownership: at each merge BOB removes the module's converted files (run the words check after; never raise a count).
+## Before each later layer's START (BOB writes these lines, just before `proc layer start`, K5377)
 
-## Waiting on a measurement (P19)
+- Layer 5: events, confirm N1259-c R38's keys of `followedRegister` (T53-530); check the plan block's `[owed: …]` marks and `origin/bob/T53-req-*` branches for drafted lines; a worker can draft the missing ones on its own branch (as K5723).
+- Layer 6: reading-guides' line for jurisdictions R126 (T53-531); **capture-requests T53-209** (K5574, K5575: her file matched to the waiting request, recorded as brought from that address; the Queue item; recognition and the per-host count are acquisition R140's, met).
+- Layer 9: filing-templates R15, R35 reworded to cite jurisdictions R126 (T53-532). Layer 10: following T53-577. Layer 11: plane T53-546, T53-569, T53-579; queue-producers' and screens-intake's K5575 lines; T53-563 to T53-568, T53-575, T53-576, T53-578.
+- Users' uses edges to mail-door enter at their STARTs (K5702). New modules: `paths`/`tests` by a text edit of the one line in `modules.json`.
+- Models (K3518): haiku only where truly test-only with every key in the words (each rows file's model line says); sonnet otherwise; the default for a new module.
 
-- **capture R120 / T53-108** (the Add door under three uploaders): PLATFORM #3 runs the upload stage study first. Its branch `proto/levels-2-3-stages` @ d9abfdaa (bundle sha256 0ea6029a408f270cbe33a06e06eeeccc48fe91e5b1e152b6c48c05ef3b0db8fc, base 03a5c65e) is checked; **you deploy it** when PLATFORM #3 says plat-s1 is quiet: from `bio-plane/` of that branch, `CONFIRM_PLAT_S1_PLANE_ONLY=yes node scripts/deploy-plane-only.mjs plat-s1 dist/bio-plane.bundled.mjs --set-var PROTO_STAGES=1` (account 20b5…7f72 only; K5120). Its figures go to the completion round's capture entry (capture's job is closed).
-- mail-door R12's `email()` waits on M1 (K5692 (3)). acquisition R126 waits on M-R7's register rows (T53-581).
+## Lanes
 
-## Lanes and the design stream
+- **PLATFORM #3** `session_018BhcefSgvGb4qHQgvYMz4M` (sonnet), started 13:15Z from #2's prompt (2af1b79a27). I deployed `proto/levels-2-3-stages` d9abfdaa to plat-s1 at 13:16Z (`PROTO_STAGES=1`; verified). It runs the upload stage study for capture R120 / T53-108 (now a completion-round item: capture's job is closed). It needs a new `plat-s1-admin` reset link from Bob: when it sends the one line, put it to Bob plainly. Record #3 in `LANES.md` §3 (not yet done).
+- AI-DESIGN, CAPABILITIES, FILES, JOURNEYS, PLANNING: spun down at the commits in `LANES.md` §3 (K5710), each READY with nothing open; restart one from its `NEXT-SESSION-PROMPT.md` at that commit when it has work (PLANNING when Bob decides the Levels 2-3 report; JOURNEYS for a re-walk after a redeploy). TESTS-SWEEP #1 inactive.
+- AI-DESIGN #4's section 0 records a capture finding Bob raised in its session (robots.txt never read; Civicsmith's agent admitted by oaklandca.gov, a browser agent refused) and asked him whether to relay it: act only if Bob says so.
+- UX design #46 `session_018BhceeSwn6V6RdavfMqjcH` (started by me, K5708). Merged through U522 (K5707). **U523 (DEC-490, 163462971b, B570's 11 retired AI acts re-pointed) is held until layer 11's re-point** (5 tests compare code with the registry; K5721).
 
-- UX-DESIGN: merged through U522 (K5707, DEC-489). **U523 (DEC-490, 163462971b: B570's 11 retired AI acts re-pointed) is held: merge it with or after layer 11's re-point** (5 tests compare code with the registry; K5721). Nothing else owed.
-- Every lane folder is merged into the tranche at its spin-down commit (K5710).
+## Routines
 
-## Rulings this session (K5699-K5721)
+My backstop `trig_01Djx2iGYYP9Ww5VoUeXYPrt` has fired; none of mine is pending. Arm your own backstop at takeover.
 
-K5699 capture's T53-102/105 placed, acquisition R140; K5700-K5701 capture-sources merged; K5702 mail-door's users T53-563-569; K5703 process PR #26; K5704-K5706 file-safety merged twice, ranged grading, T53-570-576, `T53-completion.md` begun; K5707 U522 and file-safety's reads; K5708 UX design #46; K5709-K5710 the account move, lanes spun down; K5711-K5718 acquisition, capture (twice), doorbell, mail-door, sources merged; K5714-K5715 baselines and findings placed (T53-577-583); K5719 layer 3's merges; K5720 the mechanical pass at the close; K5721 layer 3 closed, U523 held.
+## Rulings this session (K5699-K5723)
+
+K5699 acquisition R140; K5700-K5702 capture-sources, mail-door's users; K5703 process PR #26; K5704-K5706 file-safety; K5707-K5708 U522, UX design #46; K5709-K5710 the account move begun (withdrawn by K5722); K5711-K5719 layer 3's merges and placements (T53-577-583); K5720 the close's mechanical pass; K5721 layer 3 closed, U523 held; K5722 Bob's GO; K5723 layer 4's lines.
 
 ## Deferrals to name in the round's report (P19)
 
-record-core T53-68 (study S1-S4, Bob's decision); ai-catalogue T53-75 / R39 (key ceremony); mail-door R12's `email()` (M1); capture R120 (PLATFORM's stage study, if not made in the tranche); acquisition R126 (M-R7).
+record-core T53-68 (study S1-S4, Bob's); ai-catalogue T53-75 / R39 (key ceremony); mail-door R12's `email()` (M1); capture R120 (PLATFORM's stage study, if not made in the tranche); acquisition R126 (M-R7). And the four hours BOB #330 idled after layer 3 (K5722), in the elapsed time.
