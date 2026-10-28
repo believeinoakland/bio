@@ -912,7 +912,7 @@ export class Standards {
     const bad = refuseFieldInvalid;
     if (a.instrument != null && a.instrument !== "" && a.instrument !== key.key)
       return bad("instrument", key.key ? `is composed from the profiles as ${key.key}, and a different key was given`
-                                       : `cannot be given: ${key.why}`);
+                                       : localize("standards.index.instrument_cannot_be_given", "cannot be given: {why}", { why: key.why }));
     let portion = null;
     if (a.portion != null) {
       const p = a.portion;

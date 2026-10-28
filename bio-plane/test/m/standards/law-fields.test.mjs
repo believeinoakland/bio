@@ -50,7 +50,7 @@ test("R18 a declaration composes and keeps its instrument key; a declared instru
   const before = w.snapshot();
   const wrong = w.declare({ text: [a], instrument: "/eli/elsewhere/x/12" });
   assert.deepEqual([wrong.reason, wrong.field, wrong.check], ["STANDARD_FIELD_INVALID", "instrument", STANDARDS_CHECKS.STANDARD_FIELD_INVALID.check]);
-  assert.match(w.declare({ text: [a], cite: "MCBC 2024-1", kind: "commitment", instrument: "/eli/x/y/1" }).detail, /cannot be given/);
+  assert.ok(w.declare({ text: [a], cite: "MCBC 2024-1", kind: "commitment", instrument: "/eli/x/y/1" }).detail.includes(WORD("standards.index.instrument_cannot_be_given", { why: "" })));
   /* portions */
   const notText = w.declare({ text: [a], portion: { path: "12(b)", content_id: other } });
   assert.deepEqual([notText.reason, notText.check], ["STANDARD_PORTION_NOT_IN_TEXT", STANDARDS_CHECKS.STANDARD_PORTION_NOT_IN_TEXT.check]);
