@@ -8,10 +8,10 @@
  *
  * Services: list() · get(id) · validate(profile) · combine(list) · isLocale(value). */
 import FIRST from "./profiles/oakland-alameda.mjs";
-import US_FEDERAL from "./profiles/us-federal.mjs";
-import US_CALIFORNIA from "./profiles/us-california.mjs";
-import US_ALAMEDA_COUNTY from "./profiles/us-ca-alameda-county.mjs";
-import US_OAKLAND from "./profiles/us-ca-oakland.mjs";
+import US_FEDERAL from "./profiles/layers/us-federal.mjs";
+import US_CALIFORNIA from "./profiles/layers/us-california.mjs";
+import US_ALAMEDA_COUNTY from "./profiles/layers/us-ca-alameda-county.mjs";
+import US_OAKLAND from "./profiles/layers/us-ca-oakland.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
 import { BASIS_GRADES, isMachineIdentity, sha256HexSync, canonicalJson } from "../bio-plane/src/record-grammar/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
