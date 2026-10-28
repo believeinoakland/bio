@@ -138,6 +138,7 @@ export const watchMethods = {
     const key = sc === "project" ? `project:${cur.project}` : "team";
     const fp = cur.filter_fp;
     const prev = this.previousOf(definition.key, key, fp);
+    if (!holes && prev) holes = parse(this.one(`SELECT holes FROM register_imports WHERE import_id=?`, prev.import_id).holes);
     /* R129: an unchanged source is not fetched again, decided by the governed probes that fetch no body */
     if (check && prev && !force) {
       const pr = parse(this.one(`SELECT probe FROM register_imports WHERE import_id=?`, prev.import_id).probe) || [];

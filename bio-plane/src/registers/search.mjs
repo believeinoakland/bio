@@ -301,7 +301,7 @@ export const searchMethods = {
       const res = await this.rewriteSegment(oldSha, at, reg, key);
       if (res) rewritten.push(res);
     }
-    return { ok: true, removed: done.removed, tombstone: done.tombstone, segments_rewritten: rewritten.length, reason: str(reason) };
+    return { ok: true, removed: done.removed, tombstone: done.tombstone, segments_rewritten: rewritten.length, objects_purged: rewritten.filter((x) => x.purged).length, reason: str(reason) };
   },
 
   /* the reduced segment minus one row: re-serialised in the reducer's own form, stored under its new digest; the old object is deleted */
@@ -318,9 +318,10 @@ export const searchMethods = {
     }
     const out = new TextEncoder().encode(kept.map((f) => `${f.map(csvField).join(",")}\n`).join(""));
     const newSha = sha256HexSync(out);
+    let purged = false;
     if (ev && bytes) {
       try { await ev.put(newSha, out, { sha256: newSha }); } catch { /* the new object could not be stored */ }
-      try { await ev.delete(oldSha); } catch { /* the old object is already gone */ }
+      purged = await this.purgeObject(ev, oldSha);
     }
     const segs = this.rows(`SELECT import_id, piece, n FROM register_segments WHERE sha256=?`, oldSha);
     this.tx(() => {
@@ -338,7 +339,7 @@ export const searchMethods = {
       }
     });
     try { if (this.content && typeof this.content.markStale === "function") this.content.markStale(oldSha, [{ step: "register_row_removed", removed: drop.size }]); } catch { /* a row over it stays as it is */ }
-    return { old: oldSha, sha256: newSha, removed: drop.size };
+    return { old: oldSha, sha256: newSha, removed: drop.size, purged };
   },
 };
 

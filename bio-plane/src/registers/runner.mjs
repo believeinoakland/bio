@@ -6,7 +6,7 @@
  * `failed` (with its reason and retries), `paused` (`member`, `shelf`, `host_paused`, `host_cooling`) and `stopped`.
  * Every position is in the import's own row, so a restart between any two slices is the same import as an uninterrupted one. */
 import { sha256HexSync } from "../record-grammar/index.mjs";
-import { ROW_KEY_SEPARATOR, filterFingerprint, matches, estimate, autoWatchable } from "../register-readers/index.mjs";
+import { ROW_KEY_SEPARATOR, filterFingerprint, matches, estimate, autoWatchable, createReducer } from "../register-readers/index.mjs";
 import { noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { contentHashOf } from "./port.mjs";
 import { isObj, str, json, parse, refusal, WORDS, scopeKeyOf, NOT_STATED, SCOPE_TEAM } from "./core.mjs";
@@ -112,12 +112,15 @@ export const runnerMethods = {
 
   /* ------------------------------------------------------------------ R11: queue an import */
 
-  importStart({ register, filter, scope, project, author, viewer, holes, pieces, kind = "import", reason = null, on_behalf = null, interest = null, previous = null, force = false } = {}) {
+  importStart({ register, filter, scope, project, author, viewer, holes, pieces, file, kind = "import", reason = null, on_behalf = null, interest = null, previous = null, force = false } = {}) {
     const by = str(author);
     if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_IMPORT_REGISTER", WORDS("MACHINE_CANNOT_IMPORT_REGISTER", "an import is a member's act; a machine starts none"), {});
     const d = this.definitionOf(register);
     if (!d) return refusal("NO_SUCH_REGISTER", WORDS("NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
-    const bad = this.actRefusal(d.definition);
+    /* R46 (2): a file in a member's hand is the one way into a register behind an account or a fee, and the phase does not stop it */
+    const bytes = file instanceof Uint8Array ? file : file && file.bytes instanceof Uint8Array ? file.bytes : null;
+    const isFile = file !== undefined && file !== null;
+    const bad = isFile ? this.fileRefusal(d.definition, bytes) : this.actRefusal(d.definition);
     if (bad) return bad;
     const checked = this.checkFilter(d.definition, filter);
     if (!checked.ok) return checked;
@@ -135,19 +138,90 @@ export const runnerMethods = {
     if (dup) return { ok: true, existed: true, import: dup.import_id, state: dup.state };
     const active = Number(this.one(`SELECT COUNT(*) AS n FROM register_imports WHERE state IN ('queued','fetching','reading')`).n);
     if (active >= this.bounds.MAX_ACTIVE_IMPORTS) return refusal("IMPORT_QUEUE_FULL", WORDS("IMPORT_QUEUE_FULL", "{n} imports are already queued or running; start another when one has finished", { n: String(active) }), { active, max: this.bounds.MAX_ACTIVE_IMPORTS });
+    if (isFile) return this.fileImport({ def: d.definition, checked, sc, proj, key, by, bytes, holes, pieces });
     const plist = this.dataPieces(d.definition, pieces).map((p) => ({ piece: p.key, state: "pending" }));
     if (!plist.length) return refusal("PIECE_UNKNOWN", WORDS("PIECE_UNKNOWN", "the register has no piece of that name"), { register: d.definition.key });
-    const at = this.nowIso();
+    const id = this.insertImport({ register: d.definition.key, checked, sc, key, proj, kind, by, on_behalf, interest, previous, holes, pieces: plist, cursor: { slices: 0, force: force === true, reason }, state: "queued" });
+    this.told(this.queuedListeners, { import: id, register: d.definition.key, kind });
+    return { ok: true, existed: false, import: id, state: "queued" };
+  },
+
+  insertImport({ register, checked, sc, key, proj, kind, by, on_behalf = null, interest = null, previous = null, holes = null, pieces, cursor, state }) {
     let id;
     this.tx(() => {
       this.sql.exec(`INSERT INTO register_imports (register, filter, filter_fp, scope, scope_key, project, kind, state, author, on_behalf, interest_id, previous, holes, pieces, cursor, queued_at, due_ms)
-                     VALUES (?,?,?,?,?,?,?, 'queued', ?,?,?,?,?,?,?,?,?)`,
-                    d.definition.key, json(checked.filter), checked.fingerprint, sc, key, proj, kind, by, on_behalf, interest, previous,
-                    holes ? json(holes) : null, json(plist), json({ slices: 0, force: force === true, reason }), at, this.nowMs());
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                    register, json(checked.filter), checked.fingerprint, sc, key, proj, kind, state, by, on_behalf, interest, previous,
+                    holes ? json(holes) : null, json(pieces), json(cursor), this.nowIso(), this.nowMs());
       id = Number(this.one(`SELECT MAX(import_id) AS id FROM register_imports`).id);
     });
-    this.told(this.queuedListeners, { import: id, register: d.definition.key, kind });
-    return { ok: true, existed: false, import: id, state: "queued" };
+    return id;
+  },
+
+  /** R46 (2): what a file in a member's hand may be brought into: not a register that is unmeasured or a person-search, and a file with bytes */
+  fileRefusal(def, bytes) {
+    if (def.status === "not_measured") return refusal("REGISTER_NOT_MEASURED", WORDS("REGISTER_NOT_MEASURED", "this register has not been measured, so it cannot be imported yet; your team can bring it in with its own definition"), { register: def.key });
+    if (def.gate === "people_search") return refusal("REGISTER_PEOPLE_SEARCH", WORDS("REGISTER_PEOPLE_SEARCH", "a paid people-search is not a register this product reaches"), { register: def.key });
+    if (!bytes || !bytes.length) return refusal("FILE_EMPTY", WORDS("FILE_EMPTY", "the file has no bytes; nothing was brought in"), { field: "file" });
+    return null;
+  },
+
+  /** R46 (2), R14, R15: the member's own file reduced as it is read, its segments stored, the original never kept: only its fingerprint. Nothing is fetched. */
+  async fileImport({ def, checked, sc, proj, key, by, bytes, holes, pieces }) {
+    const pieceKey = (def.pieces || []).find((p) => (Array.isArray(pieces) && pieces.length ? pieces.includes(p.key) : !def.pieces.some((q) => q.header_from === p.key)))?.key ?? "file";
+    const pieceObj = (def.pieces || []).find((p) => p.key === pieceKey) ?? { key: "file", delimiter: def.delimiter ?? "comma" };
+    const reducer = createReducer({ definition: def, piece: pieceObj, filter: checked.filter, covers: "whole_file" });
+    const out = [];
+    const CH = 1 << 20;
+    for (let i = 0; i < bytes.length; i += CH) { const o = reducer.write(bytes.subarray(i, i + CH)); if (o.length) out.push(o); }
+    const end = reducer.end();
+    if (!end.ok) return refusal("REGISTER_NOT_READABLE", WORDS("REGISTER_NOT_READABLE", "the file cannot be read as this register's file ({why}); nothing was brought in", { why: String(end.why) }), { why: end.why });
+    if (end.bytes.length) out.push(end.bytes);
+    const all = new Uint8Array(out.reduce((n, c) => n + c.length, 0));
+    let at = 0;
+    for (const c of out) { all.set(c, at); at += c.length; }
+    /* cut at row boundaries, a row never split, a quoted line break never taken for a row's end; the header repeated */
+    const lines = [];
+    let s = 0, inQuote = false;
+    for (let i = 0; i < all.length; i++) { const c = all[i]; if (c === 0x22) inQuote = !inQuote; else if (c === 0x0a && !inQuote) { lines.push(all.subarray(s, i + 1)); s = i + 1; } }
+    if (s < all.length) lines.push(all.subarray(s));
+    const head = lines[0] ?? new Uint8Array(0), body = lines.slice(1);
+    const max = this.bounds.segment_max;
+    const segs = [];
+    let cur = [], size = head.length;
+    const close = () => { if (cur.length || !segs.length) segs.push(cur); cur = []; size = head.length; };
+    for (const l of body) { if (cur.length && size + l.length > max) close(); cur.push(l); size += l.length; }
+    close();
+    const ev = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
+    if (!ev) return refusal("EVIDENCE_STORAGE_NOT_CONFIGURED", WORDS("EVIDENCE_STORAGE_NOT_CONFIGURED", "your team's Civicsmith has no evidence storage configured, so nothing was brought in"), {});
+    const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const made = [];
+    for (const [n, rows] of segs.entries()) {
+      const seg = new Uint8Array(head.length + rows.reduce((t, l) => t + l.length, 0));
+      seg.set(head, 0);
+      let o = head.length;
+      for (const l of rows) { seg.set(l, o); o += l.length; }
+      const sha = hex(await crypto.subtle.digest("SHA-256", seg));
+      if (!(await ev.head(sha))) await ev.put(sha, seg);
+      made.push({ n, sha256: sha, bytes: seg.length, rows: rows.length, final: n === segs.length - 1, existed: false });
+    }
+    const at_ = this.nowIso();
+    const p = { piece: pieceKey, state: "reading", source: "file", address: null, retrieved_at: at_, source_date: "not_stated",
+                original: { sha256: end.original.sha256, bytes: end.original.bytes, covers: end.original.covers },
+                reduced: { rows_in: end.reduced.rows_in, rows_out: end.reduced.rows_out, rows_undetermined: end.reduced.rows_undetermined, withheld_cells: end.reduced.withheld_cells,
+                           kept_columns: end.reduced.kept_columns, dropped_columns: end.reduced.dropped_columns },
+                segments: made };
+    const dup = this.one(`SELECT * FROM register_imports WHERE register=? AND filter_fp=? AND scope_key=? AND state IN ('queued','fetching','reading','paused') ORDER BY import_id LIMIT 1`, def.key, checked.fingerprint, key);
+    if (dup) return { ok: true, existed: true, import: dup.import_id, state: dup.state };
+    const id = this.insertImport({ register: def.key, checked, sc, key, proj, kind: "import", by, holes, pieces: [p], cursor: { slices: 0, source: "file", ing: { piece: pieceKey, seg: 0, rows: 0 }, est_stored: all.length }, state: "reading" });
+    this.tx(() => {
+      for (const m of made)
+        this.sql.exec(`INSERT OR REPLACE INTO register_segments (import_id, piece, n, sha256, bytes, rows, final, project, address, retrieved_at, source_date, original_sha256, original_bytes, covers, bundle_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)`,
+                      id, pieceKey, m.n, m.sha256, m.bytes, m.rows, m.final ? 1 : 0, proj, `file:${end.original.sha256.slice(0, 16)}#segment:${m.n}`, at_, "not_stated", end.original.sha256, end.original.bytes, end.original.covers);
+      this.sql.exec(`UPDATE register_imports SET bytes_in = ? WHERE import_id=?`, end.original.bytes, id);
+    });
+    this.told(this.queuedListeners, { import: id, register: def.key, kind: "import" });
+    return { ok: true, existed: false, import: id, state: "reading", source: "file" };
   },
 
   /** R11: one listener per module, told `{import}` after an import is queued, so `scheduler` arms its alarm (R9, R23). */

@@ -45,7 +45,7 @@ export class Registers {
    *  (their registrations go the other way); `view` (the combined jurisdiction view, default the instance's active profiles);
    *  `bounds`, `phase`, `port` (a rowStore), `now`, `onImportQueued`, `freeBytes`. */
   constructor({ storage, record, membership, acquisition = null, store = null, content = null, extraction = null, entities = null,
-                view = null, bounds = {}, phase = null, port = null, now = null, freeBytes = null, evidence = null, subjects = null } = {}) {
+                view = null, bounds = {}, phase = null, port = null, now = null, freeBytes = null, evidence = null, subjects = null, evidencePurge = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record || recordOf({ storage });
@@ -63,6 +63,7 @@ export class Registers {
     this.clock = typeof now === "function" ? now : () => Date.now();
     this.evidenceOpt = evidence;
     this.subjectsOpt = subjects;
+    this.purgeOpt = typeof evidencePurge === "function" ? evidencePurge : null;
     this.queuedListeners = [];
     this.interestListeners = [];
     this.#freeBytes = freeBytes;
@@ -342,6 +343,15 @@ export class Registers {
   }
 
   /** The columns a reduced copy holds, in the definition's order (register-readers R3). */
+  /** R30: an object removed from the evidence store, by the store's own `delete` when it has one, else by the host's purge (`evidencePurge`). record-core's store offers neither today (reported). */
+  async purgeObject(ev, sha) {
+    try {
+      if (ev && typeof ev.delete === "function") { await ev.delete(sha); return true; }
+      if (this.purgeOpt) { await this.purgeOpt(sha); return true; }
+    } catch { /* the object stays, and the caller says so */ }
+    return false;
+  }
+
   kept(definition) { return (Array.isArray(definition.columns) ? definition.columns : []).filter((c) => isObj(c) && typeof c.name === "string" && c.keep === true && !CONTACT_ROLES.includes(c.role)).map((c) => c.name); }
 
   /* ---- the registrations that go the other way (content R65, extraction R113), once, at start ---- */
