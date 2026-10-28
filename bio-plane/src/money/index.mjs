@@ -52,6 +52,8 @@ const SOURCE_DEPTH_MAX = 32;
 /* R31: an ingest key, at most. */
 const INGEST_KEY_MAX = 200;
 /* R36: the five connection kinds and their words, by the design's key where it has one, else money's own provisional row. */
+/* the sentence of the reason `neighbours` gives when no date is asked (the row is read by its key) */
+export const NO_DATE_ASKED = localize("money.neighbours.no_date_asked", "No date was asked, so whether this fact was in force on a date is not judged.");
 const KIND_WORDS = Object.freeze({
   money_transfer: localize("label.connectionkinds.money_transfer", "money moved"),
   money_payment: localize("label.connectionkinds.money_payment", "money paid"),
@@ -244,12 +246,11 @@ export class Money {
 
   /* R39 (T53; DEC-458): the governing view is the active profiles combined with the team's one layer, which `local-facts`
      provides (`teamLayer`, its R30) and the caller appends after the recorded ids; where it is absent or does not combine,
-     the profiles alone. The layer is read for the fiscal years it states, as an internal reader: what a caller is told is
-     the period a key maps to, never the layer. */
+     the profiles alone. Asked as an internal call (no viewer): what a caller is told is the period a key maps to, never the layer. */
   #team() {
     const lf = this.#lf();
     if (!lf || typeof lf.teamLayer !== "function") return null;
-    try { const t = lf.teamLayer({ viewer: "admin" }); return isObj(t) && t.ok !== false && !t.refused ? t : null; } catch { return null; }
+    try { const t = lf.teamLayer({}); return isObj(t) && t.ok !== false && !t.refused ? t : null; } catch { return null; }
   }
   #view() {
     const ids = typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
@@ -286,10 +287,11 @@ export class Money {
       if ((e.profile !== "team" && e.origin !== "team") || !gov) return { ...base, from: "records" };
       const path = gov.level === "federal" ? "team/federal/fiscal_year" : `team/${gov.level}:${gov.place}/fiscal_year`;
       let st = null;
-      try { st = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path, viewer: "admin" }) : null; } catch { st = null; }
-      const latest = st && isObj(st.latest) ? st.latest : null;
+      try { st = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path }) : null; } catch { st = null; }
+      /* local-facts R32: `governs.says` is "stated by <member>, <date>"; `how` is how the member checked */
+      const says = st && isObj(st.governs) && typeof st.governs.says === "string" ? st.governs.says : null;
       return { ...base, from: "stated", government: { level: gov.level, ...(gov.place ? { place: gov.place } : {}) },
-               stated: { by: latest ? latest.by ?? null : null, at: latest ? latest.at ?? null : null, how: latest ? latest.how ?? null : null },
+               stated: { says, how: st && typeof st.how === "string" ? st.how : null },
                status: st && typeof st.status === "string" ? st.status : "confirmed",
                ...(st && st.status === "disputed" && typeof st.why === "string" ? { dispute: st.why } : {}) };
     };
@@ -1404,6 +1406,10 @@ export class Money {
      date asked. Cheap, so R37 counts a node's facts by it before any edge is built. */
   #validity(r, at) {
     const valid = { from: r.period_from, to: r.period_to, precision: r.period_precision, zone: r.period_zone };
+    /* no date asked: `validAt` cannot judge, and the registry's contract (connection-grammar R6) judges the same, so each fact is
+       undetermined with a keyed reason (`{key, vars}`), never the thrown message */
+    if (at === undefined || at === null || at === "")
+      return { valid, v: { undetermined: true, why: { key: "money.neighbours.no_date_asked", vars: {} } } };
     let v;
     try { v = validAt({ valid }, at); } catch (e) { v = { undetermined: true, why: String(e && e.message ? e.message : e) }; }
     if (v === "out" || (v && v.refused)) return null;
