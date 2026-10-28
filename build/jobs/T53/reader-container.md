@@ -45,3 +45,41 @@ Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 1, module lines 2145
 
 Tests: 69/69. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 2, module lines 2144
+
+## Completion (2026-10-28)
+
+**CHANGE applied** · T53-538 (K5637): reader-container enrolled as a fleet member, every file in its own folder.
+- `fleet-member.json`: kind `container`, entry `container/server.mjs`, testDir, surface; one class (top-level form) `ReaderContainer`, `instance_type` standard-1, `max_instances` 3, bind `{member: reader-container, binding: READER}`; image `docker.io/civicsmith/reader-container`, `digest` null and no `source_sha256` (both recorded by `recordContainerDigest` at the release), platform linux/amd64, port 8080, base = the Dockerfile's FROM digest, `packages: packages.json`; bundle `src/worker.mjs` → `dist/reader-container.bundled.mjs` + `.bundle.json`, external `cloudflare:workers`, `node:*`; build `{dockerfile, context, command}`; `egress` empty; `callers` bio-plane `READER_CONTAINER` (service).
+- `src/worker.mjs`: default export `fetch` passes the image's four routes to one of the class's instances (named `reader-0`…`reader-2`), any other route 404 `UNKNOWN`, no class bound a stated 503 `UNREACHABLE`; `limits` statement as file-scanner's; exports `ReaderContainer` (`enableInternet` false, port from the marker, `sleepAfter` 5m) and `ContainerProxy`.
+- `wrangler.jsonc`: account `20b533579290b9b93168345edd3b7f72` only, main the bundle, `vars.VERSION`, `workers_dev`/`preview_urls` false, `limits.cpu_ms`, observability on, the container block, the `READER` Durable Object binding, migration v1 `new_sqlite_classes: [ReaderContainer]`; no bucket, store, route or trigger.
+- `package.json` `build` script (`scripts/build.mjs`, bundler's `writeMember`), `@cloudflare/containers` 0.3.7 dev dependency, `package-lock.json`; `dist/` built and committed (fleetbundles: byte-identical fresh build, sha256 in the manifest, R31 size and start-up measured).
+- `packages.json` and the Dockerfile: every package pinned, versions read from the 2026-10-06 bookworm and bookworm-security indexes (none null). 7-Zip is `p7zip-full 16.02+really26.02+dfsg-0+deb12u1` (7-Zip 26.02).
+- `test/member.test.mjs` (R8): the committed bundle loaded under Node: routes passed through, others 404, the class with no internet, the configuration binding nothing that stores, and the marker, statement and Dockerfile as bundler reads them.
+
+**What the bundler checks refuse, which I cannot satisfy from my folder**
+- `bio-plane/test/system/fleetbundles.test.mjs` (bundler's) pins the member list (around line 121, six names) and the container members with their images: both arms FAIL with reader-container enrolled (every other arm passes for it). That test is the bundles' merge verify, so the merge's verify fails until bundler adds `reader-container` to those two lists: a CHANGE for BUNDLER, landing with this merge.
+- `wrangler.jsonc`'s image carries a placeholder digest of 64 zeros, because `recordContainerDigest` only rewrites an existing `repository@sha256:<64 hex>` reference; the marker's `digest` is null, so `imageReference` names the image as missing until recorded, and no install can deploy it before then.
+- `.github/workflows/container-images.yml` (not this module's) needs a matrix row `{name: reader-container, context: reader-container, file: reader-container/Dockerfile, member: reader-container}` and its `paths` filter for the image to be built and its digest printed.
+- Not provable before the image exists: that bookworm's `p7zip-full` 26.02 installs a `7z` command (the server reads `READER_7Z` if it is named otherwise), and that bookworm's ImageMagick 6.9.11 with libheif 1.15 decodes HEIC and AVIF as the tests here did (ImageMagick 6.9.12, libheif 1.17). The image's `GET /version` names each tool once it runs.
+
+**Tests** · 73 pass, 0 fail, 0 skip. Checks for the module: architecture 0, coverage 8 of 8, words 0, fixtures 0, ownership 0.
+
+**Met** · R1, R2, R3, R4, R5, R6, R7, R8
+
+Tests: 73/73. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 3, module lines 2545
+
+## Completion (2026-10-28)
+
+**CHANGE applied** · the image digest (BOB #328; container-images.yml run 40620372145 on job/T53/reader-container @ 87667e02): `node bio-plane/scripts/bundles.mjs --record-image reader-container ReaderContainer sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b` recorded it without refusal. `fleet-member.json` image `digest` is that digest with `source_sha256` a6dc1cb8…; `wrangler.jsonc` names `docker.io/civicsmith/reader-container@sha256:c1422b26…`, replacing the placeholder. `containerImageStates`: `ReaderContainer current`. The placeholder comments in both files are now accurate. The bundle is rebuilt because it imports the marker, and fleetbundles' byte-identity arm passes for it.
+- `test/member.test.mjs` now also checks that both files name the one published image and that its state is `current`.
+- Found and fixed in my tests: with the beta figures now active (`archive.unpacked_bytes` and `member_bytes` 2 GiB), the R5 over-bound member test built a 2 GiB buffer in memory and failed once under the parallel run. It now streams the zeros through gzip to a file. Two full runs since then: 73/73, none cancelled. The large-ZIP test is now at the full 500 MiB uploaded bound, which my earlier note foresaw.
+
+**Still BOB's** · bundler's fleetbundles pinned lists (the joint merge with BUNDLER).
+
+**Tests** · 73 pass, 0 fail, 0 skip. Checks for the module: architecture 0, coverage 8 of 8, words 0, fixtures 0, ownership 0.
+
+**Met** · R1, R2, R3, R4, R5, R6, R7, R8
+
+Tests: 73/73. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 4, module lines 2562

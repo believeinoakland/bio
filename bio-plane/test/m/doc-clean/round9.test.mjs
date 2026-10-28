@@ -14,7 +14,8 @@ import { TAG_MAX, newScan } from "../../../src/doc-clean/xml.mjs";
 import { readContainer } from "../../../src/ooxml.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { zipChunks64 } from "../../make-zip.mjs";
-import { docx, makeZip, unzipCopy, enc } from "./fixtures.mjs";
+import { docx, makeZip, unzipCopy, enc, makePdf } from "./fixtures.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const SRC = new URL("../../../src/doc-clean/", import.meta.url).pathname;
 const DIR = mkdtempSync(join(tmpdir(), "doc-clean-round9-"));
@@ -296,4 +297,19 @@ test("R12 every ceiling is read from READ_BOUNDS: CLEAN_MAX_BYTES, the entry bou
     });
   }
   assert.deepEqual(found, [], "a ceiling's figure written as a literal");
+});
+
+// ---- R3 (T53-539): a PDF whose single value passes pdf-reader's direct-object bound is refused naming the bound ----
+
+test("R3 DOCUMENT_UNREADABLE: a page-tree array past the direct-object bound is refused naming the object and the bound's figure, through its words key", async () => {
+  const dmax = boundOf("pdf", "direct_object");
+  const line = `\n${" ".repeat(16)}3 0 R`;
+  const kids = `[${line.repeat(Math.ceil(dmax / line.length) + 10)}\n]`;
+  assert.ok(kids.length > dmax, "the array's text is past the bound");
+  const bytes = makePdf(["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids 4 0 R /Count 1 >>", "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 9 9] >>", kids]);
+  const r = await cleanDocument(bytes);
+  assert.deepEqual(Object.keys(r).sort(), ["code", "detail", "ok"]);
+  assert.equal(r.code, "DOCUMENT_UNREADABLE");
+  assert.equal(r.detail, localize("doc-clean.pdf.object_num_gen_is_larger_than", "object {num} {gen} is a single value larger than the {figure} bytes this module reads of one", { num: "4", gen: "0", figure: String(dmax) }));
+  assert.ok(r.detail.includes(String(dmax)), "the figure is in the sentence");
 });

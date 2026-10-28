@@ -1,0 +1,58 @@
+{
+  "name": "reader-container",
+  "kind": "container",
+  "entry": "container/server.mjs",
+  "testDir": "test",
+  "surface": {
+    "POST /convert?kind=&to=": "R1, R2: a legacy or macro Office file or an RTF converted to docx, xlsx or pptx, macros never run, no link followed",
+    "POST /frames?kind=": "R3, R4: a picture decoded to upright PNG frames, then its facts (time, place, orientation)",
+    "POST /archive?kind=&name=": "R5: an archive's members as a stream of records within the bounds the caller sends, then its end, or a refusal",
+    "GET /version": "the image's tools and their versions",
+    "anything else": "404 {ok: false, code: \"UNKNOWN\"}"
+  },
+  "image": {
+    "repository": "docker.io/civicsmith/reader-container",
+    "digest": "sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
+    "source_sha256": "a6dc1cb86a5cd27995b779755e597acbb9da2490ecde6ac76c48538c5dcd0b5c",
+    "platform": "linux/amd64",
+    "port": 8080,
+    "schedulingPolicy": "default",
+    "base": {
+      "repository": "docker.io/library/node",
+      "digest": "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+    },
+    "packages": "packages.json"
+  },
+  "bundle": {
+    "entry": "src/worker.mjs",
+    "outfile": "dist/reader-container.bundled.mjs",
+    "manifest": "dist/reader-container.bundle.json",
+    "external": [
+      "cloudflare:workers",
+      "node:*"
+    ]
+  },
+  "class_name": "ReaderContainer",
+  "instance_type": "standard-1",
+  "max_instances": 3,
+  "bind": [
+    {
+      "member": "reader-container",
+      "binding": "READER"
+    }
+  ],
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "command": "docker build --platform linux/amd64 -f Dockerfile -t <repository>:<version> reader-container"
+  },
+  "egress": [],
+  "callers": [
+    {
+      "member": "bio-plane",
+      "binding": "READER_CONTAINER",
+      "kind": "service"
+    }
+  ],
+  "note": "The fleet-member marker of a container member with one class (bundler R24-R27, R36, R37; K5637). `bundle` is the Worker that answers the plane's READER_CONTAINER service binding and hosts the class (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. `image` names the class's image only as repository@digest: `digest` and `source_sha256` are recorded by bundler's recordContainerDigest from the image container-images.yml publishes, which writes the same digest into wrangler.jsonc. The base is pinned by digest, as the Dockerfile's FROM; `packages` is the Debian package statement (bundler R27). The container has no internet (`egress` empty; the Worker's class sets enableInternet false): the Worker hands it every byte it reads, and it keeps nothing between requests (R8)."
+}

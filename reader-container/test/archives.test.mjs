@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync, createWriteStream, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { gzipSync, createGzip } from 'node:zlib';
 import { makeZip, zipBomb, nestedZip, zipChunks64Sized } from '../../bio-plane/test/make-zip.mjs';
 import { read, collect, ARCHIVE } from '../src/index.mjs';
 import { startContainer, sourceOf, fileSource, needs, scratch } from './helpers.mjs';
@@ -18,22 +18,27 @@ after(async () => { await box.close(); });
 const enc = new TextEncoder();
 const text = (m) => Buffer.from(m.bytes).toString('utf8');
 
+/* one TAR header (ustar) for a file of `size` bytes */
+function tarHeader(name, size) {
+  const h = Buffer.alloc(512);
+  h.write(name, 0, 100, 'utf8');
+  h.write('0000644\0', 100); h.write('0000000\0', 108); h.write('0000000\0', 116);
+  h.write(`${size.toString(8).padStart(11, '0')}\0`, 124);
+  h.write('00000000000\0', 136);
+  h[156] = 0x30;
+  h.write('ustar\0', 257); h.write('00', 263);
+  h.fill(0x20, 148, 156);
+  let sum = 0; for (const b of h) sum += b;
+  h.write(`${sum.toString(8).padStart(6, '0')}\0 `, 148);
+  return h;
+}
+
 /* a TAR of `files` [{ name, data }] (ustar) */
 function tar(files) {
   const blocks = [];
   for (const f of files) {
     const data = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
-    const h = Buffer.alloc(512);
-    h.write(f.name, 0, 100, 'utf8');
-    h.write('0000644\0', 100); h.write('0000000\0', 108); h.write('0000000\0', 116);
-    h.write(`${data.length.toString(8).padStart(11, '0')}\0`, 124);
-    h.write('00000000000\0', 136);
-    h[156] = 0x30;
-    h.write('ustar\0', 257); h.write('00', 263);
-    h.fill(0x20, 148, 156);
-    let sum = 0; for (const b of h) sum += b;
-    h.write(`${sum.toString(8).padStart(6, '0')}\0 `, 148);
-    blocks.push(h, Buffer.from(data), Buffer.alloc((512 - (data.length % 512)) % 512));
+    blocks.push(tarHeader(f.name, data.length), Buffer.from(data), Buffer.alloc((512 - (data.length % 512)) % 512));
   }
   blocks.push(Buffer.alloc(1024));
   return new Uint8Array(Buffer.concat(blocks));
@@ -148,11 +153,20 @@ test('R5 an encrypted member is stated and not opened; the archive\'s other memb
   assert.deepEqual([byName['open.txt'].encrypted, text(byName['open.txt'])], [false, 'open']);
 });
 
-test('R5 a member that inflates past its declared size is stopped at the unpacked bound, never sent whole', { skip: needs('sevenZip') }, async () => {
-  /* a TAR.GZ whose one member is larger than the unpacked bound would allow, made small by repetition */
-  const big = new Uint8Array(ARCHIVE.unpacked + 1);
-  const gz = gzipSync(tar([{ name: 'big.bin', data: big }]), { level: 9 });
-  const r = await read(sourceOf(gz), 'gz', { container: box.container });
+test('R5 a member larger than the unpacked bound is stopped while it streams, never sent whole', { skip: needs('sevenZip'), timeout: 900000 }, async () => {
+  /* a TAR.GZ whose one member is the unpacked bound + 1 zero bytes, written as a stream so nothing holds it whole */
+  const size = ARCHIVE.unpacked + 1;
+  const path = join(scratch('inflate'), 'big.tar.gz');
+  const z = createGzip({ level: 9 });
+  const done = new Promise((r) => z.pipe(createWriteStream(path)).on('finish', r));
+  const zeros = Buffer.alloc(1 << 20);
+  const put = (b) => (z.write(b) ? null : new Promise((r) => z.once('drain', r)));
+  await put(tarHeader('big.bin', size));
+  for (let left = size; left > 0; left -= zeros.length) await put(left >= zeros.length ? zeros : zeros.subarray(0, left));
+  await put(Buffer.alloc((512 - (size % 512)) % 512 + 1024));
+  z.end();
+  await done;
+  const r = await read(fileSource(path), 'gz', { container: box.container, name: 'big.tar.gz' });
   assert.equal(r.ok, false);
   assert.ok(['UNPACKED_OVER', 'MEMBER_OVER', 'RATIO_OVER'].includes(r.code), r.code);
 });
