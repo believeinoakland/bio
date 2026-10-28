@@ -31,6 +31,11 @@ export const DOORBELL_CHECKS = Object.freeze({
     check: 'C-118.4', where: inIndex("pullKnock", "is-knock-pullable"),
     translation: word('refusal.KNOCK_DISCARDED'),
   }),
+  /* C-118.13 `KNOCK_BYTES_CHANGED` (R31; DEC-479): the number is provisional, `capture` mints C-118's next free row. */
+  KNOCK_BYTES_CHANGED: Object.freeze({
+    check: 'C-118.13', where: inIndex("#bytesChanged", "is-knock-unchanged"),
+    translation: word('screen.inbox.view.changed'),
+  }),
   RESOLVE_NO_REASON: Object.freeze({
     check: 'C-118.7', where: inIndex("inboxResolve", "is-resolve-reasoned"),
     translation: localize('doorbell.checks.changing_a_knocks_status_records', 'Changing a knock\'s status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.'),

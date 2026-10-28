@@ -24,6 +24,8 @@ import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { DOORBELL_SCHEMA, DOORBELL_ADDITIVE_COLUMNS, DOORBELL_EXEMPT_TABLES } from "./schema.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
+import { fileSafetyOf } from "../file-safety/index.mjs";
 export { DOORBELL_SCHEMA, DOORBELL_EXEMPT_TABLES } from "./schema.mjs";
 
 /* The helpers below are copied from `capture`, which keeps its own for its other code (the map's §2). */
@@ -93,6 +95,10 @@ const statedOf = (value, max) => {
   return clean || null;
 };
 
+/* R30 (DEC-108 (5)): how many days after receipt a discarded knock is cleared; `runtime-limits`' figure, no literal here. */
+export const DISCARD_DAYS = boundOf("doorbell", "discard_days");
+const DAY_MS = 86400000;
+
 /* R19 (BOB's privacy ruling): how many UTC days the tally keeps. */
 export const TALLY_DAYS = 30;
 
@@ -113,22 +119,23 @@ export function doorbellOf(ctx, deps = {}) {
   if (d) return d;
   const capture = deps.capture ?? captureOf(ctx);
   d = new Doorbell(storage, { capture, record: deps.record ?? capture.core, provenance: deps.provenance ?? capture.provenance,
-                              credentials: deps.credentials ?? null });
+                              credentials: deps.credentials ?? null, fileSafety: deps.fileSafety ?? null });
   d.migrate();
   instances.set(storage, d);
   return d;
 }
 
 export class Doorbell {
-  #sql; #storage; #readers = new Map(); #declared = false;
+  #sql; #storage; #readers = new Map(); #declared = false; #clearing = new Set();
 
-  constructor(storage, { capture, record = null, provenance = null, credentials = null } = {}) {
+  constructor(storage, { capture, record = null, provenance = null, credentials = null, fileSafety = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.capture = capture;
     this.core = record;
     this.provenance = provenance;
     this.credentials = credentials;
+    this.fileSafety = fileSafety;
   }
 
   /** R25 (the map's doubt 5): the storage's `env` (the `CAPTURES` evidence bucket, `KNOCK_FINGERPRINT_KEY`,
@@ -140,6 +147,12 @@ export class Doorbell {
   #credentials() {
     if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
     return this.credentials;
+  }
+
+  /* file-safety's instance for this storage (R31's scan), reached when first needed. */
+  #fileSafety() {
+    if (!this.fileSafety) this.fileSafety = fileSafetyOf({ storage: this.#storage }, { record: this.core });
+    return this.fileSafety;
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -537,6 +550,67 @@ export class Doorbell {
     return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
   }
 
+  /** R31 (DEC-479 (45)): a member looks at a knock safely before it is moved into the record. The knock's bytes are fetched as R13
+   *  fetches them, hashed against the row's digest, and handed to `file-safety`'s `safeViewOfBytes` (its R71), which scans them and
+   *  answers only the safe view a document has: never the raw bytes, never a type taken on trust from R27. Nothing is written: no
+   *  receipt, capture, bundle, actor or job row, the knock's status and row stay as they were, and no record is kept of who looked
+   *  (`file-safety` R10). Refused, each writing nothing: `MEMBER_SESSION_REQUIRED`, `NO_SUCH_KNOCK` (R3), `EVIDENCE_NOT_HELD` (the
+   *  bytes are gone), `KNOCK_BYTES_CHANGED` (what is stored no longer hashes to the knock's digest), and `file-safety`'s own: a file
+   *  locked by a password (`SAFE_VIEW_FAILED`, reason `ENCRYPTED`, its R54), `NO_SAFE_VIEW` (a kind it has no safe view for yet). */
+  async inboxView({ knockId, viewer = null, sheet = null, fromRow = null } = {}) {
+    if (!viewerPredicate(viewer).member || !/^member:/.test(String(viewer)))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: localize("doorbell.index.view_member_only", "a knock is looked at by a signed-in member; nothing was read") };
+    if (typeof knockId !== "string" || !knockId || this.#clearing.has(knockId)) return this.#noSuchKnock(knockId);
+    const row = this.#one(`SELECT knock_id, sha256, in_r2, content, content_b64 FROM inbox WHERE knock_id = ?`, knockId);
+    if (!row) return this.#noSuchKnock(knockId);
+    let bytes = null;
+    try {
+      if (row.in_r2) {
+        const bucket = this.env && typeof this.env.CAPTURES?.get === "function" ? this.env.CAPTURES : null;
+        const obj = bucket ? await bucket.get(`bio/inbox/${row.sha256}`) : null;
+        if (obj) bytes = new Uint8Array(await obj.arrayBuffer());
+      } else if (typeof row.content_b64 === "string") {
+        bytes = Uint8Array.from(atob(row.content_b64), (c) => c.charCodeAt(0));
+      } else if (typeof row.content === "string") {
+        bytes = te.encode(row.content);
+      }
+    } catch { bytes = null; }
+    if (!bytes)
+      return evidenceAbsent(row.sha256, "bio", { knockId, status: 404,
+        detail: localize("doorbell.index.knock_bytes_gone", "the knock's bytes are no longer held, so nothing was shown") }).body;
+    if (hexOf(await crypto.subtle.digest("SHA-256", bytes)) !== row.sha256) {
+      return this.#bytesChanged(knockId);
+    }
+    let seen;
+    try {
+      const fs = this.#fileSafety();
+      seen = fs && typeof fs.safeViewOfBytes === "function"
+        ? await fs.safeViewOfBytes({ bytes, sha256: row.sha256, viewer, sheet, fromRow })
+        : { ok: false, reason: "SAFE_VIEW_UNAVAILABLE" };
+    } catch { seen = { ok: false, reason: "SAFE_VIEW_UNAVAILABLE" }; }
+    if (seen instanceof Response) return seen;
+    if (seen && seen.ok !== false) return { ...seen, knockId };
+    const why = seen && typeof seen === "object" ? seen : {};
+    if (why.reason === "NO_SAFE_VIEW")
+      return { ok: false, reason: "NO_SAFE_VIEW", code: "NO_SAFE_VIEW", translation: word("screen.inbox.view.nokind"), knockId, status: 422 };
+    if (why.reason === "BYTES_CHANGED") {
+      return this.#bytesChanged(knockId);
+    }
+    if (why.reason === "SAFE_VIEW_FAILED" && why.renderer_reason === "ENCRYPTED")
+      return { ok: false, reason: "SAFE_VIEW_FAILED", code: "SAFE_VIEW_FAILED", renderer_reason: "ENCRYPTED", final: true,
+               translation: word("file-safety.index.the_file_is_encrypted_so_no_safe_view"), knockId, status: 422 };
+    return { ...why, ok: false, reason: why.reason || "SAFE_VIEW_UNAVAILABLE", knockId, status: why.status || 503 };
+  }
+
+  /* R31 (C-118.13): the one site `KNOCK_BYTES_CHANGED` is minted. */
+  #bytesChanged(knockId) {
+    /* DEC-49 REGION is-knock-unchanged */
+    const k = DOORBELL_CHECKS.KNOCK_BYTES_CHANGED;
+    return { ok: false, reason: "KNOCK_BYTES_CHANGED", code: "KNOCK_BYTES_CHANGED", check: k.check, translation: k.translation, knockId, status: 409 };
+    /* END DEC-49 REGION is-knock-unchanged */
+  }
+
   /** R3: a member moves a knock to `discarded` or back to `new`, recorded with who, when and the member's own reason
    *  (DEC-88 (2)). `pulled` is R13's act for that knock and answers as `pullKnock` does (a promise), once its reason is
    *  admitted, the reason recorded on the row with the pull: a knock becomes `pulled` only by being brought in. Refused
@@ -547,7 +621,7 @@ export class Doorbell {
    *  bytes the record already holds only to a viewer who may see it. */
   inboxResolve({ knockId, status, by, reason, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
+    if (typeof knockId !== "string" || !knockId || this.#clearing.has(knockId) || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
     /* DEC-49 REGION is-resolve-reasoned */
     if (!reasonGiven(reason)) {
@@ -761,6 +835,8 @@ export class Doorbell {
       source: { kind: "knocker", named: false, pseudonym: row.pseudonym ?? null,
                 receipt: { knock_id: row.knock_id, sha256: row.sha256, bytes: row.bytes, received: row.received } },
       knocker_note: { text: String(row.note ?? ""), words_of: "the knocker", evidence_of_truth: false },
+      /* R29 (DEC-459): the name the knocker sent the file under, the knocker's word as the note is; null when none was sent. */
+      knocker_file_name: row.file_name == null ? null : { text: String(row.file_name), words_of: "the knocker", evidence_of_truth: false },
       origin: { kind: "doorbell", knock_id: row.knock_id },
       attestation_attempts: [],
     };
@@ -792,6 +868,77 @@ export class Doorbell {
                           WHERE capture_sha = ? ORDER BY received, knock_id`, sha).map((r) => ({ ...r }));
     } catch { return []; }
   }
+
+  /* R30: this instance's clock, epoch milliseconds, as `capture` reads it (its R115): the function it was handed as `now`, else the
+     store's `BIO_NOW_MS`, else the wall clock; an answer that is no finite number reads the next. */
+  #instant() {
+    const cap = this.capture || {};
+    if (cap.clockHanded || (typeof cap.clock === "function" && cap.clock !== Date.now)) {
+      let t;
+      try { t = Number(cap.clock()); } catch { t = NaN; }
+      if (Number.isFinite(t)) return t;
+    }
+    for (const env of [cap.clockEnv, this.env]) {
+      const raw = env ? env.BIO_NOW_MS : undefined;
+      if (raw === undefined || raw === null || raw === "") continue;
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
+
+  /** R30 (N824; DEC-108 (5)): the discarded knocks received `DISCARD_DAYS` or more before `now` (the instance clock when
+   *  absent), at most `limit` (default 200, clamped 1 to 1000), oldest received first, are cleared: the bytes under
+   *  `bio/inbox/<digest>` (unless another row still names the digest), then the inbox row, in one transaction. Asked at every
+   *  call and never remembered, `mayClearDiscarded()` gates it: when it says no, nothing is cleared and the answer says `held`.
+   *  A knock whose bytes could not be removed keeps its row and is tried again by the next call. Writes no tally and no record of
+   *  what it cleared; never throws. */
+  async clearDiscarded({ now = null, limit = null } = {}) {
+    let cleared = 0;
+    try {
+      const gate = this.mayClearDiscarded();
+      if (!gate.may) return { ok: true, cleared: 0, truncated: false, held: true, basis: gate.basis };
+      const at = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : this.#instant();
+      const cap = limitOf(limit);
+      const cutoff = new Date(at - DISCARD_DAYS * DAY_MS).toISOString();
+      const found = this.#rows(`SELECT knock_id, sha256, in_r2 FROM inbox WHERE status = 'discarded' AND received <= ?
+                                 ORDER BY received, knock_id LIMIT ?`, cutoff, cap + 1);
+      const due = found.slice(0, cap), truncated = found.length > cap;
+      const ids = new Set(due.map((r) => r.knock_id));
+      for (const id of ids) this.#clearing.add(id);
+      try {
+        const bucket = this.env && typeof this.env.CAPTURES?.delete === "function" ? this.env.CAPTURES : null;
+        const ready = [];
+        for (const row of due) {
+          if (row.in_r2) {
+            const shared = this.#rows(`SELECT knock_id FROM inbox WHERE sha256 = ? AND in_r2 = 1`, row.sha256).some((r) => !ids.has(r.knock_id));
+            if (!shared) {
+              if (!bucket) continue;
+              try { await bucket.delete(`bio/inbox/${row.sha256}`); } catch { continue; }
+            }
+          }
+          ready.push(row.knock_id);
+        }
+        cleared = this.#tx(() => {
+          let n = 0;
+          for (const id of ready) if (this.#one(`SELECT 1 AS x FROM inbox WHERE knock_id = ? AND status = 'discarded'`, id)) { this.#sql.exec(`DELETE FROM inbox WHERE knock_id = ?`, id); n++; }
+          return n;
+        });
+      } finally { for (const id of ids) this.#clearing.delete(id); }
+      return { ok: true, cleared, truncated, held: false };
+    } catch { return { ok: false, reason: "CLEAR_FAILED", cleared, held: false }; }
+  }
+
+  /** R30: the earliest instant a discarded knock becomes due for `clearDiscarded`, or null when there is none. */
+  discardClearDue(_now = null) {
+    try {
+      const r = this.#one(`SELECT MIN(received) AS r FROM inbox WHERE status = 'discarded'`);
+      return r && r.r ? new Date(Date.parse(r.r) + DISCARD_DAYS * DAY_MS).toISOString() : null;
+    } catch { return null; }
+  }
+
+  /** R30: when the scheduler next wakes this module's clearing: the same instant, or null. */
+  discardClearWake(now = null) { return this.discardClearDue(now); }
 }
 
 /** The doorbell's routes on the plane's route map (the map's §2: the nine routes `captureOps` carried, moved; plane
@@ -814,6 +961,8 @@ export function doorbellOps(d, url, body) {
     doorbelltally: () => d.doorbellTally({ viewer: q("viewer") ?? "" }),
     /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
     inboxpull: () => d.pullKnock({ knockId: (body && body.knockId) || q("id"), by: q("by") ?? (body && body.by), viewer: q("viewer") }),
+    /* R31: a read; the control plane stamps `viewer`. */
+    inboxview: () => d.inboxView({ knockId: q("id") ?? (body && body.knockId), viewer: q("viewer"), sheet: q("sheet"), fromRow: q("fromRow") }),
     knocksof: () => d.knocksOf({ pseudonym: q("pseudonym") ?? (body && body.pseudonym), ...page }),
     pulledknocks: () => d.pulledKnocksOf(q("capture") ?? (body && body.captureSha)),
   };
@@ -836,6 +985,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["pseudonym","limit","after"], requires: ["pseudonym"] } },
   inboxpull: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle"),
     fields: { accepts: ["knockId","id"], requires: [["knockId","id"]] } },
+  inboxview: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.inboxview", "read: a safe view of one knock before it is moved into the record, keyed by knock id, for a member session only: the knock's bytes checked against its fingerprint, scanned by file-safety and shown as pages or figures only; writes nothing and moves nothing into the record"),
+    fields: { accepts: ["id","knockId","sheet","fromRow"], requires: [["id","knockId"]] } },
   inboxresolve: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("doorbell.declared.inboxresolve", "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)"),
     fields: { accepts: ["knockId","status","reason"], requires: ["knockId","status","reason"] } },
 });

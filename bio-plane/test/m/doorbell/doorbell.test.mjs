@@ -9,7 +9,7 @@ import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { EXPECT } from "./expect.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -57,7 +57,7 @@ test("R1 R11: anyone may knock with no account; an accepted knock answers 200 wi
   assert.deepEqual(Object.keys(r.body).sort(), ["bytes", "knockId", "ok", "pseudonym", "received", "sha256"]);
   assert.equal(r.body.pseudonym, null, "R11 (N364): no knocker secret, no pseudonym, and no secret shown");
   assert.equal(r.body.sha256, sha("a tip")); assert.equal(r.body.bytes, 5);
-  assert.match(r.body.received, /inbox awaiting member review/);
+  assert.equal(r.body.received, word("doorbell.received.material_group_inbox"));
   assert.match(r.body.knockId, /^KNOCK-\d{4}-\d{2}-\d{2}-[0-9a-f]{8}$/);
   assert.ok(b.held.has(`bio/inbox/${sha("a tip")}`));
   const b64 = await send(knock({ contentB64: Buffer.from([1, 2, 3]).toString("base64") }));
@@ -209,7 +209,7 @@ test("R7: decoded content over the cap this instance applies is refused 413 with
   const inline = setup({ evidence: false });
   const s = await inline.send(knock({ contentText: "x".repeat(64 * 1024 + 1) }));
   assert.deepEqual([s.status, s.body.maxBytes], [413, 64 * 1024]);
-  assert.match(s.body.detail, /evidence storage configured/);
+  assert.equal(s.body.detail, localize("doorbell.door.inline_storage_needs_evidence", "this team's inbox stores knocks inline; large material needs its evidence storage configured"));
   assert.ok(onlyCounts(inline.st), "the store is asked only to count it");
   const ok = await inline.send(knock({ contentText: "small" }));
   assert.equal(ok.status, 200);
