@@ -1,6 +1,6 @@
 # ocr-worker (T53)
 
-**Status** · session_018BhceeL6Gsvfy3WXU2DyNM · depth 2 · WORKING
+**Status** · session_018BhceeL6Gsvfy3WXU2DyNM · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -25,3 +25,20 @@
 
 Tests: 21/21. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhceeL6Gsvfy3WXU2DyNM): test runs 1, module lines 51306
+
+## Completion (2026-10-28)
+
+# ocr-worker · T53 · K5565 (T53-62) report, round 2
+
+**Entries applied**
+- The last English-in-test site (wasm core refusal) now asserts `word("ocr-worker.tessengine.the_wasm_core_did_not_arrive")`, which resolves once the setup-words rows are regenerated for the run (BOB K5606, process PR #22).
+- Merged tranche/T53 into the job branch; the ocr-worker dist conflict was resolved by rebuilding with `npm run build`.
+
+**Not done** · none.
+
+**Found in other modules** · none.
+
+**Met** · none
+
+Tests: 21/21. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhceeL6Gsvfy3WXU2DyNM): test runs 2, module lines 51306
