@@ -46565,6 +46565,90 @@
    "en": "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.",
    "protected": false,
    "note": "DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)"
+  },
+  {
+   "key": "content.extent.part_name.footnote",
+   "en": "footnote",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.footnote names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.endnote",
+   "en": "endnote",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.endnote names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.header",
+   "en": "page header",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.header names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.footer",
+   "en": "page footer",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.footer names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.comment",
+   "en": "comment",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.comment names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.speaker_note",
+   "en": "speaker notes",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.speaker_note names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.master_text",
+   "en": "slide master",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.master_text names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.text_box",
+   "en": "text box",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.text_box names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_named",
+   "en": "{name} {n}",
+   "protected": false,
+   "note": "DEC-491: a part named with its number in the document: \"footnote 3\""
+  },
+  {
+   "key": "content.extent.part_unnamed",
+   "en": "a part of the document outside its body text",
+   "protected": false,
+   "note": "DEC-491: a part whose kind the reader did not name"
+  },
+  {
+   "key": "content.part_kind.body",
+   "en": "in the body text",
+   "protected": false,
+   "note": "DEC-491: the unmarked kind, worded as content.part_kind.footnote \"in a footnote\" is"
+  },
+  {
+   "key": "content.typed.checked",
+   "en": "typed by {typist}, checked by {checkers}",
+   "protected": false,
+   "note": "DEC-491: content R64; as screen.document.attest.row and .checked"
+  },
+  {
+   "key": "content.typed.unchecked",
+   "en": "typed by {typist}, not yet checked",
+   "protected": false,
+   "note": "DEC-491: content R64; as screen.document.attest.status"
+  },
+  {
+   "key": "content.typed.anonymous_member",
+   "en": "a member of the team",
+   "protected": false,
+   "note": "DEC-491: content R64: a typist or checker credited without their name, as case-grammar.text.attested_member_group"
   }
  ],
  "rewrite": {

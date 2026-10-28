@@ -7406,3 +7406,15 @@ the design: `refusal.BYTES_CHANGED` "What is stored no longer matches the file t
 verified: the page's checks pass; on tranche/T53 (c491c72b18 and later) with these words files, words 187 failures, the same without them (the tranche's own); file-safety view 5/5, bytes-view 2/2, picture 9/9.
 reasoning recorded in: this entry; `words-drawn.src.py` (DEC-260's row in place; DEC-489 block).
 owed: BOB: merge this commit (MERGE); file-safety's reads gain `refusal.BYTES_CHANGED` (K5681).
+
+### DEC-491 · decided
+raised: 2026-10-28 · the UX design session with Bob (session_018BhceeSwn6V6RdavfMqjcH, UX design #46) (K5730 (1) and (4): content's part names, T53-134, and its typing labels reach the design stream through words-unreviewed)
+for: design (T53, the beta)
+question: The words for content's part names and its typed-row labels, written by the job at their use and extracted to `words-unreviewed.json`.
+why it is Bob's: it is not (P17): member words.
+provisional: as below. alternative: none. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-28 · the design session (P17)
+the design: `content.extent.part_name.*`, the plain names as `content.part_kind.*` already says them after "in a": footnote, endnote, page header, page footer, comment, speaker notes, slide master, text box; `content.extent.part_named` "{name} {n}" ("footnote 3"); `content.extent.part_unnamed` "a part of the document outside its body text"; `content.part_kind.body` "in the body text" (the unmarked kind, worded as its siblings are); `content.typed.checked` "typed by {typist}, checked by {checkers}", `content.typed.unchecked` "typed by {typist}, not yet checked" (as the Document screen's `screen.document.attest.*` says them); `content.typed.anonymous_member` "a member of the team" (as `case-grammar.text.attested_member_group`). The job's English is kept except `part_kind.body`. Left for BOB's later review set: `content.extent.part_human` and `part_list_not_held`, which are explanations in refusals, not names.
+verified: the page's checks pass, words 0 on the branch; on tranche/T53 (origin at 16:41 UTC) with these files, words 0 failures, content 189/189 with and without them; the 14 keys leave words-unreviewed.
+reasoning recorded in: this entry; `words-drawn.src.py` (DEC-491 block).
+owed: BOB: merge this commit (MERGE; on its own off tranche/T53, as B572 asks; DEC-490 stays held for layer 11, K5721); content's words-reads entries for the 14 keys (K5681).
