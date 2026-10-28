@@ -58,6 +58,8 @@ import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
 import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
 import { csvEntry } from "./csv.mjs";
+import { STRUCTURED_TEXT_ENTRIES } from "./structured-text-reader/index.mjs";
+import { MAIL_ENTRIES } from "./mail-reader/index.mjs";
 import * as csv from "./csv.mjs";
 import * as ooxml from "./ooxml.mjs";
 import { localize, word, hasWord } from "./setup-words/index.mjs";
@@ -757,6 +759,10 @@ registerFormat(csvEntry);
 registerFormat(cfbEntry("doc", ["WordDocument"], "WordDocument", []));
 registerFormat(cfbEntry("xls", ["Workbook", "Book"], "Workbook", []));
 registerFormat(cfbEntry("ppt", ["PowerPoint Document"], "PowerPoint Document", []));
+/* The readers' own entries, unmodified (R33): structured-text-reader's (json, ndjson, xml, svg, kml, kmz, geojson, ics, vcf, srt, vtt) and
+   mail-reader's (eml, msg, mbox), before the archives so a `kmz` is asked before the plain ZIP. */
+for (const entry of STRUCTURED_TEXT_ENTRIES) registerFormat(entry);
+for (const entry of MAIL_ENTRIES) registerFormat(entry);
 for (const entry of ARCHIVE_ENTRIES) registerFormat(entry);
 
 /* THE ZIP ENTRY (T35-11; N688, K1844, K1852) — a plain ZIP archive, recognised
@@ -904,17 +910,18 @@ export function formatNameFor(answer) {
 const LIMIT_CLASSES = {
   document: [["bytes", "document", "bytes"], ["pages", "document", "pages"]],
   spreadsheet: [["bytes", "spreadsheet", "bytes"], ["rows", "spreadsheet", "rows"]],
-  xls: [["bytes", "spreadsheet", "bytes"], ["rows_per_sheet", "spreadsheet", "xls_rows"]],
+  xls: [["bytes", "spreadsheet", "bytes"], ["rows_per_sheet", "spreadsheet", "xls_sheet_rows"]],
   text: [["bytes", "text", "bytes"]],
   json: [["bytes", "text", "bytes"], ["nesting", "text", "nesting"]],
   calendar: [["bytes", "text", "bytes"], ["events", "text", "calendar_events"]],
   picture: [["bytes", "image", "bytes"]],
   tiff: [["bytes", "image", "bytes"], ["pages", "document", "pages"]],
-  message: [["bytes", "message", "upload_bytes"], ["received_bytes", "mail", "received_bytes"]],
+  message: [["bytes", "message", "upload_bytes"], ["received_bytes", "mail", "message_bytes"]],
   mailbox: [["bytes", "archive", "uploaded_bytes"], ["messages", "archive", "mailbox_messages"]],
   archive: [["bytes", "archive", "uploaded_bytes"], ["unpacked_bytes", "archive", "unpacked_bytes"], ["members", "archive", "members"], ["depth", "archive", "depth"]],
-  kept50: [["bytes", "kept", "bytes_50"]],
-  kept100: [["bytes", "kept", "bytes_100"]],
+  /* R42 gives the kept kinds no row of their own: the data kinds take the spreadsheet class's 50 MB, the rest the document class's 100 MB */
+  kept50: [["bytes", "spreadsheet", "bytes"]],
+  kept100: [["bytes", "document", "bytes"]],
   none: [],
 };
 function limitOf(cls) {

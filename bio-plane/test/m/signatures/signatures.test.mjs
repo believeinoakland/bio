@@ -141,20 +141,24 @@ const parseAndLog = (...a) => {
 
 /* ======================================================================= R1 */
 
-const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE", "NS_DOCKET", "NS_RELEASE_NOTICE"];
+const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE", "NS_DOCKET", "NS_RELEASE_NOTICE",
+  "NS_AI_CATALOGUE", "NS_AI_ADVISORY", "NS_AI_RUN"];
 
-test("R1 the six namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
+test("R1 the nine namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
   assert.equal(NS_RELEASE, "bio-release");
   assert.equal(NS_RATIFY, "bio-ratify");
   assert.equal(NS_FLEET, "bio-release-fleet");
   assert.equal(NS_NOTICE, "bio-working-on");
   assert.equal(NS_DOCKET, "bio-docket");
   assert.equal(NS_RELEASE_NOTICE, "bio-release-notice");
-  /* Exactly six: every NS_ export of the module is one of them. */
+  assert.equal(sshsig.NS_AI_CATALOGUE, "bio-ai-catalogue");
+  assert.equal(sshsig.NS_AI_ADVISORY, "bio-ai-advisory");
+  assert.equal(sshsig.NS_AI_RUN, "bio-ai-run");
+  /* Exactly nine (T53): every NS_ export of the module is one of them. */
   assert.deepEqual(Object.keys(sshsig).filter((k) => k.startsWith("NS_")).sort(), [...NAMESPACES].sort());
   const all = NAMESPACES.map((k) => sshsig[k]);
   assert.ok(all.every((v) => typeof v === "string" && v.length > 0));
-  assert.equal(new Set(all).size, 6);
+  assert.equal(new Set(all).size, 9);
   /* Compiled: a caller cannot rebind one. */
   for (const k of NAMESPACES) assert.throws(() => { sshsig[k] = "x"; });
   const msg = enc("one message\n");
