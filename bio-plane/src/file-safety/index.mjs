@@ -1239,7 +1239,7 @@ export class FileSafety {
       const pages = Number(r.headers.get("x-pages")) || 0, source = Number(r.headers.get("x-source-pages")) || 0, truncated = r.headers.get("x-truncated") === "true";
       return { ok: true, kind: "pdf", derived: true, of: want, sha256: r.headers.get("x-derived-sha256") || null, pages, source_pages: source, truncated, original: null,
                statement: FileSafety.#viewStatement(pages, source, truncated), bytes: got.bytes };
-    } catch { return refusal("SAFE_VIEW_FAILED", "The safe view could not be made.", { renderer_reason: "RENDER_FAILED" }); }
+    } catch { return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_safe_view_could_not_be_made", "The safe view could not be made."), { renderer_reason: "RENDER_FAILED" }); }
     finally { if (planted) { try { await this.#bucket().delete(planted); } catch { /* the source object is left to the store's own cleaning */ } } }
   }
 
