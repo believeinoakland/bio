@@ -102,18 +102,6 @@ const TABLE = {
     picture_source: same(603979776, k("image", "picture_source")),
     /* pixels of the rows route: 16384 x 12288, today's photo ceiling (K4862) */
     rows_pixels: same(201326592, k("image", "rows_pixels")),
-    /* image-cover R12-R14 (T53; DEC-460; K5555): the redraw's answer, and what the photo reader (`photoFactsOf`) and the
-     * profile check will read; protective figures set at the job's START, BOB's to move */
-    redraw_bytes: same(32 * MiB, k("image", "redraw_bytes")),
-    photo_profile_max: same(MiB, k("image", "photo_profile_max")),
-    photo_profile_tags: same(256, k("image", "photo_profile_tags")),
-    photo_exif_bytes: same(MiB, k("image", "photo_exif_bytes")),
-    photo_directory_entries: same(1024, k("image", "photo_directory_entries")),
-    photo_field_chars: same(256, k("image", "photo_field_chars")),
-    photo_text_chars: same(4096, k("image", "photo_text_chars")),
-    photo_list_items: same(64, k("image", "photo_list_items")),
-    photo_xmp_bytes: same(256 * KiB, k("image", "photo_xmp_bytes")),
-    photo_inflated_bytes: same(256 * KiB, k("image", "photo_inflated_bytes")),
   },
   ocr: {
     frame_bytes: bytes(61300000, k("ocr", "frame_bytes"), MB50),
