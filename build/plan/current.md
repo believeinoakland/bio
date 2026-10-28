@@ -82,7 +82,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/people.md`
 **explore**
 - T53-162 · N1260 (DEC-409) · every chain, shorter paths, time stop
-- T53-163 · N1260 (DEC-447) · `followfrom`
+- T53-163 · N1260 (DEC-447) · `followfrom` `[moved: affordances T53-605, K5786]`
 - T53-164 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-165 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/explore.md`
@@ -151,6 +151,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 **run-rules**
 - T53-192 · K5457 · bar per AI and part, `GATE_PART_OF`
 - T53-193 · K5565 · English in tests: its entry
+- T53-601 · observation-log's report (K5786) · its tests pin the C-22 set: add C-22.32 `OBSERVATION_FIELD_MALFORMED` and C-22.33 `OBSERVATION_FIELD_NOT_ALLOWED` (table.test.mjs R11, t46.test.mjs:120 R30)
 - rows: `build/plan/T53-R1/run-rules.md`
 **agent-harness**
 - T53-194 · K5457 · `ROLE_NEEDS`, `needOf`, `partOf`
@@ -172,6 +173,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-204 · N1219, DEC-466 · reads passed through, `airunparts`
 - T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick `[written: K5748: ai-runs R106]`
 - T53-206 · K5565 · English in tests: its entry
+- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; R29's column list names them
 - rows: `build/plan/T53-R1/ai-runs.md`
 **run-productions**
 - T53-207 · K5571 · agent-steps R54's idem obligations get lines (6)
@@ -418,6 +420,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - C T52-36
 - T53-320 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-321 · K5565 · English in tests: its entry
+- T53-607 · money's report (K5786) · t47.test.mjs:143 names `money_flow`: read as money's five `money_*` kinds
 - rows: `build/plan/T53-R1/wizard-scripts.md`
 **op-grades**
 - T53-559 · K5693, doorbell R31 · `inboxview` graded (a read)
@@ -430,6 +433,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-326 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-327 · K5565 · English in tests: its entry
 - T53-565 · mail-door R12 · the member acts `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` graded from mail-door's `DECLARED_OPS`
+- T53-604 · K5786 · grades for `eventwithdraw`, `moneyby` and `moneyfiscalyears`
 - rows: `build/plan/T53-R1/op-grades.md`
 **affordances**
 - T53-328 · N1260 (DEC-447) · "Follow from here" in this module
@@ -437,6 +441,8 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-329 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-330 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-331 · K5565 · English in tests: its entry
+- T53-605 · DEC-447 (moved from explore T53-163, K5786) · `followfrom`
+- T53-606 · money's report (K5786) · `money_flow` in words.mjs:39 and :57, R72 and t48.test.mjs read as money's five `money_*` kinds; `moneyby` and `moneyfiscalyears` carried (t33 R12 R24)
 - rows: `build/plan/T53-R1/affordances.md`
 **tasks**
 - C T52-40
@@ -497,6 +503,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-361 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-362 · K5565 · English in tests: its entry
 - T53-567 · mail-door R12 · mail-door's five member acts declared from its `DECLARED_OPS` (member session only)
+- T53-603 · events R61, money R39-R40, calculations R53 (K5786) · rows for `eventwithdraw`, `moneyby` and `moneyfiscalyears`; the calculations family's `extra` becomes `{ spotcheckvisit: ["by"], calculationcreate: ["owner"], calculationevaluate: ["owner"] }`
 - rows: `build/plan/T53-R1/op-declarations.md`
 **admission**
 - T53-363 · N1264 · `admit` in the room, parity
@@ -581,6 +588,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-399 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-400 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-401 · K5565 · English in tests: its entry
+- T53-608 · local-facts' report (R29, K5786) · R45's test reads `factStatus` by the layer's path, as local-facts R29 now names it, not `factStatus({})` for `<package>/time_zone`
 - rows: `build/plan/T53-R1/screens-settings.md`
 **screens-ai**
 - T53-402 · N1220 (DEC-420) · seven AI screens `[waits: UX-DESIGN's rows, B555]`

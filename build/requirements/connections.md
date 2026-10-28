@@ -123,6 +123,8 @@ Terms. A **theme** is `{theme_id, name, test, at}` and its declarer, `theme_id` 
 
 - **R76** *(not yet met: T53)* (T53; N1260; K1489; `connection-grammar` R7; `entities` R16) **`named_in` checks a document's sight itself.** `entities.strongestByCapture` takes no viewer, is unbounded and is unfiltered by sight (`entities/index.mjs:1878`), so R74 never counts what it answers. For each bundle id R74 would answer, the module asks the same bundle-sight check R63 uses (`connection-grammar` R7's), and an entity read through `concerns` is bounded at `limit` (R74's fanout, with `truncated` as `concerns` answers it, carried as R64 carries a capped derivation: the answer says it was cut and names the bound). Test: an entity resolved in a bundle the viewer may not see and one they may answers one hop, a `set_size` and a `why` counting the visible one only; a resolution set larger than the read limit answers `truncated: true` with the bound named. Control: a viewer who may see both gets both.
 
+- **R77** *(not yet met: T53)* (T53; N1200, N1186; K5747; T53-587; `membership` registerProjectReach) **This module reads a project's reach through membership.** It registers its reader of a project's reach (the records its hops cite) once through `membership.registerProjectReach`, so a run fenced to its project also reads them; the plane registers no second reader for it (`store-assembly` T53-593). Test: a run fenced to project P reads the records P's hops cite and none of another project's. Control: a second registration is refused `LISTENER_DECLARED`.
+
 ## Private
 
 ### Uses

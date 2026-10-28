@@ -73,7 +73,7 @@ Terms. A **hop** is one connection in `connection-grammar`'s shape `{id, from, t
 
 **A preset names itself (T53; JOURNEYS R-74)**
 
-- **R37** (T53; JOURNEYS R-74 owner half, D2 explore R?2; amends R2, R10) **`presets()` answers each preset's name as well as its kinds.** Each row of `presets()` (R10) carries `name`, the plain-word name by key that a screen draws, and `kinds`, the kind set the preset walks, so a screen needs nothing but the answer to draw both. Test: `presets()` rows each carry a `name` that is a words key's text and a non-empty `kinds`. Control: running a preset by its name walks the same kind set as before.
+- **R37** (T53; JOURNEYS R-74 owner half, D2 explore R?2; amends R2, R10) **`presets()` answers each preset's name as well as its kinds.** Each row of `presets()` (R10) carries `name`, the id a screen sends back to run the preset, `words`, the plain-word name read from a words key, which a screen draws (K5786), and `kinds`, the kind set the preset walks, so a screen needs nothing but the answer to draw both. Test: `presets()` rows each carry `words` that is a words key's text and a non-empty `kinds`. Control: running a preset by its name walks the same kind set as before.
 
 ## Private
 
