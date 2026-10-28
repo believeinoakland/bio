@@ -347,7 +347,10 @@ test("R5: an error result has type error, the engine's code and a cause; each is
   assert.equal(by["S!B1"].function, "WEBSERVICE"); assert.equal(by["S!B2"].function, "WEBSERVICE");
   assert.equal(by["S!B2"].via, "S!B1");
   assert.equal(body.counts.errors, 8);
-  assert.ok(!/disagree(s|ment)?\b(?! with the file)/i.test(JSON.stringify(body).replace(/not a disagreement/g, "")));
+  /* the error note names the count and the marking; no other part of the answer claims a disagreement with the file */
+  const errorNotes = body.notes.filter((n) => n.includes(String(body.counts.errors)) && n.includes(String(NOT_RECOMPUTED)));
+  assert.equal(errorNotes.length, 1);
+  assert.ok(!/disagree(s|ment)?\b/i.test(JSON.stringify({ ...body, notes: body.notes.filter((n) => !errorNotes.includes(n)) })));
   /* a non-error cell carries none of the error fields */
   const fine = (await recomputeVia(member(), small([{ r: "A1", f: "1", v: 1 }]))).body.cells[0];
   for (const k of ["error", "cause", "not_recomputed", "function"]) assert.equal(fine[k], undefined);
