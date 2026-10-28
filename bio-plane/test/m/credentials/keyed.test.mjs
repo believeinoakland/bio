@@ -14,7 +14,7 @@ const row = (table, code) => ({ ok: false, reason: code, code, check: table[code
 test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NOT_AN_ADMIN); an unknown service; an empty key or set; each writing nothing", async () => {
   const w = await world().group("ann", "dee");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
-  assert.deepEqual(KEYED_SERVICES, ["courtlistener"]);
+  assert.deepEqual(KEYED_SERVICES, ["courtlistener", "ca-officers"]);   /* R84 (T53): no `openfec` */
   const before = w.snapshot();
   for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", null])
     assert.deepEqual(await w.c.keyedServiceSet({ service: "courtlistener", key: KEY, by }),
@@ -42,7 +42,7 @@ test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NO
 test("R29 off by default and off while no key is held; keyedServiceFor answers the key only while on, else KEYED_SERVICE_OFF; keyedServices never a key; the key sealed", async () => {
   const w = await world().group();
   const off = row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF");
-  assert.deepEqual(w.c.keyedServices(), { services: [{ service: "courtlistener", held: false, on: false, set_by: null, set_at: null }] });
+  assert.deepEqual(w.c.keyedServices(), { services: KEYED_SERVICES.map((service) => ({ service, held: false, on: false, set_by: null, set_at: null })) });
   assert.deepEqual(shape(await w.c.keyedServiceFor({ service: "courtlistener" })), off, "off by default");
   /* switched on with no key: still off */
   assert.deepEqual(w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" }),
@@ -67,4 +67,32 @@ test("R29 off by default and off while no key is held; keyedServiceFor answers t
   w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
   await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-2", by: "admin" });
   assert.deepEqual((await w.c.keyedServiceFor({ service: "courtlistener" })).key, "cl-2");
+});
+
+/* ===== R84 (T53; N1259; K5666): the state's officers lookup, `ca-officers` ===== */
+
+test("R84 KEYED_SERVICES holds ca-officers beside courtlistener and no openfec; a non-administrator is refused NOT_AN_ADMIN, nothing written; off by default and while no key is held; on, the key is answered to the in-plane caller alone; control: courtlistener's own key is unchanged", async () => {
+  const w = await world().group("ann");
+  assert.ok(KEYED_SERVICES.includes("ca-officers") && KEYED_SERVICES.includes("courtlistener"));
+  assert.ok(!KEYED_SERVICES.includes("openfec") && !JSON.stringify(w.c.keyedServices()).includes("openfec"));
+  const before = w.snapshot();
+  for (const by of ["ann", "class:admin", null])
+    assert.deepEqual(await w.c.keyedServiceSet({ service: "ca-officers", key: KEY, by }),
+      notAnAdmin(by, localize("credentials.index.setting_the_teams_key", "setting the team's key for an outside service")), String(by));
+  assert.equal(w.snapshot(), before, "nothing written");
+  const off = row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF");
+  assert.deepEqual(shape(await w.c.keyedServiceFor({ service: "ca-officers" })), off, "off by default");
+  assert.equal(w.c.keyedServiceSwitch({ service: "ca-officers", on: true, by: "admin" }).on, false, "on with no key held is off");
+  assert.deepEqual(shape(await w.c.keyedServiceFor({ service: "ca-officers" })), off);
+  await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-own", by: "admin" });
+  w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
+  assert.equal((await w.c.keyedServiceSet({ service: "ca-officers", key: KEY, by: "admin" })).held, true);
+  assert.deepEqual(await w.c.keyedServiceFor({ service: "ca-officers" }), { ok: true, service: "ca-officers", key: KEY });
+  assert.deepEqual(await w.c.keyedServiceFor({ service: "courtlistener" }), { ok: true, service: "courtlistener", key: "cl-own" }, "control");
+  /* never shown: the key is in no table, list or route answer */
+  assert.ok(!w.snapshot().includes(KEY));
+  assert.ok(!JSON.stringify([w.c.keyedServices(), w.ops("by=admin").keyedservices()]).includes(KEY));
+  w.c.keyedServiceSwitch({ service: "ca-officers", on: false, by: "admin" });
+  assert.deepEqual(shape(await w.c.keyedServiceFor({ service: "ca-officers" })), off);
+  assert.equal((await w.c.keyedServiceSet({ service: "ca-officers", key: null, by: "admin" })).held, false, "a set with no key removes it");
 });

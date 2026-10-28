@@ -147,3 +147,5 @@ test("R63 aiRunCredentialMint records the account that serves the segment on the
   }
   assert.equal(w.snapshot(), before);
 });
+
+test.todo("R63 a run credential minted for account A is revoked when A's reference resolves to nothing; control: a credential for a run on account B is not (awaits ai-accounts R26 and R60)");

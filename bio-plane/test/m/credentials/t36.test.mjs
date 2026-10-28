@@ -58,7 +58,7 @@ test("R29 a security tool's credentials are held under `security:<tool_id>` by a
   /* listed after the named services, by service, never a key */
   const listed = w.c.keyedServices().services;
   assert.deepEqual(listed.map((x) => [x.service, x.held, x.on, x.set_by]),
-    [["courtlistener", false, false, null], ["security:scanii-1", true, true, "admin"], ["security:t1", true, true, "second"]]);
+    [["courtlistener", false, false, null], ["ca-officers", false, false, null], ["security:scanii-1", true, true, "admin"], ["security:t1", true, true, "second"]]);
   /* sealed: no table, answer or route carries a field, the whole set, or its digest */
   const { createHash } = await import("node:crypto");
   const dump = w.snapshot();
@@ -99,7 +99,7 @@ test("R29 a set with no key removes the service's key and the service is off: fo
     await w.c.keyedServiceSet({ service, key: "k2", by: "admin" });
     assert.deepEqual(shape(await w.c.keyedServiceFor({ service })), row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF"), `${service}: off again`);
   }
-  assert.deepEqual(w.c.keyedServices().services.map((x) => x.service), ["courtlistener", "security:t1"]);
+  assert.deepEqual(w.c.keyedServices().services.map((x) => x.service), ["courtlistener", "ca-officers", "security:t1"]);
   /* the route: the body's set, the stamp's `by`, and a body with no key removes */
   assert.equal((await w.ops("by=admin", { service: "security:t9", key: { a: "b" } }).keyedserviceset()).held, true);
   assert.deepEqual(await w.ops("by=admin", { service: "security:t9" }).keyedserviceset(),

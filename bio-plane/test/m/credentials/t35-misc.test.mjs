@@ -176,7 +176,16 @@ test("R1 R4 R39 R45 R46 R47 R43 the T35 routes: `source` and `country`, `by` and
   assert.equal((await w.ops("source=r", { handle: "second", code: issued.codes[0], password: "new-passphrase-1" }).recover()).ok, true);
 });
 
-test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your group's Civicsmith\" where it said this instance, this copy or its seal secret, as answered at the interface", async () => {
+/* R48 (T53; K3472): the names the team's Civicsmith is never called in a sentence a member or the founder reads. */
+const NAMES_FOR_THE_TEAMS_CIVICSMITH = /\b(?:group|instance|copy|copies|plane|server)\b/i;
+
+test("R48 control: a sentence that calls the team's Civicsmith \"your group's Civicsmith\" is caught by the check the strings below pass, and each other name it must not have", () => {
+  for (const name of ["group", "instance", "copy", "plane", "server"])
+    assert.match(`in ${name === "group" ? "your group's" : `this ${name}`} Civicsmith`, NAMES_FOR_THE_TEAMS_CIVICSMITH, name);
+  assert.doesNotMatch(word("credentials.country_proof_behind"), NAMES_FOR_THE_TEAMS_CIVICSMITH, "control: a sentence needing no name passes");
+});
+
+test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your team's Civicsmith\" where it said this instance, this copy or its seal secret, as answered at the interface", async () => {
   const w = await world().group("ann", "dee");
   await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" });
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
@@ -226,7 +235,7 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
     localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
 });
 
-test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
+test("R48 (T36: R29, R35, R49, R51 included; T53, K3472) no member- or founder-facing string this module answers calls the team's Civicsmith a group, a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
   const w = await world().group("ann", "dee");
   await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" });
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
@@ -277,7 +286,7 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
     for (const k of ["translation", "detail", "remedy", "message", "stated"]) {
       if (typeof a?.[k] !== "string") continue;
       n++;
-      assert.doesNotMatch(a[k], /\b(?:instance|copy|copies|plane|server)\b/i, `${k}: ${a[k]}`);
+      assert.doesNotMatch(a[k], NAMES_FOR_THE_TEAMS_CIVICSMITH, `${k}: ${a[k]}`);
       assert.doesNotMatch(a[k], /seal secret bound|secret is bound|no seal secret bound/i, `${k}: ${a[k]}`);
     }
   assert.ok(n > 60, `strings read: ${n}`);

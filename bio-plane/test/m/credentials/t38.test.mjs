@@ -43,3 +43,7 @@ test("R27 R32 R73 a member an account serves is granted an ask (no retired notic
   assert.deepEqual(shape(none), refusal("NO_ACCOUNT"));
   assert.ok(!RETIRED.includes(none.code));
 });
+
+/* The notice is `ai-accounts` R51's and the refusal reaches the grant through R25's `accountServing`; the provider's job
+   (T53) gives the first act to a recipient its refusal, which this mint answers as given. */
+test.todo("R27 a member whose serving account sends to a recipient whose notice they have not read is refused RECIPIENT_NOTICE_DUE, minting nothing; control: a member whose notice is read is granted, and no retired code is returned (awaits ai-accounts R51)");

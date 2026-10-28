@@ -109,7 +109,18 @@ test("R28 AI_GRANT_OPS is frozen and sorted; a request under a grant is admitted
   }
   assert.equal(w.snapshot(), before, "admission writes nothing");
   /* the list holds no sources op, no member history, no administrative and no export op (answers R1) */
-  assert.deepEqual(AI_GRANT_OPS.filter((op) => /^source|^member|^admin|export|purge|audit|aicredential/.test(op)), []);
+  assert.deepEqual(AI_GRANT_OPS.filter((op) => /^source|^member|^admin|export|purge|audit|^aicredential.+/.test(op)), []);
+});
+
+test("R28 (T53; K5457) AI_GRANT_OPS holds `aicredential` (ai-accounts R65: the Worker reads the sealed key of the act's own account under the ask's grant): admitted as a read and refused as a write; control: the credential-minting ops are not on it", async () => {
+  const w = await grantWorld();
+  const g = (await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.session.ann })).token;
+  assert.ok(AI_GRANT_OPS.includes("aicredential"));
+  assert.deepEqual({ ...(await w.c.aiGrantAdmit({ token: g, op: "aicredential" })), expires: null }, { ok: true, member: "ann", viewer: "member:ann", expires: null });
+  const asWrite = await w.c.aiGrantAdmit({ token: g, op: "aicredential", write: true });
+  assert.deepEqual([shape(asWrite), asWrite.op], [refusal("GRANT_OP_REFUSED"), "aicredential"]);
+  for (const op of ["aicredentialmint", "aicredentialrevoke", "aicredentiallook", "aicredentials", "aicredentialfailed"])
+    assert.ok(!AI_GRANT_OPS.includes(op), op);
 });
 
 test("R27 R35 R36 a member with no reference of their own is granted under the group's key only while it is held and on, and once they have read its notice; NO_ACCOUNT only when no account serves them", async () => {

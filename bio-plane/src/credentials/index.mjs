@@ -59,17 +59,20 @@ export { USE_KINDS };
 export const AI_GRANT_TTL_SECONDS = 900;
 /* R28 (K1505 (14); N580, K1603, K1609): the ask's op allow-list, held by the grant's class, each entry the op's name as
    the plane routes it. `answers`' `ASK_SCOPE` (its R1) is held equal to it, both ways, by answers' copy test. Every op
-   here is a read; a grant admits no write. `rule` is answers' door to every rule service (its R7). */
+   here is a read; a grant admits no write. `rule` is answers' door to every rule service (its R7). (T53; K5457)
+   `aicredential` is `ai-accounts`' R65: the agent Worker reads the sealed key of the act's own account under the ask's
+   grant at the call; that op serves the Worker's principal alone, so a member holding the grant is refused it there. */
 export const AI_GRANT_OPS = Object.freeze([
-  "calculation", "career", "committedagainstpaid", "dutiesof", "dutyoccurrences", "entity", "entitybyalias",
+  "aicredential", "calculation", "career", "committedagainstpaid", "dutiesof", "dutyoccurrences", "entity", "entitybyalias",
   "eventsfor", "explore", "frontier", "holderat", "linesof", "meaningrows", "money", "moneyof", "profiles", "relation",
   "resolutions", "rule", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof",
   "structureat", "timeline",
 ]);
-/* R29 (K1449): the keyed outside services the group may hold a key for, by name: CourtListener's lookup. (T36; K1946
+/* R29 (K1449): the keyed outside services the team may hold a key for, by name: CourtListener's lookup. (T53; R84, N1259,
+   K5666) `ca-officers`, the state's officers lookup, is the second; no `openfec` (the federal bulk files need no key). (T36; K1946
    T1) Beside them, each outside security tool `file-safety` adds holds its credentials under its own service,
    `security:<tool_id>` (the tool id 1 to 120 letters, digits, `.`, `_` or `-`). */
-export const KEYED_SERVICES = Object.freeze(["courtlistener"]);
+export const KEYED_SERVICES = Object.freeze(["courtlistener", "ca-officers"]);
 export const SECURITY_SERVICE_PREFIX = "security:";
 const SECURITY_SERVICE_RE = /^security:[A-Za-z0-9._-]{1,120}$/;
 
