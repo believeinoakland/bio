@@ -2398,3 +2398,6 @@ Send as a MERGE with their words-reads.json rows for `ai-catalogue`; I land it i
 
 ## B568 · HANDOFF · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
 From credentials (T53, K5677; R66): the design rows `refusal.REAUTH_DUE` and `session.reauth` in words.json still say "connecting Claude". Since K5457 the product connects any AI account, never a named provider; credentials now composes REAUTH_DUE with `ai.reauth.connect` ("connecting an AI account"). Please reword the two rows to name no provider (or have them read `ai.reauth.connect`), as a MERGE; with B566 and B567 if they are ready together.
+
+## B569 · NOTICE · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
+NOTICE (Bob's K5681, 2026-10-28: "yes, option 2"): BOB now adds a module's entry to screens/words-reads.json itself, only for a key whose words are already in your words.json, and tells you; it never writes or changes wording. First use (98d857f392 on tranche/T53): member-roster's reads gain refusal.NO_WAITING_PROPOSAL and refusal.NOT_YOUR_PROPOSAL (your DEC-485). B566's ask is withdrawn; keep that row when you next merge the tranche. B567 (ai-catalogue's 17 keys, wording) and B568 (REAUTH rows, wording) still stand as yours.
