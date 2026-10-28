@@ -15,8 +15,8 @@
  * project's account, the switches for each kind of use, the material limits, the notices and the disclosure, each
  * account's history) moved to `ai-accounts` in T48 (T48-10, T48-11; N996, K3101), split by copy (K617, K624). This
  * module creates it in its factory with the seal secret and asks it, never a copy (R27, R29, R32, R63, R73). Its
- * transitional delegates and its ops are gone (R72 retired, T53, K5457); `USE_KINDS` and the `ACCOUNT_CHECKS` view stay
- * re-exported only until their last readers re-point.
+ * transitional delegates, ops, `USE_KINDS` and `ACCOUNT_CHECKS` view stay answered only until their last readers
+ * re-point (R72, retired T53, K5457: deleted by the first job after that).
  *
  * Requirements: build/requirements/credentials.md (R1–R79; R26, and R22–R25, R33–R37, R43, R51, R52, R54–R62, R64, R70
  * moved to `ai-accounts`, retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
@@ -37,7 +37,7 @@
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, projectViewer } from "../membership/index.mjs";
-import { aiAccountsOf, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
+import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -2120,6 +2120,22 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
   return c;
 }
 
+/* R72 (T48, transitional; K3101): each service that moved to `ai-accounts` (its R1–R23) answered here through its own,
+   byte for byte: a delegate per name, never a copy of its code (K624). Deleted, with `ACCOUNT_CHECKS`' view and the
+   spread in `credentialsOps`, by this module's first job after its last user re-points (split map §5). */
+export const MOVED_TO_AI_ACCOUNTS = Object.freeze([
+  "accountReferenceSet", "accountReferenceRemove", "accountReferenceState", "accountReferenceFor", "accountFor",
+  "registerDisclosureRead", "disclosureDue", "accountUsesSet", "accountUses", "accountUsesOf", "accountHistory",
+  "subscriptionConnected", "subscriptionDisconnect", "subscriptionTokenHold", "subscriptionTokenRefused",
+  "groupKeySet", "groupKeyRemove", "groupKeySwitch", "groupKeyState", "groupKeySwitches", "groupKeyNotice",
+  "groupKeyNoticeSeen", "aiKeepAwaySet", "aiKeepAwayState", "aiKeptAway", "projectKeySet", "projectSigninSet",
+  "projectAccountRemove", "projectAccountSwitch", "projectAccountState", "projectKeyNotice", "projectKeyNoticeSeen",
+  "projectAccountsSuspended", "projectAiKeepAwaySet", "projectAiKeepAwayState", "projectsKeptAway",
+]);
+for (const name of MOVED_TO_AI_ACCOUNTS)
+  Object.defineProperty(Credentials.prototype, name, {
+    value: function (...a) { return this.accounts[name](...a); }, writable: true, configurable: true });
+
 /* The ops this module answers, as entries of the plane's one route map (plane R5: `routes` spreads them in, after
    membership's, and control-plane's `dispatch` answers every store request over it). `url` carries the control
    plane's stamps (`by`, `who`) in its query, read AFTER the body is spread, so a caller's own copy never wins (D-136);
@@ -2131,6 +2147,10 @@ export function credentialsOps(c, url, body, env) {
   const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
   const by = () => url.searchParams.get("by");
   return {
+    /* R72 (T48, transitional; K3101): the 24 ops that moved to `ai-accounts`, answered by its own route map over this
+       module's delegates, so each answers byte for byte as `ai-accounts`' does until its callers re-point; this
+       module's own ops follow and none of them shares a name with one of these. */
+    ...aiAccountsOps(c, url, body, env),
     /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
        value, hashes it, and this module never sees the value. R53 (N761; K2129): the digest is read from the body
        only, where the control plane sets it after removing any a caller sent; a `secretSha` in the query is never

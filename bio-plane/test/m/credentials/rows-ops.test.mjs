@@ -96,7 +96,7 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   const moved = Object.keys(aiAccountsOps(w.c.accounts, new URL("http://x/"), null, {}));
   const routes = Object.keys(w.ops());
   assert.deepEqual(routes.sort(), Object.keys(credentialsOpsNoVersion(w)).sort(), "the routes are this module's own map");
-  assert.ok(moved.every((op) => !routes.includes(op)), "no moved route is answered here");
+  assert.ok(moved.every((op) => routes.includes(op)), "the moved routes are still answered here, through their delegates (R72 until its users re-point)");
 });
 
 test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
