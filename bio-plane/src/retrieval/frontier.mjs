@@ -159,19 +159,7 @@ export class Frontier {
              tally, never_looked_count: never.slice(0, cap).length,
              missing_unexplained: unexplained.slice(0, cap),
              missing_unexplained_count: unexplained.slice(0, cap).length,
-             note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: "
-                 + "these are addresses a document we hold points at that nothing has ever looked for. A missing "
-                 + "row is read through section 5.1's causes in order, so an address this record holds a capture "
-                 + "of, or one it cannot place after the log's first row, is named in `missing_unexplained` with "
-                 + "its cause and never counted as nobody-looked; every such row names the causes it could not "
-                 + "rule out. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is "
-                 + "published only when every record it names — through `result_ref`, through a "
-                 + "ratify or link authority, through a run's context or a sweep's capture request "
-                 + "— is one this viewer may see, and a referent that cannot be attributed to any "
-                 + "record at all withholds the row rather than being waved through. No count of "
-                 + "what was withheld is reported, because that count is the leak. The `tally` "
-                 + "counts every row at this level rather than this page, names nothing, and is "
-                 + "not gated" };
+             note: localize("retrieval.frontier.note_document_never_looked", "NEVER_LOOKED is the absence of a row and is reported apart from the tally: these are addresses a document we hold points at that nothing has ever looked for. A missing row is read through section 5.1's causes in order, so an address this record holds a capture of, or one it cannot place after the log's first row, is named in `missing_unexplained` with its cause and never counted as nobody-looked; every such row names the causes it could not rule out. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is published only when every record it names — through `result_ref`, through a ratify or link authority, through a run's context or a sweep's capture request — is one this viewer may see, and a referent that cannot be attributed to any record at all withholds the row rather than being waved through. No count of what was withheld is reported, because that count is the leak. The `tally` counts every row at this level rather than this page, names nothing, and is not gated") };
   }
 
   /* ---- the content level (R42–R44) ---- */
@@ -303,21 +291,7 @@ export class Frontier {
       undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
       /* R44: nothing here the answer contradicts. The per-unit text index exists; `indexed` reads undetermined only
          where a capture has no `derive` row (an index observation). */
-      note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has "
-          + "ever tried to extract, and it is reported apart from the tally because it is the "
-          + "absence of a row — and a missing row is read through section 5.1's causes in "
-          + "order, so a capture extracted before this log carried the content level is NOT in "
-          + "that set and is named in `missing_unexplained` with its cause instead. An entry is the "
-          + "capture's latest EXTRACTION, and the re-extraction candidate list is every capture whose latest "
-          + "extraction is not a definitive PRESENT, plus every capture whose "
-          + "transcription rests on a calibration a worse measurement has superseded. `indexed` is read "
-          + "from the capture's latest index observation, and reads UNDETERMINED where the record holds none "
-          + "(a capture indexed before the index was observed), never where it holds one. "
-          + "The withholding fence applies ROW-WHOLE: a capture this viewer may not "
-          + "see is absent from every collection here, and `truncated` describes THE LISTS YOU "
-          + "WERE GIVEN and never the supply they were cut from — for a viewer entitled to every "
-          + "row those are the same list, and no count of what was withheld is reported, because "
-          + "that count is the leak",
+      note: localize("retrieval.frontier.note_content_extraction", "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row — and a missing row is read through section 5.1's causes in order, so a capture extracted before this log carried the content level is NOT in that set and is named in `missing_unexplained` with its cause instead. An entry is the capture's latest EXTRACTION, and the re-extraction candidate list is every capture whose latest extraction is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. `indexed` is read from the capture's latest index observation, and reads UNDETERMINED where the record holds none (a capture indexed before the index was observed), never where it holds one. The withholding fence applies ROW-WHOLE: a capture this viewer may not see is absent from every collection here, and `truncated` describes THE LISTS YOU WERE GIVEN and never the supply they were cut from — for a viewer entitled to every row those are the same list, and no count of what was withheld is reported, because that count is the leak"),
     };
   }
 
@@ -422,19 +396,7 @@ export class Frontier {
       missing_causes: V.MEANING_MISSING_ROW_CAUSES,
       evidence_one_sided: sided,
       tally, by_subject_kind,
-      note: "the three acts of section 4.3 have three subjects and are three partitions of one "
-          + "table: a CAPTURE (did anything read this document for entities), a REFERENCE (did "
-          + "anything try to match this name against the registry), an ENTITY (did anything derive "
-          + "the connections among the documents concerning this subject). A LOOKED_ABSENT row in "
-          + "`looked` is a look that RAN and produced nothing; a subject in `never_looked` is one "
-          + "nobody has looked at. NEVER_LOOKED is the absence of a row and is reported apart from the tally, "
-          + "read through section 5.1's causes in order — and at a reference or an entity "
-          + "the pre-log evidence is ONE-SIDED (`evidence_one_sided`), because a look that found "
-          + "nothing left no artifact, so a pre-log empty look reads UNDETERMINED and is named in "
-          + "`missing_unexplained` rather than counted as nobody-looked. The withholding fence "
-          + "applies to capture and reference subjects, which name a document this team holds; "
-          + "an ENTITY subject is not withheld from a recognised viewer, because the subject registry is "
-          + "instance-wide and op=concerns already serves it; a viewer the plane does not recognise sees nothing",
+      note: localize("retrieval.frontier.note_meaning_level", "the three acts of section 4.3 have three subjects and are three partitions of one table: a CAPTURE (did anything read this document for entities), a REFERENCE (did anything try to match this name against the registry), an ENTITY (did anything derive the connections among the documents concerning this subject). A LOOKED_ABSENT row in `looked` is a look that RAN and produced nothing; a subject in `never_looked` is one nobody has looked at. NEVER_LOOKED is the absence of a row and is reported apart from the tally, read through section 5.1's causes in order — and at a reference or an entity the pre-log evidence is ONE-SIDED (`evidence_one_sided`), because a look that found nothing left no artifact, so a pre-log empty look reads UNDETERMINED and is named in `missing_unexplained` rather than counted as nobody-looked. The withholding fence applies to capture and reference subjects, which name a document this team holds; an ENTITY subject is not withheld from a recognised viewer, because the subject registry is instance-wide and op=concerns already serves it; a viewer the plane does not recognise sees nothing"),
     };
   }
 

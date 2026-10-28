@@ -79,7 +79,8 @@ test("R26: the tally and contentAxis read a capture promoted before D-672 as it 
   ix(w, xl, "LOOKED_INDETERMINATE", { detail: "a xlsx has no indexing unit arm in this build" });
   const a = w.retrieval.contentAxis({ captureSha: xl.sha, viewer: V("vera") });
   assert.deepEqual([a.indexed, a.index.state], ["indexed_none", "LOOKED_INDETERMINATE"]);
-  assert.match(a.why, /no indexing unit arm/);
+  assert.ok(a.why.startsWith(`${WORD("observation-log.indexed_none")}: `));
+  assert.ok(a.why.endsWith(WORD("observation-log.index.a_container_has_no_arm", { container: "xlsx" }).split(" (")[0]));
   assert.equal(w.retrieval.meaningRows({ q: "passage:zzqx", rows: "passage", viewer: V("vera") }).scope.indexed_none, 1);
   /* Re-promoted with sheet units, the index's new row is the one read. */
   ix(w, xl, "PRESENT");

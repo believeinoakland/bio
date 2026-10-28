@@ -92,7 +92,7 @@ test("R11, R13: rows=content answers at content grain and says so — arm, table
   assert.deepEqual(r.levels.content, { state: "COUNTED", documents_with_rows: 4, rows_matched: 6,
     why: "4 of 6 document(s) in scope hold content rows; 2 hold none" });
   assert.equal(r.levels.meaning.state, "UNDETERMINED");
-  assert.match(r.levels.meaning.why, /^nobody has yet said whether a finding rests on what was found here; the Cited column beside each result says it for that result$/);
+  assert.equal(r.levels.meaning.why, WORD("retrieval.levels.finding_rests_plain"));
   assert.equal(r.says, "6 row(s) over 6 document(s) in scope");
   /* Paging: a page of two, then the rest, is the same set with no row twice. */
   const p1 = w.retrieval.meaningRows({ q: "has:content", rows: "content", viewer: V("vera"), limit: 2 });

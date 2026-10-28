@@ -40,7 +40,7 @@ test("R16, R27, R13 (plan rule 6): the sentences the module answers are the list
                    "field_value_filters", "field_asks_field", "fm_path_fm", "leg_resolves_concerns", "passage_searches_documents",
                    "content_cap_undetermined", "content_chain_apply", "content_cap_apply", "leg_asks_record", "sort_field_sort"])
     assert.ok(syntax.includes(WORD(`retrieval.syntax.${k}`)), k);
-  assert.ok(syntax.includes(localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says")), "R13, R14: a sentence no key holds is read through localize");
+  assert.ok(syntax.includes(WORD("retrieval.index.content_searches_citations")), "R13, R14: the content-axis sentence is read by its key");
   assert.equal(w.retrieval.contentAxis({}).note, WORD("retrieval.note.content_axis_read"));
   const held = w.retrieval.contentAxis({ captureSha: "f".repeat(64), viewer: V("ann") });
   assert.equal(held.note, WORD("retrieval.note.record_holds_capture", { content_axis_states: Object.keys(held.vocabulary)[3] }));
