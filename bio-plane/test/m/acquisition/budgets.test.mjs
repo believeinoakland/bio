@@ -11,6 +11,7 @@ import { unpack, ARCHIVE_CHECKS, UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_
          UNPACK_LIMITS } from "../../../src/acquisition/index.mjs";
 import * as acquisition from "../../../src/acquisition/index.mjs";
 import { ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX } from "../../../src/ooxml.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 const URL1 = "https://files.example/many.zip";
 const capture = (w, bytes, url = URL1) => run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/zip" } }) }, { locator: url });
@@ -24,7 +25,8 @@ test("R40: each figure is exported by its name, as K1940 set them, and together 
   assert.deepEqual({ ...UNPACK_LIMITS }, { UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES });
   assert.ok(Object.isFrozen(UNPACK_LIMITS));
   for (const k of Object.keys(UNPACK_LIMITS)) assert.equal(acquisition[k], UNPACK_LIMITS[k], k);
-  assert.deepEqual([ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX], [3, 268435456, 10000]);
+  assert.deepEqual([ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX],
+                   [boundOf("archive", "depth"), boundOf("archive", "unpacked_bytes"), boundOf("archive", "members")]);   // T53-527: read from READ_BOUNDS, never a number
 });
 
 test("R40: one call cuts at most UNPACK_CALL_ENTRIES entries; the rest wait for the next call (no limit named), the automatic run asks the queue to continue, and a member's op=unpack finishes it", async () => {

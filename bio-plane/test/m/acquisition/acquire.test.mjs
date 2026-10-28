@@ -13,6 +13,7 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
          civicsmithUserAgent, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { renderFailure } from "../capture-sources/fixtures.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
@@ -305,8 +306,8 @@ test("R9 R28: every outbound fetch goes through the governor under a legible age
   assert.equal(b.net.seen[0].init.headers["user-agent"], civicsmithUserAgent("0.0.0", "unnamed", "acquire"));
 });
 
-test("R10: CAPTURE_MAX, the one exported limit, is 256 MiB and is the limit R10 enforces: a body of exactly CAPTURE_MAX bytes is filed, one byte more is TOO_LARGE naming it as maxBytes, the stream cancelled", async () => {
-  assert.equal(CAPTURE_MAX, 256 * 1024 * 1024);
+test("R10: CAPTURE_MAX, the one exported limit, is READ_BOUNDS' archive.uploaded_bytes and is the limit R10 enforces: a body of exactly CAPTURE_MAX bytes is filed, one byte more is TOO_LARGE naming it as maxBytes, the stream cancelled", async () => {
+  assert.equal(CAPTURE_MAX, boundOf("archive", "uploaded_bytes"));   // T53-527: the statement's figure, never a number
   const CHUNK = 4 * 1024 * 1024;
   const body = (total, onCancel = () => {}) => {
     let sent = 0;
@@ -355,11 +356,11 @@ test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; e
   assert.equal(w.held(sha(big)), true, "the whole is kept under its own hash (fix2-t51.test.mjs holds the rest of it)");
   assert.equal(sha(w.bytesOf(sha(big))), sha(big));
   assert.deepEqual(outcome("https://a.example/big"), ["success"]);
-  /* over 256 MiB: TOO_LARGE, the stream cancelled */
+  /* over the limit: TOO_LARGE, the stream cancelled */
   let cancelled = false, sent = 0;
-  const huge = new ReadableStream({ pull(c) { if (sent > 320 * 1024 * 1024) { c.close(); return; } sent += 4 * 1024 * 1024; c.enqueue(new Uint8Array(4 * 1024 * 1024)); }, cancel() { cancelled = true; } }, { highWaterMark: 0 });
+  const huge = new ReadableStream({ pull(c) { if (sent > boundOf("archive", "uploaded_bytes") + 64 * 1024 * 1024) { c.close(); return; } sent += 4 * 1024 * 1024; c.enqueue(new Uint8Array(4 * 1024 * 1024)); }, cancel() { cancelled = true; } }, { highWaterMark: 0 });
   const tl = await run(w, { "https://a.example/huge": () => new Response(huge) }, { locator: "https://a.example/huge" });
-  assert.deepEqual([tl.status, tl.body.reason, tl.body.maxBytes, cancelled], [413, "TOO_LARGE", 256 * 1024 * 1024, true]);
+  assert.deepEqual([tl.status, tl.body.reason, tl.body.maxBytes, cancelled], [413, "TOO_LARGE", boundOf("archive", "uploaded_bytes"), true]);
   /* a single part whose digest differs from the running hash */
   const orig = crypto.subtle.digest.bind(crypto.subtle);
   crypto.subtle.digest = async (alg, data) => { const d = new Uint8Array(await orig(alg, data)); d[0] ^= 1; return d.buffer; };

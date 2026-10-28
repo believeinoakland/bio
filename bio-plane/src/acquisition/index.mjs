@@ -371,6 +371,14 @@ export function stageTimes(t, at = undefined) {
 /* R47: the longest `for` (a question's id) a member may name. */
 export const FOR_MAX = 200;
 
+/* T53-526 (format-registry R38, R39, R35): what `detectFormat` answers is read by its KIND, never by the one word `undetermined`. `refused` is a
+   type this copy does not keep (R139) and is never a detection; `unlisted` is held and named (R138), and `unlisted` with `named: null` names nothing;
+   `text` is valid text with no other leading structure, a text capture. An answer is a DETECTION OF THE BYTES (and so stands over a declared type)
+   when it is neither `undetermined`, a refusal, an unnamed `unlisted`, nor the bare `text` fallback. */
+const isRefusedKind = (d) => !!d && d.format === "refused";
+const isNamedKind = (d) => !!d && d.format !== "undetermined" && d.format !== "refused" && !(d.format === "unlisted" && (d.named === null || d.named === undefined));
+const isSignature = (d) => isNamedKind(d) && d.format !== "text";
+
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
 export const CAPTURE_MAX = boundOf("archive", "uploaded_bytes");   // R114: quoted from READ_BOUNDS
@@ -1670,7 +1678,10 @@ async function acquireRun(cap, body0, opts0, t) {
      render, else the single part of a page; none for a capture of several parts (past what a title is read from) or one that is
      not HTML. A fact read from the bytes, not a reading (R8): nothing is invented from a file name, a heading elsewhere or the host. */
   const titleBytes = renderRecorded ? renderedBytes : !multipart && keptParts && keptParts.length === 1 ? keptParts[0] : null;
-  const htmlTitle = titleBytes && detectFormat(titleBytes, ct || null).format === "html"
+  /* T53-526: a page the source serves as HTML whose bytes read as well-formed XML (a fragment, XHTML) is still a page whose title is read; the answer's
+     KIND decides, never the one word `html` */
+  const titleKind = titleBytes ? detectFormat(titleBytes, ct || null) : null;
+  const htmlTitle = titleKind && (titleKind.format === "html" || (titleKind.format === "xml" && /html/i.test(ct || "")))
     ? titleOfBytes(titleBytes, renderRecorded ? null : res.headers.get("content-type")) : null;
   /* R98 (fix round 4, C25; pdf-reader R40): a PDF's title is `pdfTitle`'s (its Info `Title`, else its XMP `dc:title`), read from the bytes this
      call holds without reading any page, cleaned as a page's is; a PDF with neither, or one past what is held in memory, answers null. */
@@ -1810,7 +1821,7 @@ async function acquireRun(cap, body0, opts0, t) {
     if (!multipart && total > 0 && total <= ODF_DIGEST_MAX) {
       try {
         const o = await ev.get(sha);
-        if (o) { const d = detectFormat(new Uint8Array(await o.arrayBuffer()), null); if (d && d.format !== "undetermined") detected = d; }
+        if (o) { const d = detectFormat(new Uint8Array(await o.arrayBuffer()), null); if (isNamedKind(d)) detected = d; }
       } catch { detected = null; }
     }
     driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
@@ -2145,7 +2156,8 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     } };
     let byBytes = null;
     try { byBytes = await detectFormat(src, null, fileName); } catch { byBytes = null; }
-    if (byBytes && byBytes.format !== "undetermined") profile.format = byBytes;
+    /* a bare `text` from the bytes says only that they are valid text, so a declared type that names a format stands over it, as it does for a buffer read whole */
+    if (isSignature(byBytes) || (isNamedKind(byBytes) && !declared0)) profile.format = byBytes;
     else {
       /* no signature in the bytes: the declared type, as before, from the head that was read (a ZIP is never made by a declared type) */
       let declared = null;

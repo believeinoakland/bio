@@ -48,13 +48,13 @@ test("R101: the profile of a 10 MB PDF held in two parts with no declared type i
   for (const c of reads) assert.ok(c[2] && c[2].range && c[2].range.length <= 1024 * 1024, `a range, not the part (${JSON.stringify(c[2])})`);
 });
 
-test("R101: control: bytes that are not a known format, held in parts, stay undetermined; a missing first part is stated, never a failed profile", async () => {
+test("R101: control: bytes with no signature, held in parts, are read by the kind format-registry answers (valid text is `text`); a missing first part is stated, never a failed profile", async () => {
   const w = world();
   const junk = new Uint8Array(10 * MIB).fill(0x41);
   const h = await held(w, junk);
   const p = await profileOf({ ev: h.ev, sha: h.sha, ct: null, total: h.total, multipart: true, headers: {}, locator: "upload:y",
                               view: profileView(w.core), retrieved: "2026-10-22T00:00:00Z", origin: "member", parts: h.parts });
-  assert.equal(p.format.format, "undetermined");
+  assert.equal(p.format.format, "text", "T53-526: valid text with no other structure is a text capture, not undetermined");
   const lost = await profileOf({ ev: h.ev, sha: h.sha, ct: null, total: h.total, multipart: true, headers: {}, locator: "upload:y",
                                  view: profileView(w.core), retrieved: "2026-10-22T00:00:00Z", origin: "member",
                                  parts: [{ sha256: "0".repeat(64), bytes: 1 }, ...h.parts] });
