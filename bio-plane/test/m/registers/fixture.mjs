@@ -72,7 +72,7 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
   const store = { core: record, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9", BIO_NOW_MS: String(now) }, governor: w0.gov, provenance: content.provenance };
   /* the daemon's host as `importTick` is handed it (monitoring's `sweepHost`, its R65): the pause, and the epoch with its claims. Monitoring is later in the order than
      this module, so its object is not imported; this is the contract's shape. */
-  // fixtures-contract: monitoring registers-sweep-host
+  /* (a hand-built object of that shape: nothing else in this file answers for another module) */
   const sweep = (() => { const claims = new Set(); let epoch = 0; return { paused: () => ({ paused: false }), openEpoch: () => ++epoch, claim: (c, s, e) => { const k = `${c}|${s}|${e}`; if (claims.has(k)) return false; claims.add(k); return true; }, closeEpoch: () => {}, running: new Set() }; })();
   const entities = entitiesOf(host, { record, membership, provenance: () => content.provenance });
   const acq = { streamRegister, probeRegister, sourceChanged, keyedFetch };
