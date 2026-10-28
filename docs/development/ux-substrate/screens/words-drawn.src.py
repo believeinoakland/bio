@@ -1457,7 +1457,7 @@ w302('screen.open-file.safetext', 'Your own plain-text file, shown as text. Noth
 w302('screen.open-file.safetext.cut', 'The file is longer than this view shows; the rest is in the original file.', False, 'file-safety R45')
 REWRITE.update({  # DEC-302 (1), (4): keys minted in words-t48 and words-mod-2
   'refusal.ACCOUNT_MEMBER_NOT_ACTIVE': "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
-  'refusal.NO_SAFE_VIEW': "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
+  'refusal.NO_SAFE_VIEW': "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets, plain text and ordinary JPEG or PNG photographs (a photograph is shown redrawn). This file is none of them, so it has no safe view.",
 })
 # --- end DEC-302
 # --- DEC-303 (BOB's B267, K3629; B268, K3630): T50's L2 stake keys and L5 fold keys for the L11 screens
@@ -8773,6 +8773,11 @@ w488('ai.catalogue.state.stale', 'The list of AIs may be out of date.', "the cop
 w488('ai.catalogue.state.current', 'The list of AIs is up to date.', "the copy's state: current")
 REWRITE.update({'session.reauth': 'For this, enter your password again: signing or publishing a case, changing administrators and connecting an AI account always ask.'})
 REWRITE.update({'refusal.REAUTH_DUE': 'Type your password again to do this. Signing or publishing a case, changing administrators and connecting an AI account always ask for it. Nothing was changed.'})
+
+def w489(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-489: ' + note))
+# B571: FILE-SAFETY's BYTES_CHANGED (C-140.46, R71) and NO_SAFE_VIEW now that photographs have a safe view (R60)
+w489('refusal.BYTES_CHANGED', "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.", 'file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
