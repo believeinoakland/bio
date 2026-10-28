@@ -6,11 +6,13 @@ import assert from "node:assert/strict";
 import { registerFormat, unregisterFormat, getFormat, listFormats, detectFormat } from "../../../src/formats.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 
-const BUILT_IN = ["jpeg", "png", "html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"];
+const BUILT_IN = ["jpeg", "png", "gif", "tiff", "webp", "bmp", "jp2", "heic", "heif", "avif", "html", "pdf", "rtf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "doc", "xls", "ppt", "tar", "gz", "7z", "zip", "text"];
 const enc = (s) => new TextEncoder().encode(s);
 const PDF = enc("%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n");
 const HTML = enc("<!DOCTYPE html><html><body>x</body></html>");
-const NOTHING = enc("plain words that no registered entry claims");
+/* Binary bytes that no entry claims: with the real roster they are `unlisted` and unnamed (R38), with the registry emptied (or no `text`
+   fallback) R12's `undetermined`. Plain words would be `text` (R35). */
+const NOTHING = Uint8Array.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3);
 
 /** Runs `fn` with the registry emptied, then restores the roster in its original order. */
 function withEmptyRegistry(fn) {
@@ -104,7 +106,7 @@ test("R5: the entry is stored and returned unchanged — not cloned, no default 
     format: "r5-stub",
     detect: (b, ct) => (b && new TextDecoder("latin1").decode(b).startsWith(MAGIC) ? { format: "r5-stub", confidence: "certain", signals: [] } : null),
   });
-  assert.equal(detectFormat(enc(MAGIC), null).format, "undetermined");
+  assert.equal(detectFormat(enc(MAGIC), null).format, "text");
   try {
     const got = registerFormat(entry);
     assert.equal(got, entry);
@@ -152,7 +154,7 @@ test("R8: listFormats returns every key in registration order; a re-registered f
     assert.deepEqual(listFormats(), [...BUILT_IN, "r8-b", "r8-a"]);
     const html = unregisterFormat("html");
     registerFormat(html);
-    assert.deepEqual(listFormats(), ["jpeg", "png", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip", "r8-b", "r8-a", "html"]);
+    assert.deepEqual(listFormats(), [...BUILT_IN.filter((f) => f !== "html"), "r8-b", "r8-a", "html"]);
     const list = listFormats();
     list.push("mutated");
     assert.equal(listFormats().includes("mutated"), false);
@@ -253,7 +255,10 @@ test("R11: pass 2 runs only when pass 1 had no hit and a content type is provide
 });
 
 test("R12: no hit in either pass returns the stated undetermined with both reasons", () => {
-  const und = (a, b) => ({ format: "undetermined", confidence: "none", signals: [a, b] });
+  /* the real roster closes on `unlisted` for bytes (R38); a registry without its `text` fallback keeps R12's `undetermined` */
+  let closed = true;
+  const und = (a, b) => (closed && a === NO_SIG ? { format: "unlisted", named: null, confidence: "none", signals: [a, b] }
+    : { format: "undetermined", confidence: "none", signals: [a, b] });
   const NO_SIG = localize("format-registry.formats.no_magic_byte_match", "no registered magic-byte signature matched");
   const NO_BYTES = localize("format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff");
   const NO_CT = localize("format-registry.formats.no_content_type_declared", "no content type was declared");
@@ -268,6 +273,7 @@ test("R12: no hit in either pass returns the stated undetermined with both reaso
       assert.deepEqual(detectFormat(undefined, undefined), und(NO_BYTES, NO_CT));
       assert.deepEqual(detectFormat(), und(NO_BYTES, NO_CT));
     };
+    closed = run !== withEmptyRegistry;
     if (run === withEmptyRegistry) {
       run(check);
       run(() => assert.deepEqual(detectFormat(PDF, "application/pdf"), und(NO_SIG, ct("application/pdf"))));
@@ -303,7 +309,7 @@ test("R13: the only answers are an entry's verbatim result or the stated undeter
     [null, "text/csv"], [NOTHING, "application/octet-stream"], [enc("PK\x03\x04junk"), null]];
   for (const [b, c] of inputs) {
     const r = detectFormat(b, c);
-    if (r.format === "undetermined") { assert.equal(r.confidence, "none"); continue; }
+    if (r.format === "undetermined" || r.format === "unlisted") { assert.equal(r.confidence, "none"); continue; }
     const own = b ? getFormat(r.format).detect(b, null) : getFormat(r.format).detect(null, c);
     assert.deepEqual(r, own);
   }
@@ -345,7 +351,7 @@ test("R25: detectFormat's answer for one registry state and one pair of inputs n
   }
   // registerFormat/unregisterFormat are the mutators: the same state gives the same answers again
   const pdf = unregisterFormat("pdf");
-  assert.equal(detectFormat(PDF, null).format, "undetermined");
+  assert.equal(detectFormat(PDF, null).format, "text", "R35: the bytes are valid text and no other entry claims them");
   registerFormat(pdf);
   restoreBuiltInOrder();
   assert.deepEqual(inputs.map(([b, c]) => detectFormat(b, c)), first);
@@ -379,7 +385,8 @@ test("R26: bytes always outrank a declared content type — every entry has pass
 
 test("R27: an unmatched input is a stated undetermined with why; an unknown key is null from getFormat and unregisterFormat, never a throw", () => {
   const r = detectFormat(NOTHING, "x/unknown");
-  assert.equal(r.format, "undetermined");
+  assert.equal(r.format, "unlisted", "the real roster closes on a held, unnamed unlisted for bytes (R38)");
+  assert.equal(r.named, null);
   assert.equal(r.confidence, "none");
   assert.equal(r.signals.length, 2);
   assert.ok(r.signals.every((s) => typeof s === "string" && s.length > 0));
