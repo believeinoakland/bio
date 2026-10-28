@@ -174,10 +174,11 @@ test("R67 the read contract: members (member_id, handle, role, status) and admin
 async function fourAdmins() {
   const w = await world().group();
   const add = async (id) => {
-    const p = await w.m.memberAdd({ memberId: id, cover: `c-${id}`, role: "admin", by: "admin" });
+    /* K5563: the second proposes, and the founder's endorsement alone issues it */
+    const p = await w.m.memberAdd({ memberId: id, cover: `c-${id}`, role: "admin", by: "second" });
     assert.equal(p.reason, "CONSENSUS_REQUIRED");
     let invite = null;
-    for (const by of w.m.activeAdmins().filter((a) => a !== "admin")) {
+    for (const by of w.m.activeAdmins().filter((a) => a !== "second")) {
       const e = await w.m.adminEndorse({ memberId: id, by });
       if (e.ok) { invite = e.invite; break; }
     }
@@ -197,16 +198,16 @@ test("R75 adminRemovalsOpen: two of four administrators vote on a third: one ent
   const w = await fourAdmins();
   assert.deepEqual(w.m.adminRemovalsOpen({ by: "admin" }), { ok: true, removals: [] }, "none under way");
   assert.equal(w.m.adminRemove({ memberId: "third", by: "second", reason: "first secret reason" }).reason, "VOTES_SHORT");
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "second secret reason" }).reason, "VOTES_SHORT");
+  assert.equal(w.m.adminRemove({ memberId: "third", by: "fourth", reason: "second secret reason" }).reason, "VOTES_SHORT");
   const before = snapshot(w);
-  const r = w.m.adminRemovalsOpen({ by: "fourth" });
+  const r = w.m.adminRemovalsOpen({ by: "admin" });
   assert.equal(snapshot(w), before, "writes nothing");
   assert.equal(r.ok, true);
   assert.equal(r.removals.length, 1);
   const [e] = r.removals;
   assert.deepEqual(Object.keys(e).sort(), ["awaiting", "have", "need", "target", "voters"]);
-  assert.deepEqual([e.target, e.have, e.need, e.awaiting], ["third", 2, 3, ["fourth"]]);
-  assert.deepEqual(e.voters.map((v) => v.voter), ["second", "admin"], "in the order cast");
+  assert.deepEqual([e.target, e.have, e.need, e.awaiting], ["third", 2, 3, ["admin"]]);
+  assert.deepEqual(e.voters.map((v) => v.voter), ["second", "fourth"], "in the order cast");
   for (const v of e.voters) { assert.deepEqual(Object.keys(v).sort(), ["at", "voter"]); assert.match(v.at, /^\d{4}-\d\d-\d\dT/); }
   assert.ok(e.voters[0].at <= e.voters[1].at);
   assert.doesNotMatch(JSON.stringify(r), /secret reason|reason/, "no reason is answered");
@@ -217,8 +218,8 @@ test("R75 adminRemovalsOpen: two of four administrators vote on a third: one ent
   const two = w.m.adminRemovalsOpen({ by: "admin" }).removals;
   assert.deepEqual(two.map((x) => x.target), ["third", "fourth"]);
   assert.deepEqual(two[1].awaiting, ["admin", "third"], "R29's order, the target and the voter left out");
-  /* the vote that carries removes the entry (R5) */
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "fourth", reason: "z" }).ok, true);
+  /* the removal that carries removes the entry (R5); at four the founder's act is the one that can (K5562: she removes alone) */
+  assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "z" }).alone, true);
   assert.deepEqual(w.m.adminRemovalsOpen({ by: "admin" }).removals.map((x) => x.target), ["fourth"]);
   /* and the numbers follow the administrators who remain: three now, so two are needed */
   assert.deepEqual([two[1].need, w.m.adminRemovalsOpen({ by: "admin" }).removals[0].need], [3, 2]);

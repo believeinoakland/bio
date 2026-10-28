@@ -98,10 +98,10 @@ test("R3: NOT_PROPOSED (C-96.14) carries its row at its one site", async () => {
   const before = snapshot(w);
   carries(await w.m.adminEndorse({ memberId: "ann", by: "admin" }), "an ordinary member");
   assert.equal(snapshot(w), before, "nothing written by a refusal");
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
+  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "second" });
   assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  assert.equal((await w.m.adminEndorse({ memberId: "third", by: "second" })).ok, true);
-  const again = await w.m.adminEndorse({ memberId: "third", by: "admin" });
+  assert.equal((await w.m.adminEndorse({ memberId: "third", by: "admin" })).ok, true);
+  const again = await w.m.adminEndorse({ memberId: "third", by: "second" });
   carries(again, "once invited");
   assert.equal(again.status, "invited");
   /* R3's order (T38, K2276): the caller's standing (R28) first, then NO_SUCH_MEMBER, then NOT_PROPOSED, so no one who

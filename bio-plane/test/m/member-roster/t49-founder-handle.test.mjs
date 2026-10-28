@@ -97,7 +97,7 @@ test("R59 R53 a second set is refused HANDLE_FIXED, the first handle kept, whate
     const r = w.m.founderHandleSet({ handle, by: "admin" });
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "HANDLE_FIXED", "HANDLE_FIXED", "C-96.52", fixed.translation],
       String(handle));
-    assert.match(r.detail, /never changed[\s\S]*Nothing was written\.$/);
+    assert.equal(r.detail, word("membership.index.the_founders_handle_is_chosen_2"));
   }
   assert.equal(snapshot(w), before, "nothing written");
   assert.equal(w.m.founderHandle(), "steward", "the first handle kept");

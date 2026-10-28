@@ -71,9 +71,25 @@ export const actOf = (detail) => detail.slice(0, detail.length - TAIL.length);
    members named: a group of three administrators, in which one more is a proposal needing every endorsement (R3, R11). */
 export async function threeAdmins(...members) {
   const w = await world().group();
-  await w.m.memberAdd({ memberId: "third", cover: "cover of third", role: "admin", by: "admin" });
-  const done = await w.m.adminEndorse({ memberId: "third", by: "second" });
+  /* K5563: the founder's endorsement alone issues, so the third is proposed by the second and endorsed by the founder. */
+  await w.m.memberAdd({ memberId: "third", cover: "cover of third", role: "admin", by: "second" });
+  const done = await w.m.adminEndorse({ memberId: "third", by: "admin" });
   await w.m.enroll({ invite: done.invite, handle: "third", password: "third-passphrase-x" });
+  for (const id of members) await w.enrol(id);
+  return w;
+}
+
+/* The founder plus four more: the fewest administrators at which the others can carry a removal without her (R86: her own
+   act removes alone, and a vote needs `floor(n/2)+1` of the others). Each is proposed by the second and the founder's
+   endorsement alone issues it (K5563). */
+export async function fiveAdmins(...members) {
+  const w = await threeAdmins();
+  for (const id of ["fourth", "fifth"]) {
+    const p = await w.m.memberAdd({ memberId: id, cover: `cover of ${id}`, role: "admin", by: "second" });
+    if (p.reason !== "CONSENSUS_REQUIRED") throw new Error(`${id} was not left waiting`);
+    const e = await w.m.adminEndorse({ memberId: id, by: "admin" });
+    await w.m.enroll({ invite: e.invite, handle: id, password: `${id}-passphrase-x` });
+  }
   for (const id of members) await w.enrol(id);
   return w;
 }

@@ -8,23 +8,23 @@ const propose = (w, id, by = "admin") => w.m.memberAdd({ memberId: id, cover: `c
 
 test("R77 endorsementsOwed: a proposal with two of three endorsements lists for the one who has not, then clears when she endorses", async () => {
   const w = await threeAdmins("ann");
-  await propose(w, "fourth");
-  await w.m.adminEndorse({ memberId: "fourth", by: "second" });          // admin and second have endorsed; third has not
-  const owed = w.m.endorsementsOwed({ by: "third" });
+  await propose(w, "fourth", "second");
+  await w.m.adminEndorse({ memberId: "fourth", by: "third" });           // second and third have endorsed; the founder has not
+  const owed = w.m.endorsementsOwed({ by: "admin" });
   assert.equal(owed.length, 1);
   assert.deepEqual({ ...owed[0], proposed_at: typeof owed[0].proposed_at }, {
-    memberId: "fourth", handle: null, proposed_by: "admin", proposed_at: "string",
-    have: ["admin", "second"], awaiting: ["third"] });
+    memberId: "fourth", handle: null, proposed_by: "second", proposed_at: "string",
+    have: ["second", "third"], awaiting: ["admin"] });
   assert.match(owed[0].proposed_at, /^\d{4}-\d\d-\d\dT/);
   const before = snapshot(w);
-  w.m.endorsementsOwed({ by: "third" });
+  w.m.endorsementsOwed({ by: "admin" });
   assert.equal(snapshot(w), before, "it writes nothing");
   /* controls: those who have endorsed, the proposer, and callers who are not administrators are listed nothing */
-  for (const by of ["admin", "second"]) assert.deepEqual(w.m.endorsementsOwed({ by }), [], `${by} has endorsed`);
+  for (const by of ["second", "third"]) assert.deepEqual(w.m.endorsementsOwed({ by }), [], `${by} has endorsed`);
   for (const by of ["ann", "nobody", null, undefined, "", "class:admin", "member:third"]) assert.deepEqual(w.m.endorsementsOwed({ by }), [], `${by} is not an administrator`);
   assert.deepEqual(w.m.endorsementsOwed(), [], "no argument");
-  await w.m.adminEndorse({ memberId: "fourth", by: "third" });           // consensus: the fourth is invited
-  assert.deepEqual(w.m.endorsementsOwed({ by: "third" }), [], "the member is no longer proposed");
+  await w.m.adminEndorse({ memberId: "fourth", by: "admin" });           // her endorsement issues the invitation
+  assert.deepEqual(w.m.endorsementsOwed({ by: "admin" }), [], "the member is no longer proposed");
 });
 
 test("R77 the founder owes endorsements too; a proposal she made herself, and a proposal at any other status, are not listed", async () => {

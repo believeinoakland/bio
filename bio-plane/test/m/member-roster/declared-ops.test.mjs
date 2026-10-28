@@ -24,9 +24,9 @@ const mk = (op, { scene = () => world().group("ann"), stamps = {}, real = {}, bo
 const invited = async () => { const w = await world().group(); const a = await w.m.memberAdd({ memberId: "newbie", cover: "A cover", by: "admin" }); w.invite = a.invite; return w; };
 const fourAdmins = async () => {
   const w = await threeAdmins();
-  await w.m.memberAdd({ memberId: "fourth", cover: "c", role: "admin", by: "admin" });
-  await w.m.adminEndorse({ memberId: "fourth", by: "second" });
-  const done = await w.m.adminEndorse({ memberId: "fourth", by: "third" });
+  await w.m.memberAdd({ memberId: "fourth", cover: "c", role: "admin", by: "second" });
+  await w.m.adminEndorse({ memberId: "fourth", by: "third" });
+  const done = await w.m.adminEndorse({ memberId: "fourth", by: "admin" });
   await w.m.enroll({ invite: done.invite, handle: "fourth", password: "fourth-passphrase-x" });
   return w;
 };
@@ -35,6 +35,10 @@ const holds = (op, call, codes, extra = {}) => declaredOpHolds({ op, declaration
 const BY_ADMIN = { by: "admin", viewer: "admin" };
 
 const CASES = {
+  adminproposalcancel: { id: "R80", call: mk("adminproposalcancel", { scene: async () => { const w = await world().group(); await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "second" }); return w; }, stamps: { by: "second" } }),
+    codes: { memberId: ["NO_SUCH_MEMBER"] }, values: { memberId: "third" } },
+  adminremovals: { id: "R80", call: mk("adminremovals", { scene: fourAdmins, stamps: { by: "second" } }),
+    codes: {}, values: {} },
   adminendorse: { id: "R80", call: mk("adminendorse", { scene: async () => { const w = await world().group(); await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "admin" }); return w; }, stamps: { by: "second" } }),
     codes: { memberId: ["NO_SUCH_MEMBER"] }, values: { memberId: "third" } },
   expertiseconfirm: { id: "R80", call: mk("expertiseconfirm", { scene: async () => { const w = await world().group("ann"); w.m.expertiseDeclare({ memberId: "ann", label: "CPA" }); return w; }, body: () => ({ by: "admin" }) }),
@@ -84,7 +88,7 @@ for (const [op, c] of Object.entries(CASES))
   });
 
 test("R80 R81 DECLARED_OPS declares exactly the ops of R80 and R81, each with the whole row, frozen", () => {
-  const r80 = ["adminendorse", "expertiseconfirm", "expertisedeclare", "expertisewithdraw", "memberpairingset"];
+  const r80 = ["adminendorse", "adminproposalcancel", "adminremovals", "expertiseconfirm", "expertisedeclare", "expertisewithdraw", "memberpairingset"];
   assert.deepEqual(Object.keys(CASES).filter((o) => CASES[o].id === "R80").sort(), r80);
   assert.equal(Object.keys(DECLARED_OPS).length, Object.keys(CASES).length, "R81's ops are the rest, and nothing else is declared");
   for (const op of Object.keys(CASES)) assert.ok(DECLARED_OPS[op], op);
@@ -114,7 +118,9 @@ test("R80 expertiseconfirm accepts withdraw: with withdraw: true it is accepted 
 /* the ids the descriptions are localized under, each named here (K874); `expertisewithdraw`'s is the design's key */
 const DESCRIPTION_IDS = [
   "member-roster.declared.adminendorse",
+  "member-roster.declared.adminproposalcancel",
   "member-roster.declared.adminremove",
+  "member-roster.declared.adminremovals",
   "member-roster.declared.courtnoticeset",
   "member-roster.declared.enroll",
   "member-roster.declared.expertiseconfirm",
