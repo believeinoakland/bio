@@ -76,6 +76,7 @@ test("R1 R12 control: with no mail domain set, or the door switched off, making 
 test("R1 `within` runs inside the act: its refusal rolls the new address back and the old one stays live; a throw is MAIL_WITHIN_FAILED", async () => {
   const { d } = fresh();
   const old = await addressFor(d, "ann");
+  // fixtures-own: input the caller's own act refusing inside the address act, no module's answer
   const no = await d.mailAddressMake({ by: "member:ann", within: () => ({ ok: false, reason: "NO" }) });
   assert.deepEqual([no.ok, no.reason], [false, "NO"]);
   assert.equal((await d.mailAddressOf({ viewer: "member:ann" })).address, old);

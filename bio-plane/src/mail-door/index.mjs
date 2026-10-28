@@ -77,7 +77,7 @@ const memberSessionRequired = () => ({ ok: false, reason: "MEMBER_SESSION_REQUIR
 const refusal = (code, extra = {}) => { const row = rowOf(code); return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra }; };
 
 /* R11, MAIL_WITHIN_FAILED (no C row, as K2452 keeps UPLOAD_WITHIN_FAILED): the one sentence a failed `within` answers. */
-export const MAIL_WITHIN_FAILED_DETAIL = "the act run with this one did not complete, so it was rolled back and nothing was written";
+export const MAIL_WITHIN_FAILED_DETAIL = localize("mail-door.index.within_failed", "the act run with this one did not complete, so it was rolled back and nothing was written");
 const WITHIN_FAULT = Symbol("within's fault");
 
 const instances = new WeakMap();
