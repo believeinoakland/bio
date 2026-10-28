@@ -11,6 +11,7 @@ import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { ODT_CONTENT_TYPE, ODS_CONTENT_TYPE, ODP_CONTENT_TYPE } from "../../../src/odf.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { detectFormat } from "../../../src/formats.mjs";
 
 /* A minimal STORED zip, written here so the bytes are this file's: the `mimetype` member first and stored, each member
    with its CRC-32, and a central directory the detector reads. */
@@ -95,7 +96,8 @@ test("R18 R4: a Drive capture of a document, spreadsheet or presentation grades 
   assert.equal(mis.status, 200);
   const hop = mis.body.document.provenance_chain[1];
   assert.deepEqual([hop.export_format, hop.export_format_confirmed], ["odt", false], "the confirmation is read from the bytes, never from the declared type");
-  assert.match(hop.evidence, /NOT confirmed from the bytes/);
+  { const seen = detectFormat(sheetBytes, null);
+    assert.ok(hop.evidence.includes(word("capture-sources.drive.not_confirmed_from_the_bytes", { format: "odt", format_2: seen.format, confidence: seen.confidence, signals: seen.signals.join("; ") })), "stated as not confirmed, in the word table's sentence"); }
   assert.equal(mis.body.document.capture.grade, EARNED_CAPTURE_CEILING, "still a direct fetch");
 });
 

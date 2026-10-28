@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7885 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7888 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19870,6 +19870,7 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.index.bio_plane_acquire_hashed_at_receipt","bio-plane acquire, https fetch, hashed at receipt",null,null,false,"code"],
   ["acquisition.index.bio_plane_acquire_https_fetch","bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt",null,null,false,"code"],
   ["acquisition.index.browser_is_bound_to_something","BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.",null,null,false,"code"],
+  ["acquisition.index.call_op_acquire_again_with","call op=acquire again with {how} to pick up the outstanding parts; the primary is already complete and is never re-fetched",null,null,false,"code"],
   ["acquisition.index.capture_not_kept","the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again",null,null,false,"code"],
   ["acquisition.index.challenge_page","{host} answered with a check that asks for a person ({signals}) in place of the document. Your team's Civicsmith does not get past such a check, and nothing was saved.",null,null,false,"code"],
   ["acquisition.index.file_type_refused","A {kind} is not kept{reason}. Nothing was saved.",null,null,false,"code"],
@@ -19911,7 +19912,9 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.index.the_primary_capture_did_not","the primary capture did not read back",null,null,false,"code"],
   ["acquisition.index.the_render_allowance_could_not","the render allowance could not be read, so the render is deferred rather than run unmetered.",null,null,false,"code"],
   ["acquisition.index.the_served_bytes_are_v1","the served bytes are {v1}, not an HTML page; nothing was filed.",null,null,false,"code"],
+  ["acquisition.index.the_stored_bytes_were_not","the stored bytes were not read as a ZIP archive, so the declared type does not make one",null,null,false,"code"],
   ["acquisition.index.the_whole_page_qualifier","; {reading}, so they are not asserted to be the whole page",null,null,false,"code"],
+  ["acquisition.index.the_workers_runtime_does_not","the Workers runtime does not expose the peer address of an outbound fetch",null,null,false,"code"],
   ["acquisition.index.these_bytes_are_the_document","these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}",null,null,false,"code"],
   ["acquisition.index.these_bytes_were_served_for","these bytes were served for {locator} at {retrieved}",null,null,false,"code"],
   ["acquisition.index.this_request_carried_map_the","this request carried {map}. The export address, the export format and the producer are DERIVED by your team's Civicsmith from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.",null,null,false,"code"],

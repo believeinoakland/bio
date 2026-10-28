@@ -197,6 +197,13 @@
       "line": 1247
     },
     {
+      "id": "acquisition.index.call_op_acquire_again_with",
+      "en": "call op=acquire again with {how} to pick up the outstanding parts; the primary is already complete and is never re-fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 2338
+    },
+    {
       "id": "acquisition.index.capture_not_kept",
       "en": "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again",
       "module": "acquisition",
@@ -334,7 +341,7 @@
       "en": "subresource capture reads the primary back into memory to parse it, so it is bounded to {SUB_PARSE_MAX} bytes; this document is {total}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2365
+      "line": 2364
     },
     {
       "id": "acquisition.index.the_archive_fallback_is_a",
@@ -467,7 +474,7 @@
       "en": "the primary capture did not read back",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2371
+      "line": 2370
     },
     {
       "id": "acquisition.index.the_render_allowance_could_not",
@@ -484,11 +491,25 @@
       "line": 1690
     },
     {
+      "id": "acquisition.index.the_stored_bytes_were_not",
+      "en": "the stored bytes were not read as a ZIP archive, so the declared type does not make one",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 2270
+    },
+    {
       "id": "acquisition.index.the_whole_page_qualifier",
       "en": "; {reading}, so they are not asserted to be the whole page",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
       "line": 1975
+    },
+    {
+      "id": "acquisition.index.the_workers_runtime_does_not",
+      "en": "the Workers runtime does not expose the peer address of an outbound fetch",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1674
     },
     {
       "id": "acquisition.index.these_bytes_are_the_document",
@@ -537,7 +558,7 @@
       "en": "{work_calls} compute calls over {work_bytes} bytes; {fetched} fetched, {discovered} discovered",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2460
+      "line": 2459
     },
     {
       "id": "acquisition.index.your_teams_civicsmith_fetches_a",

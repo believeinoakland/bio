@@ -31,6 +31,9 @@ const EXPECTED = {
   CAPTURE_NOT_KEPT: "C-154.1",
 };
 
+/* DEC-149's voice: the phrases no member-facing row may use (data the test looks for, not a sentence the product says) */
+const OLD_VOICE = ["this instance", "this copy", "the plane", "the instance"];
+
 test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.24 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
@@ -55,7 +58,7 @@ test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.
   /* DEC-167 (3), R29: C-139's words carry no offset, method number or figure: those travel in the answer's own fields */
   for (const [code, row] of Object.entries(ARCHIVE_CHECKS)) {
     assert.doesNotMatch(row.translation, /\d/, `${code}: no figure in the member's words`);
-    assert.doesNotMatch(row.translation, /this instance|this copy|the plane|the instance/i, `${code}: DEC-149's voice`);
+    assert.equal(OLD_VOICE.some((p) => row.translation.toLowerCase().includes(p)), false, `${code}: DEC-149's voice`);
   }
   /* K794, K850: C-68.1 is the catalogue's row with its number and translation unchanged, its where the one raiser's region */
   assert.deepEqual({ ...INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED }, {

@@ -3,7 +3,7 @@
    and `unpack(store, {archiveSha, by, cls})`, over test-support's ZIP writer (`make-zip.mjs`) for every hostile shape.
    R40's budgets are budgets.test.mjs's, R41's read archivelist.test.mjs's. */
 import { test } from "node:test";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { world, run, sha, text } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
@@ -65,7 +65,7 @@ test("R17 R10: a ZIP held in parts (past the read's bound) is profiled `zip` fro
   const r = await capture(w, z);
   assert.equal(r.body.parts, 2, "the archive is held in two parts");
   assert.equal(r.body.document.profile.format.format, "zip");
-  assert.match(r.body.document.profile.format.signals.join(" "), /judged from the end record and the central directory/);
+  assert.ok(r.body.document.profile.format.signals.includes(word("format-registry.formats.container_judged_from_end", { size: String(r.body.document.capture.bytes) })), "judged from the end record and the central directory, in the registry's word");
   const [bigDoc, smallDoc] = r.body.unpack.documents;
   assert.equal(bigDoc.capture.sha256, sha(big), "cut exactly across the archive's parts");
   assert.equal(bigDoc.parts.length, 2, "a file over 8 MiB is stored in parts of 8 MiB (R10's form)");
@@ -82,7 +82,7 @@ test("R17 R10: a ZIP held in parts (past the read's bound) is profiled `zip` fro
   /* bytes that are not an archive, declared application/zip and held in parts: not `zip`, nothing opened */
   const n = await capture(world(), new Uint8Array(9 * 1024 * 1024).fill(7));
   assert.equal(n.body.document.profile.format.format, "undetermined");
-  assert.match(n.body.document.profile.format.signals.join(" "), /the declared type does not make one/);
+  assert.ok(n.body.document.profile.format.signals.includes(word("acquisition.index.the_stored_bytes_were_not")), "a declared type never makes a ZIP, and the profile says so");
   assert.equal("unpack" in n.body, false);
 });
 

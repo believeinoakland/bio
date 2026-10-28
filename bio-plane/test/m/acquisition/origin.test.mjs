@@ -22,11 +22,13 @@ registerDoctype({
     return { match: true, confidence: "certain", signals: [`origin ${JSON.stringify(ctx.origin ?? null)}`] };
   },
 });
+/* the page text this test's recogniser looks for: test input, not a sentence the product reads */
+const REGISTER_MARK = "Register of Actions";
 const MEMBER_ONLY = localize("court-doctypes.ecourt.member_only", "an account-gated register is read only from a member's own capture");
 registerDoctype({
   key: "member_only_register", label: "a member-only register", version: 1, contract: null,
   detect(ctx) {
-    if (!/Register of Actions/.test(String((ctx && ctx.text) || ""))) return { match: false, confidence: "none", signals: [] };
+    if (!String((ctx && ctx.text) || "").includes(REGISTER_MARK)) return { match: false, confidence: "none", signals: [] };
     if (ctx.origin !== "member") return { match: false, confidence: "none", signals: [localize("court-doctypes.ecourt.a_register_of_actions", "a register of actions")], why: MEMBER_ONLY };
     return { match: true, confidence: "certain", signals: [localize("court-doctypes.ecourt.a_register_of_actions", "a register of actions"), "origin member"] };
   },

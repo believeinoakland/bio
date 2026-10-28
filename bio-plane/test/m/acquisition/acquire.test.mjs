@@ -384,19 +384,18 @@ test("R11: existed for one part is whether it was held before this call; for sev
   const big = new Uint8Array(8 * 1024 * 1024 + 1).fill(1);
   const mr = { "https://a.example/big": () => new Response(big) };
   const m1 = await run(w, mr, { locator: "https://a.example/big" });
-  assert.equal(m1.body.existed, null); assert.match(m1.body.existed_undetermined, /NOT a finding that the bytes are new/);
-  assert.match(m1.body.existed_undetermined, /0 of this fetch's 2 parts were already held/);
-  assert.match(m1.body.existed_undetermined, /holds no row for these bytes under a record that still exists/, "N458: the member's word is record");
-  assert.doesNotMatch(m1.body.existed_undetermined, /\bbundle\b/);
+  assert.equal(m1.body.existed, null);
+  assert.equal(m1.body.existed_undetermined, word("acquisition.text.document_captured_parts", { parts: 2, held_parts: 0 }), "T53-101: read from the word table; what was and was not asked, and how many parts were held");
+  assert.doesNotMatch(m1.body.existed_undetermined, /\bbundle\b/, "N458: the member's word is record");
   const m2 = await run(w, mr, { locator: "https://a.example/big" });
   assert.equal(m2.body.existed, null, "several parts never answer false, even when every part was held");
-  assert.match(m2.body.existed_undetermined, /2 of this fetch's 2 parts were already held/);
+  assert.equal(m2.body.existed_undetermined, word("acquisition.text.document_captured_parts", { parts: 2, held_parts: 2 }));
   const reg = world({ provOpts: { registered: [sha(big)] } });
   const rr = await run(reg, mr, { locator: "https://a.example/big" });
   assert.deepEqual([rr.body.existed, rr.body.existed_undetermined], [true, undefined]);
   const silent = world({ prov: { recordReceipt() {}, registerHolds() { throw new Error("down"); } } });
   const s = await run(silent, mr, { locator: "https://a.example/big" });
-  assert.equal(s.body.existed, null); assert.match(s.body.existed_undetermined, /could not be consulted/);
+  assert.equal(s.body.existed, null); assert.equal(s.body.existed_undetermined, word("acquisition.text.document_captured_parts_store", { parts: 2, held_parts: 0 }), "the register could not be asked, and the answer says so");
   /* over-strictness: the document a capture files does not depend on what existed, byte for byte */
   assert.equal(JSON.stringify(first.body.document), JSON.stringify(again.body.document));
 });
@@ -457,7 +456,7 @@ test("R14 R16 R31: transport, the chain, the capture block, the origin and the f
                       { locator: "https://a.example/dir/report.txt", matchedSweep: "SWEEP-1" }, { cls: "member", member: true, sessMember: "m1" });
   const d = r.body.document;
   assert.deepEqual(Object.keys(d.capture.transport).sort(), ["http_headers", "peer_address", "peer_address_unavailable", "redirected", "requested", "resolved", "status"]);
-  assert.equal(d.capture.transport.peer_address, null); assert.match(d.capture.transport.peer_address_unavailable, /does not expose/);
+  assert.equal(d.capture.transport.peer_address, null); assert.equal(d.capture.transport.peer_address_unavailable, word("acquisition.index.the_workers_runtime_does_not"));
   assert.ok(d.capture.transport.http_headers.some(([k, v]) => k === "etag" && v === "e"));
   assert.ok(d.capture.transport.http_headers.some(([k, v]) => k === "x-a" && v === "1"), "every header");
   assert.deepEqual([d.capture.transport.requested, d.capture.transport.resolved, d.capture.transport.status, d.capture.transport.redirected],
@@ -496,14 +495,14 @@ test("R15: an asserted authority is determined with a dated basis; none is undet
   const route = { "https://a.example/x": () => text("x") };
   const det = await run(w, route, { locator: "https://a.example/x", authority: " City Clerk " });
   assert.deepEqual([det.body.document.authority, det.body.document.authority_state], ["City Clerk", "determined"]);
-  assert.match(det.body.document.authority_basis, /asserted by the capturing member at intake, \d{4}-/);
+  assert.equal(det.body.document.authority_basis, word("acquisition.authority_basis.asserted_capturing_intake", { caller: "member", retrieved: det.body.document.retrieved }));
   assert.equal(w.store.state.events.length, 0);
   const caller = await run(w, route, { locator: "https://a.example/x", authority: "Clerk" }, { cls: "admin", member: false });
-  assert.match(caller.body.document.authority_basis, /asserted by the capturing caller at intake/);
+  assert.equal(caller.body.document.authority_basis, word("acquisition.authority_basis.asserted_capturing_intake", { caller: "caller", retrieved: caller.body.document.retrieved }));
   for (const a of [undefined, "", "   ", 7]) {
     const un = await run(w, route, { locator: "https://a.example/x", authority: a });
     assert.equal(un.status, 200, "never refused");
-    assert.equal(un.body.document.authority_state, "undetermined"); assert.match(un.body.document.authority_basis, /no assertion was supplied.*recorded \d{4}-/);
+    assert.equal(un.body.document.authority_state, "undetermined"); assert.equal(un.body.document.authority_basis, word("acquisition.authority_basis.assertion_supplied_mechanical", { retrieved: un.body.document.retrieved }));
   }
   assert.equal(w.store.state.events.length, 1, "one per capture digest");
   assert.deepEqual([w.store.state.events[0].kind, w.store.state.events[0].subject, w.store.state.events[0].captureSha],

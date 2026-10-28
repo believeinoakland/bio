@@ -1671,7 +1671,7 @@ async function acquireRun(cap, body0, opts0, t) {
   for (const [k, v] of res.headers) responseHeaders.push([k, v]);
   const transport = { requested: locator, resolved: resolvedUrl || locator, redirected: !!(resolvedUrl && resolvedUrl !== locator),
     status: res.status, http_headers: responseHeaders, peer_address: null,
-    peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch" };
+    peer_address_unavailable: localize("acquisition.index.the_workers_runtime_does_not", "the Workers runtime does not expose the peer address of an outbound fetch") };
   const name = (body.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
 
   /* R6, D-64 — THE RENDER ARM, THE PAIR. From here on `sha`, `total` and `ct` name the RENDERED document, the
@@ -2267,7 +2267,7 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
       try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, declared0, fileName); } catch { declared = null; }
       profile.format = declared && declared.format === "zip"
         ? { format: "undetermined", confidence: "none",
-            signals: [...(declared.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] }
+            signals: [...(declared.signals || []), localize("acquisition.index.the_stored_bytes_were_not", "the stored bytes were not read as a ZIP archive, so the declared type does not make one")] }
         : declared || profile.format;
     }
   }
@@ -2335,8 +2335,7 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
       reuse: subs.manifest.reuse, part_fetch_spread: subs.manifest.part_fetch_spread, compute: subs.manifest.compute,
       ...(subs.resumeState ? { continuation: {
         session: sessionId, outstanding: subs.manifest.outstanding, ticks: subs.session ? subs.session.ticks : 1,
-        how: "call op=acquire again with {continue: \"<session>\"} to pick up the outstanding parts; "
-           + "the primary is already complete and is never re-fetched" } } : {}),
+        how: localize("acquisition.index.call_op_acquire_again_with", "call op=acquire again with {how} to pick up the outstanding parts; the primary is already complete and is never re-fetched", { how: '{continue: "<session>"}' }) } } : {}),
       ...(subs.siteRecord ? { site: subs.siteRecord } : {}),
       ...(subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}),
     },

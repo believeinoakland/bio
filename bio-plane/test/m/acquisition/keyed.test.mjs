@@ -119,7 +119,7 @@ test("R36 R9 R23: a governed refusal, a thrown fetch, a redirect and a refusal a
   const thrown = withCreds(world(), credentials());
   const t = await call(thrown, () => new Error(`connection reset carrying Token ${KEY}`), (s) => keyedFetch(s, req()));
   assert.deepEqual([t.out.ok, t.out.reason], [false, "FETCH_FAILED"]);
-  assert.match(t.out.detail, /not carried because the team's key rode it/);
+  assert.equal(t.out.detail, word("acquisition.keyed.the_request_to_the_service"), "the error is not carried because the key rode it");
   keyNowhere(thrown, t, "thrown");
   const moved = withCreds(world(), credentials());
   const m = await call(moved, { [LOOKUP]: new Response("", { status: 302, headers: { location: "https://elsewhere.example/" } }) }, (s) => keyedFetch(s, req()));
