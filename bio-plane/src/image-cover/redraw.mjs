@@ -4,9 +4,10 @@
  * rotated; a PNG by its PNG decoder, alpha drawn over white) and written again as a fresh PNG: IHDR, the original's colour
  * profile when it passes the strict structural check (R14) and its bytes unchanged, the image data, IEND. Nothing else of
  * the original's bytes is carried, so no metadata marker, thumbnail, second picture or trailing byte can be (R12). The
- * orientation is answered, not applied: the screen turns the picture. The answer's rows are filtered with the best of the five
- * PNG filters and deflated by the platform; an answer over `redraw_bytes`, or a frame over `picture_frame`, is refused
- * `IMAGE_TOO_LARGE` before the memory is asked for. Pure (R6). */
+ * orientation is answered, not applied: the screen turns the picture. Each row is filtered with the best of the five PNG filters
+ * and handed to a streaming deflater (`deflate.mjs`) as it is decoded, so the working set is a band of rows and the answer so
+ * far, never the bitmap (T53-513, K5628). A decoded frame over `picture_frame`, or an answer over `redraw_bytes`, is refused
+ * `IMAGE_TOO_LARGE`, the frame from the header before anything is decoded. Pure (R6). */
 import { readJpegHeader, decodeBaselineJpegRows, DctRefusal } from "../../../pdf-worker/src/dctdecode.mjs";
 import { decodePng, PngRefusal } from "../../../pdf-worker/src/pngdecode.mjs";
 import { boundOf } from "../read-bounds.mjs";
@@ -14,12 +15,12 @@ import { CoverRefusal, checkPixels, COVER_MAX_BYTES, COVER_MAX_PIXELS } from "./
 import { fromDct } from "./jpeg.mjs";
 import { crc32, filter } from "./png.mjs";
 import { scanPhoto, leftOutOf, isJpeg } from "./photo.mjs";
+import { Deflater } from "./deflate.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 export const REDRAW_MAX_BYTES = boundOf("image", "redraw_bytes");
 const FRAME_MAX = boundOf("image", "picture_frame");
 const SIGNATURE = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-const SLICE = 49152;                               // the bytes handed to the deflater at a time (not a ceiling)
 
 const tooLarge = (what, size, bound) => new CoverRefusal("IMAGE_TOO_LARGE", localize("image-cover.redraw.the_what_is_size_over", "the {what} is {size} bytes, over the {bound} this module redraws", { what: String(what), size: String(size), bound: String(bound) }));
 
@@ -35,11 +36,11 @@ function fromPng(e) {
   return new CoverRefusal("IMAGE_DATA_CORRUPT", localize("image-cover.png.the_png_data_cannot_be", "the PNG data cannot be read: {why}", { why: String(e.detail?.note ?? e.code) }));
 }
 
-/** The filtered rows of an image, one row at a time: each row takes the filter whose output sums smallest as signed bytes. */
-function makeRowFilter(stride, bpp, out) {
+/** A row filter: each row takes the filter whose output sums smallest as signed bytes, and goes to `sink`. */
+function makeRowFilter(stride, bpp, sink) {
   const scratch = [0, 1, 2, 3, 4].map(() => new Uint8Array(stride + 1));
-  let prev = new Uint8Array(stride);
-  return (row, y) => {
+  const prev = new Uint8Array(stride);
+  return (row) => {
     let best = 0, bestScore = Infinity;
     for (let t = 0; t < 5; t++) {
       filter(t, row, prev, bpp, scratch[t]);
@@ -48,37 +49,9 @@ function makeRowFilter(stride, bpp, out) {
       for (let i = 1; i <= stride; i++) { const v = f[i]; s += v < 128 ? v : 256 - v; }
       if (s < bestScore) { bestScore = s; best = t; }
     }
-    out.set(scratch[best], y * (stride + 1));
+    sink(scratch[best]);
     prev.set(row);
   };
-}
-
-/** Deflate `data` in slices; `{parts, total}`; stops with IMAGE_TOO_LARGE the moment the output passes the bound. */
-async function deflateBounded(holder, max) {
-  const data = holder.rows;
-  holder.rows = null;
-  const cs = new CompressionStream("deflate");
-  const parts = [];
-  let total = 0, over = false;
-  const reading = (async () => {
-    const r = cs.readable.getReader();
-    for (;;) {
-      const { done, value } = await r.read();
-      if (done) break;
-      total += value.length;
-      if (total > max) { over = true; r.cancel().catch(() => {}); break; }
-      parts.push(value);
-    }
-  })();
-  reading.catch(() => {});
-  const w = cs.writable.getWriter();
-  try {
-    for (let o = 0; o < data.length && !over; o += SLICE) await w.write(data.subarray(o, Math.min(o + SLICE, data.length)));
-    if (!over) await w.close();
-  } catch { /* the reader stopped the stream: it is over the bound */ }
-  await reading;
-  if (over) throw tooLarge(localize("image-cover.redraw.redrawn_picture", "redrawn picture"), total, max);
-  return { parts, total };
 }
 
 const be32 = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
@@ -99,8 +72,9 @@ function assemble(chunks) {
   return out;
 }
 
-/** The decoded 8-bit samples of the photograph, as filtered PNG rows. */
-async function decodeRows(d, S) {
+/** Decode the photograph and feed its filtered rows to `z`: `{width, height, comps}`. */
+async function decodeInto(d, S, z) {
+  const frameTooLarge = (size) => tooLarge(localize("image-cover.redraw.decoded_frame", "decoded frame"), size, FRAME_MAX);
   if (isJpeg(d)) {
     let h;
     try { h = readJpegHeader(d); } catch (e) { throw fromDct(e); }
@@ -108,23 +82,23 @@ async function decodeRows(d, S) {
     if (n !== 1 && n !== 3) throw new CoverRefusal("UNSUPPORTED_JPEG_PROCESS", localize("image-cover.redraw.this_jpegs_coding_is_not", "this JPEG has {n} components; only grey or three are redrawn", { n: String(n) }));
     checkPixels(W, H, COVER_MAX_PIXELS);
     const stride = W * n;
-    if (stride * H > FRAME_MAX) throw tooLarge(localize("image-cover.redraw.decoded_frame", "decoded frame"), stride * H, FRAME_MAX);
-    const rows = new Uint8Array((stride + 1) * H), put = makeRowFilter(stride, n, rows);
+    if (stride * H > FRAME_MAX) throw frameTooLarge(stride * H);
+    const put = makeRowFilter(stride, n, (row) => z.push(row));
     try {
-      decodeBaselineJpegRows(d, { onRows: (strip, y0, count) => { for (let j = 0; j < count; j++) put(strip.subarray(j * stride, (j + 1) * stride), y0 + j); } });
+      decodeBaselineJpegRows(d, { onRows: (strip, y0, count) => { for (let j = 0; j < count; j++) put(strip.subarray(j * stride, (j + 1) * stride)); } });
     } catch (e) { throw fromDct(e); }
-    return { rows, width: W, height: H, comps: n };
+    return { width: W, height: H, comps: n };
   }
   const ct = d.length > 25 ? d[25] : 2, n = ct === 0 || ct === 4 ? 1 : 3;
   const W = S.width, H = S.height;
   if (!W || !H) throw new CoverRefusal("IMAGE_DATA_CORRUPT", localize("image-cover.redraw.the_png_has_no_header", "the PNG has no readable header"));
   checkPixels(W, H, COVER_MAX_PIXELS);
-  if (W * n * H > FRAME_MAX) throw tooLarge(localize("image-cover.redraw.decoded_frame", "decoded frame"), W * n * H, FRAME_MAX);
+  if (W * n * H > FRAME_MAX) throw frameTooLarge(W * n * H);
   let img;
   try { img = await decodePng(d); } catch (e) { throw fromPng(e); }
-  const stride = img.width * img.comps, rows = new Uint8Array((stride + 1) * img.height), put = makeRowFilter(stride, img.comps, rows);
-  for (let y = 0; y < img.height; y++) put(img.samples.subarray(y * stride, (y + 1) * stride), y);
-  return { rows, width: img.width, height: img.height, comps: img.comps };
+  const stride = img.width * img.comps, put = makeRowFilter(stride, img.comps, (row) => z.push(row));
+  for (let y = 0; y < img.height; y++) put(img.samples.subarray(y * stride, (y + 1) * stride));
+  return { width: img.width, height: img.height, comps: img.comps };
 }
 
 /** Redraw a JPEG or PNG from its pixels (R12): `{ok: true, bytes, format: "png", width, height, orientation, left_out}`
@@ -137,15 +111,18 @@ export async function redrawPicture(bytes) {
       throw new CoverRefusal("PHOTO_TOO_LARGE", localize("image-cover.redraw.the_photo_is_length_bytes", "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module redraws", { length: String(d.length), COVER_MAX_BYTES: String(COVER_MAX_BYTES) }));
     const S = await scanPhoto(d);
     if (!S) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.redraw.the_photo_is_neither_a_jpeg_nor_a_png", "the photo is neither a JPEG nor a PNG"));
-    const img = await decodeRows(d, S);
-    const { width, height, comps } = img;
+    const overBound = (total) => { if (total > REDRAW_MAX_BYTES) throw tooLarge(localize("image-cover.redraw.redrawn_picture", "redrawn picture"), total, REDRAW_MAX_BYTES); };
+    const z = new Deflater(overBound);
+    const { width, height, comps } = await decodeInto(d, S, z);
     const ihdr = Uint8Array.from([...be32(width), ...be32(height), 8, comps === 1 ? 0 : 2, 0, 0, 0]);
     const profile = S.profile?.ok && comps === 3 ? S.profile.bytes : null;
-    const { parts, total } = await deflateBounded(img, REDRAW_MAX_BYTES);       // the filtered rows are let go once deflated
+    const { parts, total } = z.finish();
     const chunks = [chunk("IHDR", [ihdr], 13)];
     if (profile) {
-      const z = await deflateBounded({ rows: profile }, REDRAW_MAX_BYTES);
-      chunks.push(chunk("iCCP", [Uint8Array.from([0x49, 0x43, 0x43, 0, 0]), ...z.parts], 5 + z.total));
+      const zp = new Deflater(overBound);
+      zp.push(profile);
+      const pz = zp.finish();
+      chunks.push(chunk("iCCP", [Uint8Array.from([0x49, 0x43, 0x43, 0, 0]), ...pz.parts], 5 + pz.total));
     }
     chunks.push(chunk("IDAT", parts, total), chunk("IEND", [], 0));
     const out = assemble(chunks);
