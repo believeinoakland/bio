@@ -34,7 +34,7 @@
 | lane | session | started |
 |---|---|---|
 | AI-DESIGN #4 (archived; SPUN DOWN at 0db6ea9e, K5709: #5 starts from its prompt there) | `session_018BhcedHXD9yareupMq6poX` | 2026-10-27, BOB #322 (#3 `session_018BhcedQQCRAKFMw8Mi8Xka` archived by #4) |
-| PLATFORM #2 (archived; SPUN DOWN at 2af1b79a27, K5709: #3 starts from its prompt there) | `session_018BhcegTAycjUS9ubrhLQ2p` | 2026-10-27, BOB #322 (#1 `session_018BhceduzvspNp7pagSnBaL` archived by #2) |
+| PLATFORM #3 (live; the upload stage study for capture R120 / T53-108, a completion-round item; signed in to plat-s1 with Bob's reset link) | `session_018BhcefSgvGb4qHQgvYMz4M` | 2026-10-28 13:15Z, BOB #330 from #2's prompt (2af1b79a27); #2 `session_018BhcegTAycjUS9ubrhLQ2p` archived |
 | CAPABILITIES #2 (archived; SPUN DOWN at 3df02b4ad, K5709) | `session_018BhceefmwyUmQFrnSkiEv7` | 2026-10-27, BOB #322 (#1 `session_018BhcefgnFUeeyqm8N5bN75` archived by #2) |
 | FILES #1 (archived; SPUN DOWN at 304b4e47, K5709) | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
 | JOURNEYS #4 (archived; SPUN DOWN at 0dc47f69, K5709) | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |
