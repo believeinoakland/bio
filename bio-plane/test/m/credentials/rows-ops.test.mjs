@@ -96,7 +96,7 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   const moved = Object.keys(aiAccountsOps(w.c.accounts, new URL("http://x/"), null, {}));
   const routes = Object.keys(w.ops());
   assert.deepEqual(routes.sort(), Object.keys(credentialsOpsNoVersion(w)).sort(), "the routes are this module's own map");
-  assert.ok(moved.every((op) => routes.includes(op)), "the moved routes are still answered here, through their delegates (R72 until its users re-point)");
+  assert.ok(moved.every((op) => !routes.includes(op)), "no moved route is answered here: ai-accounts serves its own");
 });
 
 test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
@@ -143,7 +143,7 @@ test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this m
 
 test("R27 R29 the T33-20 routes: `by`, `member` and `session` from the query over the body; the grant answered once; the keyed services' key from the body only, never answered back", async () => {
   const w = await world().group("ann");
-  assert.equal((await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-route", by: "ann" })).ok, true);
+  assert.equal((await w.served("ann")).ok, true);
   const tok = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   const g = await w.ops(`member=ann&by=ann&session=${tok}`).aigrantmint();
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).member, "ann");

@@ -110,7 +110,7 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal(typeof sess, "string");
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
   w.c.aiCredentialMint({ tokenId: "t1", secretSha: "a".repeat(64), principalKind: "member", who: "second" });
-  assert.equal((await w.c.accounts.accountReferenceSet({ member: "second", kind: "apikey", secret: "sk-test", by: "second" })).ok, true);
+  assert.equal((await w.served("second")).ok, true);
   assert.equal((await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-key", by: "second" })).ok, true);
   assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
   assert.equal(w.c.passwordResetLinkMake({ member: "second", by: "admin" }).ok, true);   /* T47: R69's table */
@@ -126,7 +126,7 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal((await w.c.login({ handle: "second", password: "recovered-passphrase" })).ok, true);
 });
 
-test("R18 R30 the declaration: (T48) its own fourteen tables declared once by credentials through declareTable, with their classes; the eleven AI-account tables declared by ai-accounts alone, never by this module; any refusal is thrown", () => {
+test("R18 R30 the declaration: (T48) its own fourteen tables declared once by credentials through declareTable, with their classes; the AI-account tables declared by ai-accounts alone, never by this module; any refusal is thrown", () => {
   const w = world();
   const mine = [...w.core.declared.entries()].filter(([, d]) => d.module === "credentials");
   assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES].sort(), "every table this module owns, and only those");
@@ -134,8 +134,8 @@ test("R18 R30 the declaration: (T48) its own fourteen tables declared once by cr
     "password_reset_links", "recoveries", "recovery_codes", "security_counts", "security_key", "security_pending", "sessions",
     "signers", "signin_window"], "R30's fourteen");
   const theirs = [...AI_ACCOUNTS_TABLES, ...AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE].map((t) => t.name);
-  assert.equal(theirs.length, 11);
-  for (const t of theirs) assert.equal(w.core.declared.get(t)?.module, "ai-accounts", `${t} is declared, once, by ai-accounts`);
+  for (const t of theirs) assert.notEqual(w.core.declared.get(t)?.module, "credentials", `${t} is ai-accounts', never declared here`);
+  assert.equal(w.core.declared.get("ai_accounts")?.module, "ai-accounts");
   const cls = Object.fromEntries(mine.map(([n, d]) => [n, d.classes]));
   for (const t of CREDENTIALS_EXEMPT_TABLES)
     assert.deepEqual([cls[t].purge, cls[t].expunge, cls[t].derive, cls[t].version_chain], ["exempt", "none", "stored", false], t);

@@ -99,7 +99,7 @@ test("R65 a request marked background is no activity; the session route reads ba
 
 test("R65 R71 a locked session serves only unlock and sign-out: another act answers SESSION_LOCKED (C-29.43) through sessionLockedRefusal, writing nothing; control: unlocked, the act is served", async () => {
   const { w, token } = await signedIn("own");
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.served("ann");
   const late = T0 + SESSION_LIMITS.ownLock + S;
   assert.deepEqual(said(Credentials.sessionLockedRefusal()), row("SESSION_LOCKED"));
   const before = w.snapshot();
@@ -116,7 +116,7 @@ test("R65 R71 a locked session serves only unlock and sign-out: another act answ
 
 test("R65 R71 an ask's grant is not admitted while its session is locked, and again once it is unlocked", async () => {
   const { w, token } = await signedIn("own");
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.served("ann");
   const g = await at(T0, () => w.c.aiGrantMint({ member: "ann", by: "ann", session: token }));
   const late = T0 + SESSION_LIMITS.ownLock + S;
   w.sql.exec(`UPDATE ai_grants SET expires=?`, late + 3600 * S);

@@ -28,8 +28,8 @@ const NEW = "a-new-passphrase-9";
 /* ann signed in twice (one session presents the change), with an ask grant under each and a standing grant; bob signed in */
 async function signedIn() {
   const w = await world().group("ann", "bob");
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
+  await w.served("ann");
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("member:ann"), switch: "standing", on: true, by: "ann" });
   w.s = {};
   for (const k of ["ann1", "ann2", "ann3"]) w.s[k] = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   w.s.bob = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
@@ -192,9 +192,9 @@ test("R27 R32 R63 (T48) the keep-away refusal R27, R32 and R63 answer is exactly
   const { on, uses, ...state } = w.c.accounts.aiKeepAwayState();
   assert.deepEqual([on, k.keep_away], [true, state]);
   assert.deepEqual(k, w.c.accounts.aiKeptAway(), "ai-accounts' own answer");
-  assert.match(ACCOUNT_CHECKS.AI_KEPT_AWAY.where, /^src\/ai-accounts\/index\.mjs /);
+  assert.match(ACCOUNT_CHECKS.AI_KEPT_AWAY.where, /^src\/ai-accounts\//);
   for (const r of [await w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-                   await w.c.accounts.accountReferenceFor({ member: "ann", act: { kind: "run", member: "ann" } }),
+                   await w.c.accounts.accountFor({ member: "ann", act: { kind: "run", member: "ann" } }),
                    await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.s.ann1 }),
                    await w.c.aiGrantMintStanding({ member: "ann", question: "q" }),
                    w.c.aiRunCredentialMint({ member: "ann", run: "RUN-K", writes: ["airuntick"] })])

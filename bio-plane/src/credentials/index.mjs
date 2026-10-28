@@ -37,7 +37,7 @@
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, projectViewer } from "../membership/index.mjs";
-import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
+import { aiAccountsOf, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -2103,16 +2103,17 @@ export class Credentials {
 /* K61: the one Credentials of a Durable Object's storage, made on first use over its `sql`, reaching record-core and
    membership by their factories on the same `ctx`; its first construction registers the seam (R16, R17). `record` and
    `membership` (a test's own) are read on the first call only. `now` (K5148) is the instance clock, read on the first call
-   only, as retrieval's and capture-requests' are; none handed, the store's environment or the wall clock answers. */
+   only, as retrieval's and capture-requests' are; none handed, the store's environment or the wall clock answers. `catalogue`
+   (T53) is ai-catalogue's service, handed on to `ai-accounts` (its R32) on the first call. */
 const OF = new WeakMap();
-export function credentialsOf(ctx, { record = null, membership = null, sealSecret = null, now = null } = {}) {
+export function credentialsOf(ctx, { record = null, membership = null, sealSecret = null, now = null, catalogue = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = OF.get(storage);
   if (!c) {
     const core = record ?? recordOf(ctx);
     const m = membership ?? membershipOf(ctx, { record });
     /* (T48; `ai-accounts` R32) `ai-accounts` is made here, first, with the seal secret this module is given */
-    const accounts = aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now });   /* K5197: the instance clock reaches it */
+    const accounts = aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now, catalogue });   /* K5197: the instance clock reaches it */
     c = new Credentials({ sql: storage.sql, core, membership: m, accounts, now });
     OF.set(storage, c);
     c.start();
@@ -2124,13 +2125,8 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
    byte for byte: a delegate per name, never a copy of its code (K624). Deleted, with `ACCOUNT_CHECKS`' view and the
    spread in `credentialsOps`, by this module's first job after its last user re-points (split map §5). */
 export const MOVED_TO_AI_ACCOUNTS = Object.freeze([
-  "accountReferenceSet", "accountReferenceRemove", "accountReferenceState", "accountReferenceFor", "accountFor",
-  "registerDisclosureRead", "disclosureDue", "accountUsesSet", "accountUses", "accountUsesOf", "accountHistory",
-  "subscriptionConnected", "subscriptionDisconnect", "subscriptionTokenHold", "subscriptionTokenRefused",
-  "groupKeySet", "groupKeyRemove", "groupKeySwitch", "groupKeyState", "groupKeySwitches", "groupKeyNotice",
-  "groupKeyNoticeSeen", "aiKeepAwaySet", "aiKeepAwayState", "aiKeptAway", "projectKeySet", "projectSigninSet",
-  "projectAccountRemove", "projectAccountSwitch", "projectAccountState", "projectKeyNotice", "projectKeyNoticeSeen",
-  "projectAccountsSuspended", "projectAiKeepAwaySet", "projectAiKeepAwayState", "projectsKeptAway",
+  "accountFor", "registerDisclosureRead", "disclosureDue", "accountUsesSet", "accountUses", "accountUsesOf", "accountHistory",
+  "aiKeepAwaySet", "aiKeepAwayState", "aiKeptAway", "projectAiKeepAwaySet", "projectAiKeepAwayState", "projectsKeptAway",
 ]);
 for (const name of MOVED_TO_AI_ACCOUNTS)
   Object.defineProperty(Credentials.prototype, name, {
@@ -2147,10 +2143,6 @@ export function credentialsOps(c, url, body, env) {
   const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
   const by = () => url.searchParams.get("by");
   return {
-    /* R72 (T48, transitional; K3101): the 24 ops that moved to `ai-accounts`, answered by its own route map over this
-       module's delegates, so each answers byte for byte as `ai-accounts`' does until its callers re-point; this
-       module's own ops follow and none of them shares a name with one of these. */
-    ...aiAccountsOps(c, url, body, env),
     /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
        value, hashes it, and this module never sees the value. R53 (N761; K2129): the digest is read from the body
        only, where the control plane sets it after removing any a caller sent; a `secretSha` in the query is never

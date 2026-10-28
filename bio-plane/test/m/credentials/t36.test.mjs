@@ -113,12 +113,10 @@ test("R29 a set with no key removes the service's key and the service is off: fo
 
 async function servedWorld() {
   const w = await world().group("ann", "bob");
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ANN", by: "ann" });
-  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
-  await w.c.accounts.groupKeySet({ key: "sk-ant-api03-GROUP", by: "admin" });
-  w.c.accounts.groupKeySwitch({ on: true, by: "admin" });
-  w.c.accounts.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
-  w.c.accounts.groupKeyNoticeSeen({ member: "bob", by: "bob" });
+  await w.served("ann");
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("member:ann"), switch: "standing", on: true, by: "ann" });
+  await w.on(w.team(), "bob");
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("group"), switch: "standing", on: true, by: "admin" });
   w.session = {};
   for (const id of ["ann", "bob"]) w.session[id] = (await w.c.login({ handle: `${id}`, password: PASSWORD(id) })).token;
   return w;
@@ -144,7 +142,6 @@ test("R35 while the group keeps its material away every account is refused AI_KE
                                ["bob", ask("bob")], ["bob", { kind: "run", member: "bob" }], ["ann", ask("bob")], ["class:ai", ask("class:ai")],
                                ["ghost", ask("ghost")], [null, null]]) {
     want(await w.c.accounts.accountFor({ member, act }), `accountFor ${member} ${JSON.stringify(act)}`);
-    want(await w.c.accounts.accountReferenceFor({ member, act }), `accountReferenceFor ${member}`);
   }
   for (const id of ["ann", "bob"]) {
     want(await w.c.aiGrantMint({ member: id, by: id, session: w.session[id] }), `R27 ${id}`);

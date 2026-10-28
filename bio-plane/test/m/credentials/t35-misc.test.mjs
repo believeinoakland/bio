@@ -84,7 +84,7 @@ test("R42 a credential minted before expiry was recorded is given expiresAt 90 d
   assert.equal(c.aiCredentialLook({ secretSha: SHA("e") }).credential.expiresAt, second(T + 90 * D));
 });
 
-test("R16 a member's revocation also spends their unspent recovery codes and clears their connected subscription, in the same act; no one else's", async () => {
+test("R16 a member's revocation also spends their unspent recovery codes and ai-accounts clears their accounts, in the same act; no one else's", async () => {
   const w = await world().group("ann");
   await addAdmin(w, "third");
   const codes = w.c.recoveryCodesIssue({ by: "third" }).codes;
@@ -97,7 +97,7 @@ test("R16 a member's revocation also spends their unspent recovery codes and cle
   assert.equal(r?.ok, true);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM recovery_codes WHERE role='member:third' AND spent_at IS NULL`).n, 0);
   assert.equal(w.c.recoveryCodesState({ by: "second" }).remaining, 10, "no one else's");
-  assert.deepEqual(w.rows(`SELECT member_id FROM subscription_connections`).map((x) => x.member_id), ["ann"]);
+  assert.deepEqual(w.rows(`SELECT DISTINCT owner FROM ai_accounts`).map((x) => x.owner), ["member:ann"]);
   w.m.memberSet({ memberId: "third", status: "active", by: "admin" });
   assert.equal((await w.c.recover({ handle: "third", code: codes[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED",
     "spent for good, whatever the member's later standing");
@@ -109,7 +109,7 @@ test("R30 T35's tables are declared through declareTable, each never exported an
   for (const t of ["signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries"])
     assert.deepEqual([cls(t).module ?? "credentials", cls(t).purge, cls(t).export, cls(t).sight, cls(t).expunge],
       ["credentials", "exempt", "never", "group", "none"], t);
-  assert.equal(w.core.declared.get("subscription_connections").module, "ai-accounts");
+  assert.equal(w.core.declared.get("ai_accounts").module, "ai-accounts");
   assert.ok(CREDENTIALS_TABLES.every((t) => t.export !== "yes" || t.name === "signers"));
 });
 
@@ -134,7 +134,7 @@ test("R3 R38 R39 R43 R44 R45 R46 R47 R49 R53 T35's rows, T36's R49 row and T37's
     assert.deepEqual([r.check, r.where], want[code], code);
     assert.match(r.translation, /\.$/);
   }
-  assert.deepEqual([AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_BAD_EXPIRY.check, ACCOUNT_CHECKS.SUBSCRIPTION_LOGIN_REFUSED.check], ["C-29.28", "C-29.29"]);
+  assert.equal(AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_BAD_EXPIRY.check, "C-29.28");
   assert.deepEqual([AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_NO_SECRET.check, AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_NO_SECRET.where],
     ["C-29.33", W("aiCredentialMint", "is-ai-credential-digest")], "T37: R53");
   const ids = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS]
@@ -202,32 +202,15 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your tea
   const unknown = w.c.aiCredentialRevoke({ who: "ann", tokenId: "nope" });
   has(unknown.translation, word("refusal.AI_CREDENTIAL_UNKNOWN"));
   has(unknown.detail, localize("credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", { v1: "nope" }));
-  /* :153, :154 (C-29.22) and index :794 */
-  const bare = await world({ sealSecret: null }).group("ann");
-  const unsealed = await bare.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
-  /* (T50; plan rule 6) ai-accounts' rows are read by key, never quoted: the row's translation is the word itself */
-  assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
-  has(unsealed.detail, localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read."));
-  /* index :822 */
-  has((await w.c.accounts.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
-    "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
+  /* :153, :154, :822 are ai-accounts' rows and words (its R30), tested there */
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
   assert.equal(refused.detail, localize("credentials.index.sign_in_refused", "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential."));
   assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
-  /* index :880, :1060, :1243: a sealed key that no longer opens */
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  await w.c.accounts.groupKeySet({ key: "sk-group", by: "admin" });
-  w.c.accounts.groupKeySwitch({ on: true, by: "admin" });
-  w.c.accounts.groupKeyNoticeSeen({ member: "dee", by: "dee" });
+  /* a keyed service's sealed key that no longer opens (:1243; the other two are ai-accounts') */
   await w.c.keyedServiceSet({ service: "courtlistener", key: "cl", by: "admin" });
   w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
   const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: `${SEAL}-changed` });
-  has((await other.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
-    localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
-  w.c.accounts.groupKeyNoticeSeen({ member: "second", by: "second" });
-  has((await other.accounts.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
-    localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
   has((await other.keyedServiceFor({ service: "courtlistener" })).detail,
     localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
 });
@@ -241,7 +224,6 @@ test("R48 (T36: R29, R35, R49, R51 included; T53, K3472) no member- or founder-f
   for (const f of [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS])
     for (const r of Object.values(f)) said.push({ translation: r.translation });
   said.push({ detail: Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED });
-  const bare = await world({ sealSecret: null }).group("ann");
   for (const p of [
     w.c.signerAdd({ keyB64: "x", memberId: "ann", by: "admin" }), w.c.signerAdd({ keyB64: "AAAAk", memberId: "cal", by: "admin" }),
     w.c.signerAdd({ keyB64: "AAAAk", memberId: "dee", by: "admin" }), w.c.signerRegisterOwn({ keyB64: "AAAAk", by: "class:ai" }),
@@ -250,19 +232,14 @@ test("R48 (T36: R29, R35, R49, R51 included; T53, K3472) no member- or founder-f
     w.c.aiCredentialMint({ who: "ann", principalKind: "organisation", tokenId: "t" }),
     w.c.aiCredentialMint({ who: "ann", principalKind: "member", tokenId: "t", expiresInDays: 0 }),
     w.c.aiCredentialRevoke({ who: "class:ai" }), w.c.aiCredentialRevoke({ who: "ann", tokenId: "x" }),
-    w.c.accounts.accountReferenceSet({ member: "ann", kind: "x", secret: "s", by: "ann" }), w.c.accounts.accountReferenceSet({ member: "ann", by: null }),
-    w.c.accounts.accountReferenceSet({ member: "ann", by: "dee" }), w.c.accounts.accountReferenceSet({ member: "dee", by: "dee" }),
-    w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "", by: "ann" }), w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "x", by: "ann" }),
-    w.c.accounts.accountReferenceFor({ member: "ann", act: null }), w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    w.c.accounts.groupKeySet({ key: "k", by: "ann" }), w.c.accounts.groupKeyState({ viewer: null }),
+    w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
     w.c.aiGrantAdmit({ token: "x" }), w.c.aiGrantMintStanding({ member: "ann", question: "q" }),
     w.c.keyedServiceFor({ service: "x" }), w.c.keyedServiceFor({ service: "courtlistener" }), w.c.keyedServiceSet({ service: "courtlistener", key: "", by: "admin" }),
-    w.c.accounts.subscriptionConnected({ member: "ann", token: "t" }), w.c.accounts.subscriptionConnected({ member: "dee" }),
     w.c.securityCount({ kind: "x" }), w.c.securityMap({ from: "x", to: "y", by: "admin" }), w.c.securityMap({ by: "ann" }),
     w.c.signOut({ token: "x" }), w.c.recoveryCodesIssue({ by: "ann" }),
     w.c.recover({ handle: "ann", code: "x", password: "new-passphrase-1", source: "a" }),
     w.c.login({ handle: "x", password: "wrong-passphrase", source: "b" }),
-    bare.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" }),
+    w.served("ann"),
     /* T37's refusals: R3's three of its own, R53's mint with no digest */
     w.c.passwordChange({ by: "class:admin" }), w.c.passwordChange({ by: "ann", session: "none" }),
     w.c.aiCredentialMint({ who: "ann", tokenId: "nd", principalKind: "member" }),

@@ -9,6 +9,9 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { coreOver } from "../record-core/fixtures.mjs";
+import { catalogueFor, PLANS, ENTRIES, HOSTS } from "../ai-accounts/catalogue.mjs";
+import { SECRET } from "../ai-accounts/fixture.mjs";
+export { PLANS, ENTRIES, HOSTS, SECRET };
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -43,22 +46,26 @@ function coreWithDeclared(db) {
 /* The seal secret the composition root hands in (R23, R29); a test world binds one unless told not to. */
 export const SEAL = "test-seal-secret-0123456789";
 
-export function world({ sealSecret = SEAL, now = null } = {}) {
+export function world({ sealSecret = SEAL, now = null, catalogue = undefined } = {}) {
   const db = new DatabaseSync(":memory:");
   const core = coreWithDeclared(db);
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
-  const c = credentialsOf(ctx, { record: core, membership: m, sealSecret, now });
+  /* ai-catalogue as ITS published fixture gives it (K4990): the accounts of `ai-accounts` are of the catalogue's plans */
+  const cat = catalogue === undefined ? catalogueFor(ctx, { record: core }) : catalogue;
+  const ready = cat?.seeded ?? Promise.resolve();
+  const c = credentialsOf(ctx, { record: core, membership: m, sealSecret, now, catalogue: cat });
   if (credentialsOf(ctx) !== c) throw new Error("credentialsOf answers one instance per storage");
   c.migrate();
+  const a = c.accounts;
   const w = {
-    db, sql, core, m, c, ctx,
+    db, sql, core, m, c, a, ctx, catalogue: cat, ready,
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
     /* The founder claims the instance (R1). */
-    async claim() { return c.claim({ password: FOUNDER_PASSWORD, handle: FOUNDER_HANDLE, tokenFp: "fp-1" }); },
+    async claim() { await ready; return c.claim({ password: FOUNDER_PASSWORD, handle: FOUNDER_HANDLE, tokenFp: "fp-1" }); },
     /* Invite (membership) and enrol to active, then set the member's password here (R3). */
     async enrol(id, role = "member", by = "admin", caps = null) {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: caps, by });
@@ -67,9 +74,44 @@ export function world({ sealSecret = SEAL, now = null } = {}) {
       if (e.ok) await c.setPassword({ role: `member:${id}`, password: PASSWORD(id) });
       return e;
     },
-    /* (T47; R70) `id` signs in through their Claude subscription: the door holds the token the sign-in printed. */
-    async signin(id, validFor = null) {
-      return c.accounts.subscriptionTokenHold({ member: id, token: SIGNIN_TOKEN(id), validFor });
+    /* A member's own account of the catalogue's API plan for members, its key sealed, by her own act (ai-accounts' world). */
+    own(member, { plan = PLANS.memberApi, secret = SECRET(member), entries = undefined, means = "sealed", ...more } = {}) {
+      return a.accountSet({ owner: `member:${member}`, provider: PLANS.provider, plan, means, secret, entries, by: member, ...more });
+    },
+    /* The team's account of the catalogue's team API plan, its key sealed, by an administrator. */
+    team({ plan = PLANS.teamApi, secret = SECRET("team"), by = "admin", entries = undefined, means = "sealed", ...more } = {}) {
+      return a.accountSet({ owner: "group", provider: PLANS.provider, plan, means, secret, entries, by, ...more });
+    },
+    /* A project's account of the catalogue's team API plan, its key sealed, by one of its owners. */
+    projectAccount(project, owner, { plan = PLANS.teamApi, secret = SECRET(project), entries = undefined, means = "sealed", ...more } = {}) {
+      return a.accountSet({ owner: `project:${project}`, provider: PLANS.provider, plan, means, secret, entries, by: owner, ...more });
+    },
+    /* `set` (an account set) switched on by its owner, and the recipient notice of its host read by `member` (R51). */
+    async on(set, member = null) {
+      const r = await set;
+      if (r.ok !== true) throw new Error(`account not set: ${r.reason}`);
+      const by = r.owner === "group" ? "admin" : r.owner.startsWith("project:") ? member : r.owner.slice(7);
+      if (a.accountSwitch({ account_id: r.account_id, on: true, by }).ok !== true) throw new Error("account not switched on");
+      if (member) a.recipientNoticeSeen({ member, provider: PLANS.provider, host: HOSTS.main, by: member });
+      return r;
+    },
+    /* The id of the first account `owner` holds (`ai_accounts`), null when none. */
+    idOf(owner) { return sql.exec(`SELECT account_id FROM ai_accounts WHERE owner=? ORDER BY seq`, owner)[0]?.account_id ?? null; },
+    /* Every account `owner` holds, removed by `by` (`ai-accounts` R1, R5): the members' ways of ending what served them. */
+    removeAccounts(owner, by) {
+      const ids = sql.exec(`SELECT account_id FROM ai_accounts WHERE owner=?`, owner).map((r) => r.account_id);
+      return ids.map((account_id) => a.accountRemove({ account_id, by }));
+    },
+    /* A member served by an account of their own: the member API plan, sealed, switched on, the recipient's notice read. */
+    async served(member) { return w.on(w.own(member), member); },
+    /* (T53) `id` signs in through their personal subscription: an account of means `issued`, its token held, switched on. */
+    async signin(id) {
+      const r = await a.accountSet({ owner: `member:${id}`, provider: PLANS.provider, plan: PLANS.subscription, means: "issued",
+        secret: SIGNIN_TOKEN(id), by: id });
+      if (r.ok !== true) return r;
+      a.accountSwitch({ account_id: r.account_id, on: true, by: id });
+      a.recipientNoticeSeen({ member: id, provider: PLANS.provider, host: HOSTS.main, by: id });
+      return r;
     },
     /* The founder plus a second administrator, so ordinary members may be added; then each member, enrolled. */
     async group(...members) {
@@ -118,9 +160,22 @@ export function realWorld() {
   if (typeof rc.migrate === "function") rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
-  const c = credentialsOf(ctx, { sealSecret: SEAL });
+  const cat = catalogueFor(ctx, { record: rc });
+  const c = credentialsOf(ctx, { sealSecret: SEAL, catalogue: cat });
   c.migrate();
-  return { db, sql, ctx, rc, m, c, row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };
+  const acc = c.accounts;
+  return { db, sql, ctx, rc, m, c, ready: cat.seeded,
+    row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
+    /* a member served by an account of their own: the member API plan, sealed, on, the recipient's notice read */
+    async served(member) {
+      await cat.seeded;
+      const r = await acc.accountSet({ owner: `member:${member}`, provider: PLANS.provider, plan: PLANS.memberApi, means: "sealed",
+        secret: SECRET(member), by: member });
+      if (r.ok !== true) return r;
+      acc.accountSwitch({ account_id: r.account_id, on: true, by: member });
+      acc.recipientNoticeSeen({ member, provider: PLANS.provider, host: HOSTS.main, by: member });
+      return r;
+    } };
 }
 
 /* An administrator added and enrolled the way the roster allows at the time of the call and after member-roster's R84 to

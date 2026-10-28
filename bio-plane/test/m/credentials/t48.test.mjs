@@ -22,19 +22,13 @@ const A = await import("../../../src/ai-accounts/index.mjs");
 const C = await import("../../../src/credentials/index.mjs");
 const CHECKS = await import("../../../src/credentials/checks.mjs");
 
-/* Every service of ai-accounts' R1–R23: the public methods of its class, less the seams credentials itself calls (its
-   R24–R26) and the lifecycle (`start`, `migrate`, `declareTables`). */
-const SEAMS = ["sealText", "unsealText", "accountActBar", "accountServing", "servingAccountOf", "notYourAccount", "noAccount",
-  "accountMemberNotActive", "onAccountCleared"];
-const MOVED = Object.getOwnPropertyNames(A.AiAccounts.prototype)
-  .filter((n) => n !== "constructor" && !["start", "migrate", "declareTables"].includes(n) && !SEAMS.includes(n)).sort();
-
-test("R72 one delegate per moved service: every service of ai-accounts' R1–R23 is answered by credentials, passing its arguments unchanged and answering ai-accounts' own answer, the same object (a promise included); control: a seam or a lifecycle call is not delegated", async () => {
-  assert.equal(MOVED.length, 36);
-  assert.deepEqual([...C.MOVED_TO_AI_ACCOUNTS].sort(), MOVED, "the delegates are exactly ai-accounts' moved services");
-  assert.ok(Object.isFrozen(C.MOVED_TO_AI_ACCOUNTS));
+/* R72 retired (T53, K5457): what ai-accounts retired is gone from credentials; the services it still has and users still
+   call by credentials' name stay answered, the same object, until those users re-point. */
+test("R72 (retired) the delegates left are exactly the services ai-accounts still answers, each passing its arguments unchanged and answering ai-accounts' own answer; none of what ai-accounts retired is answered here", async () => {
   const w = await world().group("ann");
-  for (const name of MOVED) {
+  assert.ok(Object.isFrozen(C.MOVED_TO_AI_ACCOUNTS));
+  for (const name of C.MOVED_TO_AI_ACCOUNTS) {
+    assert.equal(typeof A.AiAccounts.prototype[name], "function", `${name} is still ai-accounts'`);
     const seen = [];
     const answer = { sentinel: name };
     const real = w.c.accounts[name];
@@ -42,21 +36,17 @@ test("R72 one delegate per moved service: every service of ai-accounts' R1–R23
     try {
       const args = [{ member: "ann", by: "ann", n: name }, "second", 3];
       assert.equal(w.c[name](...args), answer, `${name}: ai-accounts' own answer`);
-      assert.equal(seen.length, 1, `${name}: asked once`);
-      assert.deepEqual(seen[0], args, `${name}: its arguments unchanged`);
-      assert.equal(seen[0][0], args[0], `${name}: the same object`);
+      assert.deepEqual(seen, [args], `${name}: asked once, its arguments unchanged`);
     } finally { w.c.accounts[name] = real; }
   }
-  for (const name of [...SEAMS, "start", "migrate"])
-    assert.ok(!C.MOVED_TO_AI_ACCOUNTS.includes(name), `${name} is not a delegate`);
-  /* real calls: each answers as ai-accounts answers, byte for byte */
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-r72", by: "ann" });
-  for (const [name, a] of [["accountReferenceState", { member: "ann", viewer: "member:ann" }], ["aiKeepAwayState", undefined],
-                           ["groupKeySwitches", undefined], ["accountUsesOf", { owner: "member:ann" }], ["aiKeptAway", {}],
-                           ["groupKeyState", { viewer: "member:second" }], ["projectsKeptAway", { use: "ask" }]])
-    assert.deepEqual(await w.c[name](a), await w.c.accounts[name](a), name);
-  assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    await w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
+  for (const gone of ["accountReferenceSet", "accountReferenceRemove", "accountReferenceState", "accountReferenceFor", "subscriptionConnected",
+                      "subscriptionDisconnect", "subscriptionTokenHold", "subscriptionTokenRefused", "groupKeySet", "groupKeyRemove",
+                      "groupKeySwitch", "groupKeyState", "groupKeySwitches", "groupKeyNotice", "groupKeyNoticeSeen", "projectKeySet",
+                      "projectSigninSet", "projectAccountRemove", "projectAccountSwitch", "projectAccountState", "projectKeyNotice",
+                      "projectKeyNoticeSeen", "projectAccountsSuspended"])
+    assert.equal(typeof w.c[gone], "undefined", `${gone} left with ai-accounts' R8, R12, R13, R18 and R35`);
+  for (const name of ["sealText", "unsealText", "accountActBar", "accountServing", "servingAccountOf", "onAccountCleared", "start", "migrate"])
+    assert.ok(!C.MOVED_TO_AI_ACCOUNTS.includes(name), `${name} is a seam or a lifecycle call, not a delegate`);
 });
 
 test("R72 USE_KINDS and a frozen ACCOUNT_CHECKS view are re-exported from index.mjs only: the view is ai-accounts' AI_ACCOUNT_CHECKS with this module's own C-29 rows, each row the holder's own object; checks.mjs holds only its own; control: no other moved constant is answered", () => {
@@ -69,40 +59,9 @@ test("R72 USE_KINDS and a frozen ACCOUNT_CHECKS view are re-exported from index.
   assert.ok(Object.keys(own).every((k) => !(k in A.AI_ACCOUNT_CHECKS)), "no code in both");
   assert.notEqual(CHECKS.ACCOUNT_CHECKS, C.ACCOUNT_CHECKS, "checks.mjs answers its own rows, never the view");
   assert.ok(!("NOT_YOUR_ACCOUNT" in CHECKS.ACCOUNT_CHECKS) && "NOT_YOUR_ACCOUNT" in C.ACCOUNT_CHECKS);
-  for (const k of ["ACCOUNT_KINDS", "ACCOUNT_SWITCHES", "EXPLORE_VALUES", "USE_SWITCHES", "KEEP_AWAY_REASON", "SIGNIN_TOKEN_LENGTH",
+  for (const k of ["ACCOUNT_SWITCHES", "EXPLORE_VALUES", "USE_SWITCHES", "KEEP_AWAY_REASON", "SIGNIN_TOKEN_LENGTH",
                    "AI_WORDS", "CREDENTIALS_PROJECT_TABLES", "CREDENTIALS_HISTORY_TABLE"])
     assert.ok(!(k in C) && !(k in CHECKS), `${k} is not answered here`);
-});
-
-test("R72 credentialsOps answers the 24 moved op names through the delegates, each as ai-accounts' own route map answers it, its own ops after them and none sharing a name; control: an own op is credentials'", async () => {
-  const w = await world().group("ann");
-  const url = (q) => new URL(`http://x/?${q}`);
-  const movedOps = Object.keys(A.aiAccountsOps(w.c.accounts, url(""), null, {}));
-  assert.equal(movedOps.length, 24);
-  const ops = Object.keys(w.ops());
-  for (const op of movedOps) assert.ok(ops.includes(op), op);
-  assert.equal(ops.length, 53, "the 24 moved and the 29 own (R83 adds signerknown)");
-  /* each moved op calls the delegate, which answers ai-accounts' own: a sentinel through both maps, the same arguments */
-  for (const op of movedOps) {
-    const calls = [];
-    const saved = {};
-    for (const name of C.MOVED_TO_AI_ACCOUNTS) {
-      saved[name] = w.c.accounts[name];
-      w.c.accounts[name] = (...a) => { calls.push([name, a]); return { sentinel: op }; };
-    }
-    try {
-      const q = "by=ann&viewer=member:ann&member=ann&owner=member:ann&project=P&limit=5";
-      const body = { member: "ann", secret: "sk-x", on: true, project: "P" };
-      const viaCred = w.ops(q, body)[op]();
-      const viaThem = A.aiAccountsOps(w.c.accounts, url(q), body, {})[op]();
-      assert.deepEqual(viaCred, { sentinel: op }, op);
-      assert.deepEqual(viaThem, viaCred, op);
-      assert.equal(calls.length, 2, op);
-      assert.deepEqual(calls[0], calls[1], `${op}: the same service, the same arguments`);
-    } finally { Object.assign(w.c.accounts, saved); }
-  }
-  /* control: an own op of credentials' is answered by its own code */
-  assert.equal(w.ops("by=second&member=ann").passwordresetlink().member, "ann");
 });
 
 test("R73 credentialsOf makes ai-accounts on the same storage with the seal secret it is given, and migrate runs ai-accounts' migrate first; control: a world with no seal secret seals nothing", async () => {
@@ -120,7 +79,7 @@ test("R73 credentialsOf makes ai-accounts on the same storage with the seal secr
   w.c.declareTables = () => { order.push("credentials"); return own(); };
   w.c.migrate();
   assert.deepEqual(order, ["ai-accounts", "credentials"]);
-  for (const t of ["account_references", "group_key", "subscription_connections", "project_accounts", "account_changes"])
+  for (const t of ["ai_accounts", "account_changes", "ai_account_lists"])
     assert.ok(w.row(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, t), t);
 });
 
@@ -139,66 +98,16 @@ const runs = async (names) => {
   return { w, mint };
 };
 
-test("R73 a sign-in cleared by her disconnection revokes the member's live run credentials, inside the act, naming its actor, and no one else's; control: another member's run credential and her own R12 credential stay live", async () => {
-  const { w, mint } = await runs(["ann", "bob"]);
-  await w.signin("ann");
-  const a = mint("ann");
-  const b = mint("bob");
-  const own = w.c.aiCredentialMint({ who: "ann", tokenId: "ann-own", secretSha: "c".repeat(64), principalKind: "member" });
-  assert.equal(own.ok, true);
-  assert.equal(look(w, a.token).revoked, false);
-  assert.equal(w.c.accounts.subscriptionDisconnect({ member: "ann", by: "ann" }).disconnected, true);
-  assert.deepEqual([look(w, a.token).revoked, look(w, a.token).revokedBy], [true, "ann"], "revoked in the act, by its actor");
-  assert.equal(look(w, b.token).revoked, false, "control: bob's");
-  assert.equal(w.c.aiCredentialLook({ secretSha: "c".repeat(64) }).credential.revoked, false, "control: her R12 credential");
-});
-
-test("R73 a reference removed revokes the member's run credentials as a sign-in cleared does (every account of hers clears the same way), and no one else's", async () => {
-  const { w, mint } = await runs(["ann", "bob"]);
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  const a = mint("ann");
-  const b = mint("bob");
-  assert.equal(w.c.accounts.accountReferenceRemove({ member: "ann", by: "ann" }).ok, true);
-  assert.equal(look(w, a.token).revoked, true, "removed");
-  assert.equal(look(w, b.token).revoked, false, "control: bob's run is on his own account");
-});
-
-test("R73 a reference removed ends her standing grants, and a sign-in cleared while no reference is held ends them too; control: a sign-in cleared while her reference is held leaves her standing grant, and her ask grant is never ended by it", async () => {
-  const w = await world().group("ann", "bob");
-  const held = async (t) => (await w.c.aiGrantHeld({ token: t })).ok === true;
-  /* a reference removed */
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
-  const s = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
-  const ask = await w.c.aiGrantMint({ member: "ann", by: "ann", session: s });
-  const g1 = await w.c.aiGrantMintStanding({ member: "ann", question: "q" });
-  assert.equal(await held(g1.token), true);
-  /* control: her sign-in cleared while the reference is held leaves the standing grant */
-  await w.signin("ann");
-  assert.equal(w.c.accounts.subscriptionDisconnect({ member: "ann", by: "ann" }).disconnected, true);
-  assert.equal(await held(g1.token), true, "another account of hers still serves: the grant stands");
-  w.c.accounts.accountReferenceRemove({ member: "ann", by: "ann" });
-  assert.equal(await held(g1.token), false, "the reference removed ends it");
-  assert.equal(await held(ask.token), true, "control: an ask's grant is not a standing one");
-  /* a sign-in cleared while no reference is held */
-  await w.signin("bob");
-  w.c.accounts.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: "bob" });
-  const g2 = await w.c.aiGrantMintStanding({ member: "bob", question: "q" });
-  assert.equal(await held(g2.token), true);
-  w.c.accounts.subscriptionDisconnect({ member: "bob", by: "bob" });
-  assert.equal(await held(g2.token), false, "her sign-in served it: ended");
-});
-
 test("R73 the notice is told inside ai-accounts' act, credentials' listener first, and a later listener that throws leaves the act and credentials' work standing", async () => {
   const { w, mint } = await runs(["ann"]);
-  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
+  await w.served("ann");
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("member:ann"), switch: "standing", on: true, by: "ann" });
   const g = await w.c.aiGrantMintStanding({ member: "ann", question: "q" });
   const run = mint("ann");
   /* a second module's listener, registered after credentials', that throws */
   const notices = [];
   w.c.accounts.onAccountCleared("zz-probe", (n) => { notices.push(n); throw new Error("a listener that throws"); });
-  assert.equal(w.c.accounts.accountReferenceRemove({ member: "ann", by: "ann" }).ok, true, "the act stands");
+  assert.ok(w.removeAccounts("member:ann", "ann").every((r) => r.ok === true), "the act stands");
   assert.deepEqual(notices.map((n) => [n.member, n.why]), [["ann", "removed"]]);
   assert.equal((await w.c.aiGrantHeld({ token: g.token })).ok, false, "credentials' listener ran before the throwing one");
   assert.equal(look(w, run.token).revoked, true, "and its run credential revocation stands");
@@ -209,9 +118,10 @@ test("R73 ACCOUNT_CLEARED_WHY holds the five reasons ai-accounts R26 sends, froz
   assert.ok(Object.isFrozen(C.ACCOUNT_CLEARED_WHY));
 });
 
-/* The paths below take `ai-accounts` R26's notice as the provider sends it: with an account's own id, an owner who is not
-   a member, and `other_account_serves`. They are driven through the provider's real acts once its job lands (T53). */
-test.todo("R73 an account cleared, refused, revoked or found to resolve to nothing revokes the run credentials carrying its account_id, for each why; control: a run on another account keeps its credential, and an account cleared while another still serves leaves the standing grant (awaits ai-accounts R26)");
+test("R73 ACCOUNT_CLEARED_WHY holds the five reasons ai-accounts R26 sends, frozen (each is driven through its real act in t50-signin.test.mjs)", async () => {
+  assert.deepEqual([...C.ACCOUNT_CLEARED_WHY], ["removed", "disconnected", "revoked", "refused", "unresolved"]);
+  assert.ok(Object.isFrozen(C.ACCOUNT_CLEARED_WHY));
+});
 
 /* ===== R63: the run credential's account (T53; K5457) ===== */
 
@@ -232,4 +142,3 @@ test("R63 aiRunCredentialMint records the account that serves the segment on the
   assert.equal(w.snapshot(), before);
 });
 
-test.todo("R63 a run credential minted for account A is revoked when A's reference resolves to nothing; control: a credential for a run on account B is not (awaits ai-accounts R26 and R60)");

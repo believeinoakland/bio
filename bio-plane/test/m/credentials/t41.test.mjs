@@ -33,20 +33,20 @@ test("R32 R55 a member served by their sign-in is asked their sign-in's standing
   const off = await w.c.aiGrantMintStanding({ member: "cy", question: "what is new?" });
   assert.deepEqual([shape(off), off.member], [refusal("STANDING_SWITCH_OFF"), "cy"]);
   assert.equal(w.snapshot(), before, "nothing minted");
-  assert.equal(w.c.accounts.accountUsesSet({ owner: "member:cy", switch: "standing", on: true, by: "ann" }).reason, "NOT_YOUR_ACCOUNT");
-  assert.equal(w.c.accounts.accountUsesSet({ owner: "member:cy", switch: "standing", on: true, by: "admin" }).reason, "NOT_YOUR_ACCOUNT");
+  assert.equal(w.c.accounts.accountUsesSet({ account_id: w.idOf("member:cy"), switch: "standing", on: true, by: "ann" }).reason, "NOT_YOUR_ACCOUNT");
+  assert.equal(w.c.accounts.accountUsesSet({ account_id: w.idOf("member:cy"), switch: "standing", on: true, by: "admin" }).reason, "NOT_YOUR_ACCOUNT");
   assert.equal((await w.c.aiGrantMintStanding({ member: "cy", question: "q" })).reason, "STANDING_SWITCH_OFF", "still off");
-  assert.equal(w.c.accounts.accountUsesSet({ owner: "member:cy", switch: "standing", on: true, by: "cy" }).ok, true);
+  assert.equal(w.c.accounts.accountUsesSet({ account_id: w.idOf("member:cy"), switch: "standing", on: true, by: "cy" }).ok, true);
   const g = await w.c.aiGrantMintStanding({ member: "cy", question: "what is new?" });
   assert.equal(g.ok, true);
   assert.deepEqual([(await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer], ["member:cy"]);
   /* negative control: switched off again, refused again */
-  w.c.accounts.accountUsesSet({ owner: "member:cy", switch: "standing", on: false, by: "cy" });
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("member:cy"), switch: "standing", on: false, by: "cy" });
   assert.equal((await w.c.aiGrantMintStanding({ member: "cy", question: "q" })).reason, "STANDING_SWITCH_OFF");
   /* a grant her sign-in served ends when she disconnects it */
-  w.c.accounts.accountUsesSet({ owner: "member:cy", switch: "standing", on: true, by: "cy" });
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("member:cy"), switch: "standing", on: true, by: "cy" });
   const g2 = await w.c.aiGrantMintStanding({ member: "cy", question: "q" });
-  w.c.accounts.subscriptionDisconnect({ member: "cy", by: "cy" });
+  w.removeAccounts("member:cy", "cy");
   assert.equal((await w.c.aiGrantHeld({ token: g2.token })).reason, "GRANT_NOT_HELD");
 });
 

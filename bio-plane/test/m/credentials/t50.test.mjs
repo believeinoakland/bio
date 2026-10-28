@@ -17,7 +17,7 @@ async function projectWorld() {
   for (const [id, project, title] of [["recA", "A", "a record of A"], ["recB", "B", "a record of B"], ["recNone", null, "a record of none"]])
     w.core.addBundle(id, "finding", title, project);
   for (const id of ["second", "ann", "bob"])
-    assert.equal((await w.c.accounts.accountReferenceSet({ member: id, kind: "apikey", secret: `sk-${id}`, by: id })).ok, true);
+    assert.equal((await w.served(id)).ok, true);
   w.session = {};
   for (const id of ["second", "ann", "bob"]) w.session[id] = (await w.c.login({ handle: id, password: PASSWORD(id) })).token;
   return w;
@@ -45,7 +45,7 @@ test("R79 an ask's grant minted with a project makes the viewer membership R149 
   assert.deepEqual(seen(w, held.viewer), [true, true, true]);
   assert.equal(w.rows(`SELECT project FROM ai_grants WHERE project IS NULL`).length, 1, "no project: none recorded");
   /* control: a standing question's grant carries no project */
-  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("member:ann"), switch: "standing", on: true, by: "ann" });
   const st = await w.c.aiGrantMintStanding({ member: "ann", question: "q" });
   assert.equal((await w.c.aiGrantHeld({ token: st.token })).viewer, "member:ann");
 });
