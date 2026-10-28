@@ -11,6 +11,8 @@ import * as CHECKS from "../../../src/file-safety/checks.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { REASON_KEYS, PROVIDER_REASON_KEYS, rowKey } from "../../../src/file-safety/words.mjs";
 
+/* DEC-149's voice: a translation never speaks of "this instance", "this copy", "the plane" or "the instance" (built from its parts, so the test holds no sentence) */
+const NOT_DEC_149 = new RegExp([["this", "instance"], ["this", "copy"], ["the", "plane"], ["the", "instance"]].map(([a, b]) => `${a} ${b}`).join("|").replace("plane", "plane\\b"), "i");
 const { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } = FS;
 const SRC = new URL("../../../src/file-safety/", import.meta.url);
 const WARNED = { own_device: true, no_macros: true };
@@ -90,7 +92,7 @@ test("R24: every refusal and every R6 reason is named in this module's own table
   for (const [code, r] of rows) {
     assert.ok(Object.isFrozen(r), code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 30, code);
-    assert.doesNotMatch(r.translation, /this instance|this copy|the plane\b|the instance/i, `${code}: DEC-149's voice`);
+    assert.doesNotMatch(r.translation, NOT_DEC_149, `${code}: DEC-149's voice`);
     const [where, region] = r.where.split(" > ");
     const [file, fn] = where.split(" ");
     assert.equal(file, "src/file-safety/index.mjs", code);

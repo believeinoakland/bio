@@ -1197,7 +1197,7 @@ export class FileSafety {
         this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_route = NULL, render_sha = NULL, render_wait_at = NULL, render_started_at = NULL WHERE capture_sha = ?`, sha);
         this.#arm("render", () => this.renderWake(this.now()));
       }
-      return refusal("SAFE_VIEW_PENDING", "The safe picture is queued.", { captureSha: sha });
+      return refusal("SAFE_VIEW_PENDING", localize("file-safety.index.the_safe_picture_is_queued", "The safe picture is queued."), { captureSha: sha });
     }
     const description = { ok: true, kind: "picture", derived: true, of: sha, sha256: row.render_sha, content_type: meta.content_type, width: meta.width, height: meta.height,
                           file_says: meta.file_says, file_says_held: meta.file_says_held, left_out: meta.left_out, original };
@@ -1206,7 +1206,7 @@ export class FileSafety {
     const bytesOut = bucket ? await FileSafety.#bytesOf(await bucket.get(derivedKey(this.store, row.render_sha))) : null;
     if (!bytesOut) {
       this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_wait_at = NULL, render_started_at = NULL WHERE capture_sha = ? AND render_state = 'done'`, sha);
-      return refusal("SAFE_VIEW_PENDING", "The safe picture's bytes are not held; it is made again.", { captureSha: sha });
+      return refusal("SAFE_VIEW_PENDING", localize("file-safety.index.the_safe_pictures_bytes_are_not_held", "The safe picture's bytes are not held; it is made again."), { captureSha: sha });
     }
     return new Response(bytesOut, { status: 200, headers: { "content-type": meta.content_type, "x-derived-sha256": row.render_sha, "x-of": sha,
       "x-file-safety": asciiJson({ kind: "picture", derived: true, of: sha, sha256: row.render_sha, content_type: meta.content_type, width: meta.width, height: meta.height }) } });
