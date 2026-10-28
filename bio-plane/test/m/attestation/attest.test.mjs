@@ -37,14 +37,14 @@ test("R1: a digest must be 64 hex; a miss asks the record, which separates parts
   assert.deepEqual([reg.reason, reg.code, reg.check, reg.translation, attestStatus(reg)],
                    ["CAPTURE_HELD_IN_PARTS", "CAPTURE_HELD_IN_PARTS", "C-89.1", ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation, 409],
                    "the refusal carries its catalogue row");
-  assert.match(reg.detail, /Nothing here says the bytes are missing/);
+  assert.ok(reg.detail.includes(word("attestation.index.register_names_bytes")));
   /* Neither; and the record not asked. */
   const none = await attest({ sha256: s }, { head: empty.head, put: empty.put, fetch: n.fetch, holds: holds({ acquired: false, registered: false }) });
   assert.deepEqual([none.reason, attestStatus(none)], ["NO_SUCH_CAPTURE", 404]);
-  assert.match(none.detail, /register holds no row/);
+  assert.ok(none.detail.includes(word("attestation.index.no_such_capture")));
   const unasked = await attest({ sha256: s }, { head: empty.head, put: empty.put, fetch: n.fetch, holds: async () => { throw new Error("down"); } });
   assert.equal(unasked.reason, "NO_SUCH_CAPTURE");
-  assert.match(unasked.detail, /could not be asked/);
+  assert.ok(unasked.detail.includes(word("attestation.index.no_such_capture_unasked")));
   /* No refusal asked an authority: only the held cases reached the network. */
   assert.equal(n.calls.length, TSA_ENDPOINTS.length * 2);
 });
@@ -83,7 +83,7 @@ test("R2: the authorities in order, stopping at the first bound token, stored un
   assert.equal(createHash("sha256").update(store.held.get(tokenSha)).digest("hex"), tokenSha);
   assert.deepEqual([a.attestation.file, a.attestation.kind, a.attestation.over, a.attestation.service],
                    [`snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`, "rfc3161", s, TSA_ENDPOINTS[2]]);
-  assert.match(a.note, /does not claim to have verified the signature/);
+  assert.ok(a.note.includes(word("attestation.note.trusted_timestamp_capture")));
   /* Each request is a fresh RFC 3161 request over the digest, POSTed. */
   for (const c of n.calls) assert.equal(c.init.method, "POST");
   /* Every authority fails: NO_ATTESTATION, every attempt recorded, and a thrown fetch is an attempt, not a throw. */
@@ -212,7 +212,7 @@ test("R7: attestationsOf reads every attestation the capture's register entry re
     assert.deepEqual({ ...pa, note: undefined }, { ok: true, sha256: a.sha, registered: true, note: undefined, attestations: [
       { kind: "rfc3161", service: TSA_ENDPOINTS[1], file: plane.attestations[0].file, token_sha: tok, at: "2026-09-27T01:00:01Z", ...where },
       { kind: "co_archive", service: ARCHIVE_SERVICE, locator: plane.co_archive.locator, at: "2026-09-27T01:00:02Z", ...where }] });
-    assert.match(pa.note, /no timestamp authority or archive was asked, and no token's signature was verified/);
+    assert.ok(pa.note.includes(word("attestation.note.read_record_holds", { value: "" })));
     const pb = w.att.attestationsOf(b.sha);
     assert.deepEqual(pb.attestations, [
       { kind: "rfc3161", service: "https://tsa.example", file: "snapshots/b.tsr.b64", ...where },
@@ -223,7 +223,7 @@ test("R7: attestationsOf reads every attestation the capture's register entry re
     /* No home: not "none recorded", but undetermined, with why. */
     const none = w.att.attestationsOf(sha("never registered"));
     assert.deepEqual([none.ok, none.registered, none.attestations], [true, false, []]);
-    assert.match(none.undetermined, /no register row names this capture/);
+    assert.ok(none.undetermined.includes(word("attestation.register_row_names")));
     /* A home whose register cannot be read: undetermined, with why. */
     const w2 = world();
     const d = w2.cap("d");
@@ -233,7 +233,7 @@ test("R7: attestationsOf reads every attestation the capture's register entry re
               { path: "data/provenance.json", text: "{broken" }] });
     const u = w2.att.attestationsOf(d.sha);
     assert.deepEqual([u.registered, u.attestations], [true, []]);
-    assert.match(u.undetermined, /cannot be read as a register/);
+    assert.ok(u.undetermined.includes(word("attestation.home_cannot_read", { path: "data/provenance.json" })));
     /* It writes nothing. */
     const before = w.snapshot();
     w.att.attestationsOf(a.sha);
