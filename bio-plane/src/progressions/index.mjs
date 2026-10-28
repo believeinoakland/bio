@@ -1462,8 +1462,8 @@ export class Progressions {
   captureProgressions({ captureSha, nowMs } = {}) {
     /* R19 (N285): a request naming no digest is extraction's one answer (its R63), minted there */
     if (typeof captureSha !== "string" || !captureSha)
-      return noSha("progression membership is read for a captured document, by its capture sha256 "
-                   + "(op=captureprogressions&sha256=...)");
+      return noSha(localize("progressions.index.capture_sha_required",
+                   "progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)"));
     const now = this.nowMs(nowMs);
     const rows = this.#rows(
       `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
