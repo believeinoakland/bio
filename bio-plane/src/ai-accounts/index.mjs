@@ -134,7 +134,7 @@ export function aiAccountsOps(a, url, body, env) {
   };
 }
 
-const D = (accepts, requires, extra = {}) => ({ classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "substrate", fields: { accepts, requires }, ...extra });
+const D = (accepts, requires, extra = {}) => ({ classes: ["admin", "member"], machineClasses: [], mutating: true, needs: null, weight: "substrate", fields: { accepts, requires }, ...extra });
 
 /* R36, R37, R61, R71 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send,
    declared by their owner beside the ops map: each row's class, weight and description, its fields what the arm reads. The
