@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7560 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7574 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25026,6 +25026,20 @@ export const WORD_ROWS = Object.freeze([
   ["machinery-producers.index.words_the_request_expired_at","{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.",null,null,false,"code"],
   ["machinery-producers.index.words_the_request_is_held","{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.",null,null,false,"code"],
   ["machinery-producers.index.your_teams_civicsmith_signed_the","your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",null,null,false,"code"],
+  ["mail-reader.refusal.attachment_no_such","This message has no attachment {index}.",null,null,false,"code"],
+  ["mail-reader.refusal.attachment_not_cut","Attachment {index} is a message kept inside this Outlook message; it is read with the message, not on its own.",null,null,false,"code"],
+  ["mail-reader.refusal.boundary_bad","This message's parts are not separated the way it declares, so it cannot be read. Ask the sender for a fresh copy.",null,null,false,"code"],
+  ["mail-reader.refusal.empty","This file is empty, so there is no message to read.",null,null,false,"code"],
+  ["mail-reader.refusal.is_mailbox","This file is a mailbox of messages, not one message; it is read as a mailbox.",null,null,false,"code"],
+  ["mail-reader.refusal.mailbox_malformed","This file does not begin like a mailbox, so its messages cannot be found.",null,null,false,"code"],
+  ["mail-reader.refusal.mailbox_too_large","This mailbox is {size} bytes, more than the {bound} bytes a mailbox may be. Split it into smaller mailboxes and bring each in.",null,null,false,"code"],
+  ["mail-reader.refusal.mailbox_too_many","This mailbox holds more than {bound} messages, so it is not read. Split it into smaller mailboxes and bring each in.",null,null,false,"code"],
+  ["mail-reader.refusal.malformed","This message is damaged in a way that stops it being read. Ask the sender for a fresh copy.",null,null,false,"code"],
+  ["mail-reader.refusal.msg_container_bad","This Outlook message is damaged or cut short, so it cannot be read. Save it again from Outlook and bring it in.",null,null,false,"code"],
+  ["mail-reader.refusal.not_a_message","This file is not an email message, so it is not read as one.",null,null,false,"code"],
+  ["mail-reader.refusal.source_unreadable","This message could not be read from storage. Try again in a moment.",null,null,false,"code"],
+  ["mail-reader.refusal.too_large","This message is {size} bytes, more than the {bound} bytes a message may be. Save its attachments separately and bring them in one by one.",null,null,false,"code"],
+  ["mail-reader.refusal.too_nested","This message is nested more than {max} levels deep (it reached {depth}); nothing deeper is opened. Open the inner message and bring it in on its own.",null,null,false,"code"],
   ["member-roster.declared.adminendorse","section 4.7 governance — the subject is a proposed administrator, not a bundle",null,null,false,"code"],
   ["member-roster.declared.adminremove","section 4.7 governance — the subject is an administrator's standing, not a bundle",null,null,false,"code"],
   ["member-roster.declared.courtnoticeset","the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",null,null,false,"code"],
