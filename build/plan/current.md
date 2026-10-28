@@ -97,6 +97,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **office-readers**
 - T53-39 · K5565 · English in tests: its entry
 - T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
+- T53-537 · K5637 · fixtures reach the over-bound path at whatever figure is active (from `boundOf`, or a bound seam)
 - rows: `build/plan/T53-R1/office-readers.md`
 **odf-reader**
 - T53-40 · K5565 · English in tests: its entry
@@ -170,6 +171,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - rows: `build/plan/T53-R1/file-scanner.md`
 **reader-container**
 - T53-65 · N1266, N1267 · conversion readers, archives as streams
+- T53-538 · K5637, T53-523 · fleet member files: fleet-member.json, Worker front exporting `ReaderContainer`, wrangler.jsonc, build script, packages.json with every version read
 - rows: `build/plan/T53-R1/reader-container.md`
 **ooxml**
 - T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
