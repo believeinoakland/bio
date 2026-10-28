@@ -847,6 +847,11 @@ export class FileSafety {
     }
   }
 
+  /* Whether acquisition's records say an unpack opened this archive (a read of its own table, never of the archive). */
+  #openedArchive(sha) {
+    try { return !!this.acquisition && typeof this.acquisition.openedAmong === "function" && this.acquisition.openedAmong([sha]).has(sha); } catch { return false; }
+  }
+
   /* R6: the grade at this call, from the record's facts alone; `path` the archives above (R6's `archive_cycle`), `cache`
      each member's grade for this call. Never stored (R7). */
   async #grade(sha, path, cache) {
@@ -865,7 +870,13 @@ export class FileSafety {
     const registry = look && look.bytes && !look.tooLarge && (format === "zip" || format === "unknown" || format === "ole") ? FileSafety.#registryOf(look.bytes) : null;
     let active = null, archive = null;
     if (registry) add("format_unchecked", { why: registry.format, named: registry.named });
-    else if (format === "zip") {
+    else if (format === "zip" && look && look.tooLarge && !this.#openedArchive(sha)) {
+      /* T53-510 (K5704): an archive above `GRADE_READ_MAX` that no unpack has opened is graded by its central directory, read by ranges: acquisition lists
+         an archive it has not opened by profiling it whole, which the isolate does not hold at that size. It is not opened, so it is high as any unopened
+         archive is; an encrypted member shows in the directory. Its members are graded when the unpack has filed them. */
+      archive = { opened: false, entries: look.directory && Array.isArray(look.directory.entries) ? look.directory.entries.length : 0, members_low: 0, members_high: 0 };
+      add("archive_not_opened");
+    } else if (format === "zip") {
       const l = await this.#listing(sha);
       archive = { opened: false, entries: 0, members_low: 0, members_high: 0 };
       if (!l.ok) add("archive_not_opened", { refusal: l.code });
