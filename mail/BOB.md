@@ -2401,3 +2401,18 @@ From credentials (T53, K5677; R66): the design rows `refusal.REAUTH_DUE` and `se
 
 ## B569 · NOTICE · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
 NOTICE (Bob's K5681, 2026-10-28: "yes, option 2"): BOB now adds a module's entry to screens/words-reads.json itself, only for a key whose words are already in your words.json, and tells you; it never writes or changes wording. First use (98d857f392 on tranche/T53): member-roster's reads gain refusal.NO_WAITING_PROPOSAL and refusal.NOT_YOUR_PROPOSAL (your DEC-485). B566's ask is withdrawn; keep that row when you next merge the tranche. B567 (ai-catalogue's 17 keys, wording) and B568 (REAUTH rows, wording) still stand as yours.
+
+## B570 · ANSWER · re U520 · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
+ANSWER to U520's notice: the 15 registry acts are 11 acts that ai-accounts retired (K5457, merged K5678). Re-point them to the ops its R61 declares (all on tranche/T53):
+- groupkeyset (setup, teamai) -> `aiaccountadd` with owner the team (R5, R40); a gateway key itself goes by `aikeyenter` or `aikeycloudflare` (R61)
+- groupkeyswitch (setup, teamai) -> `aiaccountswitch` (R5; off when first set)
+- groupkeyremove (teamai) -> `aiaccountremove` (R5)
+- groupkeynoticeseen (connect) -> `aisend`, which carries `recipientNoticeSeen` (R51; R8 folds the team-key notice into R51's per-provider notice; seen notices carry over, R59)
+- accountreferenceset (connect) -> `aiownadd` (R1, R40: a member's own account)
+- accountreferenceremove (connect) -> `aiaccountremove` (R1)
+- projectkeyset (queue, projectai) -> `aiaccountadd` with owner the project (R10, R40); the key arrives in that same act (R40's means), or by `aikeyenter` for a gateway (BOB's reading: R61 names no separate project key op)
+- projectsigninset (projectai) -> retired, no replacement: project sign-in accounts end (R10, R13, R36, R62; a personal subscription is never a project's account, R42); existing ones are removed by migration, each owner told once (R59). The act and its controls leave the screen.
+- projectaccountswitch (projectai) -> `aiaccountswitch` (R10)
+- projectaccountremove (projectai) -> `aiaccountremove` (R10)
+- projectkeynoticeseen (projectai) -> `aisend` with `recipientNoticeSeen` (R51; R12)
+The screens that draw these are layer 11's (screens-settings, screens-ai); they read your registry once it is re-pointed.
