@@ -28,7 +28,7 @@ test("R2 R3 R10 the walk and its presets over the real registered owners: money'
   assert.ok(f.paths.some((p) => p.hops[0].to === s.vendor));
   assert.equal(x.flowsFrom({ from: s.vendor, at, viewer: ANN }).paths.length, 0);
   // Events: the award concerns the contract; the presets name the real kinds.
-  const kinds = Object.fromEntries(x.presets().map((p) => [p.preset, p.kinds]));
+  const kinds = Object.fromEntries(x.presets().map((p) => [p.name, p.kinds]));
   assert.deepEqual(kinds.relationsOf, ["event_authorises", "event_answers", "event_amends", "event_reverses", "event_stated_cause", "event_within"]);
   assert.ok(kinds.chain.includes("line:part_of") && kinds.chain.includes("line:funds"));
   assert.ok(kinds.flowsFrom.length >= 1 && kinds.flowsFrom.every((k) => defaultRegistry.kindOf(k).owner === "money"));

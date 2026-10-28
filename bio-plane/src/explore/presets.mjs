@@ -40,22 +40,12 @@ export function presetKinds(registry, name) {
 }
 
 /**
- * Each preset with its kind set as registered now (R10), and the plain-word name a screen draws (R37): `name` the words
- * by key, `preset` the id a caller sends back to run it (`words` is `name` as it was first answered).
+ * Each preset by name (the id a caller sends back to run it) with its kind set as registered now (R10), and the
+ * plain-word name a screen draws, read from a key (R37).
  * @param {any} registry
  */
 export function presets(registry) {
-  return Object.keys(PRESET_RULES).map((preset) => {
-    const words = /** @type {any} */ (PRESET_RULES)[preset].words;
-    return { preset, name: words, words, kinds: presetKinds(registry, preset) };
-  });
-}
-
-/** The id of the preset a caller names by its id or by the plain-word name `presets()` answered (R37); null when it names none. @param {unknown} named */
-export function presetIdOf(named) {
-  const ids = Object.keys(PRESET_RULES);
-  if (typeof named !== 'string') return null;
-  return ids.find((id) => id === named) ?? ids.find((id) => /** @type {any} */ (PRESET_RULES)[id].words === named) ?? null;
+  return Object.keys(PRESET_RULES).map((name) => ({ name, words: /** @type {any} */ (PRESET_RULES)[name].words, kinds: presetKinds(registry, name) }));
 }
 
 /** The one walk over a preset's set. */

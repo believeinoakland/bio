@@ -17,7 +17,7 @@ test("R10 chain reads duties' real power kind and walks an office's power throug
   const x = exploreOf(w.host, { registry: w.registry });
   const powerKind = w.registry.owners().find((o) => o.owner === "duties").kinds.find((k) => k.word === word("duties.word.holds_power")).kind;
   assert.equal(powerKind, "holds_power");
-  const chainKinds = x.presets().find((s) => s.preset === "chain").kinds;
+  const chainKinds = x.presets().find((s) => s.name === "chain").kinds;
   assert.ok(chainKinds.includes(powerKind), `chain names duties' registered ${powerKind}`);
   assert.equal(w.registry.kindOf(powerKind).owner, "duties");
   const r = x.chain({ from: office, at: { value: "2026-03-05", precision: "day", zone: ZONE }, viewer: BOB }); // after its adoption (the fixture clock, 2026-03-02)
