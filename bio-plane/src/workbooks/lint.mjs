@@ -4,7 +4,7 @@
 
 import { add } from "../calc-grammar/index.mjs";
 import { cellAt, cellName, numbersIn, aggregatesIn, referencesIn, plainDecimal, figureOf, sameDecimal, isFigureText } from "./cells.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const LINT_KINDS = Object.freeze(["short_range", "constant_in_formula", "hidden_input", "number_as_text",
   "error_value", "cross_foot"]);
@@ -78,8 +78,11 @@ export function lintFindings(ix, inputs = inputCells(ix)) {
       while (has(end + 1)) end++;
       if (start < lo || end > hi) {
         const name = (k) => (vertical ? cellName(k, r.c1) : cellName(r.r1, k));
-        out.push({ kind: "short_range", cell: ref(f), detail: `${fn} over ${name(lo)}:${name(hi)}, while the numbers run `
-          + `${name(start)}:${name(end)}${start < lo ? `, starting before it` : ""}${end > hi ? `, past its end` : ""}` });
+        const before = start < lo ? localize("workbooks.lint.starting_before", ", starting before it") : "";
+        const past = end > hi ? localize("workbooks.lint.past_its_end", ", past its end") : "";
+        out.push({ kind: "short_range", cell: ref(f), detail: localize("workbooks.lint.short_range",
+          "{fn} over {over}, while the numbers run {run}{before}{past}",
+          { fn, over: `${name(lo)}:${name(hi)}`, run: `${name(start)}:${name(end)}`, before, past }) });
       }
     }
   }
@@ -157,8 +160,9 @@ function crossFoot(ix) {
     if (!a || !b || sameDecimal(a, b)) continue;
     const corner = cellName(C[0].f.r, R[0].f.c);
     const show = (x) => `${x.sign === "-" ? "-" : ""}${x.value}`;
-    out.push({ kind: "cross_foot", cell: `${sheet}!${corner}`, detail: `the row totals in column ${cellName(1, R[0].f.c).replace(/1$/, "")} add to `
-      + `${show(a)}, the column totals in row ${C[0].f.r} to ${show(b)}, over ${cellName(rFrom, cFrom)}:${cellName(rTo, cTo)}` });
+    out.push({ kind: "cross_foot", cell: `${sheet}!${corner}`, detail: localize("workbooks.lint.cross_foot",
+      "the row totals in column {column} add to {rows}, the column totals in row {row} to {columns}, over {range}",
+      { column: cellName(1, R[0].f.c).replace(/1$/, ""), rows: show(a), row: C[0].f.r, columns: show(b), range: `${cellName(rFrom, cFrom)}:${cellName(rTo, cTo)}` }) });
   }
   return out;
 }
