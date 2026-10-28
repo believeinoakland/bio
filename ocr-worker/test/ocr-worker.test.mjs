@@ -1419,7 +1419,7 @@ console.log("\n--- B1 · R11, R12, R13, R19: the committed bundle boots, and the
     [false, true, true]);
   const wd = await workerCall("ocr-wasm-as-data", "/version");
   t("R13 R19 a wasm core that did not arrive compiled: engine_loaded false, and it says so",
-    [wd.body.engine_loaded, /did not arrive as a compiled module/.test(wd.body.engine_unavailable)], [false, true]);
+    [wd.body.engine_loaded, wd.body.engine_unavailable === word("ocr-worker.tessengine.the_wasm_core_did_not_arrive")], [false, true]);
   for (const worker of ["ocr-wrong-model", "ocr-wasm-as-data"]) {
     const r = await ask("texty", [0], worker);
     t(`R7.1 R19 ${worker}: every page is refused ENGINE_ABSENT, before its bytes are looked at`,
