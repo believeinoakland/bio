@@ -60,3 +60,15 @@ Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 3, module lines 1271
 
 Tests: 76/78. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 4, module lines 1271
+
+## Completion (2026-10-28)
+
+# doc-clean T53 report (CHANGE: T53-539)
+
+- T53-539: a PDF whose single value passes pdf-reader's `pdf.direct_object` bound (`objects().unresolved` entry with `over: "direct_object"`, `figure`) is refused `DOCUMENT_UNREADABLE` with a detail that names the object and the bound's figure, through the words key `doc-clean.pdf.object_num_gen_is_larger_than`; any other unresolved reference keeps its sentence. Test at the interface (round9.test.mjs): a page-tree array whose text passes the bound, the figure read from `boundOf("pdf", "direct_object")`, the detail equal to the key's sentence.
+- Not done / other modules: nothing new. T53-503's report (the module cannot hold 100 MB for `document.clean_bytes`/`part_bytes`) stands.
+
+**Met** · R13
+
+Tests: 77/79. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 5, module lines 1273
