@@ -1,6 +1,6 @@
 # file-scanner (T53)
 
-**Status** · session_018BhcecnyytTT3cMe1k3Zku · depth 2 · WORKING
+**Status** · session_018BhcecnyytTT3cMe1k3Zku · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -44,3 +44,18 @@ The earlier notes stand: BOB deletes `"file-scanner/test/on-own.test.mjs": 1` fr
 Tests: 104/117. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Inherited reds: ["R16 R8 /version states every read bound by name with its figure and its source, quoted from the table; no ceiling of the module is a literal","R16 the limits, by name; the bundle states the Worker's own limits once, equal to its configuration"]
 Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 3, module lines 7019
+
+## Completion (2026-10-28)
+
+# file-scanner · T53 · report (CHANGE: R16, R37)
+
+**R16.** The two assertions that pinned `SCAN_MAX_BYTES` (256 MiB, source `alpha`) now read the figure and its source from the table (`boundOf`, `READ_BOUNDS`), as K5624 says: `test/worker.test.mjs` (the limits list also reads the render pages and bytes by `boundOf`) and `test/scanner-states.test.mjs` (every read bound's source). No source change: `src/limits.mjs` already quotes the table. Suite green.
+
+**R37.** As in the previous completion: `test/render-fetch.test.mjs` ran against the real LibreOffice 24.2.7.2 and passed, with its control.
+
+Earlier notes stand: BOB deletes `"file-scanner/test/on-own.test.mjs": 1` from `build/tests-english-baseline.json`.
+
+**Met** · R16, R37
+
+Tests: 106/117. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 4, module lines 7020
