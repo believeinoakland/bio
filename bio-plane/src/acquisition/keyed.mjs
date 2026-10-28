@@ -9,13 +9,15 @@
  * credential out of every answer).
  *
  * Every refusal is an answer `{ok: false, reason, ...}`, never a throw. */
-import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, isMachineIdentity, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { governedFetch as hostGovernedFetch } from "../host-governor/index.mjs";
-import { civicsmithUserAgent, ARCHIVE_CHECKS } from "./checks.mjs";
+import { civicsmithUserAgent, ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { ledgerOf } from "./unpack.mjs";
+import { ledgerOf, partsWriter } from "./unpack.mjs";
+import { normalizeAddress } from "../subresources.mjs";
+import { profileOf, profileView } from "./index.mjs";
 
 /* R36: each keyed service this copy can speak to: its host(s), and how its key rides a request. The names are credentials'
    `KEYED_SERVICES` (its R29, R84); a service that this table and credentials do not both know is not reached. CourtListener's
@@ -77,6 +79,9 @@ const KEYED_ANSWER_MAX = 8 * 1024 * 1024;
 const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, ...extra, detail });
 const hostOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return null; } };
 
+/* R137: the bytes a keyed answer was read from, kept beside the answer object (never in it) for `keyedCapture`, which files exactly the bytes the service served */
+const RAW = new WeakMap();
+
 /* The service's answer, read as text within the bound; `{oversize}` past it, `{failed}` when the stream breaks. */
 async function readBounded(res, max = KEYED_ANSWER_MAX) {
   const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
@@ -95,7 +100,7 @@ async function readBounded(res, max = KEYED_ANSWER_MAX) {
   const all = new Uint8Array(bytes);
   let at = 0;
   for (const c of chunks) { all.set(c, at); at += c.length; }
-  return { text: new TextDecoder("utf-8", { fatal: false }).decode(all) };
+  return { text: new TextDecoder("utf-8", { fatal: false }).decode(all), bytes: all };
 }
 
 /** R36, R130, R131: `keyedFetch(store, {service, request, purpose, viewer, standing})` fetches `request` (`{url, method, form}`: a public
@@ -216,7 +221,9 @@ export async function keyedFetch(store, { service = null, request = null, purpos
   if (!(res.status >= 200 && res.status < 300))
     return { ok: false, reason: "SOURCE_REFUSED", service, status: res.status, content_type: contentType, retry_after: retryAfter,
              text: body.text.slice(0, 2000), detail: localize("acquisition.keyed.the_service_answered_status", "the service answered {status}", { status: String(res.status) }) };
-  return { ok: true, service, status: res.status, content_type: contentType, retry_after: retryAfter, text: body.text };
+  const answer = { ok: true, service, status: res.status, content_type: contentType, retry_after: retryAfter, text: body.text };
+  if (body.bytes) RAW.set(answer, body.bytes);
+  return answer;
 }
 
 /** R131: `keyedServiceUsage(store, {service, at})` answers the calls counted and the limits stated for a service, never a key:
@@ -300,4 +307,73 @@ export async function citationLookup(store, { text = null, viewer = null, ownHos
     basis: "service_answer", verified: false,
   }));
   return { ok: true, service: "courtlistener", citations, verified: false, label: CITATION_LOOKUP_LABEL };
+}
+
+/* ---------------------------------------------------------------- R137: a keyed answer filed as a capture */
+
+/**
+ * R137: `keyedCapture(store, {service, request, purpose, viewer, standing, at}, opts)` files a keyed service's answer as ONE capture, graded by its receipt route like any fetched
+ * capture: the daily check of a followed case (`purpose: "docket-entries"`, `standing: {follow}`, R36) and a member's refresh of it. The stored bytes are the bytes the service
+ * served, hashed as written (R10); the receipt names the route `direct` (this copy fetched them, from the service's host, through the host governor and R9's agent), the address the
+ * profile's template made and the instant retrieved; the key is in no address, receipt, document or capture. The document takes the follow as its authority and has one hop,
+ * "the service served bytes with this fingerprint for <locator> at <retrieved>"; nothing is reduced, so it carries no `capture.reduced`, and R26's primary-evidence rule holds.
+ * Bytes the record already holds are `existed` and nothing new is filed. Nothing is filed for an answer that is not a 200 with a body, or when the service is off (then nothing is sent).
+ * A larger answer than the service's bound (`answer_max`) is `TOO_LARGE`, not cut: a keyed answer is a page, not a register file.
+ */
+export async function keyedCapture(store, args = {}, opts = {}) {
+  try {
+    const a = args && typeof args === "object" ? args : {};
+    const k = await keyedFetch(store, { service: a.service, request: a.request, purpose: a.purpose, viewer: a.viewer, standing: a.standing, ownHosts: a.ownHosts ?? (opts && opts.ownHosts) ?? null, at: a.at ?? null });
+    if (!k.ok) return k;
+    const bytes = RAW.get(k);
+    if (k.status !== 200 || !bytes) return refuse("NO_BODY", localize("acquisition.keyed.no_body", "the service answered with no document, so nothing was filed"), { service: k.service, status: k.status });
+    if (bytes.length === 0) return refuse("EMPTY", localize("acquisition.keyed.empty_answer", "the service's answer was empty, so nothing was filed"), { service: k.service });
+    const ev = store && store.core && typeof store.core.evidenceStore === "function" ? store.core.evidenceStore() : null;
+    if (!ev) return refuse("EVIDENCE_STORAGE_NOT_CONFIGURED", localize("acquisition.keyed.no_storage", "your team's Civicsmith has no evidence storage configured, so nothing was filed"));
+    const w = partsWriter(ev);
+    await w.write(bytes);
+    const stored = await w.finish();
+    const p = store.provenance;
+    let before = false;
+    try { const h = p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: stored.sha256 }) : null; before = !!(h && (h.registered === true || h.acquired === true)); } catch { before = false; }
+    if (before) return { ok: true, existed: true, service: k.service, capture: { sha256: stored.sha256 } };
+    const env = (store && store.env) || {};
+    const locator = a.request.url;
+    const retrieved = new Date(nowMsOf(store, a.at ?? null)).toISOString().replace(/\.\d+Z$/, "Z");
+    try { await p?.recordReceipt?.({ address: locator, addressNorm: normalizeAddress(locator), captureSha: stored.sha256, retrieved, via: "direct", retrievalLocator: locator }); }
+    catch { /* an unwritten receipt is not a failed capture */ }
+    const follow = a.standing && typeof a.standing.follow === "string" && a.standing.follow.trim() ? a.standing.follow.trim().slice(0, 200) : null;
+    const machine = a.viewer !== undefined && a.viewer !== null && isMachineIdentity(a.viewer);
+    const multipart = stored.parts.length > 1;
+    const ct = k.content_type && /^[a-z]+\/[a-z0-9.+-]+$/.test(k.content_type) ? k.content_type : null;
+    const profile = await profileOf({ ev, sha: stored.sha256, ct, total: stored.bytes, multipart, headers: ct ? { "content-type": ct } : {}, locator, view: profileView(store.core), retrieved,
+                                      origin: "fetch", declaredType: ct, parts: stored.parts });
+    const name = `keyed-${stored.sha256.slice(0, 16)}`;
+    const document = {
+      file: `snapshots/${name}`, locator, retrieved, profile,
+      ...(follow ? { authority: follow } : {}),
+      authority_state: follow ? "determined" : "undetermined",
+      authority_basis: localize("acquisition.keyed.authority_basis", "the follow {follow} asked for this check, {retrieved}", { follow: String(follow ?? ""), retrieved }),
+      provenance_chain: [{
+        who: firstHopWho(env.INSTANCE_NAME, env.VERSION),
+        asserts: localize("acquisition.keyed.first_hop_asserts", "the service served bytes with this fingerprint for {locator} at {retrieved}", { locator: String(locator), retrieved }),
+        evidence: localize("acquisition.keyed.first_hop_evidence", "first-party https fetch from the service's host through the host governor, hashed at receipt; the team's key rode the request and is not recorded"),
+        bound: false, via: "direct",
+      }],
+      capture: {
+        method: localize("acquisition.keyed.method", "bio-plane keyed fetch, https, hashed at receipt"),
+        grade: EARNED_CAPTURE_CEILING,
+        actor_class: machine ? "daemon" : "member", actor: machine ? null : (typeof a.viewer === "string" ? a.viewer : null),
+        sha256: stored.sha256, encoding: "binary", bytes: stored.bytes, ...(ct ? { content_type: ct } : {}),
+        keyed: { service: k.service, purpose: a.purpose },
+      },
+      ...(multipart ? { parts: stored.parts.map((x, i) => ({ file: `snapshots/${name}.part${String(i).padStart(3, "0")}`, sha256: x.sha256, bytes: x.bytes })) } : {}),
+      origin: { kind: "named_request", ...(follow ? { follow } : {}) },
+      attestation_attempts: [],
+    };
+    return { ok: true, existed: false, service: k.service, document };
+  } catch (e) {
+    if (e && e.storeFailure) return { ok: false, reason: "WAITING", detail: localize("acquisition.keyed.store_waiting", "the record could not take the answer just now; it is asked again on the next run") };
+    return refuse("KEYED_CAPTURE_UNREADABLE", localize("acquisition.keyed.capture_unreadable", "the service's answer could not be filed ({why})", { why: String(e && e.message || e).slice(0, 120) }));
+  }
 }

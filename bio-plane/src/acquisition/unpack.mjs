@@ -24,6 +24,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
 import { profileOf, profileView, evidenceStorageAbsent, textTypeOf, refusedFacts, REFUSE_HEAD_BYTES } from "./index.mjs";
+import { memberRow } from "./member.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
@@ -102,7 +103,7 @@ const json = (v) => { try { return v == null ? null : JSON.parse(v); } catch { r
 const FIGURES = Object.freeze({ ...ARCHIVE_LIMITS, ...UNPACK_LIMITS });
 
 /** R29: a refusal or a not-filed entry with its row. `limit` is a limit's figure, never in the words. */
-function rowed(code, extra = {}) {
+export function rowed(code, extra = {}) {
   const row = ARCHIVE_CHECKS[code];
   const limit = Object.prototype.hasOwnProperty.call(FIGURES, code) ? { limit: FIGURES[code] } : {};
   return row ? { reason: code, code, check: row.check, translation: row.translation, ...limit, ...extra }
@@ -313,8 +314,10 @@ export class Acquisition {
   }
 
   /** R38, R40: one entry's outcome, with the call's, the tree's and the day's counts it costs, in one transaction. */
-  settle(archiveSha, index, { state, code = null, detail = null, sha256 = null, target = null, at, cost = null, root = null, day = null }) {
+  settle(archiveSha, index, { state, code = null, detail = null, sha256 = null, target = null, at, cost = null, root = null, day = null, register = null }) {
     return this.#tx(() => {
+      /* R136: the member's job row is registered in this very function, so the row commits or rolls back with the entry's outcome */
+      if (typeof register === "function") register();
       /* R122: a file filed is offered to its caller once by this settling */
       this.#sql.exec(`UPDATE archive_entries SET state=?, code=?, detail=?, sha256=?, target=?, at=?, limit_name=NULL, offers=?
                        WHERE archive_sha=? AND idx=?`, state, code, detail, sha256, target, at, state === "filed" ? 1 : null, archiveSha, index);
@@ -688,7 +691,16 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const day = at.slice(0, 10);
   const call = { entries: 0, bytes: 0 };
   let stoppedOn = null, stoppedForCall = false;
-  const ctx = { st, inst, ev, sha, h, at, mode, by, cls, member, out, source,
+  /* R136 (R38 amended): each entry it reaches registers its `member` job row, idempotently, inside the function that records the entry's outcome; the registrar is the
+     store's `registerJob`, else the call's. A registrar that refuses leaves the outcome as recorded: the row is the job's, never the entry's. */
+  const registrar = typeof st.registerJob === "function" ? (e) => st.registerJob(e) : internal && typeof internal.registerJob === "function" ? internal.registerJob : null;
+  const memberRegister = (row) => {
+    if (!registrar) return null;
+    const jr = memberRow({ container: sha, container_kind: "archive", index: row.index, name_stated: row.name ?? null, project: internal && internal.project });
+    return jr ? () => { try { const r = registrar(jr); if (r && r.ok === true) memberRows++; } catch { /* the row is the job's, never the entry's */ } } : null;
+  };
+  let memberRows = 0;
+  const ctx = { st, inst, ev, sha, h, at, mode, by, cls, member, out, source, memberRegister,
                 pv: profileView(core) };
 
   /* R40: an archive deeper than the published depth is filed as a file and never opened, whoever asks. */
@@ -717,13 +729,14 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
     }
   }
   for (const r of stoppedOn ? [] : waitingRows) {
+    if (internal && Number.isSafeInteger(internal.only) && r.idx !== internal.only) continue;   // R136: `fileMember` files one entry
     const row = rowsByIndex.get(r.idx);
     if (!row) continue;
     /* DEC-49 REGION is-entry-verdict */
     if (row.verdict === "directory") { inst.settle(sha, row.index, { state: "folder", at }); continue; }
     if (row.verdict === "symlink") { inst.settle(sha, row.index, { state: "link", target: await linkTarget(source, row), at }); continue; }
     if (NOT_CUT.includes(row.verdict)) {
-      inst.settle(sha, row.index, { state: "not_filed", code: row.verdict, at });
+      inst.settle(sha, row.index, { state: "not_filed", code: row.verdict, at, register: memberRegister(row) });
       out.not_filed.push({ index: row.index, ...rowed(row.verdict) });
       continue;
     }
@@ -772,6 +785,11 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
         catch { /* an unqueued continuation waits for a member; it never fails the run */ }
       }
     }
+  }
+  /* R116 (G175), R136: every row the registrar accepted is followed, after the commit, by the plane's `armJobs`, so owed work is due at once */
+  if (memberRows) {
+    const arm = typeof st.armJobs === "function" ? () => st.armJobs() : internal && typeof internal.armJobs === "function" ? internal.armJobs : null;
+    if (arm) { try { await arm(); } catch { /* the next alarm arms it */ } }
   }
   return {
     ok: true, archive, documents: out.documents, already_held: out.already_held, not_filed: out.not_filed, nested: out.nested,
@@ -830,7 +848,7 @@ async function cutOne(ctx, row, cost) {
     const code = verdict.ok ? "ARCHIVE_UNREADABLE" : verdict.why === "MEMBER_CORRUPT" ? "MEMBER_CORRUPT"
       : NOT_CUT.includes(verdict.why) ? verdict.why : "ARCHIVE_UNREADABLE";
     const detail = verdict.ok ? word("acquisition.text.evidence_store_hold") : (verdict.detail ?? verdict.why ?? null);
-    inst.settle(sha, row.index, { state: "not_filed", code, detail, at, ...counted });
+    inst.settle(sha, row.index, { state: "not_filed", code, detail, at, ...counted, register: ctx.memberRegister(row) });
     out.not_filed.push({ index: row.index, ...rowed(code, { detail }) });
     return;
   }
@@ -841,7 +859,7 @@ async function cutOne(ctx, row, cost) {
      stored on the way stay content-addressed and unnamed, as a corrupt member's do. */
   const refused = await refusedMember(ev, stored, row);
   if (refused) {
-    inst.settle(sha, row.index, { state: "not_filed", code: "FILE_TYPE_REFUSED", detail: refused.detail, at, ...counted });
+    inst.settle(sha, row.index, { state: "not_filed", code: "FILE_TYPE_REFUSED", detail: refused.detail, at, ...counted, register: ctx.memberRegister(row) });
     out.not_filed.push({ index: row.index, ...rowed("FILE_TYPE_REFUSED", { detail: refused.detail, kind: refused.kind, kind_text: refused.kind_text, reason_text: refused.reason_text }) });
     return;
   }
@@ -859,12 +877,12 @@ async function cutOne(ctx, row, cost) {
   const before = registered || inst.filedBefore(fileSha) || out.documents.some((d) => d.capture.sha256 === fileSha);
   try { await p?.recordReceipt?.(receipt); } catch { /* an unwritten receipt leaves the grade unanswered, never the cut undone */ }
   if (before) {
-    inst.settle(sha, row.index, { state: "already_held", sha256: fileSha, at, ...counted });
+    inst.settle(sha, row.index, { state: "already_held", sha256: fileSha, at, ...counted, register: ctx.memberRegister(row) });
     out.already_held.push({ index: row.index, sha256: fileSha });
     return;
   }
   const document = await fileDocument(ctx, row, stored, receipt);
-  inst.settle(sha, row.index, { state: "filed", sha256: fileSha, at, ...counted });
+  inst.settle(sha, row.index, { state: "filed", sha256: fileSha, at, ...counted, register: ctx.memberRegister(row) });
   out.documents.push(document);
   if (document.profile && document.profile.format && document.profile.format.format === "zip") out.nested.push(fileSha);
 }

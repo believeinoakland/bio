@@ -72,8 +72,10 @@ import { boundOf, statement } from "../read-bounds.mjs";
 export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS,
          DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 /* R36, R37 (T33-21, K1449): the keyed-service fetch path and its first client. */
+export { limitsByKind } from "./limits.mjs";
+export { fileMember, memberRow, MEMBER_KIND, CONTAINER_KINDS } from "./member.mjs";
 export { streamRegister, probeRegister, sourceChanged, REGISTER_STREAM_MAX, REGISTER_SEGMENT_MAX, REGISTER_PURPOSE, REGISTER_HOPS_MAX } from "./register.mjs";
-export { keyedFetch, keyedServiceUsage, citationLookup, KEYED_PURPOSES, POLL_SHARE_DEFAULT, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
+export { keyedFetch, keyedCapture, keyedServiceUsage, citationLookup, KEYED_PURPOSES, POLL_SHARE_DEFAULT, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
@@ -2022,6 +2024,7 @@ async function acquireRun(cap, body0, opts0, t) {
     { const owe = oweOf(cap, opts); if (owe) await owe({ kind: "unpack", sha }); else noteJob(opts, "unpack", "NO_REGISTRAR"); }
     try {
       unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
+        ...(registrarOf(cap, opts) ? { registerJob: registrarOf(cap, opts) } : {}), ...(armerOf(cap, opts) ? { armJobs: armerOf(cap, opts) } : {}),
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
         ...(oweOf(cap, opts) ? { owedLater: oweOf(cap, opts) } : {}),
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),

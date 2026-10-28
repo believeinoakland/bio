@@ -368,6 +368,13 @@ export const ARCHIVE_CHECKS = Object.freeze({
     where: at('is-challenge-page'),
     translation: localize("refusal.CHALLENGE_PAGE", "The site asked for proof that a person is asking, so nothing was saved. Open the page yourself and add the file you get."),
   }),
+  /* R136 (T53; N824): a member of a message that could not be cut out of it (an embedded Outlook message is read with its message, not cut; a damaged
+     attachment). C-139.24; BOB confirms the number at the close. */
+  MEMBER_NOT_CUT: Object.freeze({
+    check: 'C-139.24',
+    where: "src/acquisition/member.mjs fileMember > is-member-cut",
+    translation: localize("refusal.MEMBER_NOT_CUT", "Your team's Civicsmith could not cut this attachment out of its message, so nothing was saved for it. Open the message yourself and add the file."),
+  }),
 });
 
 /* R10, R96 (C5; K4370): a capture of several parts the store could not keep whole. Nothing is filed and the parts are named by

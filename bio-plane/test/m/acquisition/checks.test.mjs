@@ -26,12 +26,12 @@ const EXPECTED = {
   MEMBER_MAX: "C-139.9", ARCHIVE_RATIO_MAX: "C-139.10", ARCHIVE_ENTRIES_MAX: "C-139.11", ARCHIVE_TOTAL_MAX: "C-139.12",
   ARCHIVE_DEPTH_MAX: "C-139.13", ARCHIVE_TREE_TOTAL_MAX: "C-139.14", ARCHIVE_TREE_ENTRIES_MAX: "C-139.15",
   UNPACK_DAILY_BYTES: "C-139.16", UNPACK_DAILY_ENTRIES: "C-139.17", OWN_HOST_REFUSED: "C-139.18", CO_ARCHIVE_SETTING_INVALID: "C-139.19",
-  NOT_AN_ARCHIVE: "C-139.20", BAD_FOR: "C-139.21", FILE_TYPE_REFUSED: "C-139.22", CHALLENGE_PAGE: "C-139.23",
+  NOT_AN_ARCHIVE: "C-139.20", BAD_FOR: "C-139.21", FILE_TYPE_REFUSED: "C-139.22", CHALLENGE_PAGE: "C-139.23", MEMBER_NOT_CUT: "C-139.24",
   /* R10, R96 (C5, K4370): the capture the store could not keep whole; its row is checks.mjs's CAPTURE_KEEP_CHECKS, tested in fix3-t51.test.mjs */
   CAPTURE_NOT_KEPT: "C-154.1",
 };
 
-test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.23 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
+test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.24 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
   assert.deepEqual(Object.keys(RENDER_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("RENDER_")).sort());
@@ -41,13 +41,13 @@ test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.
   assert.deepEqual(Object.keys(ARCHIVE_CHECKS), Object.keys(EXPECTED).filter((k) => EXPECTED[k].startsWith("C-139.")), "C-139, in order");
   /* N738 (K2027): C-137 is following's alone; no row of this module carries a C-137 id, and the renumbering kept each row's order */
   assert.deepEqual(Object.values(ACQUISITION_CHECKS).filter((r) => /^C-137\b/.test(r.check)), []);
-  assert.deepEqual(Object.values(ARCHIVE_CHECKS).map((r) => r.check), Array.from({ length: 23 }, (_, i) => `C-139.${i + 1}`));
+  assert.deepEqual(Object.values(ARCHIVE_CHECKS).map((r) => r.check), Array.from({ length: 24 }, (_, i) => `C-139.${i + 1}`));
   for (const [code, row] of Object.entries(ACQUISITION_CHECKS)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
     /* plan rule 6 (N1116, R13): the member's words are the design's sentence for this refusal, read by key, never typed here */
     assert.ok(hasWord(`refusal.${code}`), `${code}: the list holds refusal.${code}`);
     assert.equal(row.translation, word(`refusal.${code}`), `${code}: read through word()`);
-    assert.match(row.where, /^src\/acquisition\/(index|unpack)\.mjs (acquire|evidenceStorageAbsent|unpack|archiveList|coArchiveSet) > is-[a-z-]+/, code);
+    assert.match(row.where, /^src\/acquisition\/(index|unpack|member)\.mjs (acquire|evidenceStorageAbsent|unpack|archiveList|coArchiveSet|fileMember) > is-[a-z-]+/, code);
     assert.ok(Object.isFrozen(row), `${code} is frozen`);
     assert.ok(!/oakland|alameda/i.test(row.translation), `${code}: R30, no place in outward text`);
   }

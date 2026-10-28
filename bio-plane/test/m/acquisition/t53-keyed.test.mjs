@@ -176,3 +176,55 @@ test("R84 R130 T53-547: the officers lookup's service id is ca-officers; it reac
   /* credentials' own list names both services */
   assert.equal((await keyedFetch(w.store, { service: "openfec", purpose: "officers-lookup", viewer: "member:m1" })).reason, "UNKNOWN_KEYED_SERVICE");
 });
+
+/* ---------------- R137 ---------------- */
+import { keyedCapture } from "../../../src/acquisition/index.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+
+const ENTRIES = JSON.stringify({ count: 2, results: [{ id: 1, description: "Order setting hearing" }, { id: 2, description: "Notice of appearance" }] });
+const served = (body, status = 200, headers = {}) => () => new Response(body, { status, headers: { "content-type": "application/json", ...headers } });
+const keyAnywhere = (w, x) => JSON.stringify([x, w.prov.receipts, w.store.state]) + [...w.b.held.values()].map((v) => new TextDecoder().decode(v)).join("\n");
+
+test("R137: the daily check of a followed case is filed as one capture: the bytes the service served, a `direct` receipt, one hop, the follow as authority; no key anywhere; a second check with identical bytes files nothing new", async () => {
+  const { w, follows } = setup();
+  follows.add("dkt-1");
+  const x = await call(w, { [DOCKET("dkt-1")]: served(ENTRIES) }, (s) => keyedCapture(s, daily("dkt-1")));
+  assert.deepEqual([x.out.ok, x.out.existed], [true, false], JSON.stringify(x.out).slice(0, 300));
+  const d = x.out.document;
+  assert.equal(d.capture.sha256, await (async () => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ENTRIES)))].map((b) => b.toString(16).padStart(2, "0")).join(""))(), "the stored bytes are the bytes the service served");
+  assert.equal(new TextDecoder().decode(w.bytesOf(d.capture.sha256)), ENTRIES);
+  assert.equal(d.capture.grade, EARNED_CAPTURE_CEILING);
+  assert.equal(d.capture.reduced, undefined, "nothing is reduced");
+  assert.deepEqual([d.authority, d.authority_state, d.provenance_chain.length, d.provenance_chain[0].via], ["dkt-1", "determined", 1, "direct"]);
+  assert.match(d.provenance_chain[0].asserts, /the service served bytes with this fingerprint for https:\/\/www\.courtlistener\.com/);
+  assert.deepEqual(w.prov.receipts.map((r) => [r.via, r.address, r.captureSha]), [["direct", DOCKET("dkt-1"), d.capture.sha256]], "the receipt names the route direct");
+  assert.equal(d.locator, DOCKET("dkt-1"));
+  assert.ok(!keyAnywhere(w, x.out).includes(KEY), "the key is in no address, receipt, document or capture");
+  assert.deepEqual(d.origin, { kind: "named_request", follow: "dkt-1" });
+  /* the next day, identical bytes: existed, nothing new filed, no second receipt */
+  const again = await call(w, { [DOCKET("dkt-1")]: served(ENTRIES) }, (s) => keyedCapture(s, daily("dkt-1", { at: T0 + DAY })));
+  assert.deepEqual([again.out.ok, again.out.existed, again.out.document, again.out.capture.sha256], [true, true, undefined, d.capture.sha256]);
+  assert.equal(w.prov.receipts.length, 1);
+  /* changed bytes are a new capture */
+  const changed = await call(w, { [DOCKET("dkt-1")]: served(ENTRIES.replace("Order setting", "Order continuing")) }, (s) => keyedCapture(s, daily("dkt-1", { at: T0 + 2 * DAY })));
+  assert.deepEqual([changed.out.ok, changed.out.existed], [true, false]);
+  assert.equal(w.prov.receipts.length, 2);
+});
+
+test("R137: an answer that is not a 200 with a body, a service switched off, and a case no one follows each file nothing; a member's refresh is filed the same way", async () => {
+  const { w, follows } = setup();
+  follows.add("dkt-1");
+  for (const [what, route] of [["a 429", served("slow", 429)], ["an empty body", served("")], ["a 404", served("none", 404)]]) {
+    const x = await call(w, { [DOCKET("dkt-1")]: route }, (s) => keyedCapture(s, daily("dkt-1", { at: T0 + 3 * DAY + (what.length * 1000) })));
+    assert.equal(x.out.ok, false, what);
+    assert.deepEqual([w.prov.receipts.length, w.b.calls.filter((c) => c[0] === "put").length], [0, 0], `${what}: nothing filed`);
+  }
+  const off = setup({ on: false });
+  off.follows.add("dkt-1");
+  const o = await call(off.w, { [DOCKET("dkt-1")]: served(ENTRIES) }, (s) => keyedCapture(s, daily("dkt-1")));
+  assert.deepEqual([o.out.reason, o.net.seen.length, off.w.prov.receipts.length], ["KEYED_SERVICE_OFF", 0, 0], "the service off sends nothing");
+  const nobody = await call(w, { [DOCKET("dkt-9")]: served(ENTRIES) }, (s) => keyedCapture(s, daily("dkt-9")));
+  assert.deepEqual([nobody.out.reason, nobody.net.seen.length], ["NOT_PERMITTED", 0]);
+  const mine = await call(w, { [DOCKET("dkt-1")]: served(ENTRIES) }, (s) => keyedCapture(s, daily("dkt-1", { viewer: "member:m1", standing: null })));
+  assert.deepEqual([mine.out.ok, mine.out.document.capture.actor_class, mine.out.document.capture.actor], [true, "member", "member:m1"]);
+});

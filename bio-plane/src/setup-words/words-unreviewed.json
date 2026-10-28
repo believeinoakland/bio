@@ -68,637 +68,938 @@
       "en": "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1192
+      "line": 1194
     },
     {
       "id": "acquisition.index.a_sweep_origin_acquire_names",
       "en": "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1130
+      "line": 1132
     },
     {
       "id": "acquisition.index.acquire_failed",
       "en": "the capture stopped on an error ({detail}); nothing is known to have been filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1037
+      "line": 1039
     },
     {
       "id": "acquisition.index.an_archive_sourced_capture_names",
       "en": "an archive-sourced capture names the document address, not a replay locator",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1098
+      "line": 1100
     },
     {
       "id": "acquisition.index.archive_org_is_a_backup",
       "en": "archive.org is a backup source and this document has not been unreachable long enough to justify one",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 681
+      "line": 683
     },
     {
       "id": "acquisition.index.attestation_pending",
       "en": "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1947
+      "line": 1949
     },
     {
       "id": "acquisition.index.bio_plane_acquire_hashed_at_receipt",
       "en": "bio-plane acquire, https fetch, hashed at receipt",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1765
+      "line": 1767
     },
     {
       "id": "acquisition.index.bio_plane_acquire_https_fetch",
       "en": "bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1982
+      "line": 1984
     },
     {
       "id": "acquisition.index.browser_is_bound_to_something",
       "en": "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1245
+      "line": 1247
     },
     {
       "id": "acquisition.index.capture_not_kept",
       "en": "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 603
+      "line": 605
     },
     {
       "id": "acquisition.index.challenge_page",
       "en": "{host} answered with a check that asks for a person ({signals}) in place of the document. Your team's Civicsmith does not get past such a check, and nothing was saved.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1414
+      "line": 1416
     },
     {
       "id": "acquisition.index.file_type_refused",
       "en": "A {kind} is not kept{reason}. Nothing was saved.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 395
+      "line": 397
     },
     {
       "id": "acquisition.index.first_party_https_fetch_of_the",
       "en": "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1976
+      "line": 1978
     },
     {
       "id": "acquisition.index.first_party_https_fetch_transport",
       "en": "first-party https fetch, hashed at receipt, transport record on this document",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1977
+      "line": 1979
     },
     {
       "id": "acquisition.index.google_answered_status_at_the",
       "en": "Google answered {status} at the OpenDocument export address {exportAddress}, which your team's Civicsmith composed from the {kind} id in {address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place — a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1388
+      "line": 1390
     },
     {
       "id": "acquisition.index.hostnameof_is_one_of_your",
       "en": "{hostnameOf} is one of your team's own hosts; nothing was fetched or filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1019
+      "line": 1021
     },
     {
       "id": "acquisition.index.keep_part_differs",
       "en": "part {n} of {parts} is not what was stored",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 577
+      "line": 579
     },
     {
       "id": "acquisition.index.keep_part_missing",
       "en": "part {n} of {parts} was not there when it was read back",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 572
+      "line": 574
     },
     {
       "id": "acquisition.index.keep_parts_do_not_add_up",
       "en": "the parts do not add up to the document that arrived",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 582
+      "line": 584
     },
     {
       "id": "acquisition.index.keep_store_refused",
       "en": "the store would not take it ({detail})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 587
+      "line": 589
     },
     {
       "id": "acquisition.index.no_renderer_is_bound_to",
       "en": "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1246
+      "line": 1248
     },
     {
       "id": "acquisition.index.no_such_session",
       "en": "no capture session of that name is held: it was finished, closed or has expired; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1188
+      "line": 1190
     },
     {
       "id": "acquisition.index.render_page_not_read_back",
       "en": "the page as a visitor saw it was made but could not be read back from the record",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2119
+      "line": 2122
     },
     {
       "id": "acquisition.index.render_pending_files",
       "en": "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1867
+      "line": 1869
     },
     {
       "id": "acquisition.index.render_pending_note",
       "en": "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1902
+      "line": 1904
     },
     {
       "id": "acquisition.index.render_stringify_is_not_a",
       "en": "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1233
+      "line": 1235
     },
     {
       "id": "acquisition.index.render_true_cannot_be_combined",
       "en": "render: true cannot be combined with {conflict}.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1239
+      "line": 1241
     },
     {
       "id": "acquisition.index.running_renders_are_running_in",
       "en": "{running} renders are running in your team's Civicsmith, which runs at most {cap} at once; this render is waiting and nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1268
+      "line": 1270
     },
     {
       "id": "acquisition.index.subresource_capture_reads_the_primary",
       "en": "subresource capture reads the primary back into memory to parse it, so it is bounded to {SUB_PARSE_MAX} bytes; this document is {total}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2362
+      "line": 2365
     },
     {
       "id": "acquisition.index.the_archive_fallback_is_a",
       "en": "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1094
+      "line": 1096
     },
     {
       "id": "acquisition.index.the_archive_has_no_endpoint",
       "en": "the archive has no endpoint for this address",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 787
+      "line": 789
     },
     {
       "id": "acquisition.index.the_archive_is_rate_limiting",
       "en": "the archive is rate-limiting us; the governor will hold this host",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 799
+      "line": 801
     },
     {
       "id": "acquisition.index.the_archives_what_answered_status",
       "en": "the archive's {what} answered {status}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 800
+      "line": 802
     },
     {
       "id": "acquisition.index.the_body_broke_off_credential",
       "en": "the body broke off while it was read; its error is not carried because a supplied credential rode it",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1581
+      "line": 1583
     },
     {
       "id": "acquisition.index.the_body_broke_off_while",
       "en": "the body broke off while it was read ({String})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1582
+      "line": 1584
     },
     {
       "id": "acquisition.index.the_daemon_class_reaches_op",
       "en": "the daemon class reaches op=acquire through the archive fallback (via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1070
+      "line": 1072
     },
     {
       "id": "acquisition.index.the_document_address_must_be",
       "en": "the document address must be https on a public host",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 896
+      "line": 898
     },
     {
       "id": "acquisition.index.the_document_exceeds_what_this",
       "en": "the document exceeds what this surface will capture even in parts",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1471
+      "line": 1473
     },
     {
       "id": "acquisition.index.the_fetch_did_not_complete",
       "en": "the fetch did not complete; its error is not carried because a supplied credential rode it",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1366
+      "line": 1368
     },
     {
       "id": "acquisition.index.the_governor_is_holding_requests",
       "en": "the governor is holding requests to {hostOf} ({reason})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 795
+      "line": 797
     },
     {
       "id": "acquisition.index.the_incremental_hash_and_the",
       "en": "the incremental hash and the block hash of the same bytes differ",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1649
+      "line": 1651
     },
     {
       "id": "acquisition.index.the_memento_exceeds_what_this",
       "en": "the memento exceeds what this surface will capture even in parts",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 907
+      "line": 909
     },
     {
       "id": "acquisition.index.the_mementos_body_broke_off",
       "en": "the memento's body broke off while it was read ({detail})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 745
+      "line": 747
     },
     {
       "id": "acquisition.index.the_opendocument_export_address_answered",
       "en": "the OpenDocument export address answered with `{ect}`, which is the Google Drive APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I §6's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1398
+      "line": 1400
     },
     {
       "id": "acquisition.index.the_opendocument_export_address_served",
       "en": "the OpenDocument export address served bytes that are HTML — {signals} — while declaring `{v1}`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1622
+      "line": 1624
     },
     {
       "id": "acquisition.index.the_per_host_governor_is",
       "en": "the per-host governor is holding requests to {rHost} ({v1}).",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1257
+      "line": 1259
     },
     {
       "id": "acquisition.index.the_per_host_governor_is_2",
       "en": "the per-host governor is holding requests to this host ({reason}); retry in about {ceil}s",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1329
+      "line": 1331
     },
     {
       "id": "acquisition.index.the_primary_capture_did_not",
       "en": "the primary capture did not read back",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2368
+      "line": 2371
     },
     {
       "id": "acquisition.index.the_render_allowance_could_not",
       "en": "the render allowance could not be read, so the render is deferred rather than run unmetered.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1274
+      "line": 1276
     },
     {
       "id": "acquisition.index.the_served_bytes_are_v1",
       "en": "the served bytes are {v1}, not an HTML page; nothing was filed.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1688
+      "line": 1690
     },
     {
       "id": "acquisition.index.the_whole_page_qualifier",
       "en": "; {reading}, so they are not asserted to be the whole page",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1973
+      "line": 1975
     },
     {
       "id": "acquisition.index.these_bytes_are_the_document",
       "en": "these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1973
+      "line": 1975
     },
     {
       "id": "acquisition.index.these_bytes_were_served_for",
       "en": "these bytes were served for {locator} at {retrieved}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1974
+      "line": 1976
     },
     {
       "id": "acquisition.index.this_request_carried_map_the",
       "en": "this request carried {map}. The export address, the export format and the producer are DERIVED by your team's Civicsmith from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1155
+      "line": 1157
     },
     {
       "id": "acquisition.index.todays_render_allowance_allowance_ms",
       "en": "today's render allowance ({allowance_ms} ms, day {day}) is committed ({spent_ms} ms spent, {reserved_ms} ms reserved by renders in flight), and this render reserves {reserve_ms} ms; it is recorded as deferred ({deferred} today).",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1273
+      "line": 1275
     },
     {
       "id": "acquisition.index.too_large_to_be_a",
       "en": "too large to be a single page",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1688
+      "line": 1690
     },
     {
       "id": "acquisition.index.url_redirected_status_to_v1",
       "en": "{url} redirected ({status}) to {v1}, which is outside the sweep's scope; the redirect was not followed, nothing at its target was fetched, and nothing was filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1353
+      "line": 1355
     },
     {
       "id": "acquisition.index.work_calls_compute_calls_over",
       "en": "{work_calls} compute calls over {work_bytes} bytes; {fetched} fetched, {discovered} discovered",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 2457
+      "line": 2460
     },
     {
       "id": "acquisition.index.your_teams_civicsmith_fetches_a",
       "en": "your team's Civicsmith fetches a requested document only from inside its own drain, and a request cannot reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1063
+      "line": 1065
     },
     {
       "id": "acquisition.keyed.a_citation_lookup_is_a",
       "en": "a citation lookup is a member's or an operator's act, and none was named; nothing was sent",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 264
+      "line": 271
     },
     {
       "id": "acquisition.keyed.a_keyed_outside_service",
       "en": "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 135
+      "line": 140
     },
     {
       "id": "acquisition.keyed.a_keyed_request_is_a",
       "en": "a keyed request is a GET or POST of a public https address on {host}, its form a flat set of strings; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 144
+      "line": 149
+    },
+    {
+      "id": "acquisition.keyed.authority_basis",
+      "en": "the follow {follow} asked for this check, {retrieved}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 356
+    },
+    {
+      "id": "acquisition.keyed.capture_unreadable",
+      "en": "the service's answer could not be filed ({why})",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 377
     },
     {
       "id": "acquisition.keyed.courtlistener_is_holding_citation_lookups",
       "en": "CourtListener is holding citation lookups from this key for now; nothing was looked up",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 277
+      "line": 284
+    },
+    {
+      "id": "acquisition.keyed.empty_answer",
+      "en": "the service's answer was empty, so nothing was filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 330
+    },
+    {
+      "id": "acquisition.keyed.first_hop_asserts",
+      "en": "the service served bytes with this fingerprint for {locator} at {retrieved}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 359
+    },
+    {
+      "id": "acquisition.keyed.first_hop_evidence",
+      "en": "first-party https fetch from the service's host through the host governor, hashed at receipt; the team's key rode the request and is not recorded",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 360
     },
     {
       "id": "acquisition.keyed.hostof_is_one_of_your",
       "en": "{hostOf} is one of your team's own hosts; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 150
+      "line": 155
+    },
+    {
+      "id": "acquisition.keyed.method",
+      "en": "bio-plane keyed fetch, https, hashed at receipt",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 364
+    },
+    {
+      "id": "acquisition.keyed.no_body",
+      "en": "the service answered with no document, so nothing was filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 329
+    },
+    {
+      "id": "acquisition.keyed.no_storage",
+      "en": "your team's Civicsmith has no evidence storage configured, so nothing was filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 332
+    },
+    {
+      "id": "acquisition.keyed.store_waiting",
+      "en": "the record could not take the answer just now; it is asked again on the next run",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 376
     },
     {
       "id": "acquisition.keyed.that_purpose_is_not_one",
       "en": "{purpose} is not a purpose {service} is read for; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 122
+      "line": 127
     },
     {
       "id": "acquisition.keyed.the_daily_checks_have_used",
       "en": "the daily checks have used their share of what the service allows a day, so a member's own lookup still goes; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 176
+      "line": 181
     },
     {
       "id": "acquisition.keyed.the_keyed_services_your_teams",
       "en": "the keyed services your team's Civicsmith speaks to are {keys}; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 118
+      "line": 123
     },
     {
       "id": "acquisition.keyed.the_per_host_governor_is",
       "en": "the per-host governor is holding requests to {host} ({reason})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 206
+      "line": 211
     },
     {
       "id": "acquisition.keyed.the_request_to_the_service",
       "en": "the request to the service did not complete; its error is not carried because the team's key rode it",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 203
+      "line": 208
     },
     {
       "id": "acquisition.keyed.the_service_allows_no_more",
       "en": "the service allows no more calls for now; nothing was sent",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 184
+      "line": 189
     },
     {
       "id": "acquisition.keyed.the_service_answered_status",
       "en": "the service answered {status}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 218
+      "line": 223
     },
     {
       "id": "acquisition.keyed.the_service_reads_at_most",
       "en": "the service reads at most {CITATION_TEXT_MAX} characters a request and this text is {length}; nothing was sent",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 268
+      "line": 275
     },
     {
       "id": "acquisition.keyed.the_service_s_answer_broke",
       "en": "the service's answer broke off while it was read",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 212
+      "line": 217
     },
     {
       "id": "acquisition.keyed.the_service_s_answer_is",
       "en": "the service's answer is not the list of citations its documentation describes",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 285
+      "line": 292
     },
     {
       "id": "acquisition.keyed.the_service_states_no_daily_limit",
       "en": "the service states no daily call limit this copy can keep, so its dockets are not checked in the background; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 172
+      "line": 177
     },
     {
       "id": "acquisition.keyed.the_services_answer_is_over",
       "en": "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 213
+      "line": 218
     },
     {
       "id": "acquisition.keyed.the_team_s_key_for",
       "en": "the team's key for this service is off or not held; the caller goes on without it",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 160
+      "line": 165
     },
     {
       "id": "acquisition.keyed.there_is_no_text",
       "en": "there is no text to look citations up in; nothing was sent",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 266
+      "line": 273
     },
     {
       "id": "acquisition.keyed.this_case_was_already_checked",
       "en": "this case was already checked today; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 174
+      "line": 179
     },
     {
       "id": "acquisition.profile.held_not_read",
       "en": "held, not read: {name}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 403
+      "line": 405
+    },
+    {
+      "id": "acquisition.register.authority_basis",
+      "en": "the member's import {import} asked for this register piece, {retrieved}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 417
+    },
+    {
+      "id": "acquisition.register.bad_redirect",
+      "en": "the source redirected to an address that cannot be read; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 138
+    },
+    {
+      "id": "acquisition.register.body_broke",
+      "en": "the piece could not be read to its end ({why}); nothing was filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 382
+    },
+    {
+      "id": "acquisition.register.definition_refused",
+      "en": "the register's definition is refused ({code}, {field}); nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 85
+    },
+    {
+      "id": "acquisition.register.fetch_failed",
+      "en": "the request to the register's source did not complete ({why})",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 130
+    },
+    {
+      "id": "acquisition.register.filter_refused",
+      "en": "the filter is refused ({code}, {field}); nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 280
+    },
+    {
+      "id": "acquisition.register.first_hop_asserts",
+      "en": "the source served bytes with this fingerprint for {locator} at {retrieved}; this file is their reduction under the stated definition and filter",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 420
+    },
+    {
+      "id": "acquisition.register.first_hop_evidence",
+      "en": "first-party https fetch through the host governor, reduced as it arrived; the original's fingerprint is on this document, the original is not kept",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 421
+    },
+    {
+      "id": "acquisition.register.header_broke",
+      "en": "the header file could not be read to its end; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 234
+    },
+    {
+      "id": "acquisition.register.header_piece",
+      "en": "the piece's header file is not one the register names; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 301
+    },
+    {
+      "id": "acquisition.register.header_too_large",
+      "en": "the header file is larger than a header can be; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 231
+    },
+    {
+      "id": "acquisition.register.host_cooling_off",
+      "en": "the governor is holding requests to {host} ({reason})",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 133
+    },
+    {
+      "id": "acquisition.register.host_not_in_definition",
+      "en": "{host} is not a host the register's definition names, so nothing was fetched from it",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 103
+    },
+    {
+      "id": "acquisition.register.limits_not_recorded",
+      "en": "the most a register piece may stream and the most one stored segment may hold are not recorded yet, so nothing is fetched until they are",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 95
+    },
+    {
+      "id": "acquisition.register.locator_hole",
+      "en": "the piece's address needs a value for {hole}; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 98
+    },
+    {
+      "id": "acquisition.register.member_act_required",
+      "en": "this register is behind an account or a fee, so a member brings the file in with their own account; your team's Civicsmith fetched nothing",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 87
+    },
+    {
+      "id": "acquisition.register.member_missing",
+      "en": "the zip does not hold exactly one member named {name}; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 191
+    },
+    {
+      "id": "acquisition.register.method",
+      "en": "bio-plane streamRegister, https fetch, reduced as it arrived, hashed as written",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 425
+    },
+    {
+      "id": "acquisition.register.no_definition",
+      "en": "there is no register definition to read; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 82
+    },
+    {
+      "id": "acquisition.register.no_storage",
+      "en": "your team's Civicsmith has no evidence storage configured, so nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 287
+    },
+    {
+      "id": "acquisition.register.not_readable",
+      "en": "the piece cannot be read as this register's file ({why}); nothing was filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 384
+    },
+    {
+      "id": "acquisition.register.own_host",
+      "en": "{host} is one of your team's own hosts; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 106
+    },
+    {
+      "id": "acquisition.register.piece_unknown",
+      "en": "the register has no piece of that name; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 89
+    },
+    {
+      "id": "acquisition.register.probe_unreadable",
+      "en": "the register could not be probed ({why}); nothing was stored",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 550
+    },
+    {
+      "id": "acquisition.register.range_unsized",
+      "en": "the source did not say how large its file is, so a member of its zip cannot be read; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 172
+    },
+    {
+      "id": "acquisition.register.range_unsupported",
+      "en": "the source does not serve a part of a file, so a member of its zip cannot be read; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 168
+    },
+    {
+      "id": "acquisition.register.refresh_unchanged",
+      "en": "the source has not changed since the last look, so it was not fetched again",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 293
+    },
+    {
+      "id": "acquisition.register.resume_diverged",
+      "en": "the source no longer gives the segments already stored, so the import cannot be continued; start it again",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 330
+    },
+    {
+      "id": "acquisition.register.resume_mismatch",
+      "en": "that resume token is not for this piece, import and filter; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 284
+    },
+    {
+      "id": "acquisition.register.source_refused",
+      "en": "the source answered {status}",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 145
+    },
+    {
+      "id": "acquisition.register.too_large",
+      "en": "the piece is larger than the most a register piece may stream; nothing was stored",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 309
+    },
+    {
+      "id": "acquisition.register.too_many_redirects",
+      "en": "the source redirected more than {n} times; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 140
+    },
+    {
+      "id": "acquisition.register.unreadable",
+      "en": "the register piece could not be read ({why}); nothing was filed",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 270
+    },
+    {
+      "id": "acquisition.register.zip_unreadable",
+      "en": "the zip could not be read ({why}); nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/register.mjs",
+      "line": 189
     },
     {
       "id": "acquisition.unpack.an_archive_is_opened",
       "en": "an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture that brought it in; nothing was opened",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 634
+      "line": 637
     },
     {
       "id": "acquisition.unpack.its_document_was_offered",
       "en": "its document was offered {n} times and found no home in a project, so it is kept in the record and is not offered again",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 708
+      "line": 720
     },
     {
       "id": "acquisition.unpack.no_acquisition_instance_holds",
       "en": "no acquisition instance holds this storage's archive records",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 1026
+      "line": 1044
     },
     {
       "id": "acquisition.unpack.no_acquisition_receipt_or",
       "en": "no acquisition receipt or register row names this archive; nothing was opened",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 646
+      "line": 649
     },
     {
       "id": "acquisition.unpack.no_archive_your_team",
       "en": "no archive your team holds and you may see answers to that digest",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 1028
+      "line": 1046
     },
     {
       "id": "acquisition.unpack.set_whether_your_team_s",
       "en": "set whether your team's captures ask a public archive for a copy",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 492
+      "line": 495
     },
     {
       "id": "acquisition.unpack.the_archives_capture_sha_its",
       "en": "the archive's capture {sha}; its central directory and the entry's local header agree on this entry",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 919
+      "line": 937
     },
     {
       "id": "acquisition.unpack.the_setting_is_true",
       "en": "the setting is true (on) or false (off); nothing was recorded",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 496
+      "line": 499
     },
     {
       "id": "acquisition.unpack.the_store_handed_in",
       "en": "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 638
+      "line": 641
     },
     {
       "id": "acquisition.unpack.these_bytes_are_entry_index",
       "en": "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 918
+      "line": 936
     },
     {
       "id": "acquisition.unpack.why_nothing_was_opened",
       "en": "{why}; nothing was opened",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 648
+      "line": 651
     },
     {
       "id": "action-clocks.count.amount_unit_after_anchor",
@@ -48635,6 +48936,13 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/checks.mjs",
       "line": 362
+    },
+    {
+      "id": "refusal.MEMBER_NOT_CUT",
+      "en": "Your team's Civicsmith could not cut this attachment out of its message, so nothing was saved for it. Open the message yourself and add the file.",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/checks.mjs",
+      "line": 376
     },
     {
       "id": "refusal.WORKBOOK_FILE_TOO_LARGE",
