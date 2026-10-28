@@ -1,0 +1,9 @@
+Round R1, layer 2, module promotion, tranche T53. Your depth: 2. BOB: BOB #328 (session_018BhcefyAzc8476i2q7nQ5q).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module promotion`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-88 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-89 · K5006 · reds: first settle, then fix
+- T53-90 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/promotion.md`

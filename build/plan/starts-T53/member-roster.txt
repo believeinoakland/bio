@@ -1,0 +1,8 @@
+Round R1, layer 2, module member-roster, tranche T53. Your depth: 2. BOB: BOB #328 (session_018BhcefyAzc8476i2q7nQ5q).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module member-roster`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-66 · K5562, K5563 · founder's removal and endorsement, vote removals shown
+- T53-67 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/member-roster.md`

@@ -1,0 +1,14 @@
+Round R1, layer 2, module ai-accounts, tranche T53. Your depth: 2. BOB: BOB #328 (session_018BhcefyAzc8476i2q7nQ5q).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module ai-accounts`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-77 · N1220 · account model, plan scope, checks P1-P7
+- T53-78 · K5457 · twelve ops retired, nineteen new, users re-pointed
+- T53-79 · DEC-465, K5471 · `aikeyseal`, list order, payer flag
+- T53-80 · K5457 · migration of apikey and signin accounts
+- T53-81 · K5478, DEC-471 · `aicreditsclear`, `ai-credits-stop`
+- T53-82 · DEC-476 · terms change a notice, `ai.notice.termschange`
+- T53-83 · K5501 · removed member loses shared placements
+- T53-84 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/ai-accounts.md`

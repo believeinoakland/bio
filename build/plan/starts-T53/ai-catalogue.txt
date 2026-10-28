@@ -1,0 +1,9 @@
+Round R1, layer 2, module ai-catalogue, tranche T53. Your depth: 2. BOB: BOB #328 (session_018BhcefyAzc8476i2q7nQ5q).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module ai-catalogue`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-74 · N1220 (K5457) · the signed closed list of AIs
+- T53-75 · K5457 · seed payload `[waits: key ceremony, Bob's pass marks]`
+- T53-76 · K5482 · untested-entry payload, combined record
+- rows: `build/plan/T53-R1/ai-catalogue.md`
