@@ -9441,35 +9441,35 @@
       "en": "governance: the authored, attributed adoption that puts a declared-bias set in force for a scope (DEC-54 c/d), keyed by (scope, bias bundle) and not by any object's state — the disclose half of the pair `strengthbar` is the gate half of",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 1257
+      "line": 1253
     },
     {
       "id": "bias.declared.biasdebt",
       "en": "read: one run's bias debt and what settled it, keyed by run id — the record behind the queue item, never an act on an object",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 1249
+      "line": 1245
     },
     {
       "id": "bias.declared.biasdebtresolve",
       "en": "bias-debt act, keyed by the RUN whose lens moved and gated by that run's read; travels with the queue item via op=queue, never beside a bundle",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 1251
+      "line": 1247
     },
     {
       "id": "bias.index.a_bar_how_strong_support",
       "en": "a BAR — how strong support must be before you assert. It gates at pre-flight (DEC-17); declared as bias it would refuse nothing.",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 648
+      "line": 644
     },
     {
       "id": "bias.index.a_project_override_naming_locked",
       "en": "a project override naming a LOCKED team statement is a conformance error; the team statement stands",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 468
+      "line": 464
     },
     {
       "id": "bias.index.adopting_bias_set_whole_team",
@@ -9483,77 +9483,77 @@
       "en": "each entry is an adoption whose PINNED REVISION is one the team has offered and not accepted: the member's act REPLACED that scope's lens with those bytes and is not a pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin puts no lens in force until the revision it names stands at 'adopted'",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 431
+      "line": 427
     },
     {
       "id": "bias.index.no_bias_debt_is_on",
       "en": "no bias debt is on record for this work: it either never carried one, or it is not one this reader can open",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 1027
+      "line": 1023
     },
     {
       "id": "bias.index.no_lens_is_in_force",
       "en": "no lens is in force for this work's context, so whether it ran under the current one is undetermined and it discharges nothing",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 1162
+      "line": 1158
     },
     {
       "id": "bias.index.settling_bias_debt_is_a",
       "en": "settling a bias debt is a judgement that the lens change does not bear on the finding, and that is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential may raise the obligation, surface it and prepare what it needs, and may not answer it",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 992
+      "line": 988
     },
     {
       "id": "bias.index.the_not_mechanised_list_is",
       "en": "the not-mechanised list is the more important half: the extractable rules are the countable ones, and in four of five documented verification failures the countable rules were satisfied while the uncountable properties failed (DEC-54).",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 689
+      "line": 685
     },
     {
       "id": "bias.index.there_is_no_description_of",
       "en": "there is no description of the team to start a declared bias from: a member writes the set's statements, each with its subject and justification, from the beginning",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 723
+      "line": 719
     },
     {
       "id": "bias.index.this_debt_was_settled_before",
       "en": "this debt was settled before the record kept which act settled it. The only act there was then is the lens moving back, and naming it here would be attributing the settlement to an act nobody recorded",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 967
+      "line": 963
     },
     {
       "id": "bias.index.this_is_a_claim_about",
       "en": "this is a claim about how an organisation behaves, which is a PATTERN statement and must cite evidence in THIS record — evidence a reader of somebody else's policy does not have. It is left for a member to make, or not.",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 669
+      "line": 665
     },
     {
       "id": "bias.index.this_reads_as_a_verdict",
       "en": "this reads as a verdict on a source, and declared bias may never issue verdicts — refused for the machine exactly as for a member",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 652
+      "line": 648
     },
     {
       "id": "bias.index.this_work_was_made_under",
       "en": "this work was made under no lens that can be read, so whether it ran under the lens now in force is undetermined and it discharges nothing",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 1160
+      "line": 1156
     },
     {
       "id": "bias.index.undetermined_adoption_pins_revision",
       "en": "undetermined: an adoption pins a revision whose bytes this record cannot produce, so which statements are in force cannot be computed",
       "module": "bias",
       "file": "bio-plane/src/bias/index.mjs",
-      "line": 440
+      "line": 436
     },
     {
       "id": "budget-doctypes.assess.every_line_read_is",
