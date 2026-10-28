@@ -573,6 +573,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-342 · K4403 · CAPABILITIES rows
 - T53-343 · K5571 · ai-accounts' and ai-use's notices to owners are reads it calls; owed lines (R45, R72, R75-R77, termsNoticesDue)
 - T53-344 · K5565 · English in tests: its entry
+- T53-549 · K5670, record-core R92 · read settings through `getSetting`, not its own SQL (index.mjs ~1595, 1600)
 - rows: `build/plan/T53-R1/notice-producers.md`
 **queue**
 - T53-345 · K5480, K5478 · `retesting-off`, `ai-credits-stop`
@@ -764,6 +765,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-448 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-449 · K5571 · R-40's `person` half (6)
 - T53-450 · K5565 · English in tests: its entry
+- T53-550 · K5671, promotion R53, R62 · `explore.mjs` (~218-239) sends a raw-id title and no project to promotion; send both as R53 asks
 - rows: `build/plan/T53-R1/screens-investigate.md`
 **screens-publish**
 - T53-451 · A7 · document pickers

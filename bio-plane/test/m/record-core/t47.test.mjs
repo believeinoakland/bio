@@ -73,12 +73,12 @@ test("R84 R81: SETTING_NOT_JSON is this module's row C-102.33, beside the settin
   assert.deepEqual(settings.map((c) => RECORD_CORE_CHECKS[c].check), ["C-102.29", "C-102.30", "C-102.31", "C-102.33", "C-102.32"]);
   assert.ok(settings.every((c) => RECORD_CORE_CHECKS[c].where === row.where));
   const c102 = Object.values(RECORD_CORE_CHECKS).map((r) => r.check).filter((c) => c.startsWith("C-102.")).map((c) => Number(c.slice(6)));
-  assert.equal(Math.max(...c102), 39, "C-102.39 is the last held number (T51: allocid rows take 34 and 35, R86; the evidence parts rows 36 to 39, R87)");
+  assert.equal(Math.max(...c102), 40, "C-102.40 is the last held number (T51: allocid rows take 34 and 35, R86; the evidence parts rows 36 to 39, R87; T53: getSettingAt's row 40, R92)");
   const checks = Object.values(RECORD_CORE_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "no number is held twice");
   /* SETTING_INVALID keeps its row and meaning: R26's setting alone, not a build fault */
   assert.equal(RECORD_CORE_CHECKS.SETTING_INVALID.check, "C-102.32");
-  assert.match(RECORD_CORE_CHECKS.SETTING_INVALID.translation, /^The setting was not changed/);
+  assert.equal(RECORD_CORE_CHECKS.SETTING_INVALID.translation, word("record-core.checks.the_setting_was_not_changed"));
   assert.ok(!RECORD_CORE_CHECKS.SETTING_INVALID.translation.includes(BUILD_FAULT));
 });
 
