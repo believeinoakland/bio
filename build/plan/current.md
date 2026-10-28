@@ -531,6 +531,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
 - T53-576 · K5705, file-safety R1, R60 · the `safe_view` job is registered for `.png`/`.jpg` names, as file-safety R1's name rule reads them
 - T53-578 · K5715, capture R119 · `r9-jobs.test.mjs`:481 (R75 R2) uploads a 200 MiB file named `.pdf`, now `TOO_LARGE` under a document's 100 MB bound: its input is a kind with the archive bound (a `.zip`)
+- T53-593 · connections' report (T53-587) · drop the plane's own `connections` project-reach registration (`assemble.mjs` R58, `wiring.mjs` `projectReachReaders`): `connections` now registers itself through `membership.registerProjectReach`, and a second registration is refused `LISTENER_DECLARED`
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
