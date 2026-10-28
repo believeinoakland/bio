@@ -36044,6 +36044,13 @@
       "line": 455
     },
     {
+      "id": "legistar-reader.index.the_address_is_not_a_legistar",
+      "en": "the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)",
+      "module": "legistar-reader",
+      "file": "legistar-reader/index.mjs",
+      "line": 70
+    },
+    {
       "id": "legistar-reader.index.the_address_names_a_client",
       "en": "the address names a Legistar client but no endpoint",
       "module": "legistar-reader",
@@ -36070,6 +36077,13 @@
       "module": "legistar-reader",
       "file": "legistar-reader/index.mjs",
       "line": 138
+    },
+    {
+      "id": "legistar-reader.index.the_bytes_are_json_but_not",
+      "en": "the bytes are JSON but not an object or an array of objects",
+      "module": "legistar-reader",
+      "file": "legistar-reader/index.mjs",
+      "line": 137
     },
     {
       "id": "legistar-reader.index.the_bytes_are_not_json",

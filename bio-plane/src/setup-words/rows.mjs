@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7623 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7625 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -24910,10 +24910,12 @@ export const WORD_ROWS = Object.freeze([
   ["legistar-reader.index.legistars_kind_for_this_meeting","Legistar's {kind} for this meeting carries a new last-publication time",null,null,false,"code"],
   ["legistar-reader.index.no_text_was_supplied_with","no text was supplied with the address, so there is nothing to read",null,null,false,"code"],
   ["legistar-reader.index.one_of_the_two_readings","one of the two readings holds no rows, so an emptied list cannot be told from a failed read and nothing is claimed either way",null,null,false,"code"],
+  ["legistar-reader.index.the_address_is_not_a_legistar","the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)",null,null,false,"code"],
   ["legistar-reader.index.the_address_names_a_client","the address names a Legistar client but no endpoint",null,null,false,"code"],
   ["legistar-reader.index.the_address_names_a_record","the address names a record id but no endpoint",null,null,false,"code"],
   ["legistar-reader.index.the_address_names_the_legistar","the address names the Legistar endpoint \"{name}\", which this reader does not read",null,null,false,"code"],
   ["legistar-reader.index.the_bytes_are_json_but","the bytes are JSON but not an array, as a list of {endpoint} is",null,null,false,"code"],
+  ["legistar-reader.index.the_bytes_are_json_but_not","the bytes are JSON but not an object or an array of objects",null,null,false,"code"],
   ["legistar-reader.index.the_bytes_are_not_json","the bytes are not JSON ({String})",null,null,false,"code"],
   ["legistar-reader.index.the_captures_own_date_was","the capture's own date was not given, so whether this end is still to come cannot be said",null,null,false,"code"],
   ["legistar-reader.index.the_record_carries_id_v1","the record carries {id} {v1}, not the {record} its address names",null,null,false,"code"],
