@@ -105,7 +105,6 @@
   "bio-plane/test/m/calculations/r7-g63-started.test.mjs": 1,
   "bio-plane/test/m/calculations/registrations.test.mjs": 2,
   "bio-plane/test/m/calculations/spotcheck.test.mjs": 2,
-  "bio-plane/test/m/calibration/store.test.mjs": 2,
   "bio-plane/test/m/capture-requests/drain.test.mjs": 1,
   "bio-plane/test/m/capture-requests/member-only.test.mjs": 5,
   "bio-plane/test/m/capture-requests/reads.test.mjs": 2,

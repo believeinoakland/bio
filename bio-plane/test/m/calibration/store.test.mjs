@@ -6,9 +6,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
-import { calibrationOf, calibrationOps, checkCalibration, CALIBRATION_CHECKS, CALIBRATION_CADENCE_MS,
+import { calibrationOf, calibrationOps, checkCalibration, cadenceSentence, CALIBRATION_CHECKS, CALIBRATION_CADENCE_MS,
          CALIBRATION_LIMIT_DEFAULT, CALIBRATION_LIMIT_MAX, DRIFT } from "../../../src/calibration/index.mjs";
 import { storage, dump } from "./storage.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
 const T0 = Date.UTC(2026, 8, 1);
@@ -195,7 +196,7 @@ test("R6 R9: an instance that registered nothing has no subject, no calibration 
   assert.equal(r.ok, true);
   assert.deepEqual([r.subjects.length, r.count, r.calibrations.length, r.truncated], [0, 0, 0, false]);
   assert.equal(r.cadence_ms, CALIBRATION_CADENCE_MS);
-  assert.match(r.why, /holds no alarm at all/);
+  assert.equal(r.why, word("calibration.why.engine_registered_calibration"));
   assert.equal(c.calibrationWake(T0, 250), null);
 });
 
@@ -230,7 +231,7 @@ test("R6 R3 R15: calibrations names the enabled subjects with each one's next pr
   await c.calibrationSignalRecord({ engine: "pdfjs", source: "notes", probe_by_ms: T0 + 4 * DAY });
   const r = c.calibrations();
   assert.equal(r.cadence_ms, CALIBRATION_CADENCE_MS);
-  assert.match(r.cadence, /30 day/);
+  assert.equal(r.cadence, cadenceSentence());
   assert.deepEqual(r.subjects.map((x) => x.engine), ["never", "pdfjs"], "enabled only");
   const [never, pdfjs] = r.subjects;
   assert.equal(never.next_probe.at, 0); assert.equal(never.next_probe.overdue, true);
@@ -422,7 +423,7 @@ test("R12: with no listener registered, obligations, obligations_raised and obli
   const r = rec(c, { cap: "D", at: "2026-09-02" });
   assert.equal(r.obligations, null); assert.equal(r.obligations_raised, null);
   assert.equal(r.obligations_truncated, null);
-  assert.match(r.why, /No module derives obligations/);
+  assert.ok(r.why.includes(word("calibration.why.module_derives_obligations")));
 });
 
 test("R12: every listener runs after each record, in the modules' total order, and obligations are their concatenation", () => {

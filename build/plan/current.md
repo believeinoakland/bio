@@ -1,6 +1,6 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
-**Status** · OPEN · BOB #330 · session_018BhcedfM8dV8rPodwgBjD3 · depth 1
+**Status** · OPEN · BOB #331 · session_018Bhcee7YUBNqPYvGL6riYK · depth 1
 **Jobs** · calibration: CALIBRATION #1 session_018Bhcec6UfHC9x41Jwa7guR; reading-pipeline: READING-PIPELINE #1 session_018BhcecocgNyjm49Xi6Ji1S; extraction: EXTRACTION #1 session_018Bhcee68Pp8u6nsGStpw6e; content: CONTENT #1 session_018BhcefiNFG9xKziP2ibeWL
 **Owed** · none
 
@@ -613,6 +613,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/screens-ai.md`
 **screens-intake**
 - T53-408 · N1269 (K5446) · largest file stated; over-limit refused, a way in
+- T53-585 · PLATFORM P-29, P-30 (K5733, K5735) · after a failed upload or promote (a quick 5xx) the Add door says whether the file was kept (after a promote failure it is held, no document made) and offers a retry; today it names the fault only
 - T53-409 · K5425 (b) · fixtures-run line 27 orphan: marker or delete
 - T53-410 · A3, DEC-454-456 · R72, R73, display rows `[waits: design's row, r9-states R65]`
 - T53-411 · K5574, K5575 · hand-off: Queue item with the link; her file matched by address
@@ -740,6 +741,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
 - T53-569 · mail-door R12 and its composition note · composes `mailDoorOf(ctx, {capture, settings})`, `settings()` from instance-setup R114 (the mail domain and switch); the `email()` export waits on M1 (K5692 (3))
 - T53-579 · K5715, acquisition R130, R136; capture R117 · wires `store.followStanding`, a `member` row's tick calling `fileMember(store, row.detail)`, and `emailCapture`'s attachments registered with `memberRow(...)`
+- T53-584 · K5726, content R64 · composes content's `creditOf({member, row})` resolver from the module that holds the attribution levels (DEC-102), so a typed row names its typist only as credited
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
