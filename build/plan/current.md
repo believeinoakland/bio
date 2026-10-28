@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 CLOSED · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #332 · session_018BhcedHXTmWvkcQG9t9wzP · depth 1
-**Jobs** · entities: ENTITIES #1 session_018BhcegLAJHLFmviGpxX2jK; events: EVENTS #1 session_018BhcegSHPdmVWCkrzGKZwR; local-facts: LOCAL-FACTS #1 session_018BhcedSE6M2T5swdLzFC13; connections: CONNECTIONS #1 session_018BhcegFwJCkdsgDuz48E3E; observation-log: OBSERVATION-LOG #1 session_018BhcecurEFLMTnAtT6vbUk; law-relations: LAW-RELATIONS #1 session_018Bhcef45tY22jRGKXzGfRR; standards: STANDARDS #1 session_018BhceeaibBmzLUp9ntjA2V; progressions: PROGRESSIONS #1 session_018BhcefkfuJhoEDmxX32LxQ; money: MONEY #1 session_018Bhcedpyp5s6ggLLpKC8dX; money-checks: MONEY-CHECKS #1 session_018BhceeqTMutDs3sqW7g4pV; duties: DUTIES #1 session_018BhcefuyFQ7MjUduiZCHQX; people: PEOPLE #1 session_018BhceeUeyPyw2FjATLUTpr; explore: EXPLORE #1 session_018BhcecCDCpuTthEgNRVFXA; bias: BIAS #1 session_018Bhceenr6bqqxmUZKHmLrE; query-language: QUERY-LANGUAGE #1 session_018BhcegBwStEWaxuJ9S9vfM; retrieval-browse: RETRIEVAL-BROWSE #1 session_018BhcegVXrafdQJ57Sgph3h
-**Owed** · start retrieval; start calculations; start workbooks; start registers
+**Jobs** · entities: ENTITIES #1 session_018BhcegLAJHLFmviGpxX2jK; events: EVENTS #1 session_018BhcegSHPdmVWCkrzGKZwR; local-facts: LOCAL-FACTS #1 session_018BhcedSE6M2T5swdLzFC13; connections: CONNECTIONS #1 session_018BhcegFwJCkdsgDuz48E3E; observation-log: OBSERVATION-LOG #1 session_018BhcecurEFLMTnAtT6vbUk; law-relations: LAW-RELATIONS #1 session_018Bhcef45tY22jRGKXzGfRR; standards: STANDARDS #1 session_018BhceeaibBmzLUp9ntjA2V; progressions: PROGRESSIONS #1 session_018BhcefkfuJhoEDmxX32LxQ; money: MONEY #1 session_018Bhcedpyp5s6ggLLpKC8dX; money-checks: MONEY-CHECKS #1 session_018BhceeqTMutDs3sqW7g4pV; duties: DUTIES #1 session_018BhcefuyFQ7MjUduiZCHQX; people: PEOPLE #1 session_018BhceeUeyPyw2FjATLUTpr; explore: EXPLORE #1 session_018BhcecCDCpuTthEgNRVFXA; bias: BIAS #1 session_018Bhceenr6bqqxmUZKHmLrE; query-language: QUERY-LANGUAGE #1 session_018BhcegBwStEWaxuJ9S9vfM; retrieval-browse: RETRIEVAL-BROWSE #1 session_018BhcegVXrafdQJ57Sgph3h; retrieval: RETRIEVAL #1 session_018BhcecFW8tvVxtjMi8XpWv; calculations: CALCULATIONS #1 session_018BhceeSbhNof9BnUV5osj4; workbooks: WORKBOOKS #1 session_018BhcedNCFBDfPRY1SLbuns; registers: REGISTERS #1 session_018BhcefB3LYfRFSuNnkEkMu
+**Owed** · none
 
 # Plan T53 · round R1, the beta's build
 
@@ -531,6 +531,7 @@ Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/
 - T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
 - T53-576 · K5705, file-safety R1, R60 · the `safe_view` job is registered for `.png`/`.jpg` names, as file-safety R1's name rule reads them
 - T53-578 · K5715, capture R119 · `r9-jobs.test.mjs`:481 (R75 R2) uploads a 200 MiB file named `.pdf`, now `TOO_LARGE` under a document's 100 MB bound: its input is a kind with the archive bound (a `.zip`)
+- T53-593 · connections' report (T53-587) · drop the plane's own `connections` project-reach registration (`assemble.mjs` R58, `wiring.mjs` `projectReachReaders`): `connections` now registers itself through `membership.registerProjectReach`, and a second registration is refused `LISTENER_DECLARED`
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
