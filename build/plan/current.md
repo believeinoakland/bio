@@ -852,6 +852,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 **ai-issuer**
 - T53-493 · K5457 · serves catalogue, advisories, seal key `[waits: BOB's deploy to 20b5…7f72, tools; R18 retention]`
 - T53-494 · K5482, K5487 · `airesultown`, `POST /ai/health`
+- T53-551 · K5674 · the index at ai-catalogue's `CATALOGUE_ADDRESS`, payloads beneath it, in the shape its `receive` reads; reads `ADVISORY_REASONS` and `validatePayload` from ai-catalogue
 - rows: `build/plan/T53-R1/ai-issuer.md`
 **journey-check**
 - T53-495 · N1260 (K4354) · act counter, 2 s assertion, Sewer Service Fund `[first: BOB's K lines for target files]`
