@@ -38949,6 +38949,195 @@
       "line": 1080
     },
     {
+      "id": "mail-door.checks.mail_already_in",
+      "en": "You have already brought this message into the record, so it was not filed again. The record holds it once.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 46
+    },
+    {
+      "id": "mail-door.checks.mail_empty",
+      "en": "The message had nothing in it, so nothing was received.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 34
+    },
+    {
+      "id": "mail-door.checks.mail_no_such_address",
+      "en": "No member of this team uses that address, so the message was not received. Nothing was kept.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 26
+    },
+    {
+      "id": "mail-door.checks.mail_not_set_up",
+      "en": "Your team has not set up its mail domain, so no private address can be made yet. Nothing was changed. You can still bring in a saved message by uploading it.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 22
+    },
+    {
+      "id": "mail-door.checks.mail_off",
+      "en": "This team does not take mail at its own addresses. Nothing was received. A member can still bring in a saved message by uploading it.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 18
+    },
+    {
+      "id": "mail-door.checks.mail_rate_member",
+      "en": "This private address has taken as many messages as it takes in an hour, so this one was not received and nothing was kept. It lifts on its own; send it again a little later. The bound is stated beside this message.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 38
+    },
+    {
+      "id": "mail-door.checks.mail_rate_team",
+      "en": "This team has taken as many messages as it takes in a day, so this one was not received and nothing was kept. It lifts on its own; send it again later. The bound is stated beside this message.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 42
+    },
+    {
+      "id": "mail-door.checks.mail_too_large",
+      "en": "This message is larger than a message sent to a private address may be, so it was not received and nothing was kept. Save it and upload it instead, or send its attachments one by one.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 30
+    },
+    {
+      "id": "mail-door.checks.no_such_mail",
+      "en": "There is no message by that name in your waiting mail. Nothing was read or changed.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/checks.mjs",
+      "line": 50
+    },
+    {
+      "id": "mail-door.declared.mailaddress",
+      "en": "a member's own private mail address: read it, make a new one (the old one off in the same act) or turn it off; answered to her alone",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 644
+    },
+    {
+      "id": "mail-door.declared.mailbringin",
+      "en": "a member brings one of her waiting messages into the record with her statement of where it came from, keyed by id: filed as a capture, whole, headers included",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 653
+    },
+    {
+      "id": "mail-door.declared.maildelete",
+      "en": "a member deletes one of her own waiting messages at once, with its bytes, keyed by id; no reason and no record",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 656
+    },
+    {
+      "id": "mail-door.declared.mailread",
+      "en": "read: one of the viewer's own waiting messages, its headers as stated, text and attachment list, keyed by id; writes nothing",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 650
+    },
+    {
+      "id": "mail-door.declared.mailtally",
+      "en": "read: the count-only tally of mail turned away, by day, for an administrator; holds no sender, address or message, and writes nothing",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 659
+    },
+    {
+      "id": "mail-door.declared.mailwaiting",
+      "en": "read: the viewer's own waiting mail, newest first, bounded and paged; writes nothing",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 647
+    },
+    {
+      "id": "mail-door.index.act_shape",
+      "en": "op=mailaddress takes act read, make or off; nothing was read or changed",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 628
+    },
+    {
+      "id": "mail-door.index.as_the_message_states_it",
+      "en": "as the message states it",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 441
+    },
+    {
+      "id": "mail-door.index.bad_cursor",
+      "en": "`after` is not a cursor this read answered as `next`",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 453
+    },
+    {
+      "id": "mail-door.index.member_session_required",
+      "en": "your private address and your waiting mail are a signed-in member's own; this caller is not one, so nothing was read or written",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 85
+    },
+    {
+      "id": "mail-door.index.no_evidence_storage",
+      "en": "this team's Civicsmith has no evidence storage configured, so a message cannot be held; nothing was received",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 368
+    },
+    {
+      "id": "mail-door.index.not_stored",
+      "en": "the message could not be stored, so nothing was received",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 377
+    },
+    {
+      "id": "mail-door.index.reading_mail_tally",
+      "en": "reading the tally of mail turned away",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 599
+    },
+    {
+      "id": "mail-door.index.text_in_record",
+      "en": "the message is in the record now; read it there",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 476
+    },
+    {
+      "id": "mail-door.index.text_unreadable",
+      "en": "the message's text could not be read; it is kept whole as received",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 475
+    },
+    {
+      "id": "mail-door.index.within_failed",
+      "en": "the act run with this one did not complete, so it was rolled back and nothing was written",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 91
+    },
+    {
+      "id": "mail-door.stated.per_member_hour",
+      "en": "At most {n} messages in any hour to one private address, estimated by a sliding window.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 268
+    },
+    {
+      "id": "mail-door.stated.per_team_day",
+      "en": "At most {n} messages in any day to the whole team, estimated by a sliding window.",
+      "module": "mail-door",
+      "file": "bio-plane/src/mail-door/index.mjs",
+      "line": 270
+    },
+    {
       "id": "mail-reader.refusal.attachment_no_such",
       "en": "This message has no attachment {index}.",
       "module": "mail-reader",
