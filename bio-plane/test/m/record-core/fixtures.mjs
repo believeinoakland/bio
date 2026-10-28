@@ -13,6 +13,8 @@ const entryOf = (name, more = {}) => ({ name, ...CLASSES, ...more });
 /* `recordOf` migrated over the test's own SQLite database `db` (a `node:sqlite` DatabaseSync, with no `bundles` table
    yet: record-core makes its own), with the three answers a user module reads or calls: `bundleInfo`, `declarePurge`
    and `declareTable`. `addBundle` writes a bundle row of record-core's own table, the way a committed bundle leaves it. */
+/* the message the bucket throws when it will not begin an upload: test input, found again in the refusal's detail */
+export const BEGIN_FAILURE = "R2 refused to start the upload";
 export function coreOver(db) {
   const rc = recordOf({ storage: storage({ db }) });
   rc.migrate();
@@ -42,7 +44,7 @@ export async function evidencePartsRefusal() {
   };
   const refusing = multipartBucket({ failComplete: "R2 is down" });
   const throwing = multipartBucket();
-  throwing.createMultipartUpload = async () => { throw new Error("R2 would not begin the upload"); };
+  throwing.createMultipartUpload = async () => { throw new Error(BEGIN_FAILURE); };
   return { refused: await make(refusing), threw: await make(throwing) };
 }
 
