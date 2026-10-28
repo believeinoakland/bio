@@ -9938,14 +9938,14 @@
       "en": "a recipe of application runs over a frozen uses table (R32), its columns {USES_HEADER}; this input lacks {missing}. Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/application.mjs",
-      "line": 132
+      "line": 136
     },
     {
       "id": "calculations.application.the_share_of_each",
       "en": "the share of each outcome in each group, with the group's size",
       "module": "calculations",
       "file": "bio-plane/src/calculations/application.mjs",
-      "line": 56
+      "line": 60
     },
     {
       "id": "calculations.declare.no_capture_is_held_here",
