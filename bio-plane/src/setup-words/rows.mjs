@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7811 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7816 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19913,16 +19913,21 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.keyed.a_keyed_request_is_a","a keyed request is a GET or POST of a public https address on {host}, its form a flat set of strings; nothing was fetched",null,null,false,"code"],
   ["acquisition.keyed.courtlistener_is_holding_citation_lookups","CourtListener is holding citation lookups from this key for now; nothing was looked up",null,null,false,"code"],
   ["acquisition.keyed.hostof_is_one_of_your","{hostOf} is one of your team's own hosts; nothing was fetched",null,null,false,"code"],
+  ["acquisition.keyed.that_purpose_is_not_one","{purpose} is not a purpose {service} is read for; nothing was fetched",null,null,false,"code"],
+  ["acquisition.keyed.the_daily_checks_have_used","the daily checks have used their share of what the service allows a day, so a member's own lookup still goes; nothing was fetched",null,null,false,"code"],
   ["acquisition.keyed.the_keyed_services_your_teams","the keyed services your team's Civicsmith speaks to are {keys}; nothing was fetched",null,null,false,"code"],
   ["acquisition.keyed.the_per_host_governor_is","the per-host governor is holding requests to {host} ({reason})",null,null,false,"code"],
   ["acquisition.keyed.the_request_to_the_service","the request to the service did not complete; its error is not carried because the team's key rode it",null,null,false,"code"],
+  ["acquisition.keyed.the_service_allows_no_more","the service allows no more calls for now; nothing was sent",null,null,false,"code"],
   ["acquisition.keyed.the_service_answered_status","the service answered {status}",null,null,false,"code"],
   ["acquisition.keyed.the_service_reads_at_most","the service reads at most {CITATION_TEXT_MAX} characters a request and this text is {length}; nothing was sent",null,null,false,"code"],
   ["acquisition.keyed.the_service_s_answer_broke","the service's answer broke off while it was read",null,null,false,"code"],
   ["acquisition.keyed.the_service_s_answer_is","the service's answer is not the list of citations its documentation describes",null,null,false,"code"],
+  ["acquisition.keyed.the_service_states_no_daily_limit","the service states no daily call limit this copy can keep, so its dockets are not checked in the background; nothing was fetched",null,null,false,"code"],
   ["acquisition.keyed.the_services_answer_is_over","the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read",null,null,false,"code"],
   ["acquisition.keyed.the_team_s_key_for","the team's key for this service is off or not held; the caller goes on without it",null,null,false,"code"],
   ["acquisition.keyed.there_is_no_text","there is no text to look citations up in; nothing was sent",null,null,false,"code"],
+  ["acquisition.keyed.this_case_was_already_checked","this case was already checked today; nothing was fetched",null,null,false,"code"],
   ["acquisition.unpack.an_archive_is_opened","an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture that brought it in; nothing was opened",null,null,false,"code"],
   ["acquisition.unpack.its_document_was_offered","its document was offered {n} times and found no home in a project, so it is kept in the record and is not offered again",null,null,false,"code"],
   ["acquisition.unpack.no_acquisition_instance_holds","no acquisition instance holds this storage's archive records",null,null,false,"code"],

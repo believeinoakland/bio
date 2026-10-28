@@ -14,14 +14,61 @@ import { governedFetch as hostGovernedFetch } from "../host-governor/index.mjs";
 import { civicsmithUserAgent, ARCHIVE_CHECKS } from "./checks.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { combine } from "../../../jurisdictions/index.mjs";
+import { ledgerOf } from "./unpack.mjs";
 
-/* R36: each keyed service this copy can speak to: its one host, and how its key rides a request. The names are
-   credentials' `KEYED_SERVICES` (its R29); a service that this table and credentials do not both know is not
-   reached. CourtListener's form is its own documentation's (v4 REST: `Authorization: Token <key>`). */
+/* R36: each keyed service this copy can speak to: its host(s), and how its key rides a request. The names are credentials'
+   `KEYED_SERVICES` (its R29, R84); a service that this table and credentials do not both know is not reached. CourtListener's
+   form is its own documentation's (v4 REST: `Authorization: Token <key>`). (T53-547; K5666) `ca-officers`, the state's officers
+   lookup (registers R46), is the second; its host is the one the active profile's officers register states (its system's hosts,
+   reached through the `company` query template, `jurisdictions` R130), never a host this file names, and its key rides the
+   header the state's API gateway reads. */
 const SERVICES = Object.freeze({
-  courtlistener: Object.freeze({ host: "www.courtlistener.com", authorization: (key) => `Token ${key}` }),
+  courtlistener: Object.freeze({ host: "www.courtlistener.com", hostsOf: () => ["www.courtlistener.com"],
+                                 systemOf: (view) => (view && Array.isArray(view.systems) ? view.systems : []).find((x) => x && Array.isArray(x.hosts) && x.hosts.includes("www.courtlistener.com") && x.rate_limits) || null,
+                                 headers: (key) => ({ authorization: `Token ${key}` }) }),
+  "ca-officers": Object.freeze({ host: null, hostsOf: (view) => officersHosts(view), systemOf: (view) => officersSystem(view),
+                                 headers: (key) => ({ "ocp-apim-subscription-key": key }) }),
 });
-export const KEYED_SERVICE_HOSTS = Object.freeze(Object.fromEntries(Object.entries(SERVICES).map(([k, v]) => [k, v.host])));
+export const KEYED_SERVICE_HOSTS = Object.freeze(Object.fromEntries(Object.entries(SERVICES).filter(([, v]) => v.host).map(([k, v]) => [k, v.host])));
+
+/* R130: the purposes a keyed request may name (`KEYED_PURPOSES`), the services each speaks to, and who may make it. `daemon: "followed"` is the one
+   machine use (K5513): the daily check of a court case a member follows. `answer_max` is the most of the answer read (the bound after M-R5 is
+   BOB's; today's figure is the one R36 has always read). */
+export const KEYED_PURPOSES = Object.freeze({
+  "citation-lookup": Object.freeze({ services: Object.freeze(["courtlistener"]), daemon: false, answer_max: 8 * 1024 * 1024 }),
+  "docket-entries": Object.freeze({ services: Object.freeze(["courtlistener"]), daemon: "followed", answer_max: 8 * 1024 * 1024 }),
+  "officers-lookup": Object.freeze({ services: Object.freeze(["ca-officers"]), daemon: false, answer_max: 8 * 1024 * 1024 }),
+});
+
+/* R131: the share of a day's stated limit the daily checks may use, so a member's act is never starved. */
+export const POLL_SHARE_DEFAULT = 0.8;
+const WINDOWS = Object.freeze([["per_minute", 60_000], ["per_hour", 3_600_000], ["per_day", 86_400_000]]);
+
+/* the instance clock (R124): a handed instant, else the store's `BIO_NOW_MS`, else the wall clock */
+const nowMsOf = (store, at = null) => {
+  const handed = at ?? (store && store.env ? store.env.BIO_NOW_MS : undefined);
+  return handed !== undefined && handed !== null && handed !== "" && Number.isFinite(Number(handed)) ? Number(handed) : Date.now();
+};
+
+/* the active profiles' combined view, read at the call (R30: no place is named here) */
+function viewOf(store) {
+  const core = store && store.core;
+  const ids = core && typeof core.getSetting === "function" ? core.getSetting("jurisdiction_profiles") : null;
+  if (!Array.isArray(ids)) return undefined;
+  const c = combine(ids);
+  return c.ok ? c.view : undefined;
+}
+const systemOf = (view, origin) => (view && Array.isArray(view.systems) ? view.systems : []).find((x) => x && x.origin === origin) || null;
+/* the officers lookup's system: the one the `company` query template's register names (`jurisdictions` R130, `registers` R46) */
+function officersSystem(view) {
+  const t = view && Array.isArray(view.query_templates) ? view.query_templates.find((x) => x && x.scheme === "company") : null;
+  const reg = t && Array.isArray(view.registers) ? view.registers.find((r) => r && r.key === t.register) : null;
+  return reg ? systemOf(view, reg.system) : null;
+}
+const officersHosts = (view) => { const sys = officersSystem(view); return sys && Array.isArray(sys.hosts) ? sys.hosts : []; };
+/* a service's stated call limits: those of the profile's system that holds its host (R132), else none */
+const limitsOf = (view, svc) => { const sys = svc.systemOf(view); return sys && sys.rate_limits && typeof sys.rate_limits === "object" ? sys.rate_limits : null; };
 
 /* R36: the most of a keyed service's answer this path reads. Chosen, not measured: a citation lookup over 64,000
    characters answers well under it. */
@@ -51,29 +98,50 @@ async function readBounded(res, max = KEYED_ANSWER_MAX) {
   return { text: new TextDecoder("utf-8", { fatal: false }).decode(all) };
 }
 
-/** R36: `keyedFetch(store, {service, request, purpose, viewer})` fetches `request` (`{url, method, form}`: a public
+/** R36, R130, R131: `keyedFetch(store, {service, request, purpose, viewer, standing})` fetches `request` (`{url, method, form}`: a public
  *  https locator on the service's own host, `GET` or `POST`, `form` a flat object of strings sent as
  *  `application/x-www-form-urlencoded`) under the group's own key for `service`, read now from
  *  `store.credentials.keyedServiceFor({service})`. Off, or with no key held, or with no credentials handed in, it
- *  answers credentials' refusal (`KEYED_SERVICE_OFF`) and fetches nothing. A machine viewer (a daemon, a token) is
- *  refused `NOT_PERMITTED`: no daemon uses a keyed service (K1449). The request goes through the host governor under
- *  R9's agent naming `purpose`; a redirect is answered, never followed. Answers `{ok: true, service, status, text,
+ *  answers credentials' refusal (`KEYED_SERVICE_OFF`) and fetches nothing. `purpose` is one of `KEYED_PURPOSES` for that
+ *  service. A machine viewer (a daemon, a token) is refused `NOT_PERMITTED` with one exception (K5513, K5527 (6)): the daily
+ *  check of a court case a member follows (`purpose: "docket-entries"`, `service: "courtlistener"`), which names its
+ *  `standing: {follow}` and is made only while the store's `followStanding({follow, service})` answers that at least one
+ *  member still follows the case, once a day for each case and within `POLL_SHARE_DEFAULT` of the day's stated limit
+ *  (a service with no stated daily limit is not polled). Every call is counted in the durable ledger (R131) and one that
+ *  would pass a stated limit is `RATE_HELD` with `retry_in_ms`, sending nothing. The request goes through the host governor
+ *  under R9's agent naming `purpose`; a redirect is answered, never followed. Answers `{ok: true, service, status, text,
  *  content_type, retry_after}` for a 2xx, else `{ok: false, reason: "SOURCE_REFUSED", status, text}`; the key is in
  *  none of them. */
-export async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = undefined, ownHosts = null } = {}) {
+export async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = undefined, ownHosts = null, standing = null, at = null } = {}) {
   const svc = typeof service === "string" && Object.prototype.hasOwnProperty.call(SERVICES, service) ? SERVICES[service] : null;
   if (!svc)
     return refuse("UNKNOWN_KEYED_SERVICE", localize("acquisition.keyed.the_keyed_services_your_teams", "the keyed services your team's Civicsmith speaks to are {keys}; nothing was fetched", { keys: String(Object.keys(SERVICES).join(", ")) }),
                   { service: typeof service === "string" ? service.slice(0, 40) : null });
-  /* K1449: never one a daemon uses. An act with no viewer named is the in-plane caller's own; a machine's is refused. */
-  if (viewer !== undefined && viewer !== null && isMachineIdentity(viewer))
-    return refuse("NOT_PERMITTED", localize("acquisition.keyed.a_keyed_outside_service", "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched"), { service });
+  const purposeRow = typeof purpose === "string" && Object.prototype.hasOwnProperty.call(KEYED_PURPOSES, purpose) ? KEYED_PURPOSES[purpose] : null;
+  if (!purposeRow || !purposeRow.services.includes(service))
+    return refuse("UNKNOWN_KEYED_PURPOSE", localize("acquisition.keyed.that_purpose_is_not_one", "{purpose} is not a purpose {service} is read for; nothing was fetched", { purpose: String(typeof purpose === "string" ? purpose.slice(0, 40) : ""), service: String(service) }),
+                  { service });
+  const view = viewOf(store);
+  const machine = viewer !== undefined && viewer !== null && isMachineIdentity(viewer);
+  /* K1449, K5513: an act with no viewer named is the in-plane caller's own; a machine's is refused unless it is the daily check of a followed case */
+  let daemonSubject = null;
+  if (machine) {
+    const follow = standing && typeof standing === "object" && typeof standing.follow === "string" && standing.follow.trim() ? standing.follow.trim().slice(0, 200) : null;
+    let held = false;
+    if (purposeRow.daemon === "followed" && follow && store && typeof store.followStanding === "function") {
+      try { held = !!(await store.followStanding({ follow, service })); } catch { held = false; }
+    }
+    if (!held)
+      return refuse("NOT_PERMITTED", localize("acquisition.keyed.a_keyed_outside_service", "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched"), { service });
+    daemonSubject = follow;
+  }
   const r = request && typeof request === "object" ? request : {};
   const method = r.method === undefined ? "GET" : r.method;
+  const hosts = svc.hostsOf(view);
   /* R28's fence and the key's: a public locator, on the service's own host and no other. */
-  if (typeof r.url !== "string" || !isPublicHttpsLocator(r.url) || hostOf(r.url) !== svc.host || (method !== "GET" && method !== "POST")
+  if (typeof r.url !== "string" || !isPublicHttpsLocator(r.url) || !hosts.includes(hostOf(r.url)) || (method !== "GET" && method !== "POST")
       || (r.form != null && (typeof r.form !== "object" || Object.values(r.form).some((v) => typeof v !== "string"))))
-    return refuse("BAD_KEYED_REQUEST", localize("acquisition.keyed.a_keyed_request_is_a", "a keyed request is a GET or POST of a public https address on {host}, its form a flat set of strings; nothing was fetched", { host: String(svc.host) }), { service });
+    return refuse("BAD_KEYED_REQUEST", localize("acquisition.keyed.a_keyed_request_is_a", "a keyed request is a GET or POST of a public https address on {host}, its form a flat set of strings; nothing was fetched", { host: String(hosts.length ? hosts.join(", ") : "the service's own host") }), { service });
   /* DEC-49 REGION is-own-host
      R42 (F16): never to one of the group's own hosts (capture-sources R65), the caller's list or the store's. */
   const own = Array.isArray(ownHosts) ? ownHosts : store && Array.isArray(store.ownHosts) ? store.ownHosts : null;
@@ -93,6 +161,29 @@ export async function keyedFetch(store, { service = null, request = null, purpos
                   { code: "KEYED_SERVICE_OFF", service });
   }
   const key = k.key;
+  /* R131: the stated limits, counted across purposes in the durable ledger; a call that would pass one is held and nothing is sent */
+  const ledger = ledgerOf(store);
+  const nowMs = nowMsOf(store, at);
+  const limits = limitsOf(view, svc);
+  if (machine) {
+    /* R130, R131: once a day for each followed case (the UTC day of the instance clock), and only within the poll share of a day's stated limit */
+    const dayStart = Math.floor(nowMs / 86_400_000) * 86_400_000;
+    if (!ledger || !limits || !Number.isInteger(limits.per_day))
+      return refuse("NOT_PERMITTED", localize("acquisition.keyed.the_service_states_no_daily_limit", "the service states no daily call limit this copy can keep, so its dockets are not checked in the background; nothing was fetched"), { service });
+    if (ledger.keyedSubjectSince(daemonSubject, purpose, dayStart))
+      return refuse("ALREADY_CHECKED_TODAY", localize("acquisition.keyed.this_case_was_already_checked", "this case was already checked today; nothing was fetched"), { service, retry_in_ms: dayStart + 86_400_000 - nowMs });
+    if (ledger.keyedSince(service, nowMs - 86_400_000, { actor: "daemon" }).length >= Math.floor(limits.per_day * POLL_SHARE_DEFAULT))
+      return refuse("RATE_HELD", localize("acquisition.keyed.the_daily_checks_have_used", "the daily checks have used their share of what the service allows a day, so a member's own lookup still goes; nothing was fetched"), { service, retry_in_ms: 0, poll: true });
+  }
+  if (ledger && limits) {
+    for (const [name, span] of WINDOWS) {
+      const cap = limits[name];
+      if (!Number.isInteger(cap)) continue;
+      const seen = ledger.keyedSince(service, nowMs - span);
+      if (seen.length >= cap)
+        return refuse("RATE_HELD", localize("acquisition.keyed.the_service_allows_no_more", "the service allows no more calls for now; nothing was sent"), { service, window: name.replace("per_", ""), retry_in_ms: Math.max(0, seen[seen.length - cap] + span - nowMs) });
+    }
+  }
   const env = (store && store.env) || {};
   const g = store && store.governor;
   let out;
@@ -102,26 +193,44 @@ export async function keyedFetch(store, { service = null, request = null, purpos
       governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null,
       /* the key rides THIS request only, to the service's own host, and a redirect is the answer */
       fetch: (u, init) => fetch(u, { ...init, method, redirect: "manual",
-        headers: { ...(init.headers || {}), authorization: svc.authorization(key), accept: "application/json",
+        headers: { ...(init.headers || {}), ...svc.headers(key), accept: "application/json",
                    ...(r.form ? { "content-type": "application/x-www-form-urlencoded" } : {}) },
         ...(r.form ? { body: new URLSearchParams(r.form).toString() } : {}) }) });
   } catch {
+    /* a call that was sent and failed still spent the service's allowance (R131) */
+    if (ledger) ledger.keyedNote({ service, purpose, actor: machine ? "daemon" : "member", subject: daemonSubject, atMs: nowMs });
     /* as R23: a thrown fetch's message can carry what rode the request, so none is carried */
     return refuse("FETCH_FAILED", localize("acquisition.keyed.the_request_to_the_service", "the request to the service did not complete; its error is not carried because the team's key rode it"), { service });
   }
   if (out.refusedByGovernor)
-    return refuse("HOST_COOLING_OFF", localize("acquisition.keyed.the_per_host_governor_is", "the per-host governor is holding requests to {host} ({reason})", { host: String(svc.host), reason: String(out.reason) }),
+    return refuse("HOST_COOLING_OFF", localize("acquisition.keyed.the_per_host_governor_is", "the per-host governor is holding requests to {host} ({reason})", { host: String(hostOf(r.url)), reason: String(out.reason) }),
                   { service, retry_in_ms: out.retry_in_ms || 0 });
+  /* counted once the governor let it go (R131) */
+  if (ledger) ledger.keyedNote({ service, purpose, actor: machine ? "daemon" : "member", subject: daemonSubject, atMs: nowMs });
   const res = out.res;
-  const body = await readBounded(res);
+  const body = await readBounded(res, purposeRow.answer_max);
   if (body.failed) return refuse("FETCH_FAILED", localize("acquisition.keyed.the_service_s_answer_broke", "the service's answer broke off while it was read"), { service });
-  if (body.oversize) return refuse("TOO_LARGE", localize("acquisition.keyed.the_services_answer_is_over", "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read", { KEYED_ANSWER_MAX: String(KEYED_ANSWER_MAX) }), { service });
+  if (body.oversize) return refuse("TOO_LARGE", localize("acquisition.keyed.the_services_answer_is_over", "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read", { KEYED_ANSWER_MAX: String(purposeRow.answer_max) }), { service });
   const contentType = ((res.headers && res.headers.get("content-type")) || "").split(";")[0].trim().toLowerCase() || null;
   const retryAfter = (res.headers && res.headers.get("retry-after")) || null;
   if (!(res.status >= 200 && res.status < 300))
     return { ok: false, reason: "SOURCE_REFUSED", service, status: res.status, content_type: contentType, retry_after: retryAfter,
              text: body.text.slice(0, 2000), detail: localize("acquisition.keyed.the_service_answered_status", "the service answered {status}", { status: String(res.status) }) };
   return { ok: true, service, status: res.status, content_type: contentType, retry_after: retryAfter, text: body.text };
+}
+
+/** R131: `keyedServiceUsage(store, {service, at})` answers the calls counted and the limits stated for a service, never a key:
+ *  `{service, limits: {per_minute, per_hour, per_day}|null, used: {minute, hour, day}, poll: {share, per_day}|null}`. Reads the ledger, writes nothing, never throws. */
+export function keyedServiceUsage(store, { service = null, at = null } = {}) {
+  try {
+    const svc = typeof service === "string" && Object.prototype.hasOwnProperty.call(SERVICES, service) ? SERVICES[service] : null;
+    if (!svc) return { ok: false, reason: "UNKNOWN_KEYED_SERVICE", service: typeof service === "string" ? service.slice(0, 40) : null };
+    const ledger = ledgerOf(store), nowMs = nowMsOf(store, at), limits = limitsOf(viewOf(store), svc);
+    const used = Object.fromEntries(WINDOWS.map(([name, span]) => [name.replace("per_", ""), ledger ? ledger.keyedSince(service, nowMs - span).length : 0]));
+    const perDay = limits && Number.isInteger(limits.per_day) ? limits.per_day : null;
+    return { ok: true, service, limits: limits ? Object.fromEntries(WINDOWS.map(([name]) => [name, Number.isInteger(limits[name]) ? limits[name] : null])) : null, used,
+             poll: perDay === null ? null : { share: POLL_SHARE_DEFAULT, per_day: Math.floor(perDay * POLL_SHARE_DEFAULT) } };
+  } catch { return { ok: false, reason: "UNREADABLE", service: typeof service === "string" ? service.slice(0, 40) : null }; }
 }
 
 /* R37: CourtListener's Citation Lookup (v4), as its documentation states it: a POST of `text`, at most 64,000

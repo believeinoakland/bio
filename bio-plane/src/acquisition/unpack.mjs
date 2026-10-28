@@ -224,6 +224,9 @@ export const ACQUISITION_TABLES = Object.freeze([
                   derive: "stored", version_chain: false }),
   Object.freeze({ name: "unpack_days", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                   version_chain: false }),
+  /* R131 (T53): each call sent to a keyed outside service, so its stated limits are counted across purposes and a restart does not reset the count */
+  Object.freeze({ name: "keyed_calls", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
+                  version_chain: false }),
 ]);
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS archive_entries (
@@ -235,7 +238,9 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   declared_total INTEGER, bytes INTEGER, tree_entries INTEGER, tree_bytes INTEGER, offers INTEGER,
   PRIMARY KEY (archive_sha, idx));
 CREATE INDEX IF NOT EXISTS archive_entries_sha ON archive_entries(sha256);
-CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL)`;
+CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS keyed_calls (service TEXT NOT NULL, purpose TEXT NOT NULL, actor TEXT NOT NULL, subject TEXT, at_ms INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS keyed_calls_service ON keyed_calls(service, at_ms)`;
 
 /* R43: the setting's name in record-core's settings (its R25). */
 export const CO_ARCHIVE_SETTING = "co_archive";
@@ -324,6 +329,22 @@ export class Acquisition {
   final(archiveSha, index, { code, detail }) {
     this.#sql.exec(`UPDATE archive_entries SET code=?, detail=? WHERE archive_sha=? AND idx=? AND state='filed'`, code, detail, archiveSha, index);
     return { ok: true };
+  }
+
+  /* ---- R131's durable count of the calls sent to a keyed service ---- */
+
+  /** R131: one call sent to `service` at `atMs` (the instance clock), by `actor` (`member` or `daemon`), for `subject` (a followed case, else null). */
+  keyedNote({ service, purpose, actor, subject = null, atMs }) {
+    this.#sql.exec(`INSERT INTO keyed_calls (service, purpose, actor, subject, at_ms) VALUES (?,?,?,?,?)`, service, purpose, actor, subject, atMs);
+  }
+  /** R131: the calls sent to `service` since `sinceMs` (all purposes and actors, or `daemon` ones alone), oldest first, as `at_ms`. */
+  keyedSince(service, sinceMs, { actor = null } = {}) {
+    return this.#rows(`SELECT at_ms FROM keyed_calls WHERE service=? AND at_ms>? ${actor ? "AND actor=?" : ""} ORDER BY at_ms`,
+                      ...(actor ? [service, sinceMs, actor] : [service, sinceMs])).map((r) => Number(r.at_ms));
+  }
+  /** R130: whether a call for `subject` under `purpose` by a daemon was sent since `sinceMs`. */
+  keyedSubjectSince(subject, purpose, sinceMs) {
+    return !!this.#one(`SELECT 1 AS x FROM keyed_calls WHERE actor='daemon' AND subject=? AND purpose=? AND at_ms>=? LIMIT 1`, subject, purpose, sinceMs);
   }
 
   dayCount(day) { return this.#one(`SELECT entries, bytes FROM unpack_days WHERE day=?`, day) || { entries: 0, bytes: 0 }; }
@@ -489,6 +510,7 @@ export function acquisitionOf(host, deps = {}) {
 }
 
 /* The instance a store handed in reaches: its own `acquisition`, else the one made over the same record-core. */
+export const ledgerOf = (store) => instanceOf(store);
 const instanceOf = (store) => (store && store.acquisition instanceof Acquisition ? store.acquisition
   : store && store.core && byRecord.get(store.core)) || null;
 
