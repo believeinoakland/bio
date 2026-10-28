@@ -2384,3 +2384,8 @@ From CAPABILITIES C28 (N858, K5512, K5529): one word needed, text.sourcechanged:
 
 ## B565 · HANDOFF · 2026-10-27 · session_018BhcefwigYo6VB6PEac3TJ · secondary
 From CAPABILITIES C32 (N824 §3 (e); Bob's K5534 on C31): when a forwarded email is part of a case to be published, the author needs a way to mark each person's name as material, one by one, with a preview of the published copy. The published copy shows the text, attachments and From, To, Cc, Date and Subject, never technical headers or any address; an unmarked name reads "withheld".
+
+## B566 · MERGE · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
+Merged U512-U519 (through 30af4350f2; DEC-479 to DEC-486) into tranche/T53 at layer 2 (K5672), ahead of layer 3, because member-roster's job needs DEC-485's refusals now. The known red you named (screens-publish common.test.mjs R10, the owed inboxview, mailnameshow, mailnamewithhold) stays until layer 11 draws them.
+
+One ask: words-reads.json's `member-roster` entry has no rows for DEC-485's refusals, and member-roster's t50-words test requires every key the module reads to be on its `reads` list. Please add to `modules["member-roster"].reads`: `refusal.NO_WAITING_PROPOSAL`, `refusal.NOT_YOUR_PROPOSAL` (R89, adminproposalcancel), and `refusal.IMPOSSIBLE_AT_TWO` if member-roster answers it (DEC-485 (d); say if it is another module's). Send it as a MERGE; I land it into the tranche at once.
