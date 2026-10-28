@@ -33,6 +33,7 @@ import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType, OBJECT_TYPES } from "../record-grammar/types.mjs";
 import { CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
+import { canonicalJson } from "../record-grammar/json.mjs";
 import { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
 import { checkChain, checkAttestation, derivationCap, gradeCeiling, extentCovers, describeChain, a1ToRowCol }
   from "../textchain.mjs";
@@ -106,7 +107,7 @@ const noteFault = (note) =>
   : null;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain, derivation_cap, page_count,
-                  minted_by, at, stale, cited_as`;
+                  minted_by, at, stale, cited_as, register`;
 
 /** R16 — THE MINT LABEL, derived in ONE place and put on every surface that shows a content row (SK-7, Bob's 5.7).
  *  Present on EVERY row, not only machine-minted ones: a key that appears only when the answer is "machine" makes
@@ -177,6 +178,8 @@ export const PART_KIND_WORDS = Object.freeze({
   cell_note: localize("content.part_kind.cell_note", "cell note"),
 });
 /** R58: a row's human form with its part's kind beside the extent, for a kind other than `body`. */
+/** A1 column letters of a 1-based column number (1 → A, 27 → AA). */
+const a1Column = (n) => { let out = ""; for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + ((c - 1) % 26)) + out; return out; };
 const refWithKind = (ref, kind) => (kind && kind !== "body" && PART_KIND_WORDS[kind]
   ? localize("content.ref.with_part_kind", "{ref} ({kind})", { ref: String(ref), kind: String(PART_KIND_WORDS[kind]) }) : ref);
 
@@ -195,6 +198,8 @@ export class Content {
        and with no resolver or no level she is not named (the plane wires it, layer 11, T53-584) */
     this.creditOf = typeof creditOf === "function" ? creditOf : () => null;
     this.staleListeners = [];
+    /* R65: the register provider (`holds(sha)`, `rowAt(sha, n)`), registered once by the module that holds register captures */
+    this.rowContext = null;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -324,6 +329,11 @@ export class Content {
    * ===================================================================== */
 
   contentContextFor(captureSha, { searched: withSearched = true } = {}) {
+    /* R65: a register segment is not read; the provider stands in for a reading, chain null */
+    if (this.#registerHolds(captureSha))
+      return { chain: null, pageCount: null, pageBoxes: null, register: { sha: captureSha },
+               container: { sheets: null, paragraphs: null, slides: null, tables: null, images: null, container_name: null,
+                            page_images_why: null, held: false, empty_level: null, why: null, office: null } };
     const r = this.extraction.readingOf(captureSha);
     const held = !!r;
     const reading = r ? { text_source: r.chain ?? null, page_count: r.pageCount ?? null,
@@ -509,8 +519,10 @@ export class Content {
 
   mint({ bundleId, captureSha, extent, mintedBy = CONTENT_MINTED_BY_PLANE, at = null, context = null, ctx = null }) {
     const c = context || ctx || this.contentContextFor(captureSha, { searched: false });
-    const bad = checkContentExtent(extent, c);
+    const bad = this.#checkExtent(extent, c);
     if (bad) return bad;
+    /* R65–R67: a `sheet-range` over a register capture is a register row: the human form by key, the reduction remembered */
+    const register = c.register && isObj(extent) && extent.kind === "sheet-range" ? this.#registerOf(captureSha, extent) : null;
     /* FW-19 / IC-125: a `bytes` row has no chain and no cap, both written NULL with `cited_as` saying why; the chain
        is also left out of its address, so a re-read never moves it and never stales it. */
     const citedAs = contentCitedAs(extent);
@@ -522,17 +534,19 @@ export class Content {
       this.sql.exec(
         `INSERT OR IGNORE INTO content
            (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
-            page_count,minted_by,at,stale,cited_as,chain_kind)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?,?)`,
-        id, captureSha, bundleId, extent.kind, canonicalExtent(extent), describeExtent(extent),
+            page_count,minted_by,at,stale,cited_as,chain_kind,register)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?,?,?)`,
+        id, captureSha, bundleId, extent.kind, canonicalExtent(extent),
+        register ? localize("content.ref.register_row", "row {n} of {file}", { n: String(extentBox(extent).r0), file: String(extent.sheet) }) : describeExtent(extent),
         chain == null ? null : JSON.stringify(chain),
         /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document (D-252); NULL is undetermined and STATED. */
         citedAs === "bytes" ? null : derivationCap(chain, target),
         c.pageCount ?? null, mintedBy, at || this.now(), citedAs,
         /* R14 (D-686, D-710): how THIS unit was read, asked of the same target as the cap. */
-        citedAs === "bytes" ? null : unitChainKind(chain, target));
+        citedAs === "bytes" ? null : unitChainKind(chain, target),
+        register ? canonicalJson(register) : null);
     }
-    const undetermined = mintUndetermined(extent, c);
+    const undetermined = c.register ? null : mintUndetermined(extent, c);
     return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}) };
   }
 
@@ -645,7 +659,7 @@ export class Content {
                       ? localize("content.index.under_the_capture_the_leg", " under the capture the leg names ({capture}…)", { capture: cit.extent_capture.trim().slice(0, 16) }) : ``) }) });
         continue;
       }
-      const bad = checkContentExtent(ext, p.ctx);
+      const bad = this.#checkExtent(ext, p.ctx);
       if (bad) errs.push({ check: bad.check, code: bad.code, translation: bad.translation, detail: `${lab(i)}: ${bad.detail}` });
     }
     return errs;
@@ -729,7 +743,9 @@ export class Content {
     const r = this.#one(`SELECT ${ROW_COLS} FROM content WHERE content_id=?`, contentId);
     if (!r) return null;
     const ext = { kind: r.extent_kind, ...(safeJson(r.extent) || {}) };
-    return { ...r, extent: safeJson(r.extent), chain: safeJson(r.chain), stale: !!r.stale, resolves: true,
+    const { register, ...plain } = r;
+    return { ...plain, ...(register ? { register: safeJson(register) } : {}),
+             extent: safeJson(r.extent), chain: safeJson(r.chain), stale: !!r.stale, resolves: true,
              mint: mintLabel(r.minted_by),
              says: r.stale ? staleSays(ext) : word("content.says.record_holds", { ext: String(describeExtent(ext)) }) };
   }
@@ -825,7 +841,11 @@ export class Content {
       : (atts.by.get(r.capture_sha) || [])
         .filter((a) => !(a.chain != null && r.chain != null && a.chain !== r.chain))
         .map((a) => ({ member: a.attestor, at: a.at, extent: attestationShape(a) }));
-    const transcription = r.cited_as === "bytes"
+    const register = r.register ? safeJson(r.register) : null;
+    const transcription = register
+      ? { ceiling: null, determinant: null, by: [], applies: false,
+          why: localize("content.why.register_row_as_filed", "not applicable: bytes as filed") }
+      : r.cited_as === "bytes"
       ? { ceiling: null, determinant: null, by: [], applies: false,
           why: word("content.why.row_cites_itself", { extent: String(describeExtent(extent)) }) }
       : target == null
@@ -841,6 +861,7 @@ export class Content {
       cited_as: r.cited_as ?? "text",
       mint: mintLabel(r.minted_by),
       transcription,
+      ...(register ? { register } : {}),
       ...(tx ? { typed: this.#typedBlock(r, tx) } : {}),
       /* The capture axis is the DOCUMENT's (DEC-4): one value, keyed by bundle, never a per-portion copy (R19, R35). */
       capture: { grain: "document", from: `earned.capture[${r.bundle_id}]`,
@@ -919,6 +940,57 @@ export class Content {
   /* ===================================================================== *
    * STALE (R22, R41).
    * ===================================================================== */
+
+  /** R65: the one registration by the module that holds register captures: `holds(sha)` says whether a capture is a
+   *  register segment, `rowAt(sha, n)` answers `{cells, reduced}` of the reduced file's row `n` (the header is row 1),
+   *  or null past the end. Offered once at start, as `onStale`'s rules; a second registration is `LISTENER_DECLARED`,
+   *  a provider without both functions `LISTENER_MALFORMED`. */
+  registerRowContext(provider) {
+    if (!provider || typeof provider.holds !== "function" || typeof provider.rowAt !== "function")
+      return { ok: false, reason: "LISTENER_MALFORMED" };
+    if (this.rowContext) return { ok: false, reason: "LISTENER_DECLARED" };
+    this.rowContext = provider;
+    return { ok: true };
+  }
+
+  /** R65: whether the provider holds `sha` as a register segment; a provider that throws holds nothing. */
+  #registerHolds(sha) {
+    if (!this.rowContext || typeof sha !== "string" || !sha) return false;
+    try { return this.rowContext.holds(sha) === true; } catch { return false; }
+  }
+
+  #registerRow(sha, n) {
+    try { const r = this.rowContext.rowAt(sha, n); return isObj(r) ? r : null; } catch { return null; }
+  }
+
+  /** R65: R7's check of a `sheet-range` over a register capture, against the provider's rows in place of a reading
+   *  (chain null is no refusal); any other extent, and a capture the provider does not hold, is checked as before. */
+  #checkExtent(extent, ctx) {
+    if (!(ctx && ctx.register) || !isObj(extent) || extent.kind !== "sheet-range") return checkContentExtent(extent, ctx);
+    const box = typeof extent.sheet === "string" && extent.sheet.trim() ? extentBox(extent) : null;
+    if (!box) {
+      /* a malformed sheet or range: R7's own refusal of its shape, asked as if a chain were held */
+      const bad = checkContentExtent(extent, { ...ctx, register: null, chain: [] });
+      if (bad) return bad;
+      const row = CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE;
+      return { ok: false, check: row.check, code: "CONTENT_EXTENT_UNREADABLE", translation: row.translation,
+               detail: localize("content.index.register_range_unreadable", "a register row names its file and a range of cells, and this one names neither as written") };
+    }
+    if (box.r0 >= 1 && this.#registerRow(ctx.register.sha, box.r1)) return null;
+    const row = CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_OUT_OF_RANGE;
+    return { ok: false, check: row.check, code: "CONTENT_EXTENT_OUT_OF_RANGE", translation: row.translation,
+             detail: localize("content.index.register_row_past_end", "row {row} is past the last row of this register file", { row: String(box.r1) }) };
+  }
+
+  /** R67: the reduction a register row points into, from the provider's `reduced` block at the range's first row. */
+  #registerOf(sha, extent) {
+    const box = extentBox(extent);
+    const got = box ? this.#registerRow(sha, box.r0) : null;
+    const red = got && isObj(got.reduced) ? got.reduced : {};
+    return { segment_sha: red.segment_sha ?? sha, original_sha256: red.original_sha256 ?? null,
+             original_covers: red.original_covers ?? null, dropped_columns: red.dropped_columns ?? null,
+             src_row: red.src_row ?? null, import: red.import ?? null };
+  }
 
   /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each re-read that
    *  stales a row whose passage the new text affects or cannot be told, `fn` is called ONCE with the re-read's notice
@@ -1442,7 +1514,7 @@ export class Content {
     const no = (reason, why) => ({ cells: null, reason, why });
     try {
       const id = typeof contentId === "string" ? contentId.trim() : "";
-      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, stale FROM content WHERE content_id=?`, id)
+      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, stale, register FROM content WHERE content_id=?`, id)
         : null;
       if (!r) return no("not_held", localize("content.index.no_content_row_by_that", "this record holds no content row by that id"));
       if (r.stale)
@@ -1458,6 +1530,25 @@ export class Content {
         if (!Number.isInteger(fromRow) || fromRow < 1 || !box || fromRow < box.r0 || fromRow > box.r1)
           return no("from_row_outside_extent", localize("content.index.from_row_outside_extent", "row {fromRow} is not a row of the cited cells, so there is nothing to read from it", { fromRow: String(typeof fromRow === "number" || typeof fromRow === "string" ? String(fromRow).slice(0, 20) : typeof fromRow) }));
         from = fromRow;
+      }
+      /* R65: a register row's cells are the provider's, the row's kept cells, never a reading's */
+      if (r.register && this.#registerHolds(r.capture_sha)) {
+        const box = extentBox(extent);
+        if (!box) return no("not_read", localize("content.index.row_cells_could_not", "the row's cells could not be read"));
+        const cells = [];
+        for (let n = Math.max(box.r0, from ?? box.r0); n <= box.r1; n++) {
+          const got = this.#registerRow(r.capture_sha, n);
+          if (!got) break;
+          const kept = Array.isArray(got.cells) ? got.cells : [];
+          for (let col = box.c0; col <= box.c1 && col <= kept.length; col++) {
+            const cell = kept[col - 1];
+            const typed = isObj(cell) ? cell : { value: cell };
+            cells.push({ source: { sheet: extent.sheet, cell: `${a1Column(col)}${n}` }, value: typed.value ?? null,
+                         type: typed.type ?? (typeof typed.value === "number" ? "number" : "string"),
+                         declared: typed.declared ?? null, cached: typed.cached ?? null, formula: typed.formula ?? null });
+          }
+        }
+        return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells };
       }
       const office = this.#officeOf(r.capture_sha);
       const sheet = typeof extent.sheet === "string" ? extent.sheet.trim() : "";

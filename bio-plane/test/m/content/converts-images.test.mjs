@@ -239,8 +239,8 @@ test("R14, R45 (content-chain-kind): a content table with no chain_kind gains it
   assert.ok([...w.st.sql.exec(`PRAGMA table_info(content)`)].some((c) => c.name === "chain_kind"));
   assert.deepEqual(kinds(w), ["c-bad=null", "c-bare=null", "c-layer=layer", "c-ocr=ocr",
     "m-doc=mixed", "m-page0=layer", "m-page2=ocr", "o-doc=mixed", "o-page0=layer", "o-page2=mixed", "x-image=null"]);
-  assert.deepEqual(w.rows(`SELECT * FROM content ORDER BY content_id`).map(({ chain_kind, ...r }) => ({ ...r })), kept,
-    "nothing but the new column moved");
+  assert.deepEqual(w.rows(`SELECT * FROM content ORDER BY content_id`).map(({ chain_kind, register, ...r }) => ({ ...r })), kept,
+    "nothing but the new columns moved (chain_kind, and R67's register)");
   assert.equal(w.row(`SELECT name FROM sqlite_master WHERE type='index' AND name='content_chain_kind'`).name, "content_chain_kind");
   assert.match(w.row(`SELECT sql FROM sqlite_master WHERE name='content_chain_kind'`).sql, /content\s*\(\s*chain_kind\s*,\s*bundle_id\s*\)/);
 });

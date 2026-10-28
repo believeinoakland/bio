@@ -115,7 +115,8 @@ CREATE TABLE IF NOT EXISTS content (
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
   cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
-  chain_kind     TEXT               -- D-686. how THIS unit was read: the last derivation step covering its page, or for a unit with no page its pages' one kind or mixed. Written at mint (content R14). NULL = undetermined. See the index block below
+  chain_kind     TEXT,              -- D-686. how THIS unit was read: the last derivation step covering its page, or for a unit with no page its pages' one kind or mixed. Written at mint (content R14). NULL = undetermined. See the index block below
+  register       TEXT               -- T53 R67: a register row's reduction as canonical JSON {segment_sha, original_sha256, original_covers, dropped_columns, src_row, import}. NULL for every other row, which has no register key
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -258,6 +259,8 @@ export function migrateContent(sql) {
   if (info.length) {
     if (!info.some((r) => r.name === "cited_as"))
       sql.exec(`ALTER TABLE content ADD COLUMN cited_as TEXT NOT NULL DEFAULT 'text'`);
+    if (!info.some((r) => r.name === "register"))
+      sql.exec(`ALTER TABLE content ADD COLUMN register TEXT`);
     const had = info.find((r) => r.name === "chain_kind");
     if (!had || had.hidden) {
       if (had) {

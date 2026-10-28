@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7991 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7995 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22752,6 +22752,8 @@ export const WORD_ROWS = Object.freeze([
   ["content.index.reading_carries_container_extent","the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded",null,null,false,"code"],
   ["content.index.reading_holds_no_office","the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)",null,null,false,"code"],
   ["content.index.record_does_not_hold_format","this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED",null,null,false,"code"],
+  ["content.index.register_range_unreadable","a register row names its file and a range of cells, and this one names neither as written",null,null,false,"code"],
+  ["content.index.register_row_past_end","row {row} is past the last row of this register file",null,null,false,"code"],
   ["content.index.row_cells_could_not","the row's cells could not be read",null,null,false,"code"],
   ["content.index.row_cited_under_earlier","the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited",null,null,false,"code"],
   ["content.index.target_has_no_typings","{target} is not a document, so nobody has typed any page of it (DEC-21)",null,null,false,"code"],
@@ -22792,10 +22794,12 @@ export const WORD_ROWS = Object.freeze([
   ["content.notice.why_so_there_is_nothing","{why}, so there is nothing to compare",null,null,false,"code"],
   ["content.notice.why_so_there_is_nothing_2","{why}, so there is nothing to compare",null,null,false,"code"],
   ["content.part_kind.body","body",null,null,false,"code"],
+  ["content.ref.register_row","row {n} of {file}",null,null,false,"code"],
   ["content.ref.with_part_kind","{ref} ({kind})",null,null,false,"code"],
   ["content.typed.anonymous_member","a member of the team",null,null,false,"code"],
   ["content.typed.checked","typed by {typist}, checked by {checkers}",null,null,false,"code"],
   ["content.typed.unchecked","typed by {typist}, not yet checked",null,null,false,"code"],
+  ["content.why.register_row_as_filed","not applicable: bytes as filed",null,null,false,"code"],
   ["contradiction.checks.disclosure_malformed","What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written.",null,null,false,"code"],
   ["contradiction.checks.flag_no_passage","Setting two documents side by side as a contradiction names a passage in each, as a document and the part of it. One of them is missing, is not held here, or is not one you can see; which of the two is named. Nothing was written.",null,null,false,"code"],
   ["contradiction.checks.flag_no_reason","Saying two documents contradict is a kept decision, and a kept decision says why. Give the reason in your own words. Nothing was written.",null,null,false,"code"],
