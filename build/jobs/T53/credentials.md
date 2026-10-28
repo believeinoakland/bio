@@ -1,6 +1,6 @@
 # credentials (T53)
 
-**Status** · session_018Bhceesg4XYzpL7ZX32uiC · depth 2 · WAITING: CHANGE (ai-accounts) done at 90f01298462, tests 217/217 on the tranche and on a local merge of member-roster; will complete with --with member-roster when told
+**Status** · session_018Bhceesg4XYzpL7ZX32uiC · depth 2 · WORKING
 **Sessions** · 1
 
 ## Completion (2026-10-28)
