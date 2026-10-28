@@ -7,6 +7,7 @@
    answer through a scripted network (`network`, `granted`). */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
+import { crc32 as zlibCrc32 } from "node:zlib";
 import { RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -33,7 +34,8 @@ export function storage() {
   for (const t of bare.split(";")) if (t.trim()) db.exec(t);
   /* provenance R48's contract columns capture reads: `registered` orders a document's captures (R77). */
   db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT,
-             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z', bytes INTEGER)`);
+             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z', bytes INTEGER,
+             authored INTEGER NOT NULL DEFAULT 0, author TEXT)`);
   db.exec(`CREATE TABLE captured_locators (address_norm TEXT NOT NULL, address TEXT NOT NULL, capture_sha TEXT NOT NULL,
              via TEXT NOT NULL DEFAULT 'direct', first_retrieved TEXT NOT NULL, last_retrieved TEXT NOT NULL,
              observations INTEGER NOT NULL DEFAULT 1, retrieval_locator TEXT, PRIMARY KEY (address_norm, capture_sha, via))`);
@@ -139,8 +141,8 @@ export function receipt(s, { address, capture, via = "direct", first, last = fir
   s.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations)
               VALUES (?, ?, ?, ?, ?, ?, ?)`, address, address, capture, via, first, last, observations);
 }
-export function register(s, captureSha, bundleId, { type = "information", project = null, registered = "2026-01-01T00:00:00.000Z" } = {}) {
-  s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered) VALUES (?, ?, 'x', ?)`, captureSha, bundleId, registered);
+export function register(s, captureSha, bundleId, { type = "information", project = null, registered = "2026-01-01T00:00:00.000Z", author = null } = {}) {
+  s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered, authored, author) VALUES (?, ?, 'x', ?, ?, ?)`, captureSha, bundleId, registered, author ? 1 : 0, author);
   s.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
               VALUES (?, ?, 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, bundleId, type, project);
 }
@@ -193,3 +195,20 @@ export function signer(s, memberId, keyB64, { keyStatus = "active", memberStatus
              memberId, memberStatus);
   s.sql.exec(`INSERT INTO signers (key_b64, member_id, status, added) VALUES (?, ?, ?, '2026-01-01')`, keyB64, memberId, keyStatus);
 }
+
+/* A ZIP package holding one stored entry (`payload`), as a real container: a local header, the bytes, the central directory and the end record (the CRC taken
+   over the payload). For a test that needs a file `format-registry` names `zip` whatever its size. */
+export function storedZip(payload, name = "data.bin") {
+  const n = Buffer.from(name), crc = zlibCrc32(payload), size = payload.length;
+  const le16 = (v) => { const b = Buffer.alloc(2); b.writeUInt16LE(v); return b; };
+  const le32 = (v) => { const b = Buffer.alloc(4); b.writeUInt32LE(v >>> 0); return b; };
+  const local = Buffer.concat([le32(0x04034b50), le16(20), le16(0), le16(0), le16(0), le16(0x21), le32(crc), le32(size), le32(size), le16(n.length), le16(0), n]);
+  const central = Buffer.concat([le32(0x02014b50), le16(20), le16(20), le16(0), le16(0), le16(0), le16(0x21), le32(crc), le32(size), le32(size), le16(n.length), le16(0), le16(0),
+                                 le16(0), le16(0), le32(0), le32(0), n]);
+  const end = Buffer.concat([le32(0x06054b50), le16(0), le16(0), le16(1), le16(1), le32(central.length), le32(local.length + size), le16(0)]);
+  const out = new Uint8Array(local.length + size + central.length + end.length);
+  out.set(local, 0); out.set(payload, local.length); out.set(central, local.length + size); out.set(end, local.length + size + central.length);
+  return out;
+}
+/** The bytes a `storedZip` adds to its payload for the default entry name. */
+export const ZIP_OVERHEAD = 30 + 8 + 46 + 8 + 22;

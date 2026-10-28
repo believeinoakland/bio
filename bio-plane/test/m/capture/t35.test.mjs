@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, governor, network, granted, sha } from "./fixture.mjs";
 import { TASK_KINDS } from "../../../src/capture/index.mjs";
+import { CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 import { acquireOp } from "../../../src/capture/ops.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../../../src/tsa.mjs";
@@ -46,11 +47,11 @@ test("R68, DEC-149 M (`#replayMatches`): a co-archive whose locator is no raw re
   assert.deepEqual([co.matches, co.match_basis], ["undetermined", word("capture.match_basis.archived_locator_replay")]);
 });
 
-test("R68, DEC-149 M (`#replayMatches`): a replay over 256 MiB reads undetermined, with capture.match_basis.replay_larger_group", async () => {
+test("R68, DEC-149 M (`#replayMatches`): a replay over the capture ceiling reads undetermined, with capture.match_basis.replay_larger_group", async () => {
   const w = reWorld();
   const chunk = new Uint8Array(4 << 20);
   let sent = 0;
-  const big = () => new Response(new ReadableStream({ pull(ctl) { if (sent > 260 << 20) ctl.close(); else { sent += chunk.length; ctl.enqueue(chunk); } } }));
+  const big = () => new Response(new ReadableStream({ pull(ctl) { if (sent > CAPTURE_MAX + (4 << 20)) ctl.close(); else { sent += chunk.length; ctl.enqueue(chunk); } } }));
   const net = scripted(w.d, "https://web.archive.org/web/20261007120000/https://a.example/page", big);
   let r;
   try { r = await w.c.reattest({ captureSha: w.d, locator: LOCATOR }); } finally { net.restore(); }

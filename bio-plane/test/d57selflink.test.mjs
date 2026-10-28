@@ -40,6 +40,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { normalizeAddress } from "../src/subresources.mjs";
+import { word } from "../src/setup-words/index.mjs";
 
 const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 
@@ -141,7 +142,7 @@ t("and the verdicts account for every one of them",
 console.log("\n--- the self-link's basis is a SELF-REFERENCE, never a change ---");
 const selfText = self ? `${self.basis || ""} ${self.detail || ""}` : "";
 t("the self-link does NOT say the target changed", /\bchanged\b/.test(selfText), false);
-t("the self-link states a SELF-REFERENCE basis", /points at the document itself/.test(self && self.basis || ""), true);
+t("the self-link states a SELF-REFERENCE basis", (self && self.basis || "") === word("capture.basis.link_points_document_itself"), true);
 t("and its detail names the self-reference", /^self-reference: /.test(self && self.detail || ""), true);
 t("no hash is printed twice", (selfText.match(new RegExp(SHA.slice(0, 12), "g")) || []).length <= 1, true);
 t("the verdict is one of the three, never a fourth",
@@ -159,7 +160,7 @@ t("undetermined, not assumed either way", same && same.verdict, "undetermined");
 console.log("\n--- over-strictness: a GENUINE two-capture bracket still reads CHANGED ---");
 t("the churned target is undetermined", churned && churned.verdict, "undetermined");
 t("and says the target changed between the bracketing captures",
-  /the target changed somewhere between the captures bracketing/.test(churned && churned.basis || ""), true);
+  (churned && churned.basis || "") === word("capture.basis.target_changed_somewhere"), true);
 t("naming two DIFFERENT hashes",
   [/b1b1b1b1b1b1/.test(churned && churned.detail || ""), /b2b2b2b2b2b2/.test(churned && churned.detail || "")], [true, true]);
 

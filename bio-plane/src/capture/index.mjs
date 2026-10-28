@@ -65,12 +65,15 @@ import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
 import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs";
+import * as provenanceExports from "../provenance/index.mjs";
+import { readMessage } from "../mail-reader/index.mjs";
 import { attest, attestationOf } from "../attestation/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
-import { word, localize } from "../setup-words/index.mjs";
+import { word, localize, hasWord } from "../setup-words/index.mjs";
+import { getFormat, detectFormat, formatNameFor, kindTable, extensionOf } from "../formats.mjs";
 export { CAPTURE_SCHEMA } from "./schema.mjs";
 export { MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "./grammar.mjs";
 
@@ -102,8 +105,10 @@ const DECLARED = Object.freeze({ ok: true, module: "capture", declared: true });
 const NOT_YET_DECLARED = Object.freeze({ ok: true, module: "capture", declared: false });
 const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declared: false, reason: "NO_DECLARATION_SEAM" });
 
-/* R76 (K2455): the routes by which a capture is received, never fetched (provenance R51, R63). */
-const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
+/* R116: the receipt route of a message brought in by email is `provenance`'s `EMAIL_VIA` (its R82, the one spelling); until that export is merged the spelling is the requirement's own. */
+const EMAIL_VIA = provenanceExports.EMAIL_VIA ?? "email";
+/* R76 (K2455; T53, R116): the routes by which a capture is received, never fetched (provenance R51, R63, R82). */
+const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA, EMAIL_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
 /* R109 (fix round 9, G152): the `READ_BOUNDS` row that is the whole-read ceiling of an upload's kind, by what its profile states of it: the row the control-plane's
@@ -117,6 +122,11 @@ const wholeReadKind = (profile) => {
   if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return "text";
   return undefined;
 };
+/** R121: the rows a cut preview shows at a time (DEC-455's drawing: "Showing rows 1 to 200"), and the longest sheet name `previewMore` takes. */
+export const PREVIEW_ROWS = 200;
+const PREVIEW_SHEET_MAX = 300;
+/** R119: the extensions whose type the table keys by another name (`format-registry`'s `kindTable()` keys: `text`, `jpeg`, `tiff`, `html`). */
+const EXTENSION_KIND = Object.freeze({ txt: "text", md: "text", log: "text", jpg: "jpeg", tif: "tiff", htm: "html" });
 /** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
 const UPLOAD_HEAD = 64 * 1024;
 /** R107: `bytes` less a UTF-8 code point cut at their end (a lead byte and too few continuation bytes), so a head that ends inside a
@@ -130,6 +140,9 @@ function withoutCutCodePoint(bytes) {
   }
   return bytes;
 }
+/** R116: the longest header value `message` carries, in characters, and the most values of a header that is listed. */
+const MAIL_FIELD_MAX = 4000;
+const MAIL_FIELD_LIST_MAX = 100;
 /** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
 export const CAPTURED_FOR_QUESTION_MAX = 200;
 /** R100: the longest project id `recordSeenIn` records, in characters. */
@@ -149,6 +162,9 @@ export const PARTED_SWEEP_MAX = 20;
 /** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (N409's pattern). */
 export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
+/** R116: the one sentence of a message's `MAIL_WITHIN_FAILED` (500, as `UPLOAD_WITHIN_FAILED`, K2452), never the thrown message. */
+export const MAIL_WITHIN_FAILED_DETAIL =
+  localize("capture.index.mail_within_failed", "the act run with the message did not complete, so the message was rolled back and nothing was written");
 
 /* R86: an upload's bytes as a reader of chunks, whatever form the caller holds them in: a `ReadableStream` (the request's
    raw body), bytes (`Uint8Array`, any typed array or `ArrayBuffer`), or an async iterable of byte chunks. `cancel` stops a
@@ -731,6 +747,20 @@ export class Capture {
     try { return await this.#upload(args ?? {}, tally); } finally { tally.end(); }
   }
 
+  /** R116 (T53; N824; K2425 (4), K2434, K2449): `emailCapture({bytes, headers, statement, by, within})` brings a received message into the record, as `uploadCapture` brings a
+   *  file: the same member-session fence, her statement required (`MAIL_NO_STATEMENT`, C-118.12), `EMPTY`, `TOO_LARGE` (the ceiling the lower of the mail bound and
+   *  `CAPTURE_MAX`, R118, judged on a declared size before a byte is read), `within` taken and refused as R86's (`MAIL_WITHIN_FAILED`, 500, for a throw). The bytes are hashed and
+   *  held under their own digest once; one receipt (`via: "email"`, address `email:<sha256>`, `by`, her statement); the answer is a provenance document built as an upload's with
+   *  `capture.method` `emailed`, `source` `{kind: "mailer", ...}` naming no member and no sender, and the message's headers as stated under `message`. It is graded received,
+   *  never fetched. R117: inside the filing transaction, after the receipt, one job row of kind `member` for each attachment `mail-reader` lists and cuts (the member job files
+   *  them), and the answer lists each attachment with its state; one over its kind's bound is listed refused with its size and the bound, the message itself still filed.
+   *  `headers` are the caller's (mail-door's reading); with none, the message's own headers as `mail-reader` reads them. */
+  async emailCapture(args = {}) {
+    const a = args ?? {};
+    const tally = Capture.#tally(a.ledger);
+    try { return await this.#upload({ ...a, name: null, type: null, email: { headers: a.headers ?? null } }, tally); } finally { tally.end(); }
+  }
+
   /* R86, R113: the refusals that come before any byte is looked at, in their order: the member-session fence, the statement of origin (C-118.10), the name
      and the declared type. The one place they are made, for the upload in one request and the upload in parts. Null when none applies. */
   static #fence({ by, statement, name, type, op }) {
@@ -749,6 +779,21 @@ export class Capture {
     /* R92: the media type the member's browser declared, a string of at most 255 characters when given. */
     if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
       return Capture.#missingArgument(op, "type", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(UPLOAD_TYPE_MAX) }), type);
+    return null;
+  }
+
+  /* R116 (T53; N824): the refusals that come before any byte of a message is looked at: the member-session fence, then her statement of where it came from
+     (`MAIL_NO_STATEMENT`, C-118.12, the rule of C-118.10 under its own code). Null when none applies. */
+  static #mailFence({ by, statement }) {
+    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: localize("capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written") };
+    /* DEC-49 REGION is-mail-stated */
+    if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
+      const row = CAPTURE_CHECKS.MAIL_NO_STATEMENT;
+      return { ok: false, reason: "MAIL_NO_STATEMENT", code: "MAIL_NO_STATEMENT", check: row.check, translation: row.translation, status: 400, maxChars: UPLOAD_STATEMENT_MAX };
+    }
+    /* END DEC-49 REGION is-mail-stated */
     return null;
   }
 
@@ -791,20 +836,77 @@ export class Capture {
   /* R111: the 413 an over-large body is refused with: its size and the figure it was judged against (`size`, `bound`; `bytes`, `maxBytes` as R86 always
      said them) and the key of the sentence. The capture ceiling is the archive row of `READ_BOUNDS`; the request ceiling is the platform's. */
   static #tooLarge(size, which, bound, keepable = null) {
-    const request = which === "request";
+    const request = which === "request", mail = which === "mail";
     /* R113: a file refused for the request-body ceiling that the capture ceiling still admits is to be sent in parts (`in_parts`), the screen's cue to begin one */
     return { ok: false, reason: "TOO_LARGE", status: 413, bytes: size, maxBytes: bound, size, bound,
              ...(request && Number.isSafeInteger(keepable) ? { in_parts: size <= keepable } : {}),
-             key: request ? "capture.index.body_over_request_ceiling" : boundStatement("archive", "uploaded_bytes", size).key,
-             detail: request
+             key: mail ? boundStatement("mail", "message_bytes", size).key : request ? "capture.index.body_over_request_ceiling" : boundStatement("archive", "uploaded_bytes", size).key,
+             detail: mail
+               ? localize("capture.index.message_too_large", "this message is larger than the {bound} bytes a message may be, so it was refused whole; nothing was written", { bound: String(bound) })
+               : request
                ? localize("capture.index.body_over_request_ceiling", "the file is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written", { bound: String(bound) })
                : localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
   }
 
+  /* R119 (T53; N1266, N1267; `format-registry` RF6, RF7, R42): what the door knows of a file's kind, and the bound that kind carries. `rows` is the kind table
+     (`kindTable()`), one row for each type of the roster, each named unlisted type and each refused type. */
+  static #kindRows() { return new Map(kindTable().map((r) => [r.key, r])); }
+
+  /* the bytes figure of a kind's row (`{bound, key}`), null when the kind has none */
+  static #kindBound(rows, key) {
+    const row = key ? rows.get(key) : null;
+    const f = row ? row.limit.figures.find((x) => x.what === "bytes") : null;
+    return f && Number.isSafeInteger(f.bound) ? f : null;
+  }
+
+  /* the kind the name and the declared type alone give (before a byte is read), a key of the table or null */
+  static #declaredKind(rows, name, type) {
+    const ext0 = typeof name === "string" ? extensionOf(name) : "";
+    const ext = EXTENSION_KIND[ext0] ?? ext0;
+    if (ext && rows.has(ext)) return ext;
+    if (typeof type === "string" && type) {
+      try { const d = detectFormat(null, type, null); if (d && typeof d.format === "string" && rows.has(d.format)) return d.format; } catch { /* no answer */ }
+    }
+    return null;
+  }
+
+  /* the kind of the bytes given (the head, or the whole of a file held in one part) as `format-registry` answers it: its answer, or null */
+  static #kindAnswer(bytes, name, type) {
+    try {
+      const a = detectFormat(bytes, typeof type === "string" && type ? type : null, typeof name === "string" && name ? name : null);
+      return a && typeof a === "object" && typeof a.format === "string" ? a : null;
+    } catch { return null; }
+  }
+
+  /* R119: the key of the kind's row for a registry answer: a listed type its own key, an unlisted one its `named` (or `other`), none for a refused or undetermined one */
+  static #keyOfAnswer(rows, a) {
+    if (!a || a.format === "refused" || a.format === "undetermined") return null;
+    const key = a.format === "unlisted" ? (a.named ?? "other") : a.format;
+    return rows.has(key) ? key : a.format === "unlisted" ? "other" : null;
+  }
+
+  /* R119 (RF7; `acquisition` R139): a file of a refused kind is not filed: the refusal states the kind and the reason in plain words, and nothing is written. */
+  static #kindRefused(a) {
+    const n = formatNameFor(a), row = CAPTURE_CHECKS.FILE_KIND_REFUSED;
+    /* the reason's words are the word table's `file.refused.reason.<name>`, which `format-registry` names by key (RF8) and the screen reads by the same key */
+    const why = n.reason_key && hasWord(n.reason_key) ? word(n.reason_key) : null;
+    return { ok: false, reason: "FILE_KIND_REFUSED", code: "FILE_KIND_REFUSED", check: row.check, translation: row.translation, status: 415,
+             kind: n.name, kind_key: n.kind_key, kind_text: n.text, ...(n.reason_key ? { why_key: n.reason_key, why_text: why } : {}),
+             detail: localize("capture.index.file_kind_refused", "This is a {kind}, which Civicsmith does not keep{why}. Nothing was written.",
+                              { kind: String(n.text ?? n.name), why: why ? `: ${why}` : "" }) };
+  }
+
+  /* R119 (N1267): a file over its kind's bound is refused 413 before it is held, with its size, the limit and the key of the limit's sentence */
+  static #kindTooLarge(size, fig, kind) {
+    return { ok: false, reason: "TOO_LARGE", status: 413, bytes: size, maxBytes: fig.bound, size, bound: fig.bound, key: fig.key, kind,
+             detail: localize("capture.index.file_too_large_kind", "this kind of file may be at most {bound} bytes, and this one is {size}; nothing was written",
+                              { bound: String(fig.bound), size: String(size) }) };
+  }
+
   async #upload({ bytes, statement, name = null, type = null, by, at = null, within = null, boundMs = null, keepLater = null,
-                  registerJob = null, armJobs = null, declared = null, bounds = null } = {}, tally) {
+                  registerJob = null, armJobs = null, declared = null, bounds = null, email = null } = {}, tally) {
     const startedAt = Date.now();
-    const fenced = Capture.#fence({ by, statement, name, type, op: "captureupload" });
+    const fenced = email ? Capture.#mailFence({ by, statement }) : Capture.#fence({ by, statement, name, type, op: "captureupload" });
     if (fenced) return fenced;
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev) return Capture.#storageAbsent();
@@ -813,12 +915,36 @@ export class Capture {
     /* R111: a body is bounded before it is held. The two ceilings are quoted (`CAPTURE_MAX`, the request-body entry of `PLATFORM_FIGURES`); the lower is the one
        a member meets, and the one a refusal names. A size declared up front (the request's length) is judged before one byte is read. */
     const capMax = Capture.#lowered(CAPTURE_MAX, bounds && bounds.capture);
-    const reqMax = Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
-    const ceiling = Math.min(capMax, reqMax), ceilingIs = reqMax <= capMax ? "request" : "capture";
+    /* R118: a message's ceiling is the lower of the mail bound and `CAPTURE_MAX`; it arrives by the plane's mail entry, not in a request, so the request-body ceiling is no
+       part of it */
+    const mailMax = email ? Capture.#lowered(boundOf("mail", "message_bytes"), bounds && bounds.mail) : Infinity;
+    const reqMax = email ? Infinity : Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
+    const ceiling = Math.min(capMax, reqMax, mailMax), ceilingIs = email && mailMax <= capMax ? "mail" : reqMax <= capMax ? "request" : "capture";
+    /* R119: a kind's own bound is judged on the size declared up front, from the name and the declared type, before one byte is read; the bytes' own kind
+       is judged below, at the head of the file and again on the whole of a file held in one part. */
+    const kinds = Capture.#kindRows();
+    let kindKey = email ? null : Capture.#declaredKind(kinds, name, type), kindFig = Capture.#kindBound(kinds, kindKey), judgedAnswer = null;
+    if (kindFig && Number.isSafeInteger(declared) && declared > kindFig.bound) {
+      await reader.cancel();
+      return Capture.#kindTooLarge(declared, kindFig, kindKey);
+    }
     if (Number.isSafeInteger(declared) && declared > ceiling) {
       await reader.cancel();
       return Capture.#tooLarge(declared, ceilingIs, ceiling, capMax);
     }
+    /* R119: the bytes' kind, once known: a refused kind is refused, any kind's bound is judged on what has arrived; null to go on */
+    const judgeKind = (bytesForKind, size) => {
+      if (email) return null;   // a message is a message: its kind is not in question, and its bound is the mail bound (R118)
+      const a = Capture.#kindAnswer(bytesForKind, name, type);
+      if (!a) return null;
+      if (a.format === "refused") return Capture.#kindRefused(a);
+      judgedAnswer = a;
+      const key = Capture.#keyOfAnswer(kinds, a);
+      if (key) { kindKey = key; kindFig = Capture.#kindBound(kinds, key); }
+      if (kindFig && size > kindFig.bound) return Capture.#kindTooLarge(size, kindFig, kindKey);
+      return null;
+    };
+    let headJudged = false;
     /* `acquisition` R10's form: the whole hashed as it arrives by record-grammar's incremental hasher, the bytes held in
        parts of exactly 8 MiB (the last the remainder), each under its own digest; whether each was held before. */
     const whole = createSha256();
@@ -856,6 +982,10 @@ export class Capture {
         if (done) break;
         if (!value) throw new Error("not bytes");
         total += value.length;
+        if (kindFig && total > kindFig.bound) {
+          await reader.cancel();
+          return Capture.#kindTooLarge(total, kindFig, kindKey);
+        }
         if (total > ceiling) {
           await reader.cancel();
           return Capture.#tooLarge(total, ceilingIs, ceiling, capMax);
@@ -864,7 +994,24 @@ export class Capture {
         if (partBytes && total > MULTIPART_KEEP_MAX) { partBytes = null; tally.release(keptBytes); keptBytes = 0; }
         if (headLen < UPLOAD_HEAD) { const k = Math.min(value.length, UPLOAD_HEAD - headLen); head.set(value.subarray(0, k), headLen); headLen += k; }
         held.push(value); heldBytes += value.length; tally.hold(value.length);
+        /* R119: the head of the file, as soon as it has arrived and before any part is stored */
+        if (!headJudged && headLen >= UPLOAD_HEAD) {
+          headJudged = true;
+          const refusal = judgeKind(head.subarray(0, headLen), total);
+          if (refusal) { await reader.cancel(); return refusal; }
+        }
         if (heldBytes >= UPLOAD_PART) await flush(false);
+      }
+      /* R119: a file that fits in one part is judged on all its bytes before any is stored (a package's kind is in its directory, at its end) */
+      if (!parts.length && total > 0) {
+        const all = new Uint8Array(total);
+        let at = 0;
+        for (const c of held) { all.set(c, at); at += c.length; }
+        const refusal = judgeKind(all, total);
+        if (refusal) return refusal;
+      } else if (!headJudged && headLen > 0) {
+        const refusal = judgeKind(head.subarray(0, headLen), total);
+        if (refusal) return refusal;
       }
       await flush(true);
     } catch {
@@ -881,6 +1028,12 @@ export class Capture {
        reading, its vouch box and OCR find it; where it cannot be kept the upload is refused and nothing is written. R103 (fix round 7;
        G79): the buffers of the parts just stored are handed to `keepWhole`, so no part is read back or hashed again: the whole is put
        once. */
+    /* R116, R117: the message as `mail-reader` reads it needs its bytes whole; a message is at most the mail bound, so its parts' buffers are still held (R103), taken before `keepWhole` hands them on */
+    let messageBytes = null;
+    if (email && partBytes && partBytes.length) {
+      if (partBytes.length === 1) messageBytes = partBytes[0];
+      else { messageBytes = new Uint8Array(total); let o = 0; for (const b of partBytes) { messageBytes.set(b, o); o += b.length; } }
+    }
     if (multipart && !(await keepWhole(ev, { sha, parts, total, bytes: partBytes })).ok)
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
@@ -921,8 +1074,43 @@ export class Capture {
       return ct;
     };
     return this.#file({ ev, sha, total, parts, multipart, partsOwed: multipart, keepRow, pending, reg, arm, by, statement, name, type, at, within,
+                        unlisted: judgedAnswer && judgedAnswer.format === "unlisted" ? judgedAnswer : null,
+                        email: email ? { headers: email.headers, bytes: messageBytes, attachmentBound: bounds && bounds.attachment } : null,
                         judge, firstPart: multipart ? head.subarray(0, headLen) : null,
                         held: onlyPart, settle: () => { tally.release(keptBytes); keptBytes = 0; } });
+  }
+
+  /* R116, R117 (T53; N824): what is stated of a received message and what it holds. `headers` are the caller's (mail-door's reading of the message), each key taken as given
+     and otherwise from the message's own headers as `mail-reader` reads them; the `message` block of the document is `provenance` R83's: `{from, to, cc, date, subject,
+     message_id, received, authentication_results}` each as stated or null, and `stated: true` (a statement the message makes of itself, never a fact the record checks).
+     The attachments `mail-reader` lists are listed with their state: `waiting` for one a member job will file (a `rows` entry for the registrar), `over_bound` for one over
+     its kind's bound (N1267: its size and the bound, no row), `not_cut` for one the reader cannot cut out unambiguously (an embedded Outlook message, read with its message). */
+  static async #mailOf({ headers, bytes, attachmentBound = null }) {
+    let read = null;
+    if (bytes) { try { read = await readMessage(bytes, { route: "address" }); } catch { read = null; } }
+    const given = headers && typeof headers === "object" && !Array.isArray(headers) ? headers : null;
+    const own = read && read.ok === true && read.headers && typeof read.headers === "object" ? read.headers : null;
+    const text = (v) => (typeof v === "string" ? v.slice(0, MAIL_FIELD_MAX) : null);
+    const pick = (k) => {
+      const v = given && Object.hasOwn(given, k) && given[k] != null ? given[k] : own ? own[k] : null;
+      if (Array.isArray(v)) { const l = v.filter((x) => typeof x === "string").slice(0, MAIL_FIELD_LIST_MAX).map(text); return l.length ? l : null; }
+      return text(v);
+    };
+    const block = { from: pick("from"), to: pick("to"), cc: pick("cc"), date: pick("date"), subject: pick("subject"), message_id: pick("message_id"),
+                    received: pick("received"), authentication_results: pick("authentication_results"), stated: true };
+    if (!read || read.ok !== true) return { block, listing: null, basis: read && typeof read.reason === "string" ? read.reason : "MAIL_UNREAD", rows: [] };
+    const kinds = Capture.#kindRows();
+    const rows = [], listing = [];
+    for (const a of Array.isArray(read.attachments) ? read.attachments : []) {
+      const item = { index: a.index, name_stated: text(a.name_stated), type_stated: text(a.type_stated), size: a.size, inline: a.inline === true };
+      const key = Capture.#declaredKind(kinds, a.name_stated, a.type_stated), fig = Capture.#kindBound(kinds, key);
+      const bound = Math.min(fig ? fig.bound : Infinity, CAPTURE_MAX, Number.isSafeInteger(attachmentBound) && attachmentBound >= 0 ? attachmentBound : Infinity);
+      if (a.cut === false) listing.push({ ...item, state: "not_cut" });
+      else if (Number.isSafeInteger(a.size) && a.size > bound)
+        listing.push({ ...item, state: "over_bound", bound, key: fig ? fig.key : boundStatement("archive", "uploaded_bytes", a.size).key });
+      else { listing.push({ ...item, state: "waiting" }); rows.push(item); }
+    }
+    return { block, listing, basis: null, rows };
   }
 
   /* R109 (fix round 9; G126; K4835 (2)): the work an upload owes is one job row each, written through the registrar, read as `keepLater` is: the store's
@@ -943,20 +1131,34 @@ export class Capture {
      sniffs; `multipart` says the file is held in parts, as against one object (past `PROFILE_TEXT_MAX` and `ODF_DIGEST_MAX` `profileOf` reads one object by
      ranges of its head and tail, whatever way it came). `held` is the bytes of a file held as one part, which the upload holds already (the profile reads
      them, never the stored object back, R109); `settle` releases them from the byte ledger once the profile is taken. */
-  async #file({ ev, sha, total, parts, multipart, partsOwed, keepRow, pending, reg, arm, by, statement, name, type, at, within, judge, firstPart, held = null, settle = null }) {
+  async #file({ ev, sha, total, parts, multipart, partsOwed, keepRow, pending, reg, arm, by, statement, name, type, at, within, judge, firstPart, held = null, settle = null, unlisted = null, email = null }) {
+    /* R116, R117: a message's own headers (when the caller handed none) and its attachments, as `mail-reader` reads them: read before the filing transaction, never inside it */
+    const mail = email ? await Capture.#mailOf(email) : null;
+    const via = email ? EMAIL_VIA : UPLOAD_VIA;
     /* R109: the rows this upload owes: `reading` always, `unpack` when the profile names `zip` (R110), `keep` when the handover is the row. Called inside the
        filing transaction; a refusal (or a throw) of the registrar rolls the upload back and is answered, never swallowed. */
+    const heldNote = (() => {
+      if (!unlisted) return null;
+      const n = formatNameFor(unlisted);
+      return { state: "held_not_read", name: n.name, kind_key: n.kind_key, text: n.text,
+               sentence: localize("capture.index.held_not_read", "held, not read: {name}", { name: String(n.text ?? n.name) }) };
+    })();
     const isZip = (profile) => !!(profile && profile.format && profile.format.format === "zip");
     const carrier = `snapshots/upload-${sha}`, partShas = parts.map((p) => p.sha256);
     /* R109 (fix round 9, G152; K4958): an upload stated over the whole-read ceiling of its kind is never read, so it owes no `reading`; the reader states it
        at once from the sizes (`control-plane` R132). The kind's row is the one the inline gate judges by: a PDF `pdf.bytes`, a CSV `csv.bytes`, a text `text.bytes`,
        every other kind the whole-load row `pdf.bytes`. */
     const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(wholeReadKind(profile)));
+    const memberRows = mail ? mail.rows.map((m) => ({ kind: "member", session: `${sha}!${m.index}`, sha,
+                                                       detail: { container: sha, container_kind: "message", index: m.index, name_stated: m.name_stated, type_stated: m.type_stated, project: null } })) : [];
+    const membersNote = mail ? (mail.listing ? { attachments: mail.listing } : { attachments: null, attachments_basis: mail.basis }) : {};
     const register = (profile) => {
       if (!reg) return { ok: true };
       const entries = [...(stated(profile) ? [] : [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }]),
                        ...(isZip(profile) ? [{ kind: "unpack", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }] : []),
-                       ...(keepRow ? [{ kind: "keep", sha, carrier, parts: partShas }] : [])];
+                       ...(keepRow ? [{ kind: "keep", sha, carrier, parts: partShas }] : []),
+                       /* R117: one `member` row for each attachment a member job will file, keyed by the capture session `<messageSha>!<index>` (`acquisition` R136) */
+                       ...memberRows];
       for (const e of entries) {
         let r;
         try { r = reg(e); } catch { r = null; }
@@ -968,8 +1170,10 @@ export class Capture {
     };
     /* R109: with no registrar the answer says which rows it could not register */
     const jobsNote = (profile) => ({
+      ...(heldNote ? { held_not_read: heldNote } : {}),
       ...(stated(profile) ? { reading_stated: true } : {}),
-      ...(reg ? {} : { jobs: { not_registered: [...(stated(profile) ? [] : [{ kind: "reading", reason: "NO_REGISTRAR" }]), ...(isZip(profile) ? [{ kind: "unpack", reason: "NO_REGISTRAR" }] : [])] } }),
+      ...(reg ? {} : { jobs: { not_registered: [...(stated(profile) ? [] : [{ kind: "reading", reason: "NO_REGISTRAR" }]), ...(isZip(profile) ? [{ kind: "unpack", reason: "NO_REGISTRAR" }] : []),
+                                                ...memberRows.map(() => ({ kind: "member", reason: "NO_REGISTRAR" }))] } }),
     });
     /* the profile of the bytes: from the bytes the upload holds when it holds them, else as `profileOf` reads the store */
     const profileThe = async (ct) => {
@@ -981,6 +1185,8 @@ export class Capture {
                                         name: typeof name === "string" && name !== "" ? name : null, declaredType: declaredFor(ct) });
       if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
       else if (ct) profile.source_content_type = null;
+      /* R119 (RF6; `acquisition` R138): a kind on no list is held whole and named, its reading stated and owed (the `reading` row below is that debt) */
+      if (heldNote) profile.held_not_read = heldNote;
       return profile;
     };
     let holds = null;
@@ -991,17 +1197,17 @@ export class Capture {
     const registered = !!(holds && holds.registered === true);
     const existed = registered || !!(holds && holds.acquired === true);
     const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
-    const address = `upload:${sha}`;
+    const address = email ? `email:${sha}` : `upload:${sha}`;
     const writeReceipt = () => {
       let r;
       try { r = this.provenance?.recordReceipt?.({ address, addressNorm: address, captureSha: sha, retrieved: when,
-                                                    via: UPLOAD_VIA, retrievalLocator: null, by, statement }); }
+                                                    via, retrievalLocator: null, by, statement }); }
       catch { r = null; }
       return r && r.recorded === true ? r : null;
     };
     const notWritten = { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502,
                          detail: localize("capture.index.receipt_not_written", "the acquisition receipt could not be written, so nothing was filed") };
-    const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
+    const receiptOf = (r) => ({ address, via, retrieved: when, observation: r.observation ?? null });
     /* a second sighting: the receipt and the rows it owes (one each, by the whole sha, so a second upload leaves the one), in one transaction */
     const sighting = (profile) => this.#tx(() => { const r = writeReceipt(); if (!r) return notWritten; const j = register(profile); return j.ok === false ? j : { ok: true, receipt: r }; });
     if (registered) {
@@ -1012,12 +1218,13 @@ export class Capture {
       const r = sighting(profile);
       if (!r.ok) return r;
       await arm();
-      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(profile) };
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(profile), ...membersNote };
     }
     const ct = await judge();
     const profile = await profileThe(ct);
     settle?.();
-    const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
+    const document = email ? this.#emailedDocument({ sha, total, parts, by, at: when, statement, profile, message: mail.block })
+                           : this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
     if (existed) {
       /* R86 (T51 fix round 2; C10): a receipt names the bytes but the register files them under no document (an upload
          interrupted before it was filed): the receipt is written as a second sighting and the document is answered as a new
@@ -1025,7 +1232,7 @@ export class Capture {
       const r = sighting(profile);
       if (!r.ok) return r;
       await arm();
-      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), document, ...pending, ...jobsNote(profile) };
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), document, ...pending, ...jobsNote(profile), ...membersNote };
     }
     let done;
     try {
@@ -1042,12 +1249,13 @@ export class Capture {
       });
     } catch (e) {
       if (e && typeof e === "object" && WITHIN_FAULT in e)
-        return { ok: false, reason: "UPLOAD_WITHIN_FAILED", status: 500, detail: UPLOAD_WITHIN_FAILED_DETAIL };
+        return email ? { ok: false, reason: "MAIL_WITHIN_FAILED", status: 500, detail: MAIL_WITHIN_FAILED_DETAIL }
+                     : { ok: false, reason: "UPLOAD_WITHIN_FAILED", status: 500, detail: UPLOAD_WITHIN_FAILED_DETAIL };
       throw e;
     }
     if (!done.ok) return done;
     await arm();
-    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending, ...jobsNote(profile),
+    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending, ...jobsNote(profile), ...membersNote,
              ...(typeof within === "function" ? { within: done.within } : {}) };
   }
 
@@ -1147,6 +1355,9 @@ export class Capture {
     /* R111: the size is judged before any part is accepted. A whole may be larger than one request may carry, so only the capture ceiling binds it. */
     const capMax = Capture.#lowered(CAPTURE_MAX, bounds && bounds.capture);
     if (bytes > capMax) return Capture.#tooLarge(bytes, "capture", capMax);
+    /* R119: a kind's own bound, from the name and declared type, is judged on the declared size before any part is accepted */
+    const kinds = Capture.#kindRows(), declaredKey = Capture.#declaredKind(kinds, name, type), declaredFig = Capture.#kindBound(kinds, declaredKey);
+    if (declaredFig && bytes > declaredFig.bound) return Capture.#kindTooLarge(bytes, declaredFig, declaredKey);
     const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
     if (!bucket || !keyOf)
       return { ok: false, reason: "PARTED_UPLOAD_UNAVAILABLE", status: 503,
@@ -1345,10 +1556,22 @@ export class Capture {
     if (!head)
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
+    /* R119: the kind of the file, from its head: a refused kind is not filed (the object stays content-addressed and named by nothing, as a refused stream's parts do),
+       a kind over its bound is refused, an unlisted one is filed held and named */
+    const kinds = Capture.#kindRows();
+    /* a package's kind is in its directory, at the file's end: the stored object is judged as a range source, which `format-registry` reads at its head and its end */
+    const rangeOf = { size: row.bytes, readRange: async (offset, length) => { const g = await ev.get(row.sha256, { range: { offset, length } }); return g ? new Uint8Array(await g.arrayBuffer()) : null; } };
+    let answer = null;
+    try { answer = await detectFormat(rangeOf, typeof row.type === "string" && row.type ? row.type : null, typeof row.name === "string" && row.name ? row.name : null); } catch { answer = null; }
+    if (!answer || typeof answer !== "object" || typeof answer.format !== "string") answer = Capture.#kindAnswer(head, row.name, row.type);
+    if (answer && answer.format === "refused") { await this.#partedDrop({ ...row, state: "completed" }, bucket, keyOf); return Capture.#kindRefused(answer); }
+    const kindKey = answer ? Capture.#keyOfAnswer(kinds, answer) : null, fig = Capture.#kindBound(kinds, kindKey);
+    if (fig && row.bytes > fig.bound) { await this.#partedDrop({ ...row, state: "completed" }, bucket, keyOf); return Capture.#kindTooLarge(row.bytes, fig, kindKey); }
     const { reg, arm } = this.#registrar(registerJob, armJobs);
     const judge = async () => textTypeOf({ bytes: withoutCutCodePoint(head), type: row.type, name: row.name });
     const filed = await this.#file({ ev, sha: row.sha256, total: row.bytes, parts: [], multipart: false, partsOwed: false, keepRow: false, pending: {}, reg, arm,
-                                     by: row.by, statement: row.statement, name: row.name, type: row.type, at, within, judge, firstPart: head });
+                                     by: row.by, statement: row.statement, name: row.name, type: row.type, at, within, judge, firstPart: head,
+                                     unlisted: answer && answer.format === "unlisted" ? answer : null });
     if (filed.ok === true) await this.#partedDrop({ ...row, state: "completed" }, bucket, keyOf);
     return filed;
   }
@@ -1397,6 +1620,36 @@ export class Capture {
       origin_statement: said(statement),
       ...(name != null ? { name_stated: said(name) } : {}),
       origin: { kind: "upload" },
+      attestation_attempts: [],
+    };
+  }
+
+  /* R116 (T53; N824; `provenance` R83): the provenance document of a message brought in by email, built as an upload's: received from the member, never fetched; the source is
+     the mailer's receipt, naming no member and no sender (`sources` R12); her words on where it came from as her statement; the message's headers as stated under `message`. */
+  #emailedDocument({ sha, total, parts, by, at, statement, profile, message }) {
+    const file = `snapshots/upload-${sha}`;
+    return {
+      file, locator: `email:${sha}`, retrieved: at,
+      profile,
+      authority_state: "undetermined",
+      authority_basis: say("capture.authority_basis", { at }),
+      provenance_chain: [{
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
+        asserts: localize("capture.index.email_asserts", "{by} brought this message in on {at}, and says where it came from; the message is held as it was received", { by: String(by), at: String(at) }),
+        evidence: localize("capture.index.email_receipt_evidence", "the message's receipt: its digest, taken as the bytes arrived, and its instant"),
+        bound: false, via: EMAIL_VIA,
+      }],
+      capture: {
+        method: "emailed",
+        grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+        actor_class: "member", actor: by,
+        sha256: sha, encoding: "binary", bytes: total,
+      },
+      ...(parts.length > 1 ? { parts: parts.map((p, i) => ({ file: `${file}.part${String(i).padStart(3, "0")}`, sha256: p.sha256, bytes: p.bytes })) } : {}),
+      source: { kind: "mailer", receipt: { sha256: sha, bytes: total, received: at } },
+      origin_statement: { text: statement, words_of: by, evidence_of_truth: false },
+      message,
+      origin: { kind: "email" },
       attestation_attempts: [],
     };
   }
@@ -1774,6 +2027,61 @@ export class Capture {
     } catch { return none; }
   }
 
+  /** R121 (T53; DEC-455; T53-104): a cut preview shows its next rows. For a spreadsheet or CSV whose preview was cut, the next `PREVIEW_ROWS` rows from `fromRow` (the
+   *  preview's `next_row`), in the shape of the reader's windowed cells (`csv-reader` R18, `odf-reader` R49 and the OOXML reader's twin): `{ok: true, captureSha, sheet?,
+   *  cells, rows: {from, to}, next_row?}`, `next_row` while rows remain and none after the last. A `fromRow` past the last row answers no cells and no `next_row`. It writes
+   *  nothing. A member session only, and only for a capture the viewer may see, else `NO_SUCH_CAPTURE` as an unheld digest is answered; the reader's refusals are answered
+   *  as its own (`reason`), each with the key of its words. Never throws. */
+  async previewMore({ captureSha, sheet = null, fromRow, viewer = undefined } = {}) {
+    if (typeof captureSha !== "string" || !HEX64.test(captureSha))
+      return Capture.#missingArgument("previewmore", "captureSha", "64 lowercase hex characters", captureSha);
+    if (!Number.isSafeInteger(fromRow) || fromRow < 1)
+      return Capture.#missingArgument("previewmore", "fromRow", localize("capture.index.shape_row_from", "the row to continue from, a whole number from 1"), fromRow);
+    if (sheet != null && (typeof sheet !== "string" || [...sheet].length > PREVIEW_SHEET_MAX))
+      return Capture.#missingArgument("previewmore", "sheet", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(PREVIEW_SHEET_MAX) }), sheet);
+    const none = { ok: false, reason: "NO_SUCH_CAPTURE", status: 404, key: "capture.index.no_such_capture",
+                   detail: localize("capture.index.no_such_capture", "your team's Civicsmith holds no captured document like that, or you cannot see it; nothing was read") };
+    try {
+      if (typeof viewer !== "string" || !memberIdOf(viewer).trim() || isMachineIdentity(viewer)) return none;
+      if (!this.#captureSeen(captureSha, viewer) || !(await this.#holds(captureSha))) return none;
+      const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+      if (!ev) return none;
+      const reason = (r) => ({ ok: false, reason: r, status: 422, key: `capture.index.preview_${r}`,
+        detail: r === "bytes_not_held" ? localize("capture.index.preview_bytes_not_held", "the record holds no whole copy of this file to read more rows from; nothing was read")
+          : r === "too_large" ? localize("capture.index.preview_too_large", "this file is larger than a preview reads rows from; nothing was read")
+          : localize("capture.index.preview_cells_not_interpretable", "this file has no rows to show; nothing was read") });
+      const obj = await ev.get(captureSha);
+      if (!obj) return reason("bytes_not_held");
+      if (Number.isFinite(obj.size) && obj.size > boundOf("spreadsheet", "bytes")) return reason("too_large");
+      const bytes = new Uint8Array(await obj.arrayBuffer());
+      /* the format the capture's own register document profiles it as, else the bytes' */
+      let named = null;
+      try {
+        const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? ORDER BY registered LIMIT 1`, captureSha);
+        const f = reg ? this.#registerDocOf(reg.bundle_id, captureSha)?.profile?.format?.format : null;
+        named = typeof f === "string" && f ? f : null;
+      } catch { named = null; }
+      const kind = named ? { format: named } : await detectFormat(bytes, null, null);
+      const entry = kind && typeof kind.format === "string" ? getFormat(kind.format) : null;
+      if (!entry || typeof entry.cellsIn !== "function") return reason("cells_not_interpretable");
+      /* one row past the window is asked for, to know whether rows remain: the reader answers `next_row` only for its own cell bound */
+      const last = fromRow + PREVIEW_ROWS - 1;
+      const ask = { fromRow, toRow: last + 1, ...(sheet != null ? { sheet } : kind.format === "csv" ? { sheet: "csv" } : {}) };
+      const out = await entry.cellsIn(bytes, ask);
+      if (!out || typeof out !== "object" || out.ok !== true) return reason(String(out && (out.reason || out.why) || "cells_not_interpretable").replace(/[^a-z0-9_]/gi, "_").slice(0, 60).toLowerCase() || "cells_not_interpretable");
+      const rowOf = (c) => { const m = /(\d+)$/.exec(String(c && c.source && (c.source.cell ?? c.source.ref) || "")); return m ? Number(m[1]) : null; };
+      const got = Array.isArray(out.cells) ? out.cells : [];
+      /* the rows that hold cells decide where the window ends: a reader may answer `rows.to` as the row it was asked to stop at, whether or not the sheet reaches it */
+      let seen = null;
+      for (const c of got) { const r = rowOf(c); if (r !== null && (seen === null || r > seen)) seen = r; }
+      const more = Number.isSafeInteger(out.next_row) && out.next_row <= last ? out.next_row : seen !== null && seen > last ? last + 1 : null;
+      const cells = got.filter((c) => { const r = rowOf(c); return r === null || r <= last; });
+      return { ok: true, captureSha, format: kind.format, ...(sheet != null ? { sheet } : {}), cells,
+               rows: { from: fromRow, to: seen === null ? fromRow - 1 : Math.min(seen, last) },
+               ...(more !== null && more > fromRow ? { next_row: more } : {}) };
+    } catch { return none; }
+  }
+
   /* ==================================================================== *
    * Already in the record, and whether the source has since changed (R96; A64, K3807, DEC-330)
    * ==================================================================== */
@@ -2035,18 +2343,20 @@ export class Capture {
                              : `b.current_state = 'collected' AND ${aside ? Capture.#IS_SET_ASIDE : Capture.#NOT_SET_ASIDE}`;
     return {
       sql: `b.object_type = 'information' AND ${standing} AND (${sight.sql})
-            AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
+            AND ${who ? `(EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
                                   WHERE r.bundle_id = b.bundle_id
-                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
+                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)
+                         OR EXISTS (SELECT 1 FROM register r WHERE r.bundle_id = b.bundle_id AND r.authored = 1
+                                    AND (CASE WHEN r.author LIKE 'member:%' THEN substr(r.author, 8) ELSE r.author END) = ?))` : "1=1"}
             AND ${hasProject ? `(b.project = ? OR EXISTS (SELECT 1 FROM register r JOIN seen_in si ON si.capture_sha = r.capture_sha
                                                          WHERE r.bundle_id = b.bundle_id AND si.project = ?))` : "1=1"}
             AND ${hasBundle ? "b.bundle_id = ?" : "1=1"}`,
-      args: [...sight.args, ...(who ? [who] : []), ...(hasProject ? [String(project), String(project)] : []), ...(hasBundle ? [String(bundleId)] : [])],
+      args: [...sight.args, ...(who ? [who, who] : []), ...(hasProject ? [String(project), String(project)] : []), ...(hasBundle ? [String(bundleId)] : [])],
     };
   }
 
   /** R77 (DEC-97 (1)): the Information documents at `collected` not set aside, as the viewer may see them, at most
-   *  `limit` (N90), with `truncated` and `next`. `member` keeps the documents that member captured (`capture_actors`
+   *  `limit` (N90), with `truncated` and `next`. `member` keeps the documents that member captured (`capture_actors`, and a member's own testimony by the author `register` stamps on it, R77 as T53 amends it
    *  over the register); `project` that project's (the document's `project`). Each row: the document, its source, its
    *  project, its age since collected, its batch eligibility (R78) and `captured_for`, the questions it was captured for as
    *  R83's reader answers them for the viewer (DEC-141 (1)). Sorted by `age` (the default, oldest first),
@@ -2370,6 +2680,9 @@ export class Capture {
     for (const r of read(`SELECT capture_sha, actor FROM (SELECT capture_sha, actor, ROW_NUMBER() OVER (PARTITION BY capture_sha ORDER BY at, actor) AS rn
                              FROM capture_actors WHERE capture_sha IN (SELECT value FROM json_each(?))) WHERE rn = 1`, shas))
       facts.actor.set(r.capture_sha, r.actor);
+    /* R77 (T53; JOURNEYS R-21): a member's own testimony names no capture actor; the author `provenance` stamps on its register row (R48) is its actor */
+    for (const r of read(`SELECT capture_sha, author FROM register WHERE authored = 1 AND author IS NOT NULL AND capture_sha IN (SELECT value FROM json_each(?))`, shas))
+      if (!facts.actor.has(r.capture_sha)) facts.actor.set(r.capture_sha, r.author);
     if (picker) return facts;
     for (const r of read(`SELECT capture_sha, first_retrieved AS at FROM (SELECT capture_sha, first_retrieved, ROW_NUMBER() OVER (PARTITION BY capture_sha
                              ORDER BY julianday(first_retrieved), first_retrieved) AS rn FROM captured_locators
@@ -3035,8 +3348,8 @@ export class Capture {
       } else if (before && after) {
         verdict = "undetermined"; pick = before;
         basis = say("capture.basis.target_changed_somewhere");
-        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, `
-               + `${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
+        detail = localize("capture.index.bracketing_captures_differ", "bracketing captures differ: {before} last seen {before_at}, {after} first seen {after_at}",
+                          { before: before.capture_sha.slice(0, 12), before_at: String(before.last_retrieved), after: after.capture_sha.slice(0, 12), after_at: String(after.first_retrieved) });
       } else if (!before && after) {
         verdict = "superseded"; pick = after;
         basis = say("capture.basis.capture_target_postdates");
@@ -3833,6 +4146,9 @@ export function captureOps(c, url, body, env, h = {}) {
     gradenote: () => c.gradeNoteOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
     /* R95 (T50): one capture's grade, by the caller's stamped viewer as `gradenote` is. */
     capturegrade: () => c.captureGradeOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
+    /* R121 (T53; DEC-455): a cut preview's next rows, by the caller's stamped viewer as `capturegrade` is; a read. */
+    previewmore: () => c.previewMore({ captureSha: q("capture") ?? (body && body.captureSha), sheet: q("sheet") ?? (body && body.sheet) ?? null,
+                                       fromRow: q("fromRow") !== null && q("fromRow") !== "" ? Number(q("fromRow")) : body && body.fromRow, viewer: q("viewer") ?? "" }),
     /* R96 (T51): `check` is the only act that reaches outside, and only from a member session (the stamp `by`). */
     heldat: () => c.heldAt({ address: q("address"), sha256: q("sha256"), check: q("check") === "1" || q("check") === "true",
                               viewer: q("viewer") ?? "", member: q("by") }),
@@ -3903,6 +4219,9 @@ export const DECLARED_OPS = Object.freeze({
   /* R95: the digest is `capture` in the query or `captureSha` in the body; a missing one is the required-argument refusal naming `captureSha`. */
   capturegrade: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.capturegrade", "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing"),
     fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+  /* R121 (T53; DEC-455): a cut preview's next rows; the digest is `capture` in the query or `captureSha` in the body, `fromRow` the preview's `next_row`; `viewer` is a stamp. */
+  previewmore: { classes: ["admin","member"], mutating: false, weight: "read", description: localize("capture.declared.previewmore", "read: the next rows of a spreadsheet or CSV whose preview was cut, from the preview's next row, keyed by capture sha (`capture` R121); writes nothing"),
+    fields: { accepts: ["capture","captureSha","sheet","fromRow"], requires: [["capture","captureSha"],"fromRow"] } },
   /* R69: an absent or malformed digest answers as an unknown one does, with no accounts (an unseen capture and an unknown one read alike),
      so it is not required: no refusal names it. */
   captureaccounts: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.captureaccounts", "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing"),

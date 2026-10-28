@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, receipt, register, H } from "./fixture.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const route = (c, name, qs = "", body = null) => captureOps(c, new URL(`http://x/${name}?${qs}`), body, c.env)[name]();
 const hex = (i) => i.toString(16).padStart(64, "0");
@@ -111,7 +112,7 @@ test("R23 R24 R25 (convert subresources: the capturelimit, siteassets and sitech
   let l = route(c, "capturelimit", "runtime=subrequests");
   assert.deepEqual([l.observed, l.probeDue], [null, true], "nothing observed: no ceiling, a probe due");
   let r = route(c, "recordcapturelimit", "", { runtime: "subrequests", observed: null });
-  assert.equal(r.recorded, false); assert.match(r.note, /nothing about where it is/);
+  assert.equal(r.recorded, false); assert.equal(r.note, word("capture.note.run_refused_says"));
   r = route(c, "recordcapturelimit", "", { runtime: "subrequests", observed: 51 });
   assert.deepEqual([r.observed, r.recorded, r.moved], [51, true, false]);
   assert.deepEqual([route(c, "capturelimit", "runtime=subrequests").observed, route(c, "capturelimit", "runtime=subrequests").probeDue], [51, false]);
@@ -144,5 +145,5 @@ test("R23 R24 R25 (convert subresources: the capturelimit, siteassets and sitech
   assert.equal(cr.documents, 3, "three documents is enough for recurrence to say something");
   const at = (a) => cr.assets.find((x) => x.address_norm === a);
   assert.deepEqual([at(A).chrome, at(own).chrome, at(A).share, at(own).share], [true, false, 1, 1 / 3]);
-  assert.match(route(c, "sitechrome", "host=nothing.example.com").note, /says nothing yet/, "too few documents: said, not guessed");
+  assert.equal(route(c, "sitechrome", "host=nothing.example.com").note, word("capture.note.fewer_three_documents"), "too few documents: said, not guessed");
 });
