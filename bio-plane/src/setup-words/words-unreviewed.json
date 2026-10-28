@@ -27154,25 +27154,144 @@
       "line": 25
     },
     {
+      "id": "explore.chains.bad_resume",
+      "en": "this resume cannot be read: ask the search again",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 493
+    },
+    {
+      "id": "explore.chains.budget_out_of_range",
+      "en": "a search waits a whole number of milliseconds from 1 to {max}; {requested} is not one",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 37
+    },
+    {
+      "id": "explore.chains.no_end",
+      "en": "no to is named: a search between two ends names both",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 52
+    },
+    {
+      "id": "explore.chains.no_resume",
+      "en": "no resume is given: a search that stopped by time offers one",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 491
+    },
+    {
+      "id": "explore.chains.own_ends_same",
+      "en": "the chain starts and ends at the same record: its two ends are told apart",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 433
+    },
+    {
+      "id": "explore.chains.own_gapped",
+      "en": "step {step} ({id}) shares no record with the step before it",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 423
+    },
+    {
+      "id": "explore.chains.own_invalid",
+      "en": "a chain is its steps in order, 1 to {CHAIN_MAX}, each with an id and a kind",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 412
+    },
+    {
+      "id": "explore.chains.own_no_ends",
+      "en": "step {step} ({id}) names no record at one of its ends: each step carries from and to",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 416
+    },
+    {
+      "id": "explore.chains.own_step_invalid",
+      "en": "step {step} has no id or no kind",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 413
+    },
+    {
+      "id": "explore.chains.resume_expired",
+      "en": "this resume is more than 15 minutes old: ask the search again",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 495
+    },
+    {
+      "id": "explore.chains.resume_other_viewer",
+      "en": "this resume was given to another member",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 494
+    },
+    {
+      "id": "explore.chains.resume_too_large",
+      "en": "the search read too many records to be kept for continuing: ask again for a narrower one",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 480
+    },
+    {
+      "id": "explore.chains.same_end",
+      "en": "from and to are the same record: a search between two ends names two",
+      "module": "explore",
+      "file": "bio-plane/src/explore/chains.mjs",
+      "line": 53
+    },
+    {
       "id": "explore.declared.explore",
       "en": "read: the paths from a node over the registered kinds as of a date, each hop cited and graded, within the bounds; writes nothing",
       "module": "explore",
       "file": "bio-plane/src/explore/ops.mjs",
-      "line": 32
+      "line": 37
+    },
+    {
+      "id": "explore.declared.exploreall",
+      "en": "read: every meaningful chain between two ends, cited and graded, most direct first; writes nothing",
+      "module": "explore",
+      "file": "bio-plane/src/explore/ops.mjs",
+      "line": 46
+    },
+    {
+      "id": "explore.declared.explorecontinue",
+      "en": "read: carries on a search that stopped by time, from where it stopped; writes nothing",
+      "module": "explore",
+      "file": "bio-plane/src/explore/ops.mjs",
+      "line": 52
+    },
+    {
+      "id": "explore.declared.explorepath",
+      "en": "read: the most direct chain between two ends, cited and graded; writes nothing",
+      "module": "explore",
+      "file": "bio-plane/src/explore/ops.mjs",
+      "line": 48
     },
     {
       "id": "explore.declared.explorepreset",
       "en": "read: one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets; writes nothing",
       "module": "explore",
       "file": "bio-plane/src/explore/ops.mjs",
-      "line": 34
+      "line": 39
+    },
+    {
+      "id": "explore.declared.exploreshorter",
+      "en": "read: shorter chains between the two ends of a chain you hold, cited and graded; writes nothing",
+      "module": "explore",
+      "file": "bio-plane/src/explore/ops.mjs",
+      "line": 50
     },
     {
       "id": "explore.declared.exploreverify",
       "en": "read: whether a derived connection re-derives to its id, and which hops it rests on; writes nothing",
       "module": "explore",
       "file": "bio-plane/src/explore/ops.mjs",
-      "line": 38
+      "line": 43
     },
     {
       "id": "explore.graph.rings_is_one_or_two",
@@ -27196,11 +27315,39 @@
       "line": 19
     },
     {
+      "id": "explore.preset.chain",
+      "en": "organisation chains",
+      "module": "explore",
+      "file": "bio-plane/src/explore/presets.mjs",
+      "line": 17
+    },
+    {
+      "id": "explore.preset.flows_from",
+      "en": "money trails",
+      "module": "explore",
+      "file": "bio-plane/src/explore/presets.mjs",
+      "line": 21
+    },
+    {
+      "id": "explore.preset.overlaps",
+      "en": "overlaps between two people",
+      "module": "explore",
+      "file": "bio-plane/src/explore/presets.mjs",
+      "line": 26
+    },
+    {
+      "id": "explore.preset.relations_of",
+      "en": "event links",
+      "module": "explore",
+      "file": "bio-plane/src/explore/presets.mjs",
+      "line": 22
+    },
+    {
       "id": "explore.presets.no_to_named",
       "en": "no to is named: a path between two records names both",
       "module": "explore",
       "file": "bio-plane/src/explore/presets.mjs",
-      "line": 76
+      "line": 80
     },
     {
       "id": "explore.presets.others_held",
@@ -27221,7 +27368,7 @@
       "en": "{owner}'s paging repeats a page",
       "module": "explore",
       "file": "bio-plane/src/explore/reader.mjs",
-      "line": 71
+      "line": 75
     },
     {
       "id": "explore.rederive.a_chain_is_a_paths",

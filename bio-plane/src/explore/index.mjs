@@ -12,6 +12,7 @@ import { presets, chain, flowsFrom, relationsOf, pathBetween, overlaps } from '.
 import { rederive } from './rederive.mjs';
 import { timelineOver } from './timeline.mjs';
 import { neighbourhood } from './graph.mjs';
+import { connectionsBetween, mostDirect, shorterThan, continueWalk } from './chains.mjs';
 import { eventsOf } from '../events/index.mjs';
 import { moneyOf } from '../money/index.mjs';
 import { entitiesOf } from '../entities/index.mjs';
@@ -23,6 +24,7 @@ export { STOPPED_SENTENCE, RINGS } from './graph.mjs';
 export { HUB_WORDS } from './reader.mjs';
 export { LEAD_SENTENCE } from './answer.mjs';
 export { INPUT_NOT_READ, CHAIN_MAX } from './rederive.mjs';
+export { budgetMsOf, CHAIN_BUDGET_MS, RESUME_TTL_MS, RESUME_MAX } from './chains.mjs';
 
 /** The time budget every exploration answers with (R5): connection-grammar's default, provisional until M-X1b. */
 export const TIME_BUDGET_MS = BOUNDS.time_budget_ms;
@@ -30,13 +32,13 @@ export const TIME_BUDGET_MS = BOUNDS.time_budget_ms;
 /**
  * The explore instance for one host (K1563 (1)): `host` is passed to every owner's `neighbours` unchanged. `deps`:
  * `registry` the owner registry (the plane's default when absent); `events` and `money` the instances whose
- * `timeline` and `moneyOf` R13 composes (by default `eventsOf(host)` and `moneyOf(host)`, reached on first use), `entities` the instance whose `labelsOf` names R25's nodes (by default `entitiesOf(host)`), `documents` the reader whose `titlesOf({ids, viewer})` names R29's document nodes (none by default: they stay unnamed); `now` a clock in milliseconds; `budget_ms` lowers the budget, never raises it.
+ * `timeline` and `moneyOf` R13 composes (by default `eventsOf(host)` and `moneyOf(host)`, reached on first use), `entities` the instance whose `labelsOf` names R25's nodes (by default `entitiesOf(host)`), `documents` the reader whose `titlesOf({ids, viewer})` names R29's document nodes (none by default: they stay unnamed); `now` a clock in milliseconds; `wall` the clock a resume token's age is read on (milliseconds since the epoch; by default `now` when one is given, else the wall clock); `budget_ms` lowers the budget, never raises it.
  * @param {any} [host]
- * @param {{registry?: any, events?: any, money?: any, entities?: any, documents?: any, now?: () => number, budget_ms?: number}} [deps]
+ * @param {{registry?: any, events?: any, money?: any, entities?: any, documents?: any, now?: () => number, wall?: () => number, budget_ms?: number}} [deps]
  */
 export function exploreOf(host, deps = {}) {
   const budget = typeof deps.budget_ms === 'number' && deps.budget_ms > 0 ? Math.min(deps.budget_ms, TIME_BUDGET_MS) : TIME_BUDGET_MS;
-  const c = { host, registry: deps.registry ?? defaultRegistry, now: deps.now ?? (() => performance.now()), budget_ms: budget,
+  const c = { host, registry: deps.registry ?? defaultRegistry, now: deps.now ?? (() => performance.now()), wall: deps.wall ?? deps.now ?? (() => Date.now()), budget_ms: budget,
     events: deps.events ?? (host ? () => eventsOf(host) : undefined), money: deps.money ?? (host ? () => moneyOf(host) : undefined),
     entities: deps.entities ?? (host ? () => entitiesOf(host) : undefined), documents: deps.documents };
   return Object.freeze({
@@ -58,5 +60,10 @@ export function exploreOf(host, deps = {}) {
     overlaps: (a) => overlaps(c, a),
     rederive: (a) => rederive(c, a),
     timelineOver: (a) => timelineOver(c, a),
+    /** The chains between two ends (R30-R33). */
+    connectionsBetween: (a) => connectionsBetween(c, a),
+    mostDirect: (a) => mostDirect(c, a),
+    shorterThan: (a) => shorterThan(c, a),
+    continueWalk: (a) => continueWalk(c, a),
   });
 }
