@@ -49449,13 +49449,6 @@
       "line": 241
     },
     {
-      "id": "refusal.BYTES_CHANGED",
-      "en": "The bytes you asked to see are not the bytes that were fingerprinted, so nothing was shown.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/checks.mjs",
-      "line": 102
-    },
-    {
       "id": "refusal.EXPORT_TOO_LARGE",
       "en": "This calculation's tables would make a workbook of {cells} cells, more than the {bound_cells} that can be exported.",
       "module": "workbooks",

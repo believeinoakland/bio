@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7943 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7942 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "a292a7436f";
+export const WORDS_COMMIT = "457061021a";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -12349,6 +12349,7 @@ export const WORD_ROWS = Object.freeze([
   ["ai.catalogue.state.needs_newer_release","A newer list of AIs exists, but this version of your team's Civicsmith can't read it. It offers the list it has until Civicsmith is updated.","DEC-488: the copy's state: a signed list of a schema this copy cannot read",null,false,"design"],
   ["ai.catalogue.state.stale","The list of AIs may be out of date.","DEC-488: the copy's state: no successful check within the policy's days; the date is screen.aiproviders.list.old's",null,false,"design"],
   ["ai.catalogue.state.current","The list of AIs is up to date.","DEC-488: the copy's state: current",null,false,"design"],
+  ["refusal.BYTES_CHANGED","What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.","DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -13889,7 +13890,7 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.NO_ROLE","A leg of a question's basis has to say what the material DOES for the answer, and this one does not say. It is never assumed: material that cuts against the case is first-class here, and guessing would put a claim about your reasoning in the record that you did not make.","citation's translation, keyed by its code",null,false,"design"],
   ["refusal.NO_RUN","A machine reads and proposes only as part of an investigation a member opened, and this named none. Nothing was done.","run-productions' translation, keyed by its code",null,false,"design"],
   ["refusal.NO_SAFE_COPY","A safe copy is made by an outside tool that rebuilds files, and your team has none turned on. The safe view is still there.","file-safety's translation, keyed by its code",null,false,"design"],
-  ["refusal.NO_SAFE_VIEW","Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.","file-safety's translation, keyed by its code; DEC-259: reworded",null,false,"design"],
+  ["refusal.NO_SAFE_VIEW","Your team's Civicsmith makes safe views of documents, presentations, spreadsheets, plain text and ordinary JPEG or PNG photographs (a photograph is shown redrawn). This file is none of them, so it has no safe view.","file-safety's translation, keyed by its code; DEC-259: reworded",null,false,"design"],
   ["refusal.NO_STANDARDS","A determination measures the act against at least one standard the record holds. Name the standards. Nothing was written.","conformance's translation, keyed by its code",null,false,"design"],
   ["refusal.NO_SUBJECT","An addressee is suggested for something: an entity in the subject registry, or a record the action rests on. None was named, so there is nothing to suggest an office for. Name the subject and ask again.","action-grammar's translation, keyed by its code",null,false,"design"],
   ["refusal.NO_SUCH_ACTION","No action answers to that here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.","action-grammar's translation, keyed by its code",null,false,"design"],
@@ -26906,7 +26907,6 @@ export const WORD_ROWS = Object.freeze([
   ["reevaluation.index.visible_to_chains","the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",null,null,false,"code"],
   ["reevaluation.index.work_products_unread","the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none",null,null,false,"code"],
   ["refusal.BAR_STALE","This project's bar changed after you opened it, so your change was not saved. The bar it holds now is shown. Read it, then set yours again if you still mean to.",null,null,false,"code"],
-  ["refusal.BYTES_CHANGED","The bytes you asked to see are not the bytes that were fingerprinted, so nothing was shown.",null,null,false,"code"],
   ["refusal.EXPORT_TOO_LARGE","This calculation's tables would make a workbook of {cells} cells, more than the {bound_cells} that can be exported.",null,null,false,"code"],
   ["refusal.EXPORT_TOO_WIDE","A table of this calculation has {columns} columns, more than the {bound_columns} a spreadsheet sheet holds.",null,null,false,"code"],
   ["refusal.FILE_TYPE_REFUSED","Your team's Civicsmith does not keep this kind of file, so nothing was saved. Send the document in another form, such as a PDF.",null,null,false,"code"],
