@@ -1,8 +1,8 @@
-**Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
+**Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 CLOSED · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #332 · session_018BhcedHXTmWvkcQG9t9wzP · depth 1
 **Jobs** · calibration: CALIBRATION #1 session_018Bhcec6UfHC9x41Jwa7guR; reading-pipeline: READING-PIPELINE #1 session_018BhcecocgNyjm49Xi6Ji1S; extraction: EXTRACTION #1 session_018Bhcee68Pp8u6nsGStpw6e; content: CONTENT #1 session_018BhcefiNFG9xKziP2ibeWL
-**Owed** · none
+**Owed** · archive calibration; archive reading-pipeline; archive extraction; archive content
 
 # Plan T53 · round R1, the beta's build
 
