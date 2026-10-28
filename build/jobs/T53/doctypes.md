@@ -50,3 +50,23 @@ Size (session_018Bhcecc4twXKUaZ83a4k6m): test runs 1, module lines 27053
 
 Tests: 80/80. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018Bhcecc4twXKUaZ83a4k6m): test runs 2, module lines 27053
+
+## Completion (2026-10-28)
+
+# doctypes · T53 R1 · report (round 3)
+
+## Entries applied
+- T53-48 (K5565, English in tests): applied in full.
+  - Literal sites (10): `word(key)`.
+  - Sentence regexes: converted to key assertions, including the two heading-signal sites (regulation-sections R9): `word("doctypes.regulation.code_headings", { count, label })` with count and label from `codeHeadingsIn(c.text, { view: CODE_VIEW })`. The no-forms case asserts the reader finds no heading (count 0).
+  - Structural regexes and data (`/defin|except/`, URLs, `Adopt Bylaw No. 2041`, "Residential Rent Adjustment Board") stay as C.
+- Words baseline not lowered: the file belongs to no module path; BOB prunes it. The current `--baseline` output for doctypes is empty (no English-in-test sites).
+
+## Tests
+- `node --test --test-force-exit doctypes/test/*.test.mjs`: 80 pass, 0 fail.
+- `checks/words.mjs . doctypes`: 0 failures, testenglish 0.
+
+**Met** · none
+
+Tests: 80/80. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018Bhcecc4twXKUaZ83a4k6m): test runs 3, module lines 27055
