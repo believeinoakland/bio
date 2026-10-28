@@ -33,7 +33,6 @@ test("R32 R47 (DEC-149, C-51.1): a malformed re-read flag is a re-read in a form
   const r = await w.x.pdfStructure({ ocr: "yes", sha: d });
   assert.equal(r.body.check, "C-51.1");
   assert.equal(r.body.translation, WORD("refusal.REEXTRACT_FLAG_MALFORMED"), "read by key (T50)");
-  assert.match(r.body.translation, /a re-read in a form your team's Civicsmith does not recognize/);
   assert.doesNotMatch(r.body.translation, OLD);
   assert.equal(REEXTRACT_CHECKS.REEXTRACT_FLAG_MALFORMED.translation, r.body.translation);
 });
@@ -43,7 +42,6 @@ test("R32 R47 (DEC-149, C-51.4): with no OCR member, your team's Civicsmith has 
   const r = await w.x.pdfStructure({ ocr: "1", sha: d, cls: "member", session: true, caps: ["contribute"], env: {} });
   assert.equal(r.body.check, "C-51.4");
   assert.equal(r.body.translation, WORD("refusal.REEXTRACT_NO_OCR_MEMBER"), "read by key (T50)");
-  assert.match(r.body.translation, /^Your team's Civicsmith has no OCR engine installed, so it cannot re-read a scanned page as text\./);
   assert.doesNotMatch(r.body.translation, OLD);
   for (const row of Object.values(REEXTRACT_CHECKS)) assert.doesNotMatch(row.translation, OLD, row.check);
 });
@@ -55,7 +53,6 @@ test("R52 (DEC-149): the membership's basis calls the pairing an inference from 
   const { membership: m } = deriveMembership({ links: [L("https://records.t.example/item?id=1", 700),
                                                        L("https://records.t.example/file?id=a", 600)] }, view);
   assert.equal(m.basis, WORD("extraction.basis.file_link_assigned"), "read by key (T50)");
-  assert.match(m.basis, /this pairing is an inference from position, to be confirmed, never the publisher's own link\./);
   assert.doesNotMatch(m.basis, OLD);
 });
 
@@ -72,7 +69,6 @@ test("R27 R21 (DEC-149): a reading's origin says your team's Civicsmith composed
   assert.equal(composed.why, word("extraction.why.group_civicsmith_read"));
   assert.equal(asserted.state, "asserted");
   assert.equal(asserted.why, WORD("extraction.why.group_civicsmith_did"), "read by key (T50)");
-  assert.match(asserted.why, /^your team's Civicsmith did not compose this reading: a caller carried it in/);
   for (const o of [composed, asserted]) assert.doesNotMatch(o.why, OLD);
 });
 
@@ -81,6 +77,6 @@ test("R34 (DEC-149): a written re-read names its candidates as what your group's
   const { w, d } = await held(text);
   const { x } = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([1])) });
   assert.equal(x.written, true);
-  assert.match(x.candidates, /what your team's Civicsmith can read; this one is re-read now$/);
+  assert.equal(x.candidates, word("extraction.index.reread_candidates_frontier"));
   assert.doesNotMatch(x.candidates, OLD);
 });

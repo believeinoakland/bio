@@ -470,11 +470,11 @@ const MIGRATIONS = Object.freeze({
     oldWalk: (reading, map) => {
       const ce = reading.container_extent;
       return !(ce && typeof ce === "object" && Number.isInteger(ce.paragraphs) && ce.paragraphs !== map.paragraphs.length)
-        || "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk";
+        || localize("extraction.index.n26_not_old_walk", "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk");
     },
     migrated: n26MigratedReading,
-    after: "read after N26 (its reading was written after the migration's cutoff)",
-    noLayer: "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs" }),
+    after: localize("extraction.index.n26_read_after", "read after N26 (its reading was written after the migration's cutoff)"),
+    noLayer: localize("extraction.index.n26_no_layer", "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs") }),
   [N439_MIGRATION]: Object.freeze({
     name: N439_MIGRATION, format: "pptx", key: "n439", marked: n439Marked, isLayer: isPptxLayer,
     renumber: (parts) => pptxRenumbering(parts), moves: pptxRenumberingMoves,
@@ -485,11 +485,11 @@ const MIGRATIONS = Object.freeze({
       if (!Array.isArray(sl)) return true;
       const differs = map.slides.some((s) => Number.isInteger(s.slide) && sl[s.slide - 1]
         && Number.isInteger(sl[s.slide - 1].shapes) && sl[s.slide - 1].shapes !== s.shapes.length);
-      return !differs || "its slides' shape counts are not the pre-N439 walk's, so it was not read by the old walk";
+      return !differs || localize("extraction.index.n439_not_old_walk", "its slides' shape counts are not the pre-N439 walk's, so it was not read by the old walk");
     },
     migrated: n439MigratedReading,
-    after: "read after N439 (its reading was written after the migration's cutoff)",
-    noLayer: "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides" }),
+    after: localize("extraction.index.n439_read_after", "read after N439 (its reading was written after the migration's cutoff)"),
+    noLayer: localize("extraction.index.n439_no_layer", "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides") }),
 });
 
 const instances = new WeakMap();
@@ -3150,7 +3150,7 @@ export class Extraction {
       doc = { capture: { sha256: sha, ...(size === null ? {} : { bytes: size }) } };
     }
     const got = await bytesOf(this.#evidenceOf(sha), doc).catch(() => ({ bytes: null }));
-    if (!got.bytes) return { waiting: "the capture's bytes are not held in the evidence store" };
+    if (!got.bytes) return { waiting: localize("extraction.index.migrate_bytes_not_held", "the capture's bytes are not held in the evidence store") };
     const entry = getFormat(m.format);
     if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")
       return `no ${m.format} entry is registered`;
@@ -3178,7 +3178,7 @@ export class Extraction {
         author: composed ? null : row.asserted_by ?? null, justification: composed ? null : safeJson(row.justification) ?? row.justification,
         composed });
     });
-    if (!wrote) return "the stored reading changed while it was being read again, and the newer one stands";
+    if (!wrote) return localize("extraction.index.migrate_reading_changed", "the stored reading changed while it was being read again, and the newer one stands");
     if (composed) this.recordComposed(next, sha);
     return { migrated: true, moved: next.migrated[m.key].moved };
   }
@@ -3331,7 +3331,7 @@ export class Extraction {
    *  it"), which the ledger reads by R34's rule; the answer's `reextraction` says nothing was performed or written here, which pages are owed and whether
    *  the registrar holds them. A reading with no page left owes nothing (R33). */
   async #pressOwes({ sha, basis, op, author = null }) {
-    const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
+    const cost = localize("extraction.index.press_cost", "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)");
     const pages = this.#pagesLeft(sha, basis);
     if (!pages.length)
       return { status: 200, body: { ok: true, op, sha256: sha, reextraction: { performed: false, written: false, cost, candidate: [],

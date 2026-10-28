@@ -122,7 +122,8 @@ test("R103 (G126e): the ledger's pass does not write over a stored reading that 
 test("R106 (G129d; SCAN E3): a photograph's OCR continues without the PDF structure read: with the member down for three ticks the job stays owed, never UNREADABLE nor finished; the fourth tick reads it", async () => {
   const { w, d } = await held(i2([{ page: 0, text: "", undetermined: [noText(0)] }]), { bytes: 2048, format: "jpeg", extra: { tier3_candidate: true } });
   let up = false;
-  const ocr = member((b) => (up ? ocrAnswer(b.pages, { text: () => "the words on the photographed page" }) : { status: 503, body: { ok: false } }));
+  const READ = "the words on the photograph";   /* the member's own answer, test input data: the units must carry exactly it */
+  const ocr = member((b) => (up ? ocrAnswer(b.pages, { text: () => READ }) : { status: 503, body: { ok: false } }));
   for (let tick = 0; tick < 3; tick++) {
     const a = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr } });
     assert.deepEqual([a.read, a.owed], [false, true], `tick ${tick + 1}: ${JSON.stringify(a)}`);
@@ -131,7 +132,7 @@ test("R106 (G129d; SCAN E3): a photograph's OCR continues without the PDF struct
   up = true;
   const done = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr } });
   assert.deepEqual([done.read, done.owed, done.reextraction.pages], [true, undefined, [0]]);
-  assert.match(w.x.readingFor(d, "class:admin").text_units.map((u) => u.text).join(" "), /photographed page/);
+  assert.ok(w.x.readingFor(d, "class:admin").text_units.map((u) => u.text).join(" ").includes(READ), "the member's answer is in the units");
   assert.deepEqual(w.x.readingFor(d, "class:admin").unread_pages, []);
   assert.deepEqual(ocr.calls.map((c) => c.body.pages), [[0], [0], [0], [0]]);
 });

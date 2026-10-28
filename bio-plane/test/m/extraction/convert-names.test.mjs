@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { labelTerms, refTermSources } from "../../../src/extraction/index.mjs";
 import { EXTRACT_RUN_MODE, PROPOSED_READING_CEILING, proposedReadingGrade, checkProposedRef, proposalChain, mintRatio }
   from "../../../src/extractrun.mjs";
@@ -105,8 +106,7 @@ test("R37 R19 R59 (from readingname.test.mjs, the backfill): cleared name terms 
 test("R43 (from extractrun.test.mjs §5): mintRatio answers ratio null when nothing was minted, saying so as an absence, else cited over minted with the uncited count", () => {
   for (const m of [mintRatio({}), mintRatio({ minted: 0, cited: 0 }), mintRatio()]) {
     assert.deepEqual([m.minted, m.cited, m.uncited, m.ratio], [0, 0, 0, null]);
-    assert.match(m.says, /nothing to measure/);
-    assert.match(m.says, /absence and not a clean result/);
+    assert.equal(m.says, word("extractrun.says.machine_credential_marked"));
   }
   const cited = mintRatio({ minted: 0, cited: 2 });
   assert.equal(cited.ratio, null, "nothing minted is null whatever was cited");

@@ -8,6 +8,8 @@ import { driftObligations } from "../../../src/extraction/drift.mjs";
 import { EXTRACT_RUN_MODE, EXTRACT_FUNCTIONS, checkExtractFunction, checkExtractVersion, proposedReadingGrade, checkProposedRef,
          proposalChain, mintRatio, quoteFigures } from "../../../src/extractrun.mjs";
 import { layerChain } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordHolesRx } from "./words.mjs";
 
 const cal = (id, cap, at = "2026-09-01") => ({ calibration_id: id, engine: "tess", version: "5", at, cap, probe_id: "p", probe_inputs: ["x"], scores: [1], measured_by: "m" });
 
@@ -20,7 +22,7 @@ test("R38 R44: driftObligations names exactly the transcriptions bound to a cali
   assert.deepEqual(out.map((o) => o.id), ["a", "z"]);
   assert.deepEqual([out[0].cap_when_graded, out[0].cap_now_measured, out[0].regraded], ["B", "C", false]);
   assert.deepEqual(out[0].reeval, { flag: true, since: "2026-09-20", source: "calibration" });
-  assert.match(out[0].why, /NOTHING HAS BEEN RE-GRADED/);
+  assert.match(out[0].why, wordHolesRx("extraction.drift.this_text_was_graded_under", ["calibration_id", "engine", "version", "v1", "at", "at_2", "v2"]));
 });
 
 test("R39 R48 R44: calibrationDrift derives on read over calibration's worse supersessions and the text-source rows naming a calibration, stores nothing, withholds hidden bundles, reads at most 5,000 rows with truncated, and answers regraded 0", async () => {
@@ -127,12 +129,12 @@ test("R42 R44 (T41, D4): a verified quote, byte for byte the capture's text at i
   /* an undetermined ceiling stays undetermined, stated, and is not refused as naming nothing */
   const und = proposedReadingGrade(byKey, { text, ceiling: null });
   assert.deepEqual([und.grade, und.verified_quote, und.check], [null, true, figures]);
-  assert.match(und.why, /^earned undetermined: /);
+  assert.equal(und.why, word("extractrun.why.earned_undetermined_proposal", { named: word("extractrun.number_date_named", { check: String(figures.length) }) }));
   assert.equal(checkProposedRef(byKey, { text, ceiling: null }), null);
   /* a figure-free verified quote names nothing to check */
   const plain = proposedReadingGrade({ ...byKey, quote: "Item" }, { text, ceiling: "A" });
   assert.deepEqual([plain.grade, plain.check], ["A", []]);
-  assert.match(plain.why, /holds no number or date$/);
+  assert.ok(plain.why.endsWith(word("extractrun.holds_number_date")), "it says it holds no number or date");
   /* NEGATIVE CONTROLS: each keeps exactly the old rule (B for a key, C for a name), unverified, nothing named */
   const old = (e, capture) => { const g = proposedReadingGrade(e, capture); return [g.grade, g.verified_quote, g.check]; };
   const nfd = "Re\u0301sume\u0301 filed";
