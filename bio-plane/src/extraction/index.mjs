@@ -542,7 +542,7 @@ export function extractionOf(ctx, opts = {}) {
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
   #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null; #serials = new WeakMap();
-  #owe = null; #repairRun = null; #reader = readDocument; #interpreter = null; #ceiling;
+  #owe = null; #repairRun = null; #reader = readDocument; #interpreter = null; #ceiling; #heldAs = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
                          env = {}, readHooks = null, reader = null, interpreter = null, interpretationCeiling = undefined } = {}) {
@@ -744,6 +744,9 @@ export class Extraction {
   async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null,
                          skipKilled = false, stampUnit = null } = {}) {
     const e = env || this.env || {};
+    /* R113: a register segment is handed to no reader and no reading is made */
+    const asRegister = this.#heldAsRegister(document && document.capture && document.capture.sha256);
+    if (asRegister) return { reading: null, held_as_register: asRegister };
     const out = await this.#reader(document, {
       /* (fix round 9, K4904 (1); plan 2c item 8) the window at this cursor killed its reader three times: the reader steps past it, stated */
       ...(skipKilled === true ? { skipKilled: true } : {}),
@@ -925,6 +928,8 @@ export class Extraction {
     };
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
+    /* R113: a register segment is not read; nothing is written */
+    { const reg = this.#heldAsRegister(digest); if (reg) return left("HELD_AS_REGISTER", { held_as_register: reg }); }
     const stored = this.#storedDocument(home.bundleId, digest);
     let document = stored || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
@@ -1977,7 +1982,10 @@ export class Extraction {
          FROM readings WHERE capture_sha=?`, captureSha);
     /* (fix round 9, G127a; R104, restating R88) a part's digest is no capture: it is answered as any digest whose reading is not held, and is never
        resolved to a whole (a part shared by two wholes names neither). */
-    if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
+    if (!row) {
+      const reg = this.#heldAsRegister(captureSha);
+      return { ok: true, found: false, capture_sha: captureSha, reading: null, ...(reg ? { held_as_register: reg } : {}) };
+    }
     /* (fix round 6, G38; R94) the stored reading is read through SQL's JSON, so a bulky key never enters the object: it is named in
        `reading_omitted` and left out of `reading`. */
     const { reading: stored, omitted } = this.#readingBounded(row.capture_sha);
@@ -3392,6 +3400,27 @@ export class Extraction {
    *  reading-pipeline R29's `{member, project?, credentials, useCheck, transcribe, at, act}`. A malformed registration
    *  is refused LISTENER_MALFORMED and a second, by any module, LISTENER_DECLARED (membership's `listenerRefusal`, its
    *  R81: the slot takes one registration whoever makes it). Everything above this layer arrives through it. */
+  /** R113 (T53; N1259; K4403 (2), (5)): `registerHeldAs(module, provider)`, once (a second is refused `LISTENER_DECLARED`, a malformed one `LISTENER_MALFORMED`):
+   *  `provider.holds(sha)` answers `{register, import}` (or `true`) for a capture it holds, a register segment. Such a capture is handed to no reading-pipeline and no
+   *  reading is written: `read`, `readHeld` and `readingFor` state its reading as `held_as_register`, never a failure and never "unread". With no provider every
+   *  capture is read as before. */
+  registerHeldAs(module, provider) {
+    const refused = listenerRefusal(this.#heldAs, module, provider && typeof provider.holds === "function" ? provider.holds : null);
+    if (refused) return refused;
+    this.#heldAs = { module, provider };
+    return { ok: true, module };
+  }
+
+  /* R113: what the provider says of a capture it holds, `{register, import}`; null for none, for no provider, and for a provider that throws. */
+  #heldAsRegister(sha) {
+    if (!this.#heldAs || typeof sha !== "string" || !sha) return null;
+    try {
+      const h = this.#heldAs.provider.holds(sha);
+      if (!h) return null;
+      return h === true ? { register: null, import: null } : { register: h.register ?? null, import: h.import ?? null };
+    } catch { return null; }
+  }
+
   registerTranscriber(module, t) {
     const refused = listenerRefusal(this.#transcriber, module, isTranscriber(t) ? t.transcription : null);
     if (refused) return refused;
