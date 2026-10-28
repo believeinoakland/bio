@@ -4,14 +4,16 @@
 
 ## 0. State now and next steps
 
-**State.** Bob answered F1-F3 (K5435 A2, K5436 B2, K5437) and K5427 (text 100 MB). READY for PLANNING: `STUDY-N1266-file-types.md` (type table final), `SIZES-N1267.md`, `CORPUS-N1268.md`, `REQ-format-registry-beta.md` (RF1-RF11), `REQ-readers-beta.md` (new modules `structured-text-reader`, `mail-reader`; container client lines CC1-CC6), `UX-NEEDS.md` (sent to BOB). First count of Oakland sources in study §2a (Legistar 1,243/1,243 PDF; portal files PDF 48, ZIP 26, XLS 22).
+**State (2026-10-28, FILES #1 spun down on BOB #330's SPIN DOWN).** All FILES drafts are READY for PLANNING in this folder: `STUDY-N1266-file-types.md` (type table final: K5435 ruled list + Tier 2, K5436 hold and name, K5437 MBOX in, PST/Access held; first count of Oakland sources in §2a), `SIZES-N1267.md` (text 100 MB, K5427; limits K5439), `CORPUS-N1268.md`, `REQ-format-registry-beta.md` (RF1-RF11), `REQ-readers-beta.md` (new modules `structured-text-reader`, `mail-reader` ML1-ML12 with C14/K5466, container client CC1-CC6; CC4 points to PLANNING's A4-R1..R6), `UX-NEEDS.md` (answered by DEC-467), `KIND-TABLE.md` (plain kind names, states, limits for the screens), `PHOTO-DATA.md` (defers to PLANNING's A4 table; K5471, K5546/K5555: colour profile kept, re-embedded unchanged), `LOAD-PER-TYPE.md` (record and container load; M/D/U marked; L3-L5 measured locally), `PROBE-SPEC.md` (L1-L6 for PLATFORM's S1 cycle) and `PROBE-SPEC-L1-L2.md` (READING-PIPELINE's first Stage 1 job, then plat-s1), `MOVE-COPY.md` (R2 to R2 copy for the whole-record move, MV1-MV7). `DECISIONS.md` carries every decision of Bob's and BOB's that this lane carries (K4628 ... K5555).
 
-**Also READY:** `LOAD-PER-TYPE.md` (record and container load per type, for PLATFORM). **Open (BOB's or others').** Protective limits are set (K5439, in REQ-readers-beta). Whether `structured-text-reader` also takes text/HTML; N1267a before any workbook bound above 250,000 cells; PLATFORM's record and container load per added type; CAPABILITIES for map files (N1257) and email capture (N824).
+**Open, none FILES' to decide.** Whether a published edition shows a photo's place (Bob, QUESTIONS.html). The eu cross-jurisdiction copy rehearsal (K5443). L1, L2, L6 measurements and HEIC redraw (waiting for the Stage 1 job, the image and P-M17). Page counts of Legistar PDFs and the portal's 26 zips and 22 "Excel" files are unopened (S2, not blocking).
 
-**Next steps.**
-1. S2 (does not block READY): Legistar PDF sizes measured (150 random: median 218 KB, p90 1.6 MB, max 19.4 MB). Still to do: open the portal's 26 zips and 22 "Excel" files; page counts.
-2. On BOB's review of the drafts: amend as asked.
-3. Answer PLANNING's questions on the drafts; a need from another lane goes to BOB.
+**Next steps for a successor.**
+1. Read any new K ruling or BOB message; amend the drafts it touches and send BOB one line.
+2. S2 (optional): open the portal's zips and "Excel" files; count PDF pages; update study §2a and the corpus source rows.
+3. When the L-measurements report, write the results into `LOAD-PER-TYPE.md` against the M ids.
+4. Answer PLANNING's questions on the drafts; a need from another lane goes to BOB.
+5. Keep section 0 current; when `HANDOFF.md` nears 25,600 bytes move oldest entries to `build/plan/archive/files/`.
 
 ## Entries
 
@@ -56,3 +58,6 @@ PHOTO-DATA.md made to agree with PLANNING's A4 table (one source); K5471 carried
 
 ### F14 · 2026-10-27
 K5546/K5555 carried: the colour profile is kept (re-embedded unchanged after a strict check); PHOTO-DATA's sRGB conversion stays withdrawn.
+
+### F15 · 2026-10-28
+SPIN DOWN from BOB #330: section 0 and the prompt rewritten; pushed; SPUN DOWN.

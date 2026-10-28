@@ -93,4 +93,10 @@ export const KNOCK_CHECKS = {
     where: atDoor("knockEmpty", "is-knock-empty"),
     translation: word('refusal.KNOCK_EMPTY'),
   },
+  /* C-85.6 `KNOCK_BYTES_CHANGED` (R31; DEC-479; BOB's number, K5693): a member's look at a knock finds its stored bytes no longer hash to its digest. */
+  KNOCK_BYTES_CHANGED: {
+    check: 'C-85.6',
+    where: inIndex("#bytesChanged", "is-knock-unchanged"),
+    translation: word('screen.inbox.view.changed'),
+  },
 };

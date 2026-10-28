@@ -23,7 +23,8 @@ import { viewerPredicate, notAnAdmin, membershipOf } from "../membership/index.m
 import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
-import { profileOf, profileView, evidenceStorageAbsent, textTypeOf } from "./index.mjs";
+import { profileOf, profileView, evidenceStorageAbsent, textTypeOf, refusedFacts, REFUSE_HEAD_BYTES, MULTIPART_KEEP_MAX } from "./index.mjs";
+import { memberRow } from "./member.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
@@ -102,7 +103,7 @@ const json = (v) => { try { return v == null ? null : JSON.parse(v); } catch { r
 const FIGURES = Object.freeze({ ...ARCHIVE_LIMITS, ...UNPACK_LIMITS });
 
 /** R29: a refusal or a not-filed entry with its row. `limit` is a limit's figure, never in the words. */
-function rowed(code, extra = {}) {
+export function rowed(code, extra = {}) {
   const row = ARCHIVE_CHECKS[code];
   const limit = Object.prototype.hasOwnProperty.call(FIGURES, code) ? { limit: FIGURES[code] } : {};
   return row ? { reason: code, code, check: row.check, translation: row.translation, ...limit, ...extra }
@@ -154,6 +155,17 @@ export function partsSource(ev, parts) {
         const pos = offset + at;
         let i = starts.length - 1;
         while (i > 0 && starts[i] > pos) i--;
+        /* a part past what this module holds in memory at once (an archive held WHOLE as one object; `MULTIPART_KEEP_MAX`) is read by range, the window asked for and no more: never the object, nor its copies, resident */
+        if (parts[i].bytes > MULTIPART_KEEP_MAX) {
+          const from = pos - starts[i], take = Math.min(parts[i].bytes - from, length - at);
+          const o = await ev.get(parts[i].sha256, { range: { offset: from, length: take } });
+          if (!o) throw new Error("a part is no longer held");
+          const w = new Uint8Array(await o.arrayBuffer());
+          if (w.length !== take) throw new Error("a part's size changed");
+          out.set(w, at);
+          at += take;
+          continue;
+        }
         const b = await load(i);
         const from = pos - starts[i], take = Math.min(b.length - from, length - at);
         out.set(b.subarray(from, from + take), at);
@@ -171,7 +183,7 @@ const storeFailed = (e) => { const x = e instanceof Error ? e : new Error(String
  *  own SHA-256 (R10's form). Answers `{sha256, bytes, parts}`; a part already held is not written again. A file of more than
  *  one part is also kept whole under its own digest (`putFromParts`, as R96 keeps a capture) when the store offers it. A store
  *  failure is thrown tagged `storeFailure`. */
-async function storeChunks(ev, chunks) {
+export function partsWriter(ev) {
   const whole = createSha256();
   const parts = [];
   let held = [], heldBytes = 0, total = 0;
@@ -191,25 +203,36 @@ async function storeChunks(ev, chunks) {
       parts.push({ sha256: psha, bytes: n });
     }
   };
-  for await (const c of chunks) {
-    whole.update(c); total += c.length;
-    held.push(c); heldBytes += c.length;
-    if (heldBytes >= PART) await flush(false);
-  }
-  await flush(true);
-  /* an empty file is held under the empty digest, as any capture would be */
-  if (!parts.length) {
-    const e = new Uint8Array(0), esha = hex(await crypto.subtle.digest("SHA-256", e));
-    try { if (!(await ev.head(esha))) await ev.put(esha, e); } catch (x) { throw storeFailed(x); }
-    parts.push({ sha256: esha, bytes: 0 });
-  }
-  const sha256 = whole.hex();
-  if (parts.length > 1 && typeof ev.putFromParts === "function") {
-    let kept = null;
-    try { if (!(await ev.head(sha256))) kept = await ev.putFromParts(sha256, parts.map((p) => p.sha256)); else kept = { ok: true }; } catch (e) { throw storeFailed(e); }
-    if (!(kept && kept.ok === true)) throw storeFailed(new Error("the store would not make the whole from its parts"));
-  }
-  return { sha256, bytes: total, parts };
+  return {
+    /** one chunk of the file */
+    async write(c) {
+      whole.update(c); total += c.length;
+      held.push(c); heldBytes += c.length;
+      if (heldBytes >= PART) await flush(false);
+    },
+    /** the file's end: `{sha256, bytes, parts}` */
+    async finish() {
+      await flush(true);
+      /* an empty file is held under the empty digest, as any capture would be */
+      if (!parts.length) {
+        const e = new Uint8Array(0), esha = hex(await crypto.subtle.digest("SHA-256", e));
+        try { if (!(await ev.head(esha))) await ev.put(esha, e); } catch (x) { throw storeFailed(x); }
+        parts.push({ sha256: esha, bytes: 0 });
+      }
+      const sha256 = whole.hex();
+      if (parts.length > 1 && typeof ev.putFromParts === "function") {
+        let kept = null;
+        try { if (!(await ev.head(sha256))) kept = await ev.putFromParts(sha256, parts.map((p) => p.sha256)); else kept = { ok: true }; } catch (e) { throw storeFailed(e); }
+        if (!(kept && kept.ok === true)) throw storeFailed(new Error("the store would not make the whole from its parts"));
+      }
+      return { sha256, bytes: total, parts };
+    },
+  };
+}
+async function storeChunks(ev, chunks) {
+  const w = partsWriter(ev);
+  for await (const c of chunks) await w.write(c);
+  return w.finish();
 }
 
 /* ======================================================================= *
@@ -224,6 +247,12 @@ export const ACQUISITION_TABLES = Object.freeze([
                   derive: "stored", version_chain: false }),
   Object.freeze({ name: "unpack_days", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                   version_chain: false }),
+  /* R131 (T53): each call sent to a keyed outside service, so its stated limits are counted across purposes and a restart does not reset the count */
+  /* R140 (T53; K5574): how many times a host answered a fetch with a challenge or CAPTCHA page, counted for the host */
+  Object.freeze({ name: "challenge_hosts", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
+                  version_chain: false }),
+  Object.freeze({ name: "keyed_calls", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
+                  version_chain: false }),
 ]);
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS archive_entries (
@@ -235,7 +264,10 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   declared_total INTEGER, bytes INTEGER, tree_entries INTEGER, tree_bytes INTEGER, offers INTEGER,
   PRIMARY KEY (archive_sha, idx));
 CREATE INDEX IF NOT EXISTS archive_entries_sha ON archive_entries(sha256);
-CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL)`;
+CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS challenge_hosts (host TEXT PRIMARY KEY, challenges INTEGER NOT NULL, first_at INTEGER NOT NULL, last_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS keyed_calls (service TEXT NOT NULL, purpose TEXT NOT NULL, actor TEXT NOT NULL, subject TEXT, at_ms INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS keyed_calls_service ON keyed_calls(service, at_ms)`;
 
 /* R43: the setting's name in record-core's settings (its R25). */
 export const CO_ARCHIVE_SETTING = "co_archive";
@@ -293,8 +325,10 @@ export class Acquisition {
   }
 
   /** R38, R40: one entry's outcome, with the call's, the tree's and the day's counts it costs, in one transaction. */
-  settle(archiveSha, index, { state, code = null, detail = null, sha256 = null, target = null, at, cost = null, root = null, day = null }) {
+  settle(archiveSha, index, { state, code = null, detail = null, sha256 = null, target = null, at, cost = null, root = null, day = null, register = null }) {
     return this.#tx(() => {
+      /* R136: the member's job row is registered in this very function, so the row commits or rolls back with the entry's outcome */
+      if (typeof register === "function") register();
       /* R122: a file filed is offered to its caller once by this settling */
       this.#sql.exec(`UPDATE archive_entries SET state=?, code=?, detail=?, sha256=?, target=?, at=?, limit_name=NULL, offers=?
                        WHERE archive_sha=? AND idx=?`, state, code, detail, sha256, target, at, state === "filed" ? 1 : null, archiveSha, index);
@@ -324,6 +358,38 @@ export class Acquisition {
   final(archiveSha, index, { code, detail }) {
     this.#sql.exec(`UPDATE archive_entries SET code=?, detail=? WHERE archive_sha=? AND idx=? AND state='filed'`, code, detail, archiveSha, index);
     return { ok: true };
+  }
+
+  /* ---- R140's count of the challenge or CAPTCHA pages a host answered with ---- */
+
+  /** R140: one more challenge from `host` at `atMs`; answers `{host, challenges, first_at, last_at}`. */
+  challengeNote(host, atMs) {
+    this.#sql.exec(`INSERT INTO challenge_hosts (host, challenges, first_at, last_at) VALUES (?,1,?,?)
+                    ON CONFLICT(host) DO UPDATE SET challenges=challenges+1, last_at=excluded.last_at`, host, atMs, atMs);
+    return this.#one(`SELECT host, challenges, first_at, last_at FROM challenge_hosts WHERE host=?`, host);
+  }
+  /** R140: how many times `host` answered with a challenge or CAPTCHA, and when last: `{host, count, last_at}` (`last_at` an instant, or null for none). */
+  personChecksFor(host) {
+    const r = this.#one(`SELECT challenges, last_at FROM challenge_hosts WHERE host=?`, host);
+    return { host, count: r ? Number(r.challenges) : 0, last_at: r ? new Date(Number(r.last_at)).toISOString().replace(/\.\d+Z$/, "Z") : null };
+  }
+  /** R140: the hosts that have answered with a challenge, most first; a read. */
+  challengeHosts() { return this.#rows(`SELECT host, challenges, first_at, last_at FROM challenge_hosts ORDER BY challenges DESC, host`); }
+
+  /* ---- R131's durable count of the calls sent to a keyed service ---- */
+
+  /** R131: one call sent to `service` at `atMs` (the instance clock), by `actor` (`member` or `daemon`), for `subject` (a followed case, else null). */
+  keyedNote({ service, purpose, actor, subject = null, atMs }) {
+    this.#sql.exec(`INSERT INTO keyed_calls (service, purpose, actor, subject, at_ms) VALUES (?,?,?,?,?)`, service, purpose, actor, subject, atMs);
+  }
+  /** R131: the calls sent to `service` since `sinceMs` (all purposes and actors, or `daemon` ones alone), oldest first, as `at_ms`. */
+  keyedSince(service, sinceMs, { actor = null } = {}) {
+    return this.#rows(`SELECT at_ms FROM keyed_calls WHERE service=? AND at_ms>? ${actor ? "AND actor=?" : ""} ORDER BY at_ms`,
+                      ...(actor ? [service, sinceMs, actor] : [service, sinceMs])).map((r) => Number(r.at_ms));
+  }
+  /** R130: whether a call for `subject` under `purpose` by a daemon was sent since `sinceMs`. */
+  keyedSubjectSince(subject, purpose, sinceMs) {
+    return !!this.#one(`SELECT 1 AS x FROM keyed_calls WHERE actor='daemon' AND subject=? AND purpose=? AND at_ms>=? LIMIT 1`, subject, purpose, sinceMs);
   }
 
   dayCount(day) { return this.#one(`SELECT entries, bytes FROM unpack_days WHERE day=?`, day) || { entries: 0, bytes: 0 }; }
@@ -489,6 +555,7 @@ export function acquisitionOf(host, deps = {}) {
 }
 
 /* The instance a store handed in reaches: its own `acquisition`, else the one made over the same record-core. */
+export const ledgerOf = (store) => instanceOf(store);
 const instanceOf = (store) => (store && store.acquisition instanceof Acquisition ? store.acquisition
   : store && store.core && byRecord.get(store.core)) || null;
 
@@ -640,7 +707,16 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const day = at.slice(0, 10);
   const call = { entries: 0, bytes: 0 };
   let stoppedOn = null, stoppedForCall = false;
-  const ctx = { st, inst, ev, sha, h, at, mode, by, cls, member, out, source,
+  /* R136 (R38 amended): each entry it reaches registers its `member` job row, idempotently, inside the function that records the entry's outcome; the registrar is the
+     store's `registerJob`, else the call's. A registrar that refuses leaves the outcome as recorded: the row is the job's, never the entry's. */
+  const registrar = typeof st.registerJob === "function" ? (e) => st.registerJob(e) : internal && typeof internal.registerJob === "function" ? internal.registerJob : null;
+  const memberRegister = (row) => {
+    if (!registrar) return null;
+    const jr = memberRow({ container: sha, container_kind: "archive", index: row.index, name_stated: row.name ?? null, project: internal && internal.project });
+    return jr ? () => { try { const r = registrar(jr); if (r && r.ok === true) memberRows++; } catch { /* the row is the job's, never the entry's */ } } : null;
+  };
+  let memberRows = 0;
+  const ctx = { st, inst, ev, sha, h, at, mode, by, cls, member, out, source, memberRegister,
                 pv: profileView(core) };
 
   /* R40: an archive deeper than the published depth is filed as a file and never opened, whoever asks. */
@@ -669,13 +745,14 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
     }
   }
   for (const r of stoppedOn ? [] : waitingRows) {
+    if (internal && Number.isSafeInteger(internal.only) && r.idx !== internal.only) continue;   // R136: `fileMember` files one entry
     const row = rowsByIndex.get(r.idx);
     if (!row) continue;
     /* DEC-49 REGION is-entry-verdict */
     if (row.verdict === "directory") { inst.settle(sha, row.index, { state: "folder", at }); continue; }
     if (row.verdict === "symlink") { inst.settle(sha, row.index, { state: "link", target: await linkTarget(source, row), at }); continue; }
     if (NOT_CUT.includes(row.verdict)) {
-      inst.settle(sha, row.index, { state: "not_filed", code: row.verdict, at });
+      inst.settle(sha, row.index, { state: "not_filed", code: row.verdict, at, register: memberRegister(row) });
       out.not_filed.push({ index: row.index, ...rowed(row.verdict) });
       continue;
     }
@@ -724,6 +801,11 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
         catch { /* an unqueued continuation waits for a member; it never fails the run */ }
       }
     }
+  }
+  /* R116 (G175), R136: every row the registrar accepted is followed, after the commit, by the plane's `armJobs`, so owed work is due at once */
+  if (memberRows) {
+    const arm = typeof st.armJobs === "function" ? () => st.armJobs() : internal && typeof internal.armJobs === "function" ? internal.armJobs : null;
+    if (arm) { try { await arm(); } catch { /* the next alarm arms it */ } }
   }
   return {
     ok: true, archive, documents: out.documents, already_held: out.already_held, not_filed: out.not_filed, nested: out.nested,
@@ -782,11 +864,22 @@ async function cutOne(ctx, row, cost) {
     const code = verdict.ok ? "ARCHIVE_UNREADABLE" : verdict.why === "MEMBER_CORRUPT" ? "MEMBER_CORRUPT"
       : NOT_CUT.includes(verdict.why) ? verdict.why : "ARCHIVE_UNREADABLE";
     const detail = verdict.ok ? word("acquisition.text.evidence_store_hold") : (verdict.detail ?? verdict.why ?? null);
-    inst.settle(sha, row.index, { state: "not_filed", code, detail, at, ...counted });
+    inst.settle(sha, row.index, { state: "not_filed", code, detail, at, ...counted, register: ctx.memberRegister(row) });
     out.not_filed.push({ index: row.index, ...rowed(code, { detail }) });
     return;
   }
   /* END DEC-49 REGION is-entry-cut */
+  /* DEC-49 REGION is-refused-kind
+     R139 (T53; N1266, RF11): a file format-registry answers `refused` (a program, an installer, a script meant to run, a disk image, a RAR) is not filed,
+     whatever archive it came out of: its outcome is `not_filed`, with its type and reason in plain words, and no receipt or document is written. The bytes
+     stored on the way stay content-addressed and unnamed, as a corrupt member's do. */
+  const refused = await refusedMember(ev, stored, row);
+  if (refused) {
+    inst.settle(sha, row.index, { state: "not_filed", code: "FILE_TYPE_REFUSED", detail: refused.detail, at, ...counted, register: ctx.memberRegister(row) });
+    out.not_filed.push({ index: row.index, ...rowed("FILE_TYPE_REFUSED", { detail: refused.detail, kind: refused.kind, kind_text: refused.kind_text, reason_text: refused.reason_text }) });
+    return;
+  }
+  /* END DEC-49 REGION is-refused-kind */
   const fileSha = stored.sha256;
   const p = st.provenance || inst.provenance;
   const address = h.address ? `${h.address}#zip:${row.index}` : null;
@@ -800,14 +893,28 @@ async function cutOne(ctx, row, cost) {
   const before = registered || inst.filedBefore(fileSha) || out.documents.some((d) => d.capture.sha256 === fileSha);
   try { await p?.recordReceipt?.(receipt); } catch { /* an unwritten receipt leaves the grade unanswered, never the cut undone */ }
   if (before) {
-    inst.settle(sha, row.index, { state: "already_held", sha256: fileSha, at, ...counted });
+    inst.settle(sha, row.index, { state: "already_held", sha256: fileSha, at, ...counted, register: ctx.memberRegister(row) });
     out.already_held.push({ index: row.index, sha256: fileSha });
     return;
   }
   const document = await fileDocument(ctx, row, stored, receipt);
-  inst.settle(sha, row.index, { state: "filed", sha256: fileSha, at, ...counted });
+  inst.settle(sha, row.index, { state: "filed", sha256: fileSha, at, ...counted, register: ctx.memberRegister(row) });
   out.documents.push(document);
   if (document.profile && document.profile.format && document.profile.format.format === "zip") out.nested.push(fileSha);
+}
+
+/** R139: the facts of a refusal when the head of a cut file (and its entry name) is a refused kind, else null. */
+async function refusedMember(ev, stored, row) {
+  try {
+    const first = stored.parts[0].sha256;
+    let o = null;
+    try { o = await ev.get(first, { range: { offset: 0, length: REFUSE_HEAD_BYTES } }); } catch { o = null; }
+    if (!o) o = await ev.get(first);
+    const head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, REFUSE_HEAD_BYTES) : null;
+    if (!head || !head.length) return null;
+    const d = detectFormat(head, null, typeof row.name === "string" ? row.name : null);
+    return d && d.format === "refused" ? refusedFacts(d) : null;
+  } catch { return null; }
 }
 
 /** R39: the provenance document of one file cut out of an archive, R16's with R39's differences. Every fact is derived

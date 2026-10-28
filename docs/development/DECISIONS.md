@@ -7394,3 +7394,15 @@ the design: The catalogue is "the list of AIs", as the AI screens already call i
 verified: the page's checks pass; on tranche/T53 with these words files, words 72 failures, the same without them (the tranche's own); "connecting Claude" remains only in code comments and the 1.80.0 census fixture.
 reasoning recorded in: this entry; `words-drawn.src.py` (DEC-488 block; two REWRITEs), `mock-screens.js` (two drawn reauth sentences).
 owed: BOB: merge this commit (MERGE); add `ai-catalogue`'s reads to words-reads.json under K5681 (the 17 keys); the screens that show the list's state and refusals read these keys.
+
+### DEC-489 · decided
+raised: 2026-10-28 · the UX design session with Bob (session_018BhceeRn5Di4Q4kwmEsXF9, UX design #45) (B571: FILE-SAFETY, K5704: R71's BYTES_CHANGED, R60's photograph safe view)
+for: design (T53, the beta)
+question: The words for file-safety's new `BYTES_CHANGED` refusal, and `NO_SAFE_VIEW` now that ordinary photographs have a safe view.
+why it is Bob's: it is not (P17).
+provisional: as below. alternative: none. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-28 · the design session (P17)
+the design: `refusal.BYTES_CHANGED` "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator." (the same as the Inbox's `screen.inbox.view.changed`, DEC-479). `refusal.NO_SAFE_VIEW` "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets, plain text and ordinary JPEG or PNG photographs (a photograph is shown redrawn). This file is none of them, so it has no safe view."
+verified: the page's checks pass; on tranche/T53 (c491c72b18 and later) with these words files, words 187 failures, the same without them (the tranche's own); file-safety view 5/5, bytes-view 2/2, picture 9/9.
+reasoning recorded in: this entry; `words-drawn.src.py` (DEC-260's row in place; DEC-489 block).
+owed: BOB: merge this commit (MERGE); file-safety's reads gain `refusal.BYTES_CHANGED` (K5681).
