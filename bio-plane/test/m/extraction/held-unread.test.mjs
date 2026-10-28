@@ -5,8 +5,7 @@
    provider is merged: the through-the-real-reader test is a `test.todo`); the real reader makes the new reading. Each test names the requirement id it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
-import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver, registrarStub } from "./fixture.mjs";
 import { registerFormat, unregisterFormat } from "../../../src/formats.mjs";
 import { extractionOps } from "../../../src/extraction/index.mjs";
 
@@ -35,7 +34,7 @@ async function heldHome(bytes, { name = "mailbox.pst", ct = "application/vnd.ms-
   const document = doc({ digest: d, bytes: u8.length, ct, format: "unlisted", fromText: false });
   w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [{ ...document, name }] }) } : null);
   w.core.transact(() => w.x.writeReading({ bundleId: "INFO-1", captureSha: d, reading: heldReading(), composed: true }));
-  w.jobs = jobRegistrarStub();
+  w.jobs = registrarStub();
   w.x.registerOwe(w.jobs.registerJob);
   return { w, d };
 }

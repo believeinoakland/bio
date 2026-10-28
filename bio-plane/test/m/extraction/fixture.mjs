@@ -23,6 +23,9 @@ import { registeredHomes, heldParts } from "../provenance/fixtures.mjs";
    doctypes' readers, as the plane's store does (`plane/wiring.mjs`). */
 registerDoctypes(registerDoctype);
 
+// fixtures-contract: store-assembly job-registrar
+export const registrarStub = () => jobRegistrarStub();
+
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 
 /* The plane's shape (K316): `sql.exec` answers workerd's cursor, an iterator read once with `toArray()` and `one()`,
