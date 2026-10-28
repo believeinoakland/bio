@@ -41816,77 +41816,77 @@
       "en": "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1109
+      "line": 1128
     },
     {
       "id": "observation-log.declared.leadlist",
       "en": "read: the leads this viewer may read, each once — `leadread`'s fence over a list; writes nothing",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1117
+      "line": 1136
     },
     {
       "id": "observation-log.declared.leadlook",
       "en": "lead-directed: a member records following a lead, keyed by lead id; with the looker's words on where they looked and what they found, now required (observation-log R17, C-54.11; DEC-88: `reasoned`); writes one observation_log row under authority_kind lead",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1111
+      "line": 1130
     },
     {
       "id": "observation-log.declared.leadread",
       "en": "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1115
+      "line": 1134
     },
     {
       "id": "observation-log.declared.leadshare",
       "en": "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project), with the sharer's reason for telling that project, now required (observation-log R16, C-54.12; DEC-88: `reasoned`); writes a `lead_shares` row and no edge",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1113
+      "line": 1132
     },
     {
       "id": "observation-log.index.a_container_has_no_arm",
       "en": "a {container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is a page, a paragraph, a slide or a sheet's used range, and HTML has no `dom` producer)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 357
+      "line": 376
     },
     {
       "id": "observation-log.index.a_look_recorded_as_st",
       "en": "a look recorded as {st} found nothing, so it cannot point at something it found",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 930
+      "line": 949
     },
     {
       "id": "observation-log.index.a_resolver_is_registered_for",
       "en": "a resolver is registered for one of {RESOLVED_AUTHORITY_KINDS}; the records every other authority kind names are fixed by the observation log",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 675
+      "line": 694
     },
     {
       "id": "observation-log.index.an_authored_observation_indexed_at",
       "en": "an authored observation indexed at a {container} extent has no indexing unit arm: its one unit is the whole document (extraction R61)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 384
+      "line": 403
     },
     {
       "id": "observation-log.index.and_b_of_locator",
       "en": " and {bytes} B of locator",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 828
+      "line": 847
     },
     {
       "id": "observation-log.index.bytes_b_of_words_v1",
       "en": "{bytes} B of words{v1}, over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 828
+      "line": 847
     },
     {
       "id": "observation-log.index.first_extraction_authored",
@@ -41896,221 +41896,235 @@
       "line": 71
     },
     {
+      "id": "observation-log.index.first_extraction_prefix",
+      "en": "first extraction; ",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/index.mjs",
+      "line": 76
+    },
+    {
       "id": "observation-log.index.lead_call_carries_nobody",
       "en": "this call carries nobody. The plane stamps the author from the credential that asked",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 822
+      "line": 841
     },
     {
       "id": "observation-log.index.lead_empty",
       "en": "the lead is empty. Its words are what the member was told or suspects, as they write it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 825
+      "line": 844
     },
     {
       "id": "observation-log.index.lead_id_was_written_by",
       "en": "{lead_id} was written by another member; only its author shares it. A machine credential is never the author (the author is a member id, stamped when the lead was written)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 857
+      "line": 876
     },
     {
       "id": "observation-log.index.look_call_carries_nobody",
       "en": "this call carries nobody. The plane stamps who looked from the credential that asked",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 915
+      "line": 934
     },
     {
       "id": "observation-log.index.look_detail_blank",
       "en": "the detail is blank. Say where you looked and what you found",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 944
+      "line": 963
     },
     {
       "id": "observation-log.index.never_looked_is_never_stored",
       "en": "NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all (OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of {LEAD_LOOK_OUTCOMES}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 922
+      "line": 941
     },
     {
       "id": "observation-log.index.no_lead_is_addressed_by",
       "en": "no lead is addressed by {lid} in this record",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 805
+      "line": 824
     },
     {
       "id": "observation-log.index.no_rk_rr_is_held",
       "en": "no {rk} {rr} is held in this record where you can read it. Capture what the look found first, then record the look against it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 936
+      "line": 955
     },
     {
       "id": "observation-log.index.nothing_found_citable",
       "en": "nothing it found is citable through it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 966
+      "line": 985
     },
     {
       "id": "observation-log.index.pass_detail_hint",
       "en": "pass detail=<your words>: where you looked and what you found",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 942
+      "line": 961
     },
     {
       "id": "observation-log.index.pass_lead_hint",
       "en": "pass lead=<LEAD-…>: the id op=lead returned",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 806
+      "line": 825
     },
     {
       "id": "observation-log.index.pass_project_hint",
       "en": "pass project=<PROJ-…>: the project to share this lead to",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 863
+      "line": 882
     },
     {
       "id": "observation-log.index.pass_reason_hint",
       "en": "pass reason=<your words>: why this lead is disclosed to {pid}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 873
+      "line": 892
     },
     {
       "id": "observation-log.index.per_capture_text_bound",
       "en": "the per-capture text bound, {bytes} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 456
+      "line": 475
     },
     {
       "id": "observation-log.index.per_capture_unit_bound",
       "en": "the per-capture UNIT bound, {units} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 455
+      "line": 474
     },
     {
       "id": "observation-log.index.per_unit_cut_bound",
       "en": "the per-unit text cap: {truncated} unit(s) were stored cut, so the record holds only the start of their text",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 462
+      "line": 481
+    },
+    {
+      "id": "observation-log.index.re_extraction_prefix",
+      "en": "re-extraction; ",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/index.mjs",
+      "line": 77
     },
     {
       "id": "observation-log.index.referent_kind_and_id",
       "en": "a referent is a KIND and an id together (resultKind capture|content, resultRef); one without the other names nothing",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 927
+      "line": 946
     },
     {
       "id": "observation-log.index.rk_is_not_something_a",
       "en": "'{rk}' is not something a look can find: capture or content. An observation referent is a rollup's (REC-100), and a member's look is never a rollup",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 933
+      "line": 952
     },
     {
       "id": "observation-log.index.the_detail_must_be_your",
       "en": "the detail must be your words, as text; a {v1} was sent",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 943
+      "line": 962
     },
     {
       "id": "observation-log.index.the_look_found_citable",
       "en": "the {rk} the look found is what a leg can cite",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 966
+      "line": 985
     },
     {
       "id": "observation-log.index.the_looks_detail_is_over",
       "en": "the look's detail is over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 950
+      "line": 969
     },
     {
       "id": "observation-log.index.the_reason_is_blank_say",
       "en": "the reason is blank. Say why this lead is disclosed to {pid}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 875
+      "line": 894
     },
     {
       "id": "observation-log.index.the_reason_is_chars_characters",
       "en": "the reason is {chars} characters, over the {LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 876
+      "line": 895
     },
     {
       "id": "observation-log.index.the_reason_must_be_your",
       "en": "the reason must be your words, as text; a {v1} was sent",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 874
+      "line": 893
     },
     {
       "id": "observation-log.index.unit_arm_no_unit_text",
       "en": "this container has an indexing unit arm and produced no unit carrying text (M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record holds no addressable passage of it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 469
+      "line": 488
     },
     {
       "id": "observation-log.index.v1_is_not_one_of",
       "en": "'{v1}' is not one of {LEAD_LOOK_OUTCOMES}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 923
+      "line": 942
     },
     {
       "id": "observation-log.index.v1_or_the_acquire_answers",
       "en": "{v1} or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 454
+      "line": 473
     },
     {
       "id": "observation-log.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. A lead is what a PERSON was told or has reason to believe, in their own name",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 821
+      "line": 840
     },
     {
       "id": "observation-log.index.who_is_a_machine_credential_2",
       "en": "'{who}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 914
+      "line": 933
     },
     {
       "id": "observation-log.index.written_unit_s_indexed_bytes",
       "en": "{written} unit(s) indexed, {bytes} B",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 463
+      "line": 482
     },
     {
       "id": "observation-log.index.you_are_not_a_joined",
       "en": "you are not a joined participant of a project addressed by {pid}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 862
+      "line": 881
     },
     {
       "id": "observation-log.vocabulary.a_governed_refusal_cannot_support",
@@ -42344,6 +42358,27 @@
       "line": 1101
     },
     {
+      "id": "observation-log.vocabulary.field_authority",
+      "en": "the entry's {field} is carried only under authority {kinds}, and this entry's authority is '{kind}'",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/vocabulary.mjs",
+      "line": 1586
+    },
+    {
+      "id": "observation-log.vocabulary.field_both",
+      "en": "the entry carries both a read and a disagreement; it may carry one of the two",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/vocabulary.mjs",
+      "line": 1582
+    },
+    {
+      "id": "observation-log.vocabulary.field_malformed",
+      "en": "the entry's {field} is not in the form the record keeps (a read: record, n of total with 1 <= n <= total, outcome {outcomes}; a disagreement: record and at least two distinct levels of {levels})",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/vocabulary.mjs",
+      "line": 1577
+    },
+    {
       "id": "observation-log.vocabulary.it_tried_considered",
       "en": "; it tried {considered}",
       "module": "observation-log",
@@ -42418,7 +42453,7 @@
       "en": "'{String}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/vocabulary.mjs",
-      "line": 1548
+      "line": 1597
     },
     {
       "id": "observation-log.vocabulary.subject_extent",
@@ -50070,6 +50105,20 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/checks.mjs",
       "line": 376
+    },
+    {
+      "id": "refusal.OBSERVATION_FIELD_MALFORMED",
+      "en": "That entry carries a read or a disagreement that is not in the form the record keeps. A read names the record, which one it was of how many, and whether it was answered or refused; a disagreement names the record and at least two different levels, in the order they were named. Nothing was written.",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/checks.mjs",
+      "line": 197
+    },
+    {
+      "id": "refusal.OBSERVATION_FIELD_NOT_ALLOWED",
+      "en": "Only an entry of a run or of one of its steps can carry a read or a disagreement, and only one of the two. Nothing was written.",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/checks.mjs",
+      "line": 203
     },
     {
       "id": "refusal.SITE_ASKS_FOR_PERSON",

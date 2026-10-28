@@ -3,9 +3,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha } from "./fixture.mjs";
-import { contentObservationsFor, CAPTURE_TEXT_UNIT_CONTAINERS, INDEX_NOTICE_UNIT_CONTAINERS, observationLogOf, OBSERVATION_LOG_MODULE }
+import { contentObservationsFor, CAPTURE_TEXT_UNIT_CONTAINERS, INDEX_NOTICE_UNIT_CONTAINERS, observationLogOf, OBSERVATION_LOG_MODULE,
+  FIRST_EXTRACTION_PREFIX, RE_EXTRACTION_PREFIX }
   from "../../../src/observation-log/index.mjs";
-import { CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../../../src/extraction/index.mjs";
+import { CAPTURE_TEXT_CAPTURE_UNIT_BOUND, CAPTURE_TEXT_CAPTURE_BOUND } from "../../../src/extraction/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const LAYER = (tier = 1, extent = null) => ({ step: "layer", tier, container: "pdf", cap: null, ...(extent ? { extent } : {}) });
@@ -51,12 +52,12 @@ test("R6 the content level: one extract row per tier outcome naming the bundle, 
   assert.deepEqual(rows.map((r) => [r.level, r.authority_kind, r.authority, r.subject_kind, r.subject, r.state, r.result_kind, r.result_ref, r.actor_class, r.actor]),
     [["content", "extract", "INFO-2026-0001", "capture", c, "partial", "reading", c, "member", "member:alice"],
      ["content", "extract", "INFO-2026-0001", "capture", c, "PRESENT", "reading", c, "member", "member:alice"]]);
-  assert.ok(rows.every((r) => r.detail.startsWith("first extraction; ")));
+  assert.ok(rows.every((r) => r.detail.startsWith(FIRST_EXTRACTION_PREFIX)));
   assert.match(rows[0].detail, /tier 1/); assert.match(rows[1].detail, /tier 3/);
   // a second reading of the same capture is a re-extraction, derived from the log
   const x2 = w.obs.observeExtraction("INFO-2026-0001", c, reading(), { author: null });
   assert.deepEqual([x2.reextraction, x2.states], [true, ["PRESENT"]]);
-  assert.match(w.log().at(-1).detail, /^re-extraction; /);
+  assert.ok(w.log().at(-1).detail.startsWith(RE_EXTRACTION_PREFIX));
   assert.deepEqual([w.log().at(-1).actor_class, w.log().at(-1).actor], ["plane", null]);
   // no text possible
   const d = sha("scan");
@@ -131,9 +132,9 @@ test("R7 the index: one derive row per capture — PRESENT when every unit was s
     ["content", "derive", "B", "c1", "PRESENT", "reading", "c1", null]);
   w.obs.observeIndexed("B", "c2", indexed({ written: 2, over_bound: 5, offered: 7 }), { hadText: true });
   assert.deepEqual([row().state, row().result_kind, row().result_ref], ["partial", "reading", "c2"]);
-  assert.match(row().bound, /per-capture text bound/);
+  assert.ok(row().bound.includes(word("observation-log.index.per_capture_text_bound", { bytes: String(CAPTURE_TEXT_CAPTURE_BOUND) })));
   w.obs.observeIndexed("B", "c2b", indexed({ written: CAPTURE_TEXT_CAPTURE_UNIT_BOUND, over_bound: 1 }), { hadText: true });
-  assert.match(row().bound, /UNIT bound/);
+  assert.ok(row().bound.includes(word("observation-log.index.per_capture_unit_bound", { units: String(CAPTURE_TEXT_CAPTURE_UNIT_BOUND) })));
   w.obs.observeIndexed("B", "c3", indexed({ written: 0 }), { hadText: false });
   assert.deepEqual([row().state, row().result_kind, row().result_ref], ["LOOKED_ABSENT", null, null]);
   w.obs.observeIndexed("B", "c4", indexed(), { hadText: true, unitArm: false, armReason: "a xlsx has no indexing unit arm" });
@@ -142,7 +143,8 @@ test("R7 the index: one derive row per capture — PRESENT when every unit was s
   assert.equal(row().state, "LOOKED_ABSENT", "an arm that produced nothing is never PRESENT over zero units");
   w.obs.observeIndexed("B", "c6", indexed({ truncated: 2, unaddressable: 1 }), { hadText: true });
   assert.equal(row().state, "partial", "R7 a cut unit makes the axis partial, as an over-bound one does");
-  assert.match(row().detail, /2 unit\(s\) stored to the per-unit cap/); assert.match(row().detail, /1 unit\(s\) offered an address/);
+  assert.ok(row().detail.includes(word("observation-log.detail.unit_stored_per", { truncated: "2" })));
+  assert.ok(row().detail.includes(word("observation-log.detail.unit_offered_address", { unaddressable: "1" })));
   assert.ok(w.log().every((r) => r.result_kind !== "content"), "never a content row");
 });
 
@@ -192,26 +194,26 @@ test("R7 the index notice (extraction R62): one derive row per indexed authored 
   // stored to a bound: partial with the bound that stopped it
   assert.deepEqual(fire({ indexed: indexed({ offered: 2, written: 1, over_bound: 1 }) }).observed.state, "partial");
   assert.deepEqual([row().result_kind, row().result_ref], ["reading", c]);
-  assert.match(row().bound, /per-capture text bound/);
+  assert.ok(row().bound.includes(word("observation-log.index.per_capture_text_bound", { bytes: String(CAPTURE_TEXT_CAPTURE_BOUND) })));
   // a unit stored to the per-unit cap is a cut unit: the axis is partial, with the cap as its bound and the cut said (G15)
   assert.equal(fire({ indexed: indexed({ offered: 1, written: 1, truncated: 1 }) }).observed.state, "partial");
   assert.deepEqual([row().state, row().result_kind, row().result_ref], ["partial", "reading", c]);
   assert.match(row().bound, /per-unit/);
-  assert.match(row().detail, /1 unit\(s\) stored to the per-unit cap/);
+  assert.ok(row().detail.includes(word("observation-log.detail.unit_stored_per", { truncated: "1" })));
   assert.equal(fire({ indexed: indexed({ offered: 1, written: 1, truncated: 0 }) }).observed.state, "PRESENT", "control: an uncut index stays present");
   // words holding no glyph offered no unit (extraction R22): no text, LOOKED_ABSENT, saying why and naming no extraction row
   assert.deepEqual(fire({ indexed: indexed({ offered: 0, written: 0, bytes: 0 }) }).observed.state, "LOOKED_ABSENT");
   assert.deepEqual([row().state, row().condition, row().bound, row().result_kind, row().result_ref], ["LOOKED_ABSENT", null, null, null, null]);
-  assert.match(row().detail, /holds no character/);
-  assert.doesNotMatch(row().detail, /extraction observation|PDF/, "no reader ran, so no extraction row is pointed at");
+  assert.equal(row().detail, word("observation-log.no_text_detail"), "the index notice's reason: no reader ran, so no extraction row is pointed at");
+  assert.notEqual(row().detail, word("observation-log.text.text_extracted_capture"));
   assert.equal(fire({ indexed: null }).observed.state, "LOOKED_ABSENT", "an index answer carrying nothing is no text");
   // a container with no unit arm: LOOKED_INDETERMINATE naming it, even with text
   assert.equal(fire({ container: "pdf-page" }).observed.state, "LOOKED_INDETERMINATE");
   assert.deepEqual([row().result_kind, row().result_ref], [null, null]);
-  assert.match(row().bound, /a pdf-page extent has no indexing unit arm/);
+  assert.equal(row().bound, word("observation-log.index.an_authored_observation_indexed_at", { container: "pdf-page" }));
   fire({ container: undefined });
   assert.deepEqual([row().state], ["LOOKED_INDETERMINATE"]);
-  assert.match(row().bound, /did not say which container/);
+  assert.equal(row().bound, word("observation-log.arm_reason.index_notice_did"));
   assert.deepEqual([...INDEX_NOTICE_UNIT_CONTAINERS], ["document"]);
   // who looked is derived from the author, never guessed
   fire({ author: null });
@@ -226,7 +228,7 @@ test("R7 the index notice (extraction R62): one derive row per indexed authored 
   assert.equal(w.count("observation_log"), n);
   // the index row never reads as an extraction: the next reading of the capture is still its first extraction (R6)
   w.obs.observeExtraction("INFO-2026-0001", c, reading());
-  assert.match(w.log().at(-1).detail, /^first extraction; /);
+  assert.ok(w.log().at(-1).detail.startsWith(FIRST_EXTRACTION_PREFIX));
   // the module listens once
   assert.equal(w.obs.listenTo(w.ex), true);
   assert.equal(w.ex.indexListeners.length, 1);
@@ -276,7 +278,7 @@ test("R8 the meaning level: the reader run per capture (PRESENT with the count, 
   w.obs.observeConnectionDerivation({ entityId: "ENT-1", count: 496, documents: 32, truncated: true, assertedBy: "member:carol" });
   assert.deepEqual([last().state, last().actor], ["partial", "member:carol"]);
   w.obs.observeConnectionDerivation({ entityId: "ENT-2", count: 0, documents: 1, entityKnown: false });
-  assert.equal(last().state, "LOOKED_ABSENT"); assert.match(last().detail, /not in the subject registry/);
+  assert.equal(last().state, "LOOKED_ABSENT"); assert.ok(last().detail.includes(word("observation-log.text.entity_id_subject")));
   // registered on entities' and connections' notices when they exist
   const regs = [];
   const fake = (name) => ({ [name]: (module, fn) => { regs.push([name, module]); fn({ entityId: "ENT-3", count: 0, documents: 0, captureSha: "c9", ref: "k:9", matches: [] }); return { ok: true }; } });
@@ -308,7 +310,7 @@ test("R6 R7 R8 end to end through extraction's own reading write (its R19, R24):
   assert.equal(again.listeners[OBSERVATION_LOG_MODULE].observed.reextraction, true);
   assert.deepEqual(w.log().slice(3).map((x) => [x.level, x.authority_kind, x.state, x.actor_class]),
     [["content", "derive", "LOOKED_ABSENT", "plane"], ["content", "extract", "PRESENT", "plane"], ["meaning", "derive", "PRESENT", "plane"]]);
-  assert.match(w.log()[4].detail, /^re-extraction; /);
+  assert.ok(w.log()[4].detail.startsWith(RE_EXTRACTION_PREFIX));
 });
 
 test("R38 a text capture has a unit arm: a reading notice for a text container whose paragraphs were stored writes PRESENT, never LOOKED_INDETERMINATE; html stays unarmed and still writes LOOKED_INDETERMINATE naming its reason", () => {
