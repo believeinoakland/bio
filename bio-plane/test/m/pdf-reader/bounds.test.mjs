@@ -119,6 +119,24 @@ test("R48: every ceiling this module keeps is read from READ_BOUNDS by name, and
   }
 });
 
+test("R47: a page-tree array of 270,000 references whose text passes the direct-object bound is absent, stated with the bound, and named by objects() as unresolved", async () => {
+  /* the array's text, not its count, passes the bound: 270,000 references written one per line with indentation are past 4 MiB */
+  const dmax = boundOf("pdf", "direct_object");
+  const N = 270000;
+  let kids = "[";
+  for (let i = 0; i < N; i++) kids += `\n${" ".repeat(16)}${i + 10} 0 R`;
+  kids += "\n]";
+  assert.ok(kids.length > dmax, "the array's text is past the bound");
+  const objs = { 1: "<< /Type /Catalog /Pages 2 0 R >>", 2: `<< /Type /Pages /Kids 4 0 R /Count ${N} >>`, 4: kids };
+  for (let i = 0; i < N; i++) objs[i + 10] = "<< /Type /Page /Parent 2 0 R >>";
+  const bytes = build(objs);
+  const d = await openPdf(bytes);
+  assert.ok(d.notes.includes(`over_bound:direct_object:${dmax + 1}:${dmax}`), JSON.stringify(d.notes.slice(0, 5)));
+  assert.equal(d.resolve({ t: "ref", n: 4 }), null, "the array past the bound is absent");
+  const got = d.objects();
+  assert.deepEqual(got.unresolved, [{ num: 4, gen: 0 }], "the reference to it is named as unresolved");
+});
+
 test("R47: a direct object past the bound is absent and stated, and an input of more objects than the bound leaves the process alive and the answer within it", async () => {
   const dmax = boundOf("pdf", "direct_object");
   const huge = `[ ${"1 ".repeat(Math.ceil(dmax / 2) + 10)}]`;

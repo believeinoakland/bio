@@ -1,0 +1,399 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Civicsmith AI catalogue keys</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!--
+  The AI catalogue's two signing keys, made and used where they never leave the person holding them.
+
+  This page is one file with no network access of any kind: nothing is loaded into it and nothing is
+  sent from it. Open it from a downloaded copy. Everything it does happens in the browser tab.
+  It is never served by the plane (signatures R57; control-plane R109).
+
+  It makes two keys, the catalogue signing key and the catalogue recovery key, each locked with a
+  passphrase. It loads a saved key back, copies the two public lines, and signs one kind of statement
+  only: a catalogue statement (signatures R51), in the OpenSSH signature format, in the namespace
+  bio-ai-catalogue, after showing what the statement says in words. Anything signed here can be checked
+  by anyone with stock OpenSSH:
+
+      ssh-keygen -Y verify -f allowed_signers -I <name> -n bio-ai-catalogue -s statement.sig < statement.txt
+-->
+<style>
+  :root {
+    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;
+    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;
+    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--dim); margin: 0 0 28px; }
+  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;
+            padding: 20px; margin: 0 0 18px; }
+  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;
+       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }
+  p { margin: 0 0 12px; }
+  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }
+  input, textarea, select { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;
+                    background: #fff; color: var(--ink); }
+  textarea { resize: vertical; }
+  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;
+           border: 1px solid var(--accent); background: var(--accent); color: #fff;
+           cursor: pointer; }
+  button:hover { background: var(--accent-dark); }
+  button.ghost { background: #fff; color: var(--accent); }
+  button.ghost:hover { background: var(--soft); }
+  button:disabled { opacity: .45; cursor: default; background: var(--accent); }
+  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }
+  .stack > * + * { margin-top: 14px; }
+  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }
+  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .keybox label { margin: 0; }
+  .copy { padding: 4px 12px; font-size: 12px; }
+  .note { color: var(--dim); font-size: 13px; margin: 0; }
+  .warn { color: var(--warn); }
+  .good { color: var(--good); }
+  .bad { color: var(--bad); }
+  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px; word-break: break-all; }
+  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row button { flex: 1 1 auto; }
+  .words { border-left: 4px solid var(--accent); padding: 8px 12px; background: var(--soft); }
+  .words ul { margin: 6px 0 0; padding-left: 20px; }
+</style>
+
+<main>
+  <h1>Civicsmith AI catalogue keys</h1>
+  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>
+
+  <section>
+    <h2>Make the two keys</h2>
+    <p>One press makes both: the <b>catalogue signing key</b>, which signs the catalogue, and the
+       <b>catalogue recovery key</b>, which is kept offline and signs only the catalogue that replaces
+       a lost or stolen signing key. Copy the two public lines into the session, and keep the
+       two private keys apart from each other and from the passphrase.</p>
+    <div class="stack">
+      <div><label for="gen-pass">Passphrase</label>
+        <input id="gen-pass" type="password" autocomplete="new-password" placeholder="passphrase"></div>
+      <div><label for="gen-pass2">The same passphrase again</label>
+        <input id="gen-pass2" type="password" autocomplete="new-password" placeholder="passphrase"></div>
+      <p class="note">Both private keys are locked with this passphrase, and loading one back asks for it.
+         Without the passphrase a private key cannot be used.</p>
+      <button id="gen" class="big">Make my two keys</button>
+    </div>
+    <div id="gen-out" class="stack" style="margin-top:18px"></div>
+  </section>
+
+  <section>
+    <h2>Load a key you already have</h2>
+    <p class="note">Paste a private key from a previous run, and its passphrase. The key says which of the
+       two it is.</p>
+    <div class="stack">
+      <textarea id="load-blob" rows="3" placeholder="BIOKEY1....." spellcheck="false"></textarea>
+      <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">
+      <div class="row">
+        <button id="load">Load this key</button>
+        <button id="forget" class="ghost">Forget everything</button>
+      </div>
+    </div>
+    <div id="load-out" style="margin-top:12px"></div>
+  </section>
+
+  <section>
+    <h2>The public lines</h2>
+    <p class="note">The two public lines, together, ready to paste into the session. Public keys are public by design.</p>
+    <div class="stack">
+      <div id="pub-status" class="status"></div>
+      <button id="copy-pub" class="ghost">Copy both public lines</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sign a catalogue statement</h2>
+    <p>Paste the catalogue statement exactly as Civicsmith gave it. This page signs nothing else.
+       It first says in words what the statement says; read that, then sign.</p>
+    <div class="stack">
+      <div><label for="st-with">Sign with</label>
+        <select id="st-with">
+          <option value="catalogue">The catalogue signing key</option>
+          <option value="recovery">The catalogue recovery key</option>
+        </select></div>
+      <div id="st-key" class="status"></div>
+      <textarea id="st-text" rows="8" spellcheck="false" placeholder="bio-ai-catalogue/1"></textarea>
+      <button id="st-read" class="ghost">Show what it says</button>
+      <div id="st-words"></div>
+      <button id="st-sign" disabled>Sign this statement</button>
+    </div>
+    <div class="stack" id="st-out" style="margin-top:16px"></div>
+  </section>
+</main>
+
+<script>
+/* ------------------------------------------------------------- helpers */
+const $ = (id) => document.getElementById(id);
+const enc = new TextEncoder();
+const u8 = (...a) => { let n = 0; for (const p of a) n += p.length;
+  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };
+const b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
+const unb64 = (s) => Uint8Array.from(atob(s.replace(/\s+/g, "")), (c) => c.charCodeAt(0));
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */
+const u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+const sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };
+
+/* An ssh-ed25519 public key on the wire, and its public line. */
+const wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));
+const pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;
+
+/* What ssh-keygen signs: SSHSIG | namespace | reserved | hash alg | H(message), in the armored blob
+   that repeats the public key and namespace so a verifier can identify the signer. */
+async function sshsig(privKey, raw32, namespace, message) {
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));
+  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));
+  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));
+  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),
+                  sshStr(namespace), sshStr(""), sshStr("sha512"),
+                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));
+  const body = b64(blob).replace(/(.{70})/g, "$1\n");
+  return `-----BEGIN SSH SIGNATURE-----\n${body}\n-----END SSH SIGNATURE-----\n`;
+}
+
+/* WebCrypto has no seed-to-public-key call, so the public half is read out of a JWK export of the
+   same seed; a raw Ed25519 seed is PKCS#8 with the fixed prefix every Ed25519 PKCS#8 key shares. */
+const PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);
+async function keysFromSeed(seed32) {
+  const pkcs8 = u8(PKCS8_HEAD, seed32);
+  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
+  const jwk = await crypto.subtle.exportKey("jwk",
+    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));
+  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));
+  return { priv, raw32 };
+}
+
+/* The two keys this page makes, and the only labels it uses. A private key carries its own label, so
+   loading one never asks which it is; the label is also the public line's comment, so the recovery key
+   is never taken for the key it backs up. */
+const NS_AI_CATALOGUE = "bio-ai-catalogue";
+const JOBS = {
+  "bio-ai-catalogue":          { slot: "catalogue", title: "Catalogue signing key" },
+  "bio-ai-catalogue-recovery": { slot: "recovery",  title: "Catalogue recovery key" },
+};
+const ORDER = ["bio-ai-catalogue", "bio-ai-catalogue-recovery"];
+
+/* A private key is always the locked form: BIOKEY1.<label>.<salt>.<iv>.<ciphertext>.<iterations>,
+   the 32-byte seed under AES-GCM with a key derived from the passphrase by PBKDF2 (SHA-256). */
+const KDF_ITER = 600000;
+async function wrapKey(seed32, pass, label) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));
+  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");
+}
+
+async function parseKeyString(blob, pass) {
+  const s = (blob || "").trim();
+  if (!s.startsWith("BIOKEY1.")) throw new Error("That does not look like a private key made by this page.");
+  const [, label, salt, iv, ct, iter] = s.split(".");
+  if (!JOBS[label]) throw new Error("That key is not one of the two catalogue keys.");
+  if (!pass) throw new Error("Type the key's passphrase first.");
+  if (!/^[1-9][0-9]{0,6}$/.test(iter || "")) throw new Error("Wrong passphrase, or the key was altered.");
+  try {
+    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));
+    if (seed.length !== 32) throw new Error("length");
+    return { label, seed };
+  } catch { throw new Error("Wrong passphrase, or the key was altered."); }
+}
+
+/* ---------------------------------------------------------------- state */
+const KEYS = { catalogue: null, recovery: null };   /* { priv, raw32, label } */
+let shown = null;   /* the exact statement text whose words are on the screen */
+
+function armed() {
+  const pubs = ORDER.map((l) => KEYS[JOBS[l].slot]).filter(Boolean).map((k) => pubLine(k.raw32, k.label));
+  $("pub-status").innerHTML = pubs.length === 2
+    ? pubs.map((p) => `<code>${esc(p)}</code>`).join("<br>")
+    : (pubs.length === 1 ? `Only one key is here: <code>${esc(pubs[0])}</code>. Make or load the other to copy both.`
+                         : "No key is here yet. Make the two keys, or load one.");
+  const k = KEYS[$("st-with").value];
+  $("st-key").innerHTML = k
+    ? `<span class="good">Signing as</span> ${esc(JOBS[k.label].title)}: <code>${esc(pubLine(k.raw32, k.label))}</code>`
+    : "That key is not here yet. Make the two keys, or load it.";
+  $("st-sign").disabled = !(k && shown !== null);
+}
+
+async function useSeed(label, seed) {
+  const { priv, raw32 } = await keysFromSeed(seed);
+  KEYS[JOBS[label].slot] = { priv, raw32, label };
+  armed();
+  return { priv, raw32 };
+}
+
+/* ---------------------------------------------------- copyable text block */
+let boxSeq = 0;
+function copyBox(id, labelText, value, hint) {
+  const rows = value.split("\n").length > 3 ? 7 : 2;
+  return `<div class="keybox">
+    <div class="top"><label for="${id}">${esc(labelText)}</label>
+      <button class="copy ghost" data-copy="${id}">Copy</button></div>
+    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${esc(value)}</textarea>
+    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}
+  </div>`;
+}
+
+/* Clipboard, with a fallback because a page opened from disk cannot always reach the async clipboard. */
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch { return false; }
+}
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;
+  if (!btn) return;
+  const src = $(btn.getAttribute("data-copy"));
+  const ok = await copyText(src ? src.value : "");
+  const was = btn.textContent;
+  btn.textContent = ok ? "Copied" : "Press Ctrl+C";
+  setTimeout(() => { btn.textContent = was; }, 1400);
+});
+
+function download(name, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* -------------------------------------------------------------- generate */
+$("gen").onclick = async () => {
+  const pass = $("gen-pass").value, again = $("gen-pass2").value;
+  $("gen-pass").value = ""; $("gen-pass2").value = "";
+  if (!pass) return ($("gen-out").innerHTML = `<p class="warn">Type a passphrase first. The keys are always locked with one.</p>`);
+  if (pass !== again) return ($("gen-out").innerHTML = `<p class="warn">The two passphrases differ, so no key was made. Type the same one twice.</p>`);
+  $("gen-out").innerHTML = `<p class="note">Making your keys…</p>`;
+  const made = {};
+  for (const label of ORDER) {
+    const seed = crypto.getRandomValues(new Uint8Array(32));
+    const { raw32 } = await keysFromSeed(seed);
+    made[label] = { pub: pubLine(raw32, label), priv: await wrapKey(seed, pass, label) };
+    await useSeed(label, seed);
+  }
+  const bothPub = ORDER.map((l) => made[l].pub).join("\n");
+  const report = ORDER.map((l) => `# ${JOBS[l].title}\npublic:  ${made[l].pub}\nprivate: ${made[l].priv}`).join("\n\n") + "\n";
+  $("gen-out").innerHTML =
+    copyBox("out-pub", "Both public lines: paste these into the session", bothPub,
+            "Public keys are public by design. This is the only thing that needs to leave this page.")
+    + ORDER.map((l) => copyBox("out-priv-" + JOBS[l].slot, JOBS[l].title + ": private, keep this", made[l].priv,
+        "Locked with your passphrase. Paste it back into “Load a key you already have” to sign.")).join("")
+    + `<div class="row"><button id="dl" class="ghost">Download both as a file</button></div>`
+    + `<p class="note">Keep the recovery key apart from the signing key, and the passphrase apart from both.</p>`;
+  $("dl").onclick = () => download("bio-ai-catalogue-keys.txt", report);
+};
+
+/* ------------------------------------------------------------------ load */
+$("load").onclick = async () => {
+  try {
+    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);
+    const { raw32 } = await useSeed(label, seed);
+    $("load-pass").value = "";
+    $("load-out").innerHTML =
+      `<p class="good">${esc(JOBS[label].title)} loaded.</p><p class="note"><code>${esc(pubLine(raw32, label))}</code></p>`;
+  } catch (e) {
+    $("load-out").innerHTML = `<p class="bad">${esc(String(e.message || e))}</p>`;
+  }
+};
+$("forget").onclick = () => {
+  KEYS.catalogue = null; KEYS.recovery = null; shown = null;
+  for (const id of ["load-blob", "load-pass", "gen-pass", "gen-pass2", "st-text"]) $(id).value = "";
+  for (const id of ["gen-out", "st-words", "st-out"]) $(id).innerHTML = "";
+  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing key-related is left in this tab.</p>`;
+  armed();
+};
+
+/* ------------------------------------------------------------ copy lines */
+$("copy-pub").onclick = async (e) => {
+  const ks = ORDER.map((l) => KEYS[JOBS[l].slot]);
+  if (!ks[0] || !ks[1]) return ($("pub-status").innerHTML = `<span class="warn">Both keys must be here to copy both lines. Make the two keys, or load the other one.</span>`);
+  const ok = await copyText(ks.map((k) => pubLine(k.raw32, k.label)).join("\n"));
+  e.target.textContent = ok ? "Copied" : "Select the lines above and copy them";
+  setTimeout(() => { e.target.textContent = "Copy both public lines"; }, 1400);
+};
+
+/* ----------------------------------------- the catalogue statement (R51) */
+/* Exactly signatures R51's bytes: six lines, each field in its form, a final newline. The text is
+   read, every field judged, and the canonical bytes rebuilt from the judged fields; what is shown in
+   words and what is signed are those rebuilt bytes, so no field can be read two ways. A trailing
+   newline or spaces after the last line may be missing or extra; nothing else may differ. */
+const WHOLE = /^[1-9][0-9]{0,15}$/;
+const dateExists = (s) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return false;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
+  return days !== undefined && d >= 1 && d <= days;
+};
+function readStatement(text) {
+  const m = /^bio-ai-catalogue\/1\nseq (\S+)\nschema (\S+)\nissued (\S+)\nsha256 (\S+)\nbytes (\S+)\n$/.exec(
+    String(text).replace(/\s+$/, "") + "\n");
+  if (!m) return { problem: "This is not a catalogue statement. It must be exactly the six lines Civicsmith gave you, starting with bio-ai-catalogue/1." };
+  const [, seq, schema, issued, sha, bytes] = m;
+  const im = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/.exec(issued);
+  if (!WHOLE.test(seq) || !Number.isSafeInteger(Number(seq))) return { problem: "The catalogue number (seq) must be a whole number, 1 or more." };
+  if (!WHOLE.test(schema) || !Number.isSafeInteger(Number(schema))) return { problem: "The schema version must be a whole number, 1 or more." };
+  if (!im || !dateExists(im[1]) || Number(im[2]) > 23 || Number(im[3]) > 59 || Number(im[4]) > 59)
+    return { problem: "The issue time must be a real UTC time written like 2026-10-27T12:30:05Z." };
+  if (!/^[0-9a-f]{64}$/.test(sha)) return { problem: "The fingerprint (sha256) must be 64 lowercase hex characters." };
+  if (!WHOLE.test(bytes) || !Number.isSafeInteger(Number(bytes))) return { problem: "The size (bytes) must be a whole number, 1 or more." };
+  const canonical = `bio-ai-catalogue/1\nseq ${seq}\nschema ${schema}\nissued ${issued}\nsha256 ${sha}\nbytes ${bytes}\n`;
+  return { canonical, seq, schema, issued, im, sha, bytes };
+}
+
+$("st-text").oninput = () => { shown = null; $("st-words").innerHTML = ""; armed(); };
+$("st-with").onchange = armed;
+
+$("st-read").onclick = () => {
+  const r = readStatement($("st-text").value);
+  $("st-out").innerHTML = "";
+  if (r.problem) {
+    shown = null; armed();
+    return ($("st-words").innerHTML = `<p class="bad">${esc(r.problem)}</p>`);
+  }
+  shown = r.canonical;
+  $("st-words").innerHTML = `<div class="words"><b>Signing this means you say:</b><ul>
+    <li>this is catalogue number <b>${esc(r.seq)}</b>, in schema version <b>${esc(r.schema)}</b>;</li>
+    <li>it was issued on <b>${esc(r.im[1])}</b> at <b>${esc(r.im[2] + ":" + r.im[3] + ":" + r.im[4])} UTC</b>;</li>
+    <li>the catalogue file is <b>${esc(r.bytes)}</b> bytes long;</li>
+    <li>and its SHA-256 fingerprint is <code>${esc(r.sha)}</code>.</li></ul>
+    <p class="note" style="margin-top:8px">A copy accepts only a catalogue with exactly this fingerprint and a higher number than the one it holds.</p></div>`;
+  armed();
+};
+
+$("st-sign").onclick = async () => {
+  const r = readStatement($("st-text").value);
+  const k = KEYS[$("st-with").value];
+  if (r.problem || !k || shown === null || r.canonical !== shown)
+    return ($("st-out").innerHTML = `<p class="warn">Press “Show what it says” and read it first.</p>`);
+  const sig = await sshsig(k.priv, k.raw32, NS_AI_CATALOGUE, enc.encode(r.canonical));
+  $("st-out").innerHTML = copyBox("out-sig", "Signature: give this back to the session", sig,
+    `Signed as <code>${esc(pubLine(k.raw32, k.label))}</code> over catalogue number ${esc(r.seq)} at exactly that fingerprint.`);
+};
+
+armed();
+</script>
