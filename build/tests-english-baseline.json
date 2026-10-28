@@ -422,6 +422,7 @@
   "bio-plane/test/m/progressions/feeds.test.mjs": 2,
   "bio-plane/test/m/progressions/overdue.test.mjs": 1,
   "bio-plane/test/m/progressions/owndates.test.mjs": 4,
+  "bio-plane/test/m/project-roster/ownership.test.mjs": 1,
   "bio-plane/test/m/promotion/gate.test.mjs": 1,
   "bio-plane/test/m/promotion/grammar.test.mjs": 2,
   "bio-plane/test/m/promotion/history.test.mjs": 5,
