@@ -32,9 +32,7 @@ test("R5: routeFinding states never-looked as the question never asked, not appl
     at: "t", by: V("r"), stateAt: "verified", seq: 3, register: "readable", undetermined: 1, documents: 2, note: ROUTE_MARK_NOTE });
   const present = routeFinding("information", { ...mark, finding: "PRESENT" });
   assert.deepEqual([present.marked, present.means], [false, OBSERVATION_MEANS.PRESENT]);
-  assert.match(ROUTE_MARK_NOTE, /this document stays where the team put it/);
-  assert.match(ROUTE_MARK_NOTE, /corrects FORWARD rather than un-saying one \(DEC-19\)/);
-  assert.match(ROUTE_MARK_NOTE, /The state and this finding disagree deliberately, and neither is a defect in the other/);
+  assert.equal(ROUTE_MARK_NOTE, word("provenance-routes.index.this_document_stays_where_the"));
   assert.deepEqual(FINDING_MEANS, { NEVER_LOOKED: OBSERVATION_MEANS.NEVER_LOOKED,
     LOOKED_INDETERMINATE: OBSERVATION_MEANS.LOOKED_INDETERMINATE, PRESENT: OBSERVATION_MEANS.PRESENT });
   assert.equal(Object.isFrozen(FINDING_MEANS), true);
@@ -100,7 +98,7 @@ test("R5: the roster is incomplete while any visible information bundle was neve
   assert.deepEqual(r.census, { documents_visible: 3, assessed: 2, never_assessed: 1,
                                standing: { LOOKED_INDETERMINATE: 1, PRESENT: 1 }, marked: 1 }, "the inquiry is no information bundle");
   assert.deepEqual([r.complete, r.documents.length, r.cause], [false, 1, null]);
-  assert.match(r.completeness, /1 of 3 captured documents have NEVER been assessed/);
+  assert.equal(r.completeness, word("provenance-routes.index.neverassessed_of_documentsvisible_captured_documents", { neverAssessed: 1, documentsVisible: 3 }));
   assess(w, "INFO-2026-0003-c");
   const all = w.routes.provenanceRoutesMarked({ viewer: V("x") });
   assert.deepEqual([all.complete, all.census.never_assessed, all.census.marked], [true, 0, 2]);
