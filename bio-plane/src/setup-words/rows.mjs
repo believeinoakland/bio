@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8055 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8064 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23475,6 +23475,7 @@ export const WORD_ROWS = Object.freeze([
   ["entities.index.a_declared_relation_is_one","a declared relation is one of {RELATION_KINDS} (safeguard 4). A connection grade is NOT a relation kind: a declared relation is constitutive, not evidentiary, and carries no grade (D-83).",null,null,false,"code"],
   ["entities.index.a_defect_report_names","a defect report names the resolution's raw reference (kind:key)",null,null,false,"code"],
   ["entities.index.a_defect_report_says_why","a defect report says why the match is wrong; it is kept beside the resolution for as long as the record lasts",null,null,false,"code"],
+  ["entities.index.a_federal_office_is_looked","a federal office is looked for by words of its name, its agency or its initials, and the query given folds to none. Nothing was read.",null,null,false,"code"],
   ["entities.index.a_forum_kind_is_held","a forum kind is held only by an entity of kind {FORUM_ENTITY_KINDS}; a {kind} carries none. Nothing was written.",null,null,false,"code"],
   ["entities.index.a_forum_kind_is_one","a forum kind is one of {FORUM_KINDS}. Nothing was written.",null,null,false,"code"],
   ["entities.index.a_kind_is_named_one","a kind is named: one of {ENTITY_KINDS}. Nothing was read.",null,null,false,"code"],
@@ -23501,6 +23502,7 @@ export const WORD_ROWS = Object.freeze([
   ["entities.index.an_entity_needs_a_note","an entity needs a note in the declarer's own words saying who or what it is and why it is registered",null,null,false,"code"],
   ["entities.index.an_identifier_is_held_in","an identifier is held in a scheme your team's active jurisdiction profiles name{v1}. Nothing was written.",null,null,false,"code"],
   ["entities.index.an_identifier_is_held_on","an identifier is held on its cited source or a system's own row",null,null,false,"code"],
+  ["entities.index.an_office_stands_for_one","an office stands for one of your team's layers{v1}. Nothing was written.",null,null,false,"code"],
   ["entities.index.at_most_naming_in_captures","at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.",null,null,false,"code"],
   ["entities.index.bad_nothing_was_written","{bad}. Nothing was written.",null,null,false,"code"],
   ["entities.index.correspondence_the_references_name_label","correspondence -- the reference's name '{label}' matched an entity alias by name; plausible, never established, flagged for a member to confirm",null,null,false,"code"],
@@ -23513,6 +23515,7 @@ export const WORD_ROWS = Object.freeze([
   ["entities.index.labels_are_read_for_entity","labels are read for entity ids, a list of them",null,null,false,"code"],
   ["entities.index.no_captured_document_the_record","no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written.",null,null,false,"code"],
   ["entities.index.no_resolution_of_that","no resolution of that reference of that captured document to that entity is held",null,null,false,"code"],
+  ["entities.index.offices_of_that_name_are","offices of that name are held for more than one layer ({v1}), so which is meant is not guessed; choose the office by its id. Nothing was written.",null,null,false,"code"],
   ["entities.index.resolve_a_single_reference","resolve a single reference by its raw kind:key, or omit ref to resolve all",null,null,false,"code"],
   ["entities.index.resolving_this_document_would_record","; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first",null,null,false,"code"],
   ["entities.index.scheme_identifier_the_reference_v1","scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}",null,null,false,"code"],
@@ -23522,7 +23525,9 @@ export const WORD_ROWS = Object.freeze([
   ["entities.index.testimony_asserted_by_v1_on","testimony -- asserted by {v1} on the member's stated basis, with no captured document (framework 8.1 grade D)",null,null,false,"code"],
   ["entities.index.testimony_names_the_raw","testimony names the raw reference (kind:key) the document carries",null,null,false,"code"],
   ["entities.index.testimony_withheld","testimony -- asserted by a member on the member's stated basis, with no captured document (framework 8.1 grade D); who testified is withheld, because the document sits where you cannot see",null,null,false,"code"],
+  ["entities.index.that_law_is_given_by","that law is given by more than one of your team's layers ({v1}); name the layer it goes under as well. Nothing was written.",null,null,false,"code"],
   ["entities.index.that_name_reaches","; that name reaches {reaches} of the {corpus} references this reader can see at this source",null,null,false,"code"],
+  ["entities.index.that_office_is_not_one","that office is not one of the built-in federal offices{v1}. Nothing was written.",null,null,false,"code"],
   ["entities.index.the_documents_naming_a_subject","the documents naming a subject only by an identifier are counted for entity ids, a list of them",null,null,false,"code"],
   ["entities.index.the_field_has_the_shape","the {field} has the shape of no form of the {v1} space{v2}{v3}. Nothing was written.",null,null,false,"code"],
   ["entities.index.the_identifier_matches_nothing","the identifier matches nothing new; resolutions already made through it are kept",null,null,false,"code"],
@@ -23535,6 +23540,8 @@ export const WORD_ROWS = Object.freeze([
   ["entities.index.the_registry_could_not_be_3","the registry could not be read: {String}",null,null,false,"code"],
   ["entities.index.the_registry_could_not_be_4","the registry could not be read: {String}",null,null,false,"code"],
   ["entities.index.the_registry_could_not_be_5","the registry could not be read: {String}",null,null,false,"code"],
+  ["entities.index.the_registry_could_not_be_6","the registry could not be read: {String}",null,null,false,"code"],
+  ["entities.index.the_registry_could_not_be_7","the registry could not be read: {String}",null,null,false,"code"],
   ["entities.index.the_report_is_kept","the report is kept beside the resolution; the grade, the resolution and every connection are unchanged",null,null,false,"code"],
   ["entities.index.the_resolutions_could_not_be","the resolutions could not be read: {String}",null,null,false,"code"],
   ["entities.index.the_scheme_names_form"," the scheme names ({form})",null,null,false,"code"],
@@ -23557,6 +23564,8 @@ export const WORD_ROWS = Object.freeze([
   ["entities.index.this_is_the_first_namingin_floor",". THIS IS THE FIRST {cap} AND NOT ALL OF THEM, so a count taken from it is a floor.",null,null,false,"code"],
   ["entities.index.v1_has_the_shape_of","{v1} has the shape of no form of the {label}{v2}",null,null,false,"code"],
   ["entities.index.v1_names_no_captured_document","{v1} names no captured document this record holds that you can see",null,null,false,"code"],
+  ["entities.index.valid_when_the_document_was_retrieved",", valid when the document was retrieved",null,null,false,"code"],
+  ["entities.index.your_team_s_active_jurisdiction_profiles_give","; your team's active jurisdiction profiles give this space no form",null,null,false,"code"],
   ["escalation.checks.reading_what_the_government_answered","Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written.",null,null,false,"code"],
   ["escalation.checks.the_escalations_stage_moves_only","The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written.",null,null,false,"code"],
   ["escalation.declared.declinetoescalate","determination-directed: a member declines, with a reason, to escalate a live noncompliant determination, keyed by determination id; prose only, corrected forward, and a later opening supersedes it",null,null,false,"code"],

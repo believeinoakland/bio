@@ -173,7 +173,7 @@ test("R64 the refusals come in order and each writes nothing: NO_ENTITY, NO_SUCH
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, c, c, check]);
     assert.equal(r.translation, ENTITY_CHECKS[c].translation);
     assert.ok(typeof r.translation === "string" && r.translation.length > 0 && typeof r.detail === "string" && r.detail.length > 0);
-    assert.match(ENTITY_CHECKS[c].where, /^src\/entities\/index\.mjs confirmOffice > is-/);
+    assert.ok(ENTITY_CHECKS[c].where.startsWith("src/entities/index.mjs confirmOffice > is-"));
     return r.translation;
   });
   assert.equal(new Set(rows).size, 2);

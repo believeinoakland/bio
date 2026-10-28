@@ -25331,672 +25331,735 @@
       "en": "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2258
+      "line": 2503
     },
     {
       "id": "entities.declared.entityalias",
       "en": "registry write, keyed by entity",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2256
+      "line": 2501
     },
     {
       "id": "entities.declared.entitybyalias",
       "en": "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2275
+      "line": 2520
     },
     {
       "id": "entities.declared.entitycreate",
       "en": "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2254
+      "line": 2499
     },
     {
       "id": "entities.declared.relationdeclare",
       "en": "registry write, keyed by entity pair",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2260
+      "line": 2505
     },
     {
       "id": "entities.declared.resolutiondefect",
       "en": "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2266
+      "line": 2511
     },
     {
       "id": "entities.declared.resolutions",
       "en": "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2279
+      "line": 2524
     },
     {
       "id": "entities.declared.resolve",
       "en": "recogniser write, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2262
+      "line": 2507
     },
     {
       "id": "entities.declared.resolvetestify",
       "en": "recogniser testimony, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2264
+      "line": 2509
     },
     {
       "id": "entities.index.a_declared_relation_carries_a",
       "en": "a declared relation carries a justification, like a pattern statement (safeguard 4)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 700
+      "line": 883
     },
     {
       "id": "entities.index.a_declared_relation_carries_a_2",
       "en": "a declared relation carries a citation, like a pattern statement (safeguard 4)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 701
+      "line": 884
     },
     {
       "id": "entities.index.a_declared_relation_is_one",
       "en": "a declared relation is one of {RELATION_KINDS} (safeguard 4). A connection grade is NOT a relation kind: a declared relation is constitutive, not evidentiary, and carries no grade (D-83).",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 693
+      "line": 876
     },
     {
       "id": "entities.index.a_defect_report_names",
       "en": "a defect report names the resolution's raw reference (kind:key)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1682
+      "line": 1925
     },
     {
       "id": "entities.index.a_defect_report_says_why",
       "en": "a defect report says why the match is wrong; it is kept beside the resolution for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1687
+      "line": 1930
+    },
+    {
+      "id": "entities.index.a_federal_office_is_looked",
+      "en": "a federal office is looked for by words of its name, its agency or its initials, and the query given folds to none. Nothing was read.",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 831
     },
     {
       "id": "entities.index.a_forum_kind_is_held",
       "en": "a forum kind is held only by an entity of kind {FORUM_ENTITY_KINDS}; a {kind} carries none. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 230
+      "line": 235
     },
     {
       "id": "entities.index.a_forum_kind_is_one",
       "en": "a forum kind is one of {FORUM_KINDS}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 232
+      "line": 237
     },
     {
       "id": "entities.index.a_kind_is_named_one",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 765
+      "line": 948
     },
     {
       "id": "entities.index.a_kind_is_named_one_2",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 839
+      "line": 1032
     },
     {
       "id": "entities.index.a_kind_is_named_one_3",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2000
+      "line": 2243
     },
     {
       "id": "entities.index.a_kind_is_named_one_4",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2003
+      "line": 2246
     },
     {
       "id": "entities.index.a_machine_holds_an_identifier",
       "en": "a machine holds an identifier only from a system rule: basis {system, row}, the system one that issues or lists the scheme ({systems}), the row its own (K1443)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1169
+      "line": 1402
     },
     {
       "id": "entities.index.a_near_match_is_looked",
       "en": "a near match is looked for by a name, and the one given folds to nothing (it is empty, or only whitespace). Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 968
+      "line": 1161
     },
     {
       "id": "entities.index.a_proceeding_is_registered_facet",
       "en": "a proceeding is registered with its facet {forum, kind, number}, and it names no {field}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1270
+      "line": 1503
     },
     {
       "id": "entities.index.a_proceedings_kind_is_one",
       "en": "a proceeding's kind is one your team's active jurisdiction profiles name{v1}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1277
+      "line": 1510
     },
     {
       "id": "entities.index.a_relation_is_between_two",
       "en": "a relation is between two distinct entities",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 696
+      "line": 879
     },
     {
       "id": "entities.index.a_relation_is_withdrawn_by",
       "en": "a relation is withdrawn by its id",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1076
+      "line": 1309
     },
     {
       "id": "entities.index.a_relation_names_two_entities",
       "en": "a relation names two entities by id: fromEntity and toEntity",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 695
+      "line": 878
     },
     {
       "id": "entities.index.a_sector_is_held_only",
       "en": "a sector is held only by an organisation ({ORGANISATION_KINDS}); a {kind} carries none. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 224
+      "line": 229
     },
     {
       "id": "entities.index.a_sector_is_one_of",
       "en": "a sector is one of {SECTORS}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 226
+      "line": 231
     },
     {
       "id": "entities.index.a_sector_is_set_with",
       "en": "a sector is set with a note saying why; it is kept beside the value for as long as the record lasts. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1108
+      "line": 1341
     },
     {
       "id": "entities.index.a_subject_is_looked_for",
       "en": "a subject is looked for by words of its name, and the query given folds to none. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 918
+      "line": 1111
     },
     {
       "id": "entities.index.a_withdrawal_says_why_the",
       "en": "a withdrawal says why the name was wrong; it is kept beside the name for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1053
+      "line": 1286
     },
     {
       "id": "entities.index.a_withdrawal_says_why_the_2",
       "en": "a withdrawal says why the relation was wrong; it is kept beside it for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1079
+      "line": 1312
     },
     {
       "id": "entities.index.a_withdrawal_says_why_the_3",
       "en": "a withdrawal says why the identifier was wrong; it is kept beside it for as long as the record lasts",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1203
+      "line": 1436
     },
     {
       "id": "entities.index.an_alias_needs_a_name",
       "en": "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 675
+      "line": 858
     },
     {
       "id": "entities.index.an_entity_needs_a_canonical",
       "en": "an entity needs a canonical label, such as 'City Clerk'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 568
+      "line": 584
     },
     {
       "id": "entities.index.an_entity_needs_a_kind",
       "en": "an entity needs a kind: one of {ENTITY_KINDS}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 556
+      "line": 562
     },
     {
       "id": "entities.index.an_entity_needs_a_note",
       "en": "an entity needs a note in the declarer's own words saying who or what it is and why it is registered",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 576
+      "line": 592
     },
     {
       "id": "entities.index.an_identifier_is_held_in",
       "en": "an identifier is held in a scheme your team's active jurisdiction profiles name{v1}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1144
+      "line": 1377
     },
     {
       "id": "entities.index.an_identifier_is_held_on",
       "en": "an identifier is held on its cited source or a system's own row",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1173
+      "line": 1406
+    },
+    {
+      "id": "entities.index.an_office_stands_for_one",
+      "en": "an office stands for one of your team's layers{v1}. Nothing was written.",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 755
     },
     {
       "id": "entities.index.at_most_naming_in_captures",
       "en": "at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2014
+      "line": 2257
     },
     {
       "id": "entities.index.bad_nothing_was_written",
       "en": "{bad}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1152
+      "line": 1385
     },
     {
       "id": "entities.index.correspondence_the_references_name_label",
       "en": "correspondence -- the reference's name '{label}' matched an entity alias by name; plausible, never established, flagged for a member to confirm",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1517
+      "line": 1760
     },
     {
       "id": "entities.index.documents_are_counted_for_at",
       "en": "documents are counted for at most {ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 890
+      "line": 1083
     },
     {
       "id": "entities.index.explain_query_plan_sql",
       "en": "EXPLAIN QUERY PLAN {sql}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2085
+      "line": 2328
     },
     {
       "id": "entities.index.grade_d_is_recorded",
       "en": "grade D is recorded testimony: it carries the member's stated basis, with an author and a date",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1637
+      "line": 1880
     },
     {
       "id": "entities.index.holder_already_holds_scheme_normal",
       "en": "{holder} already holds {scheme} {normal} with a validity that overlaps or is unstated. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 272
+      "line": 277
     },
     {
       "id": "entities.index.its_validity_then_is_undetermined",
       "en": "; its validity then is undetermined ({why})",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1494
+      "line": 1737
     },
     {
       "id": "entities.index.labels_are_read_for_at",
       "en": "labels are read for at most {LABELS_IDS_MAX} entity ids at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 862
+      "line": 1055
     },
     {
       "id": "entities.index.labels_are_read_for_entity",
       "en": "labels are read for entity ids, a list of them",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 859
+      "line": 1052
     },
     {
       "id": "entities.index.no_captured_document_the_record",
       "en": "no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1317
+      "line": 1550
     },
     {
       "id": "entities.index.no_resolution_of_that",
       "en": "no resolution of that reference of that captured document to that entity is held",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1694
+      "line": 1937
+    },
+    {
+      "id": "entities.index.offices_of_that_name_are",
+      "en": "offices of that name are held for more than one layer ({v1}), so which is meant is not guessed; choose the office by its id. Nothing was written.",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 751
     },
     {
       "id": "entities.index.resolve_a_single_reference",
       "en": "resolve a single reference by its raw kind:key, or omit ref to resolve all",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1567
+      "line": 1810
     },
     {
       "id": "entities.index.resolving_this_document_would_record",
       "en": "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1976
+      "line": 2219
     },
     {
       "id": "entities.index.scheme_identifier_the_reference_v1",
       "en": "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1494
+      "line": 1737
     },
     {
       "id": "entities.index.source_identifier_in_content_the",
       "en": "source identifier in content -- the reference's key '{ref_key}' matched a registered identifier of the entity exactly at both ends",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1514
+      "line": 1757
     },
     {
       "id": "entities.index.source_identifier_the_references_composite",
       "en": "source identifier -- the reference's composite key '{ref}' matched a registered identifier of the entity exactly; the source names this subject by this key, both ends captured",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1511
+      "line": 1754
     },
     {
       "id": "entities.index.space_must_be_one_of",
       "en": "space must be one of {map}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2169
+      "line": 2412
     },
     {
       "id": "entities.index.testimony_asserted_by_v1_on",
       "en": "testimony -- asserted by {v1} on the member's stated basis, with no captured document (framework 8.1 grade D)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1648
+      "line": 1891
     },
     {
       "id": "entities.index.testimony_names_the_raw",
       "en": "testimony names the raw reference (kind:key) the document carries",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1633
+      "line": 1876
     },
     {
       "id": "entities.index.testimony_withheld",
       "en": "testimony -- asserted by a member on the member's stated basis, with no captured document (framework 8.1 grade D); who testified is withheld, because the document sits where you cannot see",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1751
+      "line": 1994
+    },
+    {
+      "id": "entities.index.that_law_is_given_by",
+      "en": "that law is given by more than one of your team's layers ({v1}); name the layer it goes under as well. Nothing was written.",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 745
     },
     {
       "id": "entities.index.that_name_reaches",
       "en": "; that name reaches {reaches} of the {corpus} references this reader can see at this source",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1978
+      "line": 2221
+    },
+    {
+      "id": "entities.index.that_office_is_not_one",
+      "en": "that office is not one of the built-in federal offices{v1}. Nothing was written.",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 815
     },
     {
       "id": "entities.index.the_documents_naming_a_subject",
       "en": "the documents naming a subject only by an identifier are counted for entity ids, a list of them",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 887
+      "line": 1080
     },
     {
       "id": "entities.index.the_field_has_the_shape",
       "en": "the {field} has the shape of no form of the {v1} space{v2}{v3}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 268
+      "line": 273
     },
     {
       "id": "entities.index.the_identifier_matches_nothing",
       "en": "the identifier matches nothing new; resolutions already made through it are kept",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1218
+      "line": 1451
     },
     {
       "id": "entities.index.the_identifiers_could_not_be",
       "en": "the identifiers could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1228
+      "line": 1461
     },
     {
       "id": "entities.index.the_name_lookup_is_over",
       "en": "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1895
+      "line": 2138
     },
     {
       "id": "entities.index.the_name_matches_nothing_new",
       "en": "the name matches nothing new and no longer finds this entity; resolutions already made through it are kept and marked as resting on a withdrawn name, so a member can re-resolve them",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1070
+      "line": 1303
     },
     {
       "id": "entities.index.the_number_number_as_forum",
       "en": "the number {number} as {forum_label} writes it",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 657
+      "line": 694
     },
     {
       "id": "entities.index.the_registry_could_not_be",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 797
+      "line": 990
     },
     {
       "id": "entities.index.the_registry_could_not_be_2",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 832
+      "line": 1025
     },
     {
       "id": "entities.index.the_registry_could_not_be_3",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 873
+      "line": 1066
     },
     {
       "id": "entities.index.the_registry_could_not_be_4",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 953
+      "line": 1146
     },
     {
       "id": "entities.index.the_registry_could_not_be_5",
       "en": "the registry could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 999
+      "line": 1192
+    },
+    {
+      "id": "entities.index.the_registry_could_not_be_6",
+      "en": "the registry could not be read: {String}",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 846
+    },
+    {
+      "id": "entities.index.the_registry_could_not_be_7",
+      "en": "the registry could not be read: {String}",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 1232
     },
     {
       "id": "entities.index.the_report_is_kept",
       "en": "the report is kept beside the resolution; the grade, the resolution and every connection are unchanged",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1716
+      "line": 1959
     },
     {
       "id": "entities.index.the_resolutions_could_not_be",
       "en": "the resolutions could not be read: {String}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 901
+      "line": 1094
     },
     {
       "id": "entities.index.the_scheme_names_form",
       "en": " the scheme names ({form})",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 268
+      "line": 273
     },
     {
       "id": "entities.index.the_scheme_scheme_identifies_v1",
       "en": "the scheme {scheme} identifies {v1}, not a {kind}. Nothing was written.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1147
+      "line": 1380
     },
     {
       "id": "entities.index.the_subject_registry_admits_a",
       "en": "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the framework's entity axis): one of {ENTITY_KINDS}. Introducing a new kind is a doctrine change, not a write.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 559
+      "line": 565
     },
     {
       "id": "entities.index.the_subject_registry_admits_a_2",
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 768
+      "line": 951
     },
     {
       "id": "entities.index.the_subject_registry_admits_a_3",
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 847
+      "line": 1040
     },
     {
       "id": "entities.index.the_subject_registry_admits_a_4",
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2006
+      "line": 2249
     },
     {
       "id": "entities.index.these_are_candidates_not_resolutions",
       "en": "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name — as the reference the source assigned, as that reference's key, or as the name the reading recorded — offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists.{v1}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1926
+      "line": 2169
     },
     {
       "id": "entities.index.these_are_candidates_not_resolutions_2",
       "en": "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the named captured documents you can see; each is what the name lookup for that one subject would offer were these documents all there is, and nothing is established or graded by asking{v1}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2065
+      "line": 2308
     },
     {
       "id": "entities.index.this_captured_document_s_reading",
       "en": "this captured document's reading carries no such reference (nothing to resolve)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1571
+      "line": 1814
     },
     {
       "id": "entities.index.this_captured_document_s_reading_2",
       "en": "this captured document's reading carries no such reference to testify about",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1645
+      "line": 1888
     },
     {
       "id": "entities.index.this_document_s_reading_carries",
       "en": "this document's reading {where} '{srcText}', which carries every word of this subject's name '{alias}'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1974
+      "line": 2217
     },
     {
       "id": "entities.index.this_document_s_reading_is",
       "en": "this document's reading {where} '{srcText}', which is this subject's name '{alias}'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1973
+      "line": 2216
     },
     {
       "id": "entities.index.this_entity_held_that_identifier",
       "en": "this entity held that identifier and it was withdrawn; it stays on the record as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1184
+      "line": 1417
     },
     {
       "id": "entities.index.this_entity_held_that_name",
       "en": "this entity held that name and it was withdrawn; a withdrawn name stays on the record as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 680
+      "line": 863
     },
     {
       "id": "entities.index.this_entity_holds_no_such",
       "en": "this entity holds no such name, so there is nothing to withdraw",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1058
+      "line": 1291
     },
     {
       "id": "entities.index.this_entity_holds_no_such_2",
       "en": "this entity holds no such identifier, so there is nothing to withdraw",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1211
+      "line": 1444
     },
     {
       "id": "entities.index.this_is_the_first_list_floor",
       "en": " THIS IS THE FIRST {cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1926
+      "line": 2169
     },
     {
       "id": "entities.index.this_is_the_first_namingin_floor",
       "en": ". THIS IS THE FIRST {cap} AND NOT ALL OF THEM, so a count taken from it is a floor.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2065
+      "line": 2308
     },
     {
       "id": "entities.index.v1_has_the_shape_of",
       "en": "{v1} has the shape of no form of the {label}{v2}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2177
+      "line": 2420
     },
     {
       "id": "entities.index.v1_names_no_captured_document",
       "en": "{v1} names no captured document this record holds that you can see",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2189
+      "line": 2432
+    },
+    {
+      "id": "entities.index.valid_when_the_document_was_retrieved",
+      "en": ", valid when the document was retrieved",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 1737
+    },
+    {
+      "id": "entities.index.your_team_s_active_jurisdiction_profiles_give",
+      "en": "; your team's active jurisdiction profiles give this space no form",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 2420
     },
     {
       "id": "escalation.checks.reading_what_the_government_answered",
