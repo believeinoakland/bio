@@ -18,6 +18,7 @@ import { combine } from "../../../jurisdictions/index.mjs";
 import { ledgerOf, partsWriter } from "./unpack.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { profileOf, profileView } from "./index.mjs";
+import { challengeOf, personRefusal } from "./challenge.mjs";
 
 /* R36: each keyed service this copy can speak to: its host(s), and how its key rides a request. The names are credentials'
    `KEYED_SERVICES` (its R29, R84); a service that this table and credentials do not both know is not reached. CourtListener's
@@ -215,6 +216,9 @@ export async function keyedFetch(store, { service = null, request = null, purpos
   const res = out.res;
   const body = await readBounded(res, purposeRow.answer_max);
   if (body.failed) return refuse("FETCH_FAILED", localize("acquisition.keyed.the_service_s_answer_broke", "the service's answer broke off while it was read"), { service });
+  /* R140: a service that answers with a check asking for a person is not worked around; the address is named so the caller can hand it to a member */
+  { const chal = challengeOf({ status: res.status, headers: res.headers, text: body.text ? body.text.slice(0, 40960) : "", total: body.text ? body.text.length : 0 });
+    if (chal) return { ...personRefusal(store, { address: r.url, status: res.status, chal }), service }; }
   if (body.oversize) return refuse("TOO_LARGE", localize("acquisition.keyed.the_services_answer_is_over", "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read", { KEYED_ANSWER_MAX: String(purposeRow.answer_max) }), { service });
   const contentType = ((res.headers && res.headers.get("content-type")) || "").split(";")[0].trim().toLowerCase() || null;
   const retryAfter = (res.headers && res.headers.get("retry-after")) || null;

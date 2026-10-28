@@ -29,6 +29,7 @@ import { localize } from "../setup-words/index.mjs";
 import { partsWriter } from "./unpack.mjs";
 import { profileOf, profileView, userAgent, CAPTURE_MAX } from "./index.mjs";
 import { firstHopWho } from "./checks.mjs";
+import { recogniseChallenge, personRefusal, readPrefix, challengeOf, CHALLENGE_HEAD_BYTES } from "./challenge.mjs";
 
 /* R9: the purpose the agent names for every request of this file */
 export const REGISTER_PURPOSE = "register";
@@ -133,7 +134,12 @@ async function registerRequest(store, url, ctx, { method = "GET", headers = null
       return { refused: refuse("HOST_COOLING_OFF", localize("acquisition.register.host_cooling_off", "the governor is holding requests to {host} ({reason})", { host: String(hostOf(cur)), reason: String(g.reason) }), { retry_in_ms: g.retry_in_ms || 0 }) };
     const res = g.res;
     const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
-    if (!loc) return { res, url: cur };
+    if (!loc) {
+      /* R140: a site that asks for a person is not worked around: the header, or an error answer that is a bot-protection page, ends the request with the address named */
+      const chal = await recogniseChallenge(res);
+      if (chal) { cancel(res); return { refused: personRefusal(store, { address: cur, status: res.status, chal }) }; }
+      return { res, url: cur };
+    }
     cancel(res);
     try { cur = new URL(loc, cur).href; } catch { return { refused: refuse("SOURCE_REFUSED", localize("acquisition.register.bad_redirect", "the source redirected to an address that cannot be read; nothing was fetched"), { status: res.status }) }; }
   }
@@ -195,6 +201,14 @@ async function openPiece(store, pieceDef, locator, ctx) {
   const r = await registerRequest(store, locator, ctx);
   if (r.refused) return { refused: r.refused };
   if (r.res.status === 204 || !r.res.ok) { const out = refusalOf(r.res); cancel(r.res); return { refused: out }; }
+  /* R140: a challenge page served as a success: the first bytes of an HTML answer are read (on a copy of the stream) for the page's own text */
+  const type = String(r.res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+  if (!type || type === "text/html" || type === "application/xhtml+xml") {
+    let peek = null;
+    try { peek = await readPrefix(r.res.clone(), CHALLENGE_HEAD_BYTES); } catch { peek = null; }
+    const chal = peek ? challengeOf({ status: r.res.status, headers: r.res.headers, bytes: peek, total: peek.length }) : null;
+    if (chal) { cancel(r.res); return { refused: personRefusal(store, { address: r.url, status: r.res.status, chal }) }; }
+  }
   const len = Number(r.res.headers.get("content-length"));
   return { ok: true, covers: "whole_file", declared: Number.isSafeInteger(len) && len >= 0 ? len : null, finalUrl: r.url, chunks: bodyChunks(r.res), res: r.res, failure: { refusal: null } };
 }

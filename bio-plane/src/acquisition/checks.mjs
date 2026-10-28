@@ -361,12 +361,12 @@ export const ARCHIVE_CHECKS = Object.freeze({
     where: `${at('is-refused-kind')}; ${un('is-refused-kind')}`,
     translation: localize("refusal.FILE_TYPE_REFUSED", "Your team's Civicsmith does not keep this kind of file, so nothing was saved. Send the document in another form, such as a PDF."),
   }),
-  /* K5574 (T53; K5574, K3656): the source answered with a challenge or CAPTCHA page in place of the document. It is never filed as the document and
+  /* R140 (T53; K5574, K5575, K3656): the source answered with a challenge or CAPTCHA page in place of the document. It is never filed as the document and
      never worked around; the refusal is counted for the host. New at T53 (C-139.23; BOB confirms the number at the close). */
-  CHALLENGE_PAGE: Object.freeze({
+  SITE_ASKS_FOR_PERSON: Object.freeze({
     check: 'C-139.23',
     where: at('is-challenge-page'),
-    translation: localize("refusal.CHALLENGE_PAGE", "The site asked for proof that a person is asking, so nothing was saved. Open the page yourself and add the file you get."),
+    translation: localize("refusal.SITE_ASKS_FOR_PERSON", "The site asked for proof that a person is asking, so nothing was saved. Open the page yourself and add the file you get."),
   }),
   /* R136 (T53; N824): a member of a message that could not be cut out of it (an embedded Outlook message is read with its message, not cut; a damaged
      attachment). C-139.24; BOB confirms the number at the close. */

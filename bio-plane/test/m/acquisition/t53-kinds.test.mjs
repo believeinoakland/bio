@@ -1,12 +1,13 @@
 /* acquisition T53 (T53-98, T53-99; N1266, K5436, K5574, K3656): R138 a held-and-named file is filed whole with its reading owed, R139 a refused file
-   is not filed (a fetch before anything is stored; an archive's entry as `not_filed`), K5574 a challenge or CAPTCHA page in place of the document is
+   is not filed (a fetch before anything is stored; an archive's entry as `not_filed`), R140 a challenge or CAPTCHA page in place of the document is
    recognised at the fetch, refused, counted for the host, and never worked around. At the module's interface (`acquire`, `unpack`), over a scripted
    network. The member words are read from the word table, never copied. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, page, text, sha } from "./fixture.mjs";
+import { world, run, page, text, sha, network } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
-import { unpack, challengesByHost, ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
+import { unpack, personChecksFor, ARCHIVE_CHECKS, keyedFetch, streamRegister, probeRegister } from "../../../src/acquisition/index.mjs";
+import { get } from "../../../../jurisdictions/index.mjs";
 import { challengeOf } from "../../../src/acquisition/challenge.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -115,11 +116,11 @@ test("R138 R139: in an archive an unlisted entry is `filed`, and a refused entry
   assert.deepEqual([p.body.unpack.documents.length, p.body.unpack.not_filed.length], [2, 0]);
 });
 
-/* ---------------- K5574 ---------------- */
+/* ---------------- R140 ---------------- */
 const CF_PAGE = `<!DOCTYPE html><html><head><title>Just a moment...</title></head><body><script>window._cf_chl_opt={cvId:'3'};</script><noscript>Enable JavaScript and cookies to continue</noscript></body></html>`;
 const challenged = (body = CF_PAGE, status = 403, headers = {}) => () => new Response(body, { status, headers: { "content-type": "text/html; charset=UTF-8", server: "cloudflare", ...headers } });
 
-test("K5574: a challenge page in place of the document is refused with its own reason, never filed, counted for the host, and the source is asked once", async () => {
+test("R140: a challenge page in place of the document is refused with its own reason, never filed, counted for the host, and the source is asked once", async () => {
   const w = world();
   const url = "https://www.guarded.example/records/minutes.pdf";
   const cases = [
@@ -133,20 +134,24 @@ test("K5574: a challenge page in place of the document is refused with its own r
   for (const [what, route] of cases) {
     const r = await run(w, { [url]: route }, { locator: url });
     n++;
-    assert.deepEqual([r.status, r.body.ok, r.body.reason, r.body.code, r.body.check], [403, false, "CHALLENGE_PAGE", "CHALLENGE_PAGE", ARCHIVE_CHECKS.CHALLENGE_PAGE.check], what);
-    assert.equal(r.body.translation, ARCHIVE_CHECKS.CHALLENGE_PAGE.translation);
-    assert.deepEqual([r.body.host, r.body.challenge.kind, r.body.counted], ["www.guarded.example", "cloudflare", { host: "www.guarded.example", challenges: n }], what);
+    assert.deepEqual([r.status, r.body.ok, r.body.reason, r.body.code, r.body.check], [403, false, "SITE_ASKS_FOR_PERSON", "SITE_ASKS_FOR_PERSON", ARCHIVE_CHECKS.SITE_ASKS_FOR_PERSON.check], what);
+    assert.equal(r.body.translation, ARCHIVE_CHECKS.SITE_ASKS_FOR_PERSON.translation);
+    assert.deepEqual([r.body.address, r.body.host, r.body.challenge.kind, r.body.counted], [url, "www.guarded.example", "cloudflare", { host: "www.guarded.example", count: n }], what);
+    assert.equal(personChecksFor(w.store, { host: "www.guarded.example" }).count, n, `${what}: the host's count rises by one`);
     assert.equal(r.net.seen.length, 1, `${what}: one request, nothing done to get past it (K3656)`);
     assert.equal(r.body.document, undefined);
     nothingKept(w, what);
   }
   /* counted for the host, read back */
   const other = await run(w, { "https://other.example/x": challenged() }, { locator: "https://other.example/x" });
-  assert.equal(other.body.reason, "CHALLENGE_PAGE");
-  assert.deepEqual(challengesByHost(w.store).map((x) => [x.host, x.challenges]), [["www.guarded.example", 5], ["other.example", 1]]);
+  assert.equal(other.body.reason, "SITE_ASKS_FOR_PERSON");
+  assert.deepEqual([personChecksFor(w.store, { host: "other.example" }).count, personChecksFor(w.store, { host: "www.guarded.example" }).count], [1, 5]);
+  const last = personChecksFor(w.store, { host: "other.example" }).last_at;
+  assert.match(last, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/, "the time of the last");
+  assert.deepEqual(personChecksFor(w.store, { host: "never.example" }), { host: "never.example", count: 0, last_at: null });
 });
 
-test("K5574: other bot-protection pages are recognised from their own text; a CAPTCHA widget is a challenge only when it is all the page is", () => {
+test("R140: other bot-protection pages are recognised from their own text; a CAPTCHA widget is a challenge only when it is all the page is", () => {
   const dd = challengeOf({ status: 403, headers: { "content-type": "text/html" }, text: `<html><script src="https://geo.captcha-delivery.com/captcha/?initialCid=1"></script></html>` });
   assert.equal(dd.kind, "datadome");
   const px = challengeOf({ status: 403, headers: { "content-type": "text/html" }, text: `<div id="px-captcha"></div>` });
@@ -163,16 +168,56 @@ test("K5574: other bot-protection pages are recognised from their own text; a CA
   assert.equal(challengeOf({ status: 403, headers: { "content-type": "text/html" }, text: "<h1>Forbidden</h1>" }), null);
 });
 
-test("K5574 control: an ordinary refusal stays SOURCE_REFUSED, and a page that carries a protection script or a form widget is filed as the document", async () => {
+test("R140 control: an ordinary refusal stays SOURCE_REFUSED, and a page that carries a protection script or a form widget is filed as the document", async () => {
   const w = world();
   const plain403 = await run(w, { [U("no")]: () => new Response("<h1>Forbidden</h1>", { status: 403, headers: { "content-type": "text/html", server: "cloudflare" } }) }, { locator: U("no") });
   assert.deepEqual([plain403.status, plain403.body.reason], [502, "SOURCE_REFUSED"]);
   const tooMany = await run(w, { [U("slow")]: () => new Response("slow down", { status: 429, headers: { "retry-after": "30" } }) }, { locator: U("slow") });
   assert.equal(tooMany.body.reason, "SOURCE_REFUSED");
-  assert.deepEqual(challengesByHost(w.store), [], "nothing counted for them");
+  assert.equal(personChecksFor(w.store, { host: "files.example" }).count, 0, "nothing counted for them");
   const guarded = await run(w, { [U("minutes.html")]: () => page(`<!doctype html><html><head><title>Minutes of May</title></head><body><p>The council met.</p>
     <script src="/cdn-cgi/challenge-platform/scripts/jsd/main.js"></script><form><div class="g-recaptcha" data-sitekey="k"></div></form></body></html>`) }, { locator: U("minutes.html") });
   assert.equal(guarded.status, 200, "an ordinary page is filed");
   assert.equal(guarded.body.document.title, "Minutes of May");
-  assert.deepEqual(challengesByHost(w.store), []);
+  assert.equal(personChecksFor(w.store, { host: "files.example" }).count, 0, "and the ordinary page, from the same host, leaves the count unchanged");
+});
+
+test("R140: a register read and a keyed read answered by a check that asks for a person are refused the same way, name the address, send no more requests and count the host", async () => {
+  /* a keyed read */
+  const KEY = "SENTINEL-KEY-person-1";
+  const w = world();
+  w.store.credentials = { async keyedServiceFor({ service }) { return { ok: true, service, key: KEY }; } };
+  const url = "https://www.courtlistener.com/api/rest/v4/docket-entries/?docket=1";
+  const net = network(() => new Response(CF_PAGE, { status: 403, headers: { "content-type": "text/html", server: "cloudflare" } }));
+  try {
+    const k = await keyedFetch(w.store, { service: "courtlistener", purpose: "docket-entries", viewer: "member:m1", request: { url } });
+    assert.deepEqual([k.ok, k.reason, k.address, k.service], [false, "SITE_ASKS_FOR_PERSON", url, "courtlistener"]);
+    assert.ok(!JSON.stringify(k).includes(KEY));
+    assert.equal(net.seen.length, 1);
+    const ordinary = await keyedFetch(w.store, { service: "courtlistener", purpose: "docket-entries", viewer: "member:m1", request: { url } });
+    assert.equal(ordinary.reason, "SITE_ASKS_FOR_PERSON");
+  } finally { net.restore(); }
+  assert.equal(personChecksFor(w.store, { host: "www.courtlistener.com" }).count, 2);
+  const fine = network(() => new Response("[]", { headers: { "content-type": "application/json" } }));
+  try { assert.equal((await keyedFetch(w.store, { service: "courtlistener", purpose: "docket-entries", viewer: "member:m1", request: { url } })).ok, true); } finally { fine.restore(); }
+  assert.equal(personChecksFor(w.store, { host: "www.courtlistener.com" }).count, 2, "an ordinary answer leaves the count unchanged");
+  /* a register read */
+  const wr = world();
+  wr.core.setSetting("jurisdiction_profiles", ["test-port-ellery"], "member:admin");
+  const D = structuredClone(get("test-port-ellery").registers.find((r) => r.key === "town_filings"));
+  const rurl = "https://data.marlow-county.example/files/2025.csv";
+  const rn = network({ [rurl]: () => new Response(CF_PAGE, { status: 200, headers: { "content-type": "text/html", server: "cloudflare" } }) });
+  try {
+    const r = await streamRegister(wr.store, { definition: D, piece: "all", holes: { table: "2025" }, import: "i" }, { bounds: { stream_max: 1e9, segment_max: 1e6 } });
+    assert.deepEqual([r.ok, r.reason, r.address], [false, "SITE_ASKS_FOR_PERSON", rurl]);
+    assert.equal(rn.seen.length, 1);
+    assert.deepEqual([wr.prov.receipts.length, wr.b.calls.filter((c) => c[0] === "put").length], [0, 0]);
+  } finally { rn.restore(); }
+  /* the probe makes no body request, so it knows the header alone */
+  const pn = network({ [rurl]: () => new Response(null, { status: 403, headers: { "cf-mitigated": "challenge", server: "cloudflare" } }) });
+  try {
+    const p = await probeRegister(wr.store, { definition: D, piece: "all", holes: { table: "2025" } });
+    assert.deepEqual([p.ok, p.reason, p.address], [false, "SITE_ASKS_FOR_PERSON", rurl]);
+  } finally { pn.restore(); }
+  assert.equal(personChecksFor(wr.store, { host: "data.marlow-county.example" }).count, 2);
 });

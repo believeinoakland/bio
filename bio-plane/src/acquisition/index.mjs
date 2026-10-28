@@ -44,7 +44,7 @@ import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAP
          SWEEP_SCOPE_CHECKS, CAPTURE_KEEP_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat, formatNameFor } from "../formats.mjs";
-import { challengeOf, CHALLENGE_HEAD_BYTES } from "./challenge.mjs";
+import { challengeOf, recogniseChallenge, personRefusal, personChecksFor } from "./challenge.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
 import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -991,26 +991,7 @@ export function evidenceStorageAbsent(op, error, { code = true } = {}) {
 /* R42 (F16, K1881): the group's own hosts this act refuses, handed in by its caller (`opts.ownHosts`, else the store's
    `ownHosts`), capture-sources' one rule (its R65) deciding each. With none given, nothing is refused on this ground. */
 const ownHostsOf = (cap, given) => (Array.isArray(given) ? given : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null);
-/* K5574: the first `max` bytes of a body, read to recognise a challenge page; the rest is cancelled. */
-async function readPrefix(res, max) {
-  const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
-  if (!reader) return new Uint8Array(0);
-  const got = [];
-  let n = 0;
-  try { while (n < max) { const { done, value } = await reader.read(); if (done) break; got.push(value); n += value.length; } }
-  catch { /* a body that breaks off is read as far as it came */ }
-  try { await reader.cancel(); } catch { /* the source may already be gone */ }
-  const all = new Uint8Array(Math.min(n, max));
-  let at = 0;
-  for (const c of got) { const take = Math.min(c.length, all.length - at); all.set(c.subarray(0, take), at); at += take; if (at >= all.length) break; }
-  return all;
-}
-/** K5574 (K5574): the hosts that have answered a fetch with a challenge or CAPTCHA page, and how many times each did: `[{host, challenges, first_at, last_at}]`,
- *  the instants in milliseconds on the instance clock. A read; never throws. */
-export function challengesByHost(store) {
-  try { const inst = ledgerOf(store); return inst ? inst.challengeHosts().map((r) => ({ host: r.host, challenges: Number(r.challenges), first_at: Number(r.first_at), last_at: Number(r.last_at) })) : []; }
-  catch { return []; }
-}
+export { personChecksFor };
 const hostnameOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return null; } };
 const onOwnHost = (u, ownHosts) => !!ownHosts && isOwnHost(hostnameOf(u), ownHosts);
 /* R42, C-139.18: the refusal, naming the host; nothing was fetched or filed. */
@@ -1402,25 +1383,12 @@ async function acquireRun(cap, body0, opts0, t) {
   }
   /* END DEC-49 REGION is-drive-export */
   /* DEC-49 REGION is-challenge-page
-     K5574 (T53; K5574, K3656): a challenge or CAPTCHA page in place of the document is recognised from what the fetch received, never filed as the document
+     R140 (T53; K5574, K3656): a challenge or CAPTCHA page in place of the document is recognised from what the fetch received, never filed as the document
      and never worked around; the refusal is counted for the host. A header the service sets to say it challenged settles it; an error answer that is
      a bot-protection page is read for the page's own text, a bounded prefix of it. */
-  const challengeRefusal = async (chal, status) => {
-    const host = hostnameOf(resolvedUrl || locator);
-    let counted = null;
-    try { const inst = ledgerOf(cap); const r = inst && host ? inst.challengeNote(host, instantOf(cap)) : null; counted = r ? { host: r.host, challenges: Number(r.challenges) } : null; }
-    catch { counted = null; }
-    const row = ARCHIVE_CHECKS.CHALLENGE_PAGE;
-    return answer(403, { ok: false, reason: "CHALLENGE_PAGE", code: "CHALLENGE_PAGE", check: row.check, translation: row.translation, op, locator, host, status,
-      challenge: chal, counted,
-      detail: localize("acquisition.index.challenge_page", "{host} answered with a check that asks for a person ({signals}) in place of the document. Your team's Civicsmith does not get past such a check, and nothing was saved.", { host: String(host ?? ""), signals: chal.signals.join("; ") }) });
-  };
+  const challengeRefusal = async (chal, status) => answer(403, { ...personRefusal(cap, { address: resolvedUrl || locator, status, chal }), op, locator });
   if (!driveCapture) {
-    let chal = challengeOf({ status: res.status, headers: res.headers });
-    if (!chal && !res.ok && [401, 403, 429, 503].includes(res.status)) {
-      const prefix = await readPrefix(res, CHALLENGE_HEAD_BYTES);
-      chal = challengeOf({ status: res.status, headers: res.headers, bytes: prefix, total: prefix.length });
-    }
+    const chal = await recogniseChallenge(res);
     if (chal) {
       await noteOutcome("source_refused", res.status);
       try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
