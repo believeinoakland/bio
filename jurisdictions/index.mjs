@@ -385,7 +385,7 @@ function validateInto(p, errors) {
     /* R115: a team's entry rests on the capture it was read from, team:<capture sha> (TEST in a test profile) */
     if (teamLayer) {
       if (typeof o.basis === "string" && TEAM_BASIS.test(o.basis)) return true;
-      if (!(test && o.basis === "TEST")) { err(`${path}.basis`, "BASIS_INVALID", "a team entry rests on the capture it was read from (team:<capture sha>)"); return false; }
+      if (!(test && o.basis === "TEST")) { err(`${path}.basis`, "BASIS_INVALID", localize("jurisdictions.index.a_team_entry_rests_on_the", "a team entry rests on the capture it was read from (team:<capture sha>)", {})); return false; }
     }
     if (!basisValid(o.basis, test)) {
       err(`${path}.basis`, "BASIS_INVALID", o.basis === "TEST"
@@ -501,11 +501,11 @@ function validateInto(p, errors) {
   /* R114 (T53): a package is a profile of one field, the ids of the layers it stands for. */
   if (own(p, "package")) {
     for (const k of Object.keys(p)) if (!["id", "name", "covers", "test", "package"].includes(k))
-      err(k, "PACKAGE_INVALID", "a package holds only its layers' ids, besides its id, name and covers");
+      err(k, "PACKAGE_INVALID", localize("jurisdictions.index.a_package_holds_only_its_layers", "a package holds only its layers' ids, besides its id, name and covers", {}));
     if (!Array.isArray(p.package) || !p.package.length || !p.package.every((x) => typeof x === "string" && ID_RE.test(x))
         || new Set(p.package).size !== p.package.length)
-      err("package", "PACKAGE_INVALID", "package is a non-empty list of layer ids, each once");
-    else if (p.package.includes(p.id)) err("package", "PACKAGE_INVALID", "a package does not name itself");
+      err("package", "PACKAGE_INVALID", localize("jurisdictions.index.package_is_a_non_empty_list", "package is a non-empty list of layer ids, each once", {}));
+    else if (p.package.includes(p.id)) err("package", "PACKAGE_INVALID", localize("jurisdictions.index.a_package_does_not_name_itself", "a package does not name itself", {}));
     return;
   }
   /* R99, R100, R108 (T53): a profile may be a layer of the forest; a layer says how far its facts reach. */
@@ -519,19 +519,19 @@ function validateInto(p, errors) {
       if (!LAYER_ORIGINS.includes(layer.origin)) err(`${la}.origin`, "LAYER_INVALID", localize("jurisdictions.index.origin_is_one_of_layer", "origin is one of {LAYER_ORIGINS}", { LAYER_ORIGINS: String(LAYER_ORIGINS.join(", ")) }));
       if (teamLayer) {
         /* R115: the one team layer has no level and no place */
-        for (const k of ["level", "place"]) if (own(layer, k)) err(`${la}.${k}`, "LAYER_INVALID", "the team layer has no level and no place");
-        if (p.id !== "team") err("id", "LAYER_INVALID", "the team layer's id is team");
+        for (const k of ["level", "place"]) if (own(layer, k)) err(`${la}.${k}`, "LAYER_INVALID", localize("jurisdictions.index.the_team_layer_has_no_level", "the team layer has no level and no place", {}));
+        if (p.id !== "team") err("id", "LAYER_INVALID", localize("jurisdictions.index.the_team_layer_s_id_is", "the team layer's id is team", {}));
       } else {
         if (!LAW_LEVELS.includes(layer.level)) err(`${la}.level`, "LAYER_INVALID", localize("jurisdictions.index.level_is_one_of_law_4", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
         if (typeof layer.place !== "string" || !layer.place.trim() || layer.place.length > 200 || /[\r\n]/.test(layer.place))
-          err(`${la}.place`, "LAYER_INVALID", "place is the place's name, 1 to 200 characters on one line");
+          err(`${la}.place`, "LAYER_INVALID", localize("jurisdictions.index.place_is_the_place_s_name", "place is the place's name, 1 to 200 characters on one line", {}));
       }
       if (own(layer, "within")) {
-        if (typeof layer.within !== "string" || !ID_RE.test(layer.within)) err(`${la}.within`, "LAYER_INVALID", "within is the id of the layer this one sits in");
-        else if (layer.within === p.id) err(`${la}.within`, "LAYER_INVALID", "a layer does not sit within itself");
-        else if (layer.level === "federal") err(`${la}.within`, "LAYER_INVALID", "a federal layer sits within none");
+        if (typeof layer.within !== "string" || !ID_RE.test(layer.within)) err(`${la}.within`, "LAYER_INVALID", localize("jurisdictions.index.within_is_the_id_of_the", "within is the id of the layer this one sits in", {}));
+        else if (layer.within === p.id) err(`${la}.within`, "LAYER_INVALID", localize("jurisdictions.index.a_layer_does_not_sit_within", "a layer does not sit within itself", {}));
+        else if (layer.level === "federal") err(`${la}.within`, "LAYER_INVALID", localize("jurisdictions.index.a_federal_layer_sits_within_none", "a federal layer sits within none", {}));
       } else if (!teamLayer && LAW_LEVELS.includes(layer.level) && layer.level !== "federal")
-        err(`${la}.within`, "LAYER_INVALID", "a layer below the federal one sits within another layer");
+        err(`${la}.within`, "LAYER_INVALID", localize("jurisdictions.index.a_layer_below_the_federal_one", "a layer below the federal one sits within another layer", {}));
     }
   }
   if (own(p, "coverage")) {
@@ -556,21 +556,21 @@ function validateInto(p, errors) {
   /* R115, R116, R134 (T53): the team's one layer holds only the sections a team may write, each entry about one government, and
      a stated fiscal year needs neither a source nor a second member. */
   const government = (path, g, wide) => {
-    if (!isObj(g)) { err(path, "LAYER_INVALID", "government is {level, place}: the government an entry is about"); return; }
+    if (!isObj(g)) { err(path, "LAYER_INVALID", localize("jurisdictions.index.government_is_level_place_the", "government is {level, place}: the government an entry is about", {})); return; }
     fields(path, g, ["level", "place"]);
     const levels = wide ? LAW_LEVELS : ["county", "city"];
     if (!levels.includes(g.level)) err(`${path}.level`, "LAYER_INVALID", localize("jurisdictions.index.a_governments_level_is_one", "a government's level is one of {levels}", { levels: String(levels.join(", ")) }));
-    else if (g.level === "federal") { if (own(g, "place")) err(`${path}.place`, "LAYER_INVALID", "the federal government has no place"); }
-    else if (typeof g.place !== "string" || !g.place.trim() || g.place.length > 200 || /[\r\n]/.test(g.place)) err(`${path}.place`, "LAYER_INVALID", "place is the government's name, 1 to 200 characters on one line");
+    else if (g.level === "federal") { if (own(g, "place")) err(`${path}.place`, "LAYER_INVALID", localize("jurisdictions.index.the_federal_government_has_no_place", "the federal government has no place", {})); }
+    else if (typeof g.place !== "string" || !g.place.trim() || g.place.length > 200 || /[\r\n]/.test(g.place)) err(`${path}.place`, "LAYER_INVALID", localize("jurisdictions.index.place_is_the_government_s_name", "place is the government's name, 1 to 200 characters on one line", {}));
   };
   if (teamLayer) {
     for (const k of Object.keys(p)) if (!["id", "name", "covers", "test", "layer", "coverage", ...TEAM_LAYER_SECTIONS].includes(k))
       err(k, "TEAM_SECTION_REFUSED", localize("jurisdictions.index.a_team_layer_holds_only_the", "a team layer holds only {TEAM_LAYER_SECTIONS}", { TEAM_LAYER_SECTIONS: String(TEAM_LAYER_SECTIONS.join(", ")) }));
     for (const sec of TEAM_ENTRY_SECTIONS) if (Array.isArray(p[sec])) p[sec].forEach((e, i) => {
       if (!isObj(e)) return;
-      if (!own(e, "government")) err(`${sec}[${i}].government`, "LAYER_INVALID", "a team entry names the government it is about");
+      if (!own(e, "government")) err(`${sec}[${i}].government`, "LAYER_INVALID", localize("jurisdictions.index.a_team_entry_names_the_government", "a team entry names the government it is about", {}));
       else government(`${sec}[${i}].government`, e.government, sec === "fiscal_year");
-      if (sec !== "fiscal_year" && e.status !== "researched") err(`${sec}[${i}].status`, "BASIS_INVALID", "a team entry is researched: it is read from a capture");
+      if (sec !== "fiscal_year" && e.status !== "researched") err(`${sec}[${i}].status`, "BASIS_INVALID", localize("jurisdictions.index.a_team_entry_is_researched_it", "a team entry is researched: it is read from a capture", {}));
     });
     if (own(p, "fiscal_year")) {
       const seen = new Set();
@@ -578,10 +578,10 @@ function validateInto(p, errors) {
         const at = `fiscal_year[${i}]`;
         if (!entry(at, f)) return;
         fields(at, f, ["government", "body", "start", "named_by", "label", "how", "stated_by", "stated_on"]);
-        if (!isStr(f.body) || f.body === "*" || f.body.length > 200 || /[\r\n]/.test(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", "body is the government's name, 1 to 200 characters on one line, never *");
+        if (!isStr(f.body) || f.body === "*" || f.body.length > 200 || /[\r\n]/.test(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.body_is_the_government_s_name", "body is the government's name, 1 to 200 characters on one line, never *", {}));
         else if (isObj(f.government)) {
           const k = `${f.government.level}\u0000${f.government.place || ""}`;
-          if (seen.has(k)) err(`${at}.government`, "FISCAL_YEAR_INVALID", "the team layer holds one fiscal year for each government");
+          if (seen.has(k)) err(`${at}.government`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.the_team_layer_holds_one_fiscal", "the team layer holds one fiscal year for each government", {}));
           seen.add(k);
         }
         if (!isMonthDay(f.start)) err(`${at}.start`, "FISCAL_YEAR_INVALID", "start is the first day, MM-DD");
@@ -589,7 +589,7 @@ function validateInto(p, errors) {
         if (!isStr(f.label) || !FISCAL_PLACEHOLDERS.some((x) => f.label.includes(x)) || (f.label.match(/\{[^}]*\}/g) || []).some((x) => !FISCAL_PLACEHOLDERS.includes(x)))
           err(`${at}.label`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.label_is_a_template_using", "label is a template using {FISCAL_PLACEHOLDERS}", { FISCAL_PLACEHOLDERS: String(FISCAL_PLACEHOLDERS.join(", ")) }));
         /* R124: how the member checked it; who and when are `local-facts`' record, kept beside it */
-        if (own(f, "how") && (!isStr(f.how) || f.how.length > 500)) err(`${at}.how`, "VALUE_INVALID", "how is 1 to 500 characters saying how the member checked it");
+        if (own(f, "how") && (!isStr(f.how) || f.how.length > 500)) err(`${at}.how`, "VALUE_INVALID", localize("jurisdictions.index.how_is_to_characters_saying_how", "how is 1 to 500 characters saying how the member checked it", {}));
       });
     }
   }
@@ -872,7 +872,7 @@ function validateInto(p, errors) {
     /* R106 (T53): whose records the law governs, by level of office, from the statute's own definition */
     if (own(l, "governs")) {
       if (!Array.isArray(l.governs) || !l.governs.length || new Set(l.governs).size !== l.governs.length)
-        err(`${at}.governs`, "VALUE_INVALID", "governs is a non-empty list of levels of office, each once");
+        err(`${at}.governs`, "VALUE_INVALID", localize("jurisdictions.index.governs_is_a_non_empty_list", "governs is a non-empty list of levels of office, each once", {}));
       else l.governs.forEach((g, j) => { if (!GOVERNS_LEVELS.includes(g)) err(`${at}.governs[${j}]`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty_2", "level is one of {GOVERNS_LEVELS}", { GOVERNS_LEVELS: String(GOVERNS_LEVELS.join(", ")) })); });
     }
     str(`${at}.name`, l.name, "name"); str(`${at}.citation`, l.citation, "citation");
@@ -1134,13 +1134,13 @@ function validateInto(p, errors) {
       }
       if (t.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
       /* R136 (T53): no template the team files in its own name for a kind filed in a court; a brief may serve it */
-      if (t.use === "file" && isObj(k.venue) && k.venue.how === "court") err(ta, "TEMPLATE_COURT_PETITION", "a kind filed in a court has no file template; a brief may serve it");
+      if (t.use === "file" && isObj(k.venue) && k.venue.how === "court") err(ta, "TEMPLATE_COURT_PETITION", localize("jurisdictions.index.a_kind_filed_in_a_court", "a kind filed in a court has no file template; a brief may serve it", {}));
       /* R138 (T53): a text's writer and approver are named people; a machine may only compose a declared first draft */
-      if (isStr(t.authored_by) && isMachineIdentity(t.authored_by)) err(`${ta}.authored_by`, "MACHINE_CANNOT_DRAFT_TEMPLATE", "a machine is not the writer of a text; declare a machine draft with a named person as writer");
-      if (isStr(t.approved_by) && isMachineIdentity(t.approved_by)) err(`${ta}.approved_by`, "MACHINE_CANNOT_APPROVE_TEMPLATE", "a machine does not approve a text");
+      if (isStr(t.authored_by) && isMachineIdentity(t.authored_by)) err(`${ta}.authored_by`, "MACHINE_CANNOT_DRAFT_TEMPLATE", localize("jurisdictions.index.a_machine_is_not_the_writer", "a machine is not the writer of a text; declare a machine draft with a named person as writer", {}));
+      if (isStr(t.approved_by) && isMachineIdentity(t.approved_by)) err(`${ta}.approved_by`, "MACHINE_CANNOT_APPROVE_TEMPLATE", localize("jurisdictions.index.a_machine_does_not_approve_a", "a machine does not approve a text", {}));
       if (own(t, "machine_draft")) {
         if (typeof t.machine_draft !== "boolean") err(`${ta}.machine_draft`, "VALUE_INVALID", "machine_draft is true or false");
-        else if (t.machine_draft === true && !(typeof t.notes === "string" && t.notes.trim())) err(`${ta}.notes`, "VALUE_INVALID", "a machine draft declares itself in non-empty notes");
+        else if (t.machine_draft === true && !(typeof t.notes === "string" && t.notes.trim())) err(`${ta}.notes`, "VALUE_INVALID", localize("jurisdictions.index.a_machine_draft_declares_itself_in", "a machine draft declares itself in non-empty notes", {}));
       }
     }
     if (isObj(t) && (inList || own(t, "name"))) {
@@ -1850,7 +1850,7 @@ function validateInto(p, errors) {
     list("procedure_guides", p.procedure_guides).forEach((g, i) => {
       const at = `procedure_guides[${i}]`;
       if (!entry(at, g)) return;
-      for (const f of ["review_opt_out", "not_reviewed"]) if (own(g, f)) err(`${at}.${f}`, "VALUE_INVALID", "a profile guide has no review opt-out: that is a team's own guide's");
+      for (const f of ["review_opt_out", "not_reviewed"]) if (own(g, f)) err(`${at}.${f}`, "VALUE_INVALID", localize("jurisdictions.index.a_profile_guide_has_no_review", "a profile guide has no review opt-out: that is a team's own guide's", {}));
       fields(at, g, ["kind", "items", "notes", "machine_draft", "authored_by", "reviews", "approved_by", "approved_at", "status", "basis", "review_opt_out", "not_reviewed", "source_check"]);
       if (own(g, "source_check")) sourceCheck(`${at}.source_check`, g.source_check);
       if (!profileKinds.has(g.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of_4", "'{String}' is no kind of this profile", { String: String(String(g.kind)) }));
@@ -1874,20 +1874,20 @@ function validateInto(p, errors) {
       else {
         if (typeof g.notes !== "string") err(`${at}.notes`, "VALUE_INVALID", "notes are text, possibly empty");
         if (!isStr(g.authored_by)) err(`${at}.authored_by`, "VALUE_INVALID", "authored_by is a non-empty name");
-        else if (isMachineIdentity(g.authored_by)) err(`${at}.authored_by`, "MACHINE_CANNOT_DRAFT_TEMPLATE", "a machine is not the writer of a text");
+        else if (isMachineIdentity(g.authored_by)) err(`${at}.authored_by`, "MACHINE_CANNOT_DRAFT_TEMPLATE", localize("jurisdictions.index.a_machine_is_not_the_writer_2", "a machine is not the writer of a text", {}));
         if (!isStr(g.approved_by)) err(`${at}.approved_by`, "VALUE_INVALID", "approved_by is a non-empty name");
-        else if (isMachineIdentity(g.approved_by)) err(`${at}.approved_by`, "MACHINE_CANNOT_APPROVE_TEMPLATE", "a machine does not approve a text");
-        else if (isStr(g.authored_by) && g.approved_by.trim() === g.authored_by.trim()) err(`${at}.approved_by`, "VALUE_INVALID", "the approver is not the guide's writer");
+        else if (isMachineIdentity(g.approved_by)) err(`${at}.approved_by`, "MACHINE_CANNOT_APPROVE_TEMPLATE", localize("jurisdictions.index.a_machine_does_not_approve_a", "a machine does not approve a text", {}));
+        else if (isStr(g.authored_by) && g.approved_by.trim() === g.authored_by.trim()) err(`${at}.approved_by`, "VALUE_INVALID", localize("jurisdictions.index.the_approver_is_not_the_guide", "the approver is not the guide's writer", {}));
         if (!isDate(g.approved_at)) err(`${at}.approved_at`, "VALUE_INVALID", "approved_at is a real YYYY-MM-DD");
         reviewsOf(`${at}.reviews`, g.reviews);
       }
       if (own(g, "machine_draft")) {
         if (typeof g.machine_draft !== "boolean") err(`${at}.machine_draft`, "VALUE_INVALID", "machine_draft is true or false");
-        else if (g.machine_draft === true && !(typeof g.notes === "string" && g.notes.trim())) err(`${at}.notes`, "VALUE_INVALID", "a machine draft declares itself in non-empty notes");
+        else if (g.machine_draft === true && !(typeof g.notes === "string" && g.notes.trim())) err(`${at}.notes`, "VALUE_INVALID", localize("jurisdictions.index.a_machine_draft_declares_itself_in", "a machine draft declares itself in non-empty notes", {}));
       }
       statusBasis(at, g);
       if (own(g, "basis") && typeof g.basis === "string" && !(test && g.basis === "TEST") && !basisParts(g.basis).every((x) => K_REF.test(x)))
-        err(`${at}.basis`, "BASIS_INVALID", "a guide rests on the ruling that approved it (K<n>)");
+        err(`${at}.basis`, "BASIS_INVALID", localize("jurisdictions.index.a_guide_rests_on_the_ruling", "a guide rests on the ruling that approved it (K<n>)", {}));
     });
   }
 
