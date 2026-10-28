@@ -1,6 +1,6 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 OPEN · layer 3 OPEN · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
-**Status** · OPEN · BOB #328 · session_018BhcefyAzc8476i2q7nQ5q · depth 1
+**Status** · OPEN · BOB #329 · session_018BhcefYrW3vwL3mYqzy8xd · depth 1
 **Jobs** · member-roster: MEMBER-ROSTER #1 session_018BhcefiiLZYzriCJJmrdXE; record-core: RECORD-CORE #1 session_018Bhcefjn5o22km4fr7kbme; membership: MEMBERSHIP #1 session_018BhcefgcLdaAA53reT314Q; project-roster: PROJECT-ROSTER #1 session_018BhcegZCNZehxmo4dsDnTt; ai-catalogue: AI-CATALOGUE #1 session_018BhceegGiraj92rsxu2cuC; ai-accounts: AI-ACCOUNTS #1 session_018Bhceei38Q79BHcdtVPMFz; credentials: CREDENTIALS #1 session_018Bhceesg4XYzpL7ZX32uiC; promotion: PROMOTION #1 session_018BhcegYHK2EwFjRJE5A3Md
 **Owed** · none
 
@@ -852,6 +852,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 **ai-issuer**
 - T53-493 · K5457 · serves catalogue, advisories, seal key `[waits: BOB's deploy to 20b5…7f72, tools; R18 retention]`
 - T53-494 · K5482, K5487 · `airesultown`, `POST /ai/health`
+- T53-551 · K5674 · the index at ai-catalogue's `CATALOGUE_ADDRESS`, payloads beneath it, in the shape its `receive` reads; reads `ADVISORY_REASONS` and `validatePayload` from ai-catalogue
 - rows: `build/plan/T53-R1/ai-issuer.md`
 **journey-check**
 - T53-495 · N1260 (K4354) · act counter, 2 s assertion, Sewer Service Fund `[first: BOB's K lines for target files]`
