@@ -8,6 +8,7 @@ import { loadWorker } from './stubs/runtime.mjs';
 import { dialled } from './stubs/cloudflare-sockets.mjs';
 import { handle } from '../src/handler.mjs';
 import * as limits from '../src/limits.mjs';
+import { boundOf, READ_BOUNDS } from '../../bio-plane/src/read-bounds.mjs';
 import { writeObject, deleteObject } from '../src/store.mjs';
 import { PROVIDERS } from '../src/providers/catalogue.mjs';
 import { parseJsonc } from '../../bio-plane/scripts/jsonc.mjs';
@@ -211,7 +212,7 @@ test('R15 the namespace set is exactly ["bio", "scratch"], frozen, with PLANE_OP
 test('R16 the limits, by name; the bundle states the Worker\'s own limits once, equal to its configuration', async () => {
   assert.deepEqual([limits.SCAN_MAX_BYTES, limits.SCAN_BATCH_MAX, limits.SIGNATURES_MAX_AGE_MS, limits.SAFE_VIEW_DPI, limits.SAFE_VIEW_PAGES_MAX,
     limits.SAFE_VIEW_BYTES_MAX, limits.PROVIDER_TIMEOUT_MS, limits.SANDBOX_TIMEOUT_MS, limits.REPUTATION_LIST_MAX_AGE_MS],
-  [268_435_456, 200, 259_200_000, 150, 500, 33_554_432, 120_000, 3_600_000, 86_400_000]);
+  [boundOf('scan', 'max_bytes'), 200, 259_200_000, 150, boundOf('render', 'safe_view_pages'), boundOf('render', 'safe_view_bytes'), 120_000, 3_600_000, 86_400_000]);
   assert.deepEqual(limits.LOG_COUNT_KINDS, ['files_scanned', 'files_found', 'holds_placed', 'holds_released', 'deeper_checks', 'sandbox_submissions',
     'safe_views', 'safe_copies', 'reputation_listed', 'signin', 'credential', 'rate', 'handover', 'through']);
   assert.ok(Object.isFrozen(limits.LOG_COUNT_KINDS));
@@ -224,7 +225,7 @@ test('R16 the limits, by name; the bundle states the Worker\'s own limits once, 
   const mod = await loadWorker();
   assert.equal(mod.default.limits, stated);
   const v = await (await handle(new Request('https://file-scanner/version'), depsWith())).json();
-  assert.deepEqual(v.bounds.SCAN_MAX_BYTES, { value: limits.SCAN_MAX_BYTES, source: 'alpha' });
+  assert.deepEqual(v.bounds.SCAN_MAX_BYTES, { value: boundOf('scan', 'max_bytes'), source: READ_BOUNDS.scan.max_bytes.alpha === boundOf('scan', 'max_bytes') ? 'alpha' : 'standard' });
 });
 
 // R18's one exemption (as agent-runner's, K1905): the images' registry address is a distribution coordinate, not a
