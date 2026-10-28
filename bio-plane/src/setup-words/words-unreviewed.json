@@ -24704,165 +24704,172 @@
       "line": 53
     },
     {
+      "id": "duties.checks.rule_name_in_several_layers",
+      "en": "More than one of the places your team reads gives a rule by that name, so none was chosen. Name the place whose rule this is. Nothing was written.",
+      "module": "duties",
+      "file": "bio-plane/src/duties/checks.mjs",
+      "line": 138
+    },
+    {
       "id": "duties.declared.declare",
       "en": "duty-directed: keyed by a new DUT- id; writes duties' rows and moves no bundle",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1871
+      "line": 1927
     },
     {
       "id": "duties.index.a_commitments_or_windows_date",
       "en": "a commitment's or window's date is a calendar day or a date-time.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 340
+      "line": 384
     },
     {
       "id": "duties.index.a_court_source_names_a",
       "en": "a court source names a standard of kind court (an order, decree, or recommendation held as one).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 438
+      "line": 488
     },
     {
       "id": "duties.index.a_date_trigger_states_its",
       "en": "a date trigger states its date (a calendar day or a date-time).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 472
+      "line": 522
     },
     {
       "id": "duties.index.a_dependency_names_its_lead",
       "en": "a dependency names its lead (time.lead) and why (time.why).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 342
+      "line": 386
     },
     {
       "id": "duties.index.a_dependency_source_says_why",
       "en": "a dependency source says why the obligation must precede its event (source.why).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 458
+      "line": 508
     },
     {
       "id": "duties.index.a_due_dates_basis_is",
       "en": "a due date's basis is one of {BASIS_KINDS}.{v1}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 333
+      "line": 377
     },
     {
       "id": "duties.index.a_hypothesis_id_is_held",
       "en": "a hypothesis id is held in a field.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 514
+      "line": 564
     },
     {
       "id": "duties.index.a_modality_is_one_of",
       "en": "a modality is one of {MODALITIES}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 279
+      "line": 323
     },
     {
       "id": "duties.index.a_person_owes_an_obligation",
       "en": "a person owes an obligation only where a held law or court order binds them by name or role: cite it as the source and say what it binds (source.binds).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 307
+      "line": 351
     },
     {
       "id": "duties.index.a_policys_review_is_the",
       "en": "a policy's review is the body's own commitment (time.basis commitment) over the standard it reviews (review.standard is the source's).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 380
+      "line": 430
     },
     {
       "id": "duties.index.a_practice_source_states_the",
       "en": "a practice source states the measured practice (source.statement).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 456
+      "line": 506
     },
     {
       "id": "duties.index.a_prohibition_or_threshold_whose",
       "en": "a prohibition or threshold whose terms cite money facts and name funds or entities.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1609
+      "line": 1665
     },
     {
       "id": "duties.index.a_promise_rests_on_a",
       "en": "a promise rests on a standard of kind commitment, and {String} is of kind {v1}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1750
+      "line": 1806
     },
     {
       "id": "duties.index.a_reported_status_is_one",
       "en": "a reported status is one of the profile's response vocabulary: {statuses}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 369
+      "line": 419
     },
     {
       "id": "duties.index.a_reported_status_quotes_a",
       "en": "a reported status quotes a held passage (its content id).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 374
+      "line": 424
     },
     {
       "id": "duties.index.a_required_response_is_started",
       "en": "a required response is started by the report's date, and the report held as a standard states none (its period's start).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 723
+      "line": 778
     },
     {
       "id": "duties.index.a_rule_basis_names_the",
       "en": "a rule basis names the rule (time.rule) it is computed from.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 338
+      "line": 382
     },
     {
       "id": "duties.index.a_source_is_one_of",
       "en": "a source is one of {SOURCE_KINDS}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 424
+      "line": 474
     },
     {
       "id": "duties.index.a_source_trigger_names_the",
       "en": "a source trigger names the module whose items start it (trigger.source).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 470
+      "line": 520
     },
     {
       "id": "duties.index.a_state_is_one_of",
       "en": "a state is one of {OCCURRENCE_STATES}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1312
+      "line": 1368
     },
     {
       "id": "duties.index.a_trigger_is_one_of",
       "en": "a trigger is one of {TRIGGER_KINDS}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 466
+      "line": 516
     },
     {
       "id": "duties.index.a_withdrawn_obligation_is_not",
       "en": "a withdrawn obligation is not revised.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 839
+      "line": 894
     },
     {
       "id": "duties.index.act_is_a_members_own",
@@ -24876,133 +24883,133 @@
       "en": "an event trigger names the event kind (trigger.event_kind) and the entity it concerns.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 468
+      "line": 518
     },
     {
       "id": "duties.index.an_obligation_is_named_by",
       "en": "an obligation is named by its id (DUT-...).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 125
+      "line": 132
     },
     {
       "id": "duties.index.an_obligation_names_its_obligor",
       "en": "an obligation names its obligor (an entity id).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 282
+      "line": 326
     },
     {
       "id": "duties.index.an_obligation_owed_by_an",
       "en": "an obligation owed by an organisation outside government names the office that enforces it (enforcer).{stays}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 322
+      "line": 366
     },
     {
       "id": "duties.index.an_organisations_own_policy_binds",
       "en": "an organisation's own policy binds no public body or person as an obligation here unless an adoption puts it in force for that body.{stays}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 300
+      "line": 344
     },
     {
       "id": "duties.index.arising_in_names_a_registered",
       "en": "arising_in names a registered proceeding or a held capture.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 359
+      "line": 409
     },
     {
       "id": "duties.index.arisingin_names_the_held_capture",
       "en": "arisingIn names the held capture of the reply or report.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 681
+      "line": 736
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ); nothing reads now itself.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1129
+      "line": 1185
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy_2",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1281
+      "line": 1337
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy_3",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1317
+      "line": 1373
     },
     {
       "id": "duties.index.asof_is_an_instant_yyyy_4",
       "en": "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ); nothing reads now itself.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1567
+      "line": 1623
     },
     {
       "id": "duties.index.capture_not_seen",
       "en": "the record holds no such capture you can see",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 648
+      "line": 703
     },
     {
       "id": "duties.index.entity_kind_owes_no_obligation",
       "en": "an entity of kind {kind} owes no obligation.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 318
+      "line": 362
     },
     {
       "id": "duties.index.events_cannot_answer_uses",
       "en": "the events service cannot answer the uses of a power",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1398
+      "line": 1454
     },
     {
       "id": "duties.index.events_not_available",
       "en": "the events service is not available",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1038
+      "line": 1094
     },
     {
       "id": "duties.index.expansion_stopped_at_bound",
       "en": "the expansion stopped at its bound (24 months or 500 instances)",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1052
+      "line": 1108
     },
     {
       "id": "duties.index.extent_names_no_part",
       "en": "the extent names no part of that capture",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 653
+      "line": 708
     },
     {
       "id": "duties.index.field_cites_a_capture_that",
       "en": "{field} cites a capture that is not the policy's held text.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 633
+      "line": 688
     },
     {
       "id": "duties.index.field_names_the_extent_of",
       "en": "{field} names the extent of the capture that states it",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 649
+      "line": 704
     },
     {
       "id": "duties.index.give_your_reason_in_1",
@@ -25016,21 +25023,21 @@
       "en": "linking a use to a power",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1530
+      "line": 1586
     },
     {
       "id": "duties.index.matching_event_to_obligation",
       "en": "matching an event to an obligation",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1239
+      "line": 1295
     },
     {
       "id": "duties.index.name_1_to_captures_max",
       "en": "name 1 to {CAPTURES_MAX} captures, each by its sha256.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1565
+      "line": 1621
     },
     {
       "id": "duties.index.name_the_clause_the_obligation",
@@ -25044,266 +25051,273 @@
       "en": "no occurrence of this obligation answers to that key.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1254
+      "line": 1310
     },
     {
       "id": "duties.index.no_occurrence_of_this_obligation_2",
       "en": "no occurrence of this obligation answers to that key.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1323
+      "line": 1379
     },
     {
       "id": "duties.index.no_proposal_answers_to_that",
       "en": "no proposal answers to that id.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 782
+      "line": 837
     },
     {
       "id": "duties.index.place_one_of",
       "en": "as is one of obligor, obligee, enforcer",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 978
+      "line": 1034
     },
     {
       "id": "duties.index.powers_are_read_for_an",
       "en": "powers are read for an office.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1364
+      "line": 1420
     },
     {
       "id": "duties.index.proposing_obligation_no_stamp",
       "en": "proposing an obligation with no stamp",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 551
+      "line": 601
     },
     {
       "id": "duties.index.proposing_response_no_stamp",
       "en": "proposing an obligation from a response with no stamp",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 672
+      "line": 727
     },
     {
       "id": "duties.index.proposing_review_no_stamp",
       "en": "proposing a review with no stamp",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 593
+      "line": 648
+    },
+    {
+      "id": "duties.index.rule_in_several_layers",
+      "en": "more than one active layer gives a rule named {rule}: name the layer it is from ({layers}).",
+      "module": "duties",
+      "file": "bio-plane/src/duties/index.mjs",
+      "line": 125
     },
     {
       "id": "duties.index.say_the_act_owed_in",
       "en": "say the act owed, in 1 to {WORDS_MAX} characters (performance.act).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 346
+      "line": 396
     },
     {
       "id": "duties.index.say_why_in_your_own",
       "en": "say why, in your own words (cause).",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1315
+      "line": 1371
     },
     {
       "id": "duties.index.sector_no_acting_line",
       "en": "this organisation's sector is {sector}, and no {lines} line, and no source it rests on, ties it to a public body.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 317
+      "line": 361
     },
     {
       "id": "duties.index.stated_basis_team_deadline",
       "en": " A deadline the other side has stated is a deadline on the team, as are the team's own obligations to a venue: they are the team's own deadlines on its actions, never a body's obligation here.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 334
+      "line": 378
     },
     {
       "id": "duties.index.table_is_appended_to_and",
       "en": "{table} is appended to and never {v1}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 502
+      "line": 552
     },
     {
       "id": "duties.index.the_active_jurisdiction_profiles_hold",
       "en": "the active jurisdiction profiles hold no response vocabulary, so no status can be quoted.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 370
+      "line": 420
     },
     {
       "id": "duties.index.the_active_jurisdiction_profiles_hold_2",
       "en": "the active jurisdiction profiles hold no such rule.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 578
+      "line": 633
     },
     {
       "id": "duties.index.the_commitment_standard_proposal_is",
       "en": "the commitment {standard_proposal} is still a proposal; adopt it as a standard first.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 768
+      "line": 823
     },
     {
       "id": "duties.index.the_commitment_this_obligation_rests",
       "en": "the commitment this obligation rests on is still a proposal; adopt it as a standard first.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 430
+      "line": 480
     },
     {
       "id": "duties.index.the_events_read_stopped_at",
       "en": "the events read stopped at its bound of {v1}",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1037
+      "line": 1093
     },
     {
       "id": "duties.index.the_extents_words_are_not",
       "en": "the extent's words are not held as read text.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 600
+      "line": 655
     },
     {
       "id": "duties.index.the_field_amount_holds_an",
       "en": "the field '{amount}' holds an amount.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 519
+      "line": 569
     },
     {
       "id": "duties.index.the_field_duekey_would_store",
       "en": "the field '{dueKey}' would store a due date.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 517
+      "line": 567
     },
     {
       "id": "duties.index.the_field_found_holds_an",
       "en": "the field '{found}' holds an amount; cite money facts (performance.money_facts) instead.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 494
+      "line": 544
     },
     {
       "id": "duties.index.the_kind_is_one_of",
       "en": "the kind is one of {RESPONSE_KINDS}.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 675
+      "line": 730
     },
     {
       "id": "duties.index.the_policy_of_v1_stays",
       "en": " The policy of {v1} stays held as a standard and may be compared with what the organisation does (calculations); it is not tracked here as an obligation.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 296
+      "line": 340
     },
     {
       "id": "duties.index.the_portion_named_is_not",
       "en": "the portion named is not one the standard holds.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 443
+      "line": 493
     },
     {
       "id": "duties.index.the_project_named_is_not",
       "en": "the project named is not held.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 382
+      "line": 432
     },
     {
       "id": "duties.index.the_proposal_was_adopted",
       "en": "the proposal was adopted.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 783
+      "line": 838
     },
     {
       "id": "duties.index.the_proposed_commitment_cannot_be",
       "en": "the proposed commitment cannot be read here, so whether it is adopted is not known.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 748
+      "line": 803
     },
     {
       "id": "duties.index.the_quote_is_an_extent",
       "en": "the quote is an extent of another capture than the one the obligation arises in.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 685
+      "line": 740
     },
     {
       "id": "duties.index.the_quotes_words_are_not",
       "en": "the quote's words are not held as read text.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 696
+      "line": 751
     },
     {
       "id": "duties.index.the_rule_named_is_not",
       "en": "the rule named is not one the governing view holds for a body answering this report.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 730
+      "line": 785
     },
     {
       "id": "duties.index.the_uses_of_a_power",
       "en": "the uses of a power are read for a duty of modality power.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1491
+      "line": 1547
     },
     {
       "id": "duties.index.the_version_named_is_not",
       "en": "the version named is not a held version of the standard's instrument.",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 450
+      "line": 500
     },
     {
       "id": "duties.index.trigger_source_unregistered",
       "en": "no module has registered this trigger source",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1059
+      "line": 1115
     },
     {
       "id": "duties.index.unlinking_use_from_power",
       "en": "unlinking a use from a power",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1530
+      "line": 1586
     },
     {
       "id": "duties.index.uses_could_not_be_read",
       "en": "the uses could not be read",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 1407
+      "line": 1463
     },
     {
       "id": "duties.index.why_the_words_are_kept",
       "en": "{why}; the words are kept as written: \"{String}\".",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 601
+      "line": 656
     },
     {
       "id": "duties.index.why_the_words_are_kept_2",
       "en": "{why}; the words are kept as written: \"{String}\".",
       "module": "duties",
       "file": "bio-plane/src/duties/index.mjs",
-      "line": 697
+      "line": 752
     },
     {
       "id": "entities.declared.aliaswithdraw",

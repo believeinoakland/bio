@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8051 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8053 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23372,6 +23372,7 @@ export const WORD_ROWS = Object.freeze([
   ["duties.checks.an_obligation_names_who_owes","An obligation names who owes it: a registered office or body, an organisation acting for a public body, or a person a law binds. None was named. Nothing was written.",null,null,false,"code"],
   ["duties.checks.an_obligation_owed_by_an","An obligation owed by an organisation outside government names the office that enforces it, which is where a concern about it is addressed. None was named. Nothing was written.",null,null,false,"code"],
   ["duties.checks.an_organisation_outside_government_owes","An organisation outside government owes a public obligation only when it acts for a public body under a law, contract, franchise or grant. The record holds no such line from this organisation to a public body. Record that line, with its citation, first. Nothing was written.",null,null,false,"code"],
+  ["duties.checks.rule_name_in_several_layers","More than one of the places your team reads gives a rule by that name, so none was chosen. Name the place whose rule this is. Nothing was written.",null,null,false,"code"],
   ["duties.declared.declare","duty-directed: keyed by a new DUT- id; writes duties' rows and moves no bundle",null,null,false,"code"],
   ["duties.index.a_commitments_or_windows_date","a commitment's or window's date is a calendar day or a date-time.",null,null,false,"code"],
   ["duties.index.a_court_source_names_a","a court source names a standard of kind court (an order, decree, or recommendation held as one).",null,null,false,"code"],
@@ -23428,6 +23429,7 @@ export const WORD_ROWS = Object.freeze([
   ["duties.index.proposing_obligation_no_stamp","proposing an obligation with no stamp",null,null,false,"code"],
   ["duties.index.proposing_response_no_stamp","proposing an obligation from a response with no stamp",null,null,false,"code"],
   ["duties.index.proposing_review_no_stamp","proposing a review with no stamp",null,null,false,"code"],
+  ["duties.index.rule_in_several_layers","more than one active layer gives a rule named {rule}: name the layer it is from ({layers}).",null,null,false,"code"],
   ["duties.index.say_the_act_owed_in","say the act owed, in 1 to {WORDS_MAX} characters (performance.act).",null,null,false,"code"],
   ["duties.index.say_why_in_your_own","say why, in your own words (cause).",null,null,false,"code"],
   ["duties.index.sector_no_acting_line","this organisation's sector is {sector}, and no {lines} line, and no source it rests on, ties it to a public body.",null,null,false,"code"],
