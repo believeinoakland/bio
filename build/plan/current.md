@@ -4,8 +4,6 @@
 **Jobs** · setup-words: SETUP-WORDS #1 session_018BhcedGkL4WZVApjwDazfX; record-grammar: RECORD-GRAMMAR #1 session_018Bhceem2iUdAZcA7dscA4j; civil-time: CIVIL-TIME #1 session_018BhcefMpVQvXKBiGcUYBvE; calc-grammar: CALC-GRAMMAR #1 session_018BhcefSWG1wRZtFGbsrFuA; connection-grammar: CONNECTION-GRAMMAR #1 session_018BhcegRDtn8p6dt8ssxJKJ; test-support: TEST-SUPPORT #1 session_018BhcecgY3PBTrL4y2Ck7MT; runtime-limits: RUNTIME-LIMITS #1 session_018BhcegsnZTq6ndhV2RKA4f; signatures: SIGNATURES #1 session_018BhceeVjx2uYzrUetpWc1A; bundler: BUNDLER #1 session_018BhcecEeYk8AL3QJSwTuwv; court-citations: COURT-CITATIONS #1 session_018Bhced5Zt4Dzas5JyDcobU; id-spaces: ID-SPACES #1 session_018BhcefQuX8MaDHHFsk3hQ2; subresources: SUBRESOURCES #1 session_018Bhceg41wru6Q7DdChuvfB; structured-text-reader: STRUCTURED-TEXT-READER #1 session_018BhcedH8QG1p1M2ABfYXVF; mail-reader: MAIL-READER #1 session_018Bhcefa3SdZX44kR48Ukpf; csv-reader: CSV-READER #1 session_018BhcedVAhBAdjjiLzwetSC; office-readers: OFFICE-READERS #1 session_018BhcegdvdcHawV5kVZ1wKW; odf-reader: ODF-READER #1 session_018BhcefXKEEqrV3LsP4yTXY; pdf-reader: PDF-READER #1 session_018Bhcefr6qakyreu8WK9cuR; format-registry: FORMAT-REGISTRY #1 session_018BhcegEQXWdwyKyz85ehDj; text-chain: TEXT-CHAIN #1 session_018BhcefLjzJMZjCWK4WMZtR; docprofile: DOCPROFILE #1 session_018BhcedMxNPcZhctb9emQwK; doctypes: DOCTYPES #1 session_018Bhcecc4twXKUaZ83a4k6m; legistar-reader: LEGISTAR-READER #1 session_018Bhcedw3wLYumisgwbSDYf; roster-reader: ROSTER-READER #1 session_018BhcegL9Z2aotsAHfwYdpm; court-doctypes: COURT-DOCTYPES #1 session_018BhceeKJPr2wV1i3F1M6U6; register-readers: REGISTER-READERS #1 session_018BhceejwjKtfM2xJWBwiY8; budget-doctypes: BUDGET-DOCTYPES #1 session_018BhcefzxPPbS2J62Txnk3L; image-codecs: IMAGE-CODECS #1 session_018BhcegW9K1yhVCSYsMB8Ve; pdf-pixels: PDF-PIXELS #1 session_018BhcedB5GgMUpTVDfuXRuA; image-cover: IMAGE-COVER #1 session_018BhcecpR3Z1ErVEX6eAheX; doc-clean: DOC-CLEAN #1 session_018BhcedJp6SW8wmUGjgoTVP; pdf-worker: PDF-WORKER #1 session_018BhcegpWcawG1J18QR2ZJE; ocr-worker: OCR-WORKER #1 session_018BhceeL6Gsvfy3WXU2DyNM; sheet-worker: SHEET-WORKER #1 session_018BhceeMaKWRBqJpfWkzYJg; file-scanner: FILE-SCANNER #1 session_018BhcecnyytTT3cMe1k3Zku; reader-container: READER-CONTAINER #1 session_018BhcedfcFpkDwfqT6uTLcn; jurisdictions: JURISDICTIONS #2 session_018BhcefMFW1bhVhh3w9sjUp; ooxml: OOXML #1 session_018BhcedTff8SmCMqu2EScxc
 **Owed** · none
 
-T53 is the beta's build. By Bob's direction (K5417) nothing is built until the beta is designed whole and integrated into one comprehensive build plan: the design lanes (`build/plan/beta/LANES.md`) design, the PLANNING lane turns their designs into drafted requirement lines and this plan, BOB reviews and writes them, and only then does round R1 open. The entries T52 left are in `build/plan/carried-T52-R1.md`; the test sweep (option A, K5258) is the TESTS-SWEEP lane's, merged before R1.
-
 # Plan T53 · round R1, the beta's build
 
 **Status** · written by BOB #326 from PLANNING L57's READY draft (K5569, K5570) and its detail files, with K5571-K5576. One round (K5567: no R3); each module's detail in `build/plan/T53-R1/<module>.md`: its rows of every input, verbatim. Entries here are cause ids and a short clause; their pointers (requirement ids, lane files) are in the rows file. Modules and layers follow `modules.json`.
@@ -222,6 +220,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - T53-144 · N1257 (K5451) · a team writes its own layers
 - T53-145 · A2 (K5468) · member states a government's year
 - T53-146 · N1257, K5458 · CAPABILITIES rows
+- T53-542 · K5650, jurisdictions R99, R114 · read a fact's `layer` as well as `profile`
 - rows: `build/plan/T53-R1/local-facts.md`
 **connections**
 - T53-147 · N1260 (K1469) · `named_in` hop end and hub `[waits: M-F1]`
@@ -526,6 +525,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - T53-293 · N1257, K5458 · CAPABILITIES rows
 - T53-294 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-295 · K5565 · English in tests: its entry
+- T53-543 · K5650, jurisdictions R102 · `actionZone` reads `governingZone(ids, team, layer)`, not a profile's `time_zone`
 - rows: `build/plan/T53-R1/actions.md`
 **action-holds**
 - T53-296 · K5565 · English in tests: its entry
@@ -646,6 +646,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - C T52-41
 - T53-352 · N824, K5504, N1257 · CAPABILITIES rows
 - T53-353 · K5565 · English in tests: its entry
+- T53-544 · K5650, jurisdictions R14, R105 · `seeds.test.mjs:408` compares the unmatched bodies as a set; `setup.mjs:3052` copies `records_help` as a list
 - rows: `build/plan/T53-R1/instance-setup.md`
 **op-capabilities**
 - T53-354 · K4168, N824, N858 · CAPABILITIES rows
@@ -842,6 +843,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - T53-459 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-460 · K5565 · English in tests: its entry
 - T53-533 · jurisdictions R105 (N1257, DEC-404) · `help-records.mjs` picks the chosen law's block
+- T53-545 · K5650, jurisdictions R105 · `help-records.mjs:33-35` reads `view.records_help` as a list
 - rows: `build/plan/T53-R1/screens-action.md`
 **control-plane**
 - T53-461 · N1264, K4599 · routes `screenread`, folded admission

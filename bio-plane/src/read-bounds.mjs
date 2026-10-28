@@ -191,7 +191,8 @@ const TABLE = {
     cell_kept_chars: same(MiB, k("sheet", "cell_kept_chars")),
     sheets: same(1000, k("sheet", "sheets")),
   },
-  xlsx: { declared_text: bytes(32 * MiB, k("xlsx", "declared_text"), MB50) },
+  /* the standard is 25 MB (25,000,000 bytes): OFFICE-READERS measured a 50 MB declared text not held under the 85 % memory bar (150,000 rows / 33.4 MB at 82-87 %, 120,000 rows / 26.6 MB at 77.8 %; K5648). The alpha was 32 MiB; R29 keeps it never above the standard, so it is 25,000,000 too (inert: the active figure is the standard). */
+  xlsx: { declared_text: row(25000000, 25000000, MB50, k("xlsx", "declared_text")) },
   ods: {
     content_xml: bytes(20 * MiB, k("ods", "content_xml"), MB50),
     repeat_units: same(262144, k("ods", "repeat_units")),

@@ -45,7 +45,7 @@ test("R37: the second limit of each kind (pages, rows, unpacked bytes, members, 
 test("R37: the alpha figures stay in the alpha column; the beta is never below the alpha", () => {
   assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
   assert.equal(READ_BOUNDS.archive.uploaded_bytes.alpha, 256 * MiB);
-  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 32 * MiB);
+  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 25000000, "K5648: R29 keeps the alpha never above the 25 MB standard");
   for (const kind of ["document", "text", "spreadsheet", "image", "archive", "message", "pdf", "csv"]) {
     const [k, n] = wholeReadRow(kind);
     assert.ok(boundOf(k, n) >= READ_BOUNDS[k][n].alpha, kind);
@@ -267,5 +267,6 @@ test("T53-511: each reader row's active figure is its standard; the two document
   assert.equal(READ_BOUNDS.office.text_bytes.standard, 20 * MiB);
   assert.equal(boundOf("office", "text_bytes"), 20 * MiB);
   assert.equal(boundOf("archive", "member_bytes"), 2 * GiB);
+  assert.equal(boundOf("xlsx", "declared_text"), 25000000);
   assert.equal(boundOf("scan", "max_bytes"), 524288000);
 });
