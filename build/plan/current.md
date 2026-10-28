@@ -144,6 +144,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **image-cover**
 - T53-57 · A4 (DEC-460) · `redrawPicture`, `photoFactsOf`
 - T53-58 · K5565 · English in tests: its entry
+- T53-513 · K5628 · stream filtered rows into the deflater: peak bounded by a band, never the whole bitmap; frame and redraw limits unchanged
 - rows: `build/plan/T53-R1/image-cover.md`
 **doc-clean**
 - T53-59 · N824, K2334, K1485 · CAPABILITIES rows
