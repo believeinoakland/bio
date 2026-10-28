@@ -8782,6 +8782,19 @@ def w490(key, en, note):
 w490('screen.ai.notice.atsend', 'You are shown this once, with the first question that goes to the provider, and nothing goes before you send it.', "under connect's and projectai's notice: when the notice is acknowledged, by aisend's recipientNoticeSeen (ai-accounts R51)")
 w490('screen.queue.ai.signinremoved', "Your sign-in no longer serves {project}: a personal subscription never pays for a project's work. Members' acts there now use their own accounts, or the team's.", "the owner's one notice when a project's sign-in account is removed by migration (ai-accounts R59, R62)")
 
+def w491(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-491: ' + note))
+# K5730 (T53-134): content's part names and typing labels, from words-unreviewed, reviewed against content.part_kind.* and screen.document.attest.*
+for k, en in [('footnote', 'footnote'), ('endnote', 'endnote'), ('header', 'page header'), ('footer', 'page footer'), ('comment', 'comment'),
+              ('speaker_note', 'speaker notes'), ('master_text', 'slide master'), ('text_box', 'text box')]:
+    w491('content.extent.part_name.' + k, en, "a part's plain name, as content.part_kind." + k + " names it after 'in a'")
+w491('content.extent.part_named', '{name} {n}', 'a part named with its number in the document: "footnote 3"')
+w491('content.extent.part_unnamed', 'a part of the document outside its body text', 'a part whose kind the reader did not name')
+w491('content.part_kind.body', 'in the body text', 'the unmarked kind, worded as content.part_kind.footnote "in a footnote" is')
+w491('content.typed.checked', 'typed by {typist}, checked by {checkers}', 'content R64; as screen.document.attest.row and .checked')
+w491('content.typed.unchecked', 'typed by {typist}, not yet checked', 'content R64; as screen.document.attest.status')
+w491('content.typed.anonymous_member', 'a member of the team', 'content R64: a typist or checker credited without their name, as case-grammar.text.attested_member_group')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
