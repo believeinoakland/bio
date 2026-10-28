@@ -32,7 +32,7 @@ test("R3 T33 spaces: account, object, vendor, proceeding and person are known sp
   assert.ok(hasError(breakT((p) => { p.spaces.licence = p.spaces.person; }), "UNKNOWN_SPACE", "spaces.licence"));
   assert.ok(hasError(breakT((p) => { p.spaces.person.kinds = []; }), "UNKNOWN_SECTION", "spaces.person.kinds"), "kinds are enactment's only");
   /* one form per person scheme */
-  assert.deepEqual(t.spaces.person.forms.map((f) => f.form), ["minute-person", "bar-number"]);
+  assert.deepEqual(t.spaces.person.forms.map((f) => f.form), ["minute-person", "bar-number", "filer-number", "licence-number"]); /* R130: the filer and licence schemes need forms */
   assert.deepEqual(get(FIRST).spaces.person.forms.map((f) => f.form), ["legistar-person"]);
   /* the view carries them */
   const v = combine([TEST]).view;
@@ -177,11 +177,13 @@ test("R44 T33 every deadline and calendar fact carries status and a sourced basi
   }
   /* outside a test profile: researched on a measurement, ruled on a ruling */
   const F = (fn) => breakF(fn);
+  /* the layers lay their rules end to end (R114): the rule's place is found, not assumed */
+  const at0 = `deadlines[${get(FIRST).deadlines.findIndex((d) => d.rule === "records_response")}]`;
   assert.ok(F((p) => { dl(p, "records_response").basis = "M-190"; }).ok);
-  assert.ok(hasError(F((p) => { dl(p, "records_response").basis = "K1504"; }), "BASIS_INVALID", "deadlines[0].basis"));
+  assert.ok(hasError(F((p) => { dl(p, "records_response").basis = "K1504"; }), "BASIS_INVALID", `${at0}.basis`));
   assert.ok(F((p) => { dl(p, "records_response").status = "ruled"; dl(p, "records_response").basis = "K1504"; }).ok);
-  assert.ok(hasError(F((p) => { dl(p, "records_response").basis = "UNMEASURED"; }), "BASIS_INVALID", "deadlines[0].basis"));
-  assert.ok(hasError(F((p) => { delete dl(p, "records_response").status; }), "BASIS_INVALID", "deadlines[0].status"));
+  assert.ok(hasError(F((p) => { dl(p, "records_response").basis = "UNMEASURED"; }), "BASIS_INVALID", `${at0}.basis`));
+  assert.ok(hasError(F((p) => { delete dl(p, "records_response").status; }), "BASIS_INVALID", `${at0}.status`));
   assert.ok(hasError(F((p) => { p.weekend.basis = "TEST"; }), "BASIS_INVALID", "weekend.basis"));
 });
 
@@ -254,7 +256,7 @@ test("R47 closure lists: a holiday entry's list and citation; a year once per li
   const v = combine([FIRST]).view;
   const lists = v.holidays.filter((h) => h.list).map((h) => [h.list, h.year, h.citation]);
   /* R85 (T45, M-T45-1): 2027 only where a primary source states it, the federal list (OPM's schedule under 5 U.S.C. § 6103) */
-  assert.deepEqual(lists.map((x) => `${x[0]} ${x[1]}`), ["judicial 2026", "city 2026", "federal 2026", "federal 2027", "judicial 2018", "judicial 2020"]);
+  assert.deepEqual(lists.map((x) => `${x[0]} ${x[1]}`).sort(), ["city 2026", "federal 2026", "federal 2027", "judicial 2018", "judicial 2020", "judicial 2026"]);
   assert.ok(lists.every((x) => typeof x[2] === "string" && x[2].length));
   assert.deepEqual(v.deadlines.find((d) => d.rule === "records_response").observed.closures, "city");
 });

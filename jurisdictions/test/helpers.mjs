@@ -113,7 +113,7 @@ export function walkFacts(p, fn) {
   each(p.pointers, "pointers");
   (p.pointers || []).forEach((x, i) => { if (x.hours) fn(x.hours, `pointers[${i}].hours`); });
   /* T50 (R93, R94): the records-request help block and the forums */
-  if (p.records_help) fn(p.records_help, "records_help");
+  if (Array.isArray(p.records_help)) each(p.records_help, "records_help"); else if (p.records_help) fn(p.records_help, "records_help");
   each(p.forums, "forums");
 }
 /** The object at a walkFacts path. */
