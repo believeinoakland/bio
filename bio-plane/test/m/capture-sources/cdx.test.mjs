@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import {
   EMPTY_BODY_DIGEST, parseCdx, cdxTimestampToIso, rowRefusal, selectCapture, replayLocator, cdxQuery, archiveHop,
 } from "../../../src/cdx.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ORIG = "https://records.example.gov/minutes/2026-03.pdf";
 const KEY = "gov,example,records)/minutes/2026-03.pdf";
@@ -55,7 +55,7 @@ test("R29: rowRefusal gives each reason in order, null for a row that may stand 
   assert.equal(rowRefusal(row("20260301120000", { statuscode: "301", digest: "" })), "statuscode 301, not 200");
   assert.equal(rowRefusal(row("20260301120000", { statuscode: "-" })), "statuscode -, not 200");
   assert.equal(rowRefusal(row("20260301120000", { digest: "" })), "no digest");
-  assert.equal(rowRefusal(row("20260301120000", { digest: EMPTY_BODY_DIGEST })), localize("capture-sources.cdx.digest_is_the_empty_body", "digest is the empty-body digest: the capture holds nothing"));
+  assert.equal(rowRefusal(row("20260301120000", { digest: EMPTY_BODY_DIGEST })), word("capture-sources.cdx.digest_is_the_empty_body"));
 });
 
 test("R30: every refused or too-late row is listed with its reason; none usable is NO_USABLE_CAPTURE", () => {
@@ -67,7 +67,7 @@ test("R30: every refused or too-late row is listed with its reason; none usable 
   assert.equal(typeof s.detail, "string");
   assert.deepEqual(s.considered, [
     { timestamp: "20260301120000", refused: "statuscode 301, not 200" },
-    { timestamp: "20260302120000", refused: localize("capture-sources.cdx.digest_is_the_empty_body", "digest is the empty-body digest: the capture holds nothing") },
+    { timestamp: "20260302120000", refused: word("capture-sources.cdx.digest_is_the_empty_body") },
     { timestamp: "20260305120000", refused: "later than the requested bound 20260304000000" },
     { timestamp: null, refused: "not a row" },
   ]);
@@ -119,13 +119,13 @@ test("R34: archiveHop states the archive's dated claim, unsigned and saying why"
   const h = archiveHop(chosen(), REPLAY, { mementoDatetime: "Tue, 03 Mar 2026 12:00:00 GMT", warcSource: "ia-crawl-1.warc.gz" });
   assert.deepEqual(Object.keys(h).sort(), ["asserts", "bound", "document_address", "evidence", "unsigned_reason", "via", "who"]);
   assert.equal(h.who, word("capture-sources.name.internet_archive_wayback"));
-  assert.equal(h.asserts, localize("capture-sources.cdx.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: ORIG, archived_at: "2026-03-03T12:00:00Z", statuscode: "200" }));
+  assert.equal(h.asserts, word("capture-sources.cdx.these_bytes_were_served_for", { original: ORIG, archived_at: "2026-03-03T12:00:00Z", statuscode: "200" }));
   for (const part of ["timestamp 20260303120000", "digest ABCDEFGHIJKLMNOPQRSTUVWXYZ234567 (base32 SHA-1, over the body as they stored it)",
     "mimetype application/pdf", "WARC record length 6255, which is THEIR compressed record size and not the length of what we received",
     "Memento-Datetime: Tue, 03 Mar 2026 12:00:00 GMT", "x-archive-src: ia-crawl-1.warc.gz", `replayed from ${REPLAY}`])
     assert.ok(h.evidence.includes(part), part);
   assert.equal(h.bound, false);
-  assert.match(h.unsigned_reason, /no cryptographic attestation.*dated third-party claim we are trusting, not verifying/);
+  assert.equal(h.unsigned_reason, word("cdx.unsigned_reason"));
   assert.equal(h.via, "archive.org");
   assert.equal(h.document_address, ORIG);
   const plain = archiveHop(selectCapture([row("20260303120000", { mimetype: undefined, length: undefined })]).chosen, REPLAY);
@@ -154,7 +154,7 @@ test("R36: the chosen capture keeps the CDX urlkey and the hop's evidence names 
   /* An index row with no urlkey: stated, never invented. */
   const none = selectCapture([row("20260303120000", { urlkey: undefined })]).chosen;
   assert.equal(none.urlkey, null);
-  assert.ok(archiveHop(none, REPLAY).evidence.includes(localize("capture-sources.cdx.the_cdx_record_carried_no", "the CDX record carried no urlkey")));
+  assert.ok(archiveHop(none, REPLAY).evidence.includes(word("capture-sources.cdx.the_cdx_record_carried_no")));
 });
 
 /* R37 (Memento, RFC 7089): the Wayback CDX above is one source; the Memento lookup is

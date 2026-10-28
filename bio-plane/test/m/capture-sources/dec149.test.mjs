@@ -10,7 +10,7 @@ import { readDriveAddress, driveHop, classifyDriveBaseline } from "../../../src/
 import { keepRenderBodies, renderBlock } from "../../../src/render.mjs";
 import { mementoHop, readMementoAnswer, mementoRow } from "../../../src/capture-sources/memento.mjs";
 import { selectCapture } from "../../../src/cdx.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OLD = /\b(?:the|this) (?:plane|instance)\b/i;
 const CIVICSMITH = word("queue.capture-completed-unattended.who");
@@ -26,13 +26,13 @@ const html = { format: { format: "html" } }, odt = { format: { format: "odt" } }
 test("R40 (DEC-149, drive.mjs:216): an unread Drive shape is not a document your group's Civicsmith can promise to have captured", () => {
   const v = readDriveAddress("https://drive.google.com/some/new/shape");
   assert.equal(v.shape, "unknown");
-  assert.equal(v.why, localize("capture-sources.drive.this_is_a_drive_host", "this is a Drive host ({host}) with a path shape this recogniser does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document your team's Civicsmith can promise to have captured.", { host: v.host }));
+  assert.equal(v.why, word("capture-sources.drive.this_is_a_drive_host", { host: v.host }));
   assert.doesNotMatch(v.why, OLD);
 });
 
 test("R42 (DEC-149, drive.mjs:254): the export address was COMPOSED BY YOUR GROUP'S CIVICSMITH", () => {
   const h = driveHop(drive, { retrieved: "2026-09-27T01:00:00Z" });
-  const composed = localize("capture-sources.drive.the_export_address_was_composed", "the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in {address}, and no part of it was read from the request (D-112)", { address: DOC });
+  const composed = word("capture-sources.drive.the_export_address_was_composed", { address: DOC });
   assert.ok(h.evidence.split("; ").includes(composed), h.evidence);
   assert.doesNotMatch(h.evidence, OLD);
 });
@@ -42,7 +42,7 @@ test("R46 (DEC-149, drive.mjs:444, :445, :448, :449, :451, :454, :456, :458): ev
   const cases = [
     [":444", [row(EXPORT, html)], fromExport,
       word("drive.why.group_civicsmith_recorded", { said: said.html })],
-    [":445", [row(EXPORT, odt)], fromExport, localize("capture-sources.drive.your_teams_civicsmith_recorded_fetching", "your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}", { exportAddress: EXPORT, said: said.odt })],
+    [":445", [row(EXPORT, odt)], fromExport, word("capture-sources.drive.your_teams_civicsmith_recorded_fetching", { exportAddress: EXPORT, said: said.odt })],
     [":448", [row(DOC, odt)], fromPage,
       word("drive.why.group_civicsmith_recorded_fetching", { fetched_address: DOC, said: said.odt })],
     [":449", [row(DOC)], fromPage,
@@ -68,7 +68,7 @@ const ANSWER = { ok: true, html: "<html><body><p>Agenda</p></body></html>", navi
 test("R9 (DEC-149, render.mjs:343): bytes that could not be kept say your group's Civicsmith could not keep them", async () => {
   const [entry] = await keepRenderBodies(ANSWER, { put: async () => { throw new Error("store full"); }, sha256: async () => "c".repeat(64) });
   assert.equal(entry.sha256, "undetermined");
-  assert.equal(entry.digest_reason, `${CIVICSMITH} could not keep the bytes (store full)`);
+  assert.equal(entry.digest_reason, word("render.group_civicsmith_keep", { entry: "store full" }));
   assert.doesNotMatch(entry.digest_reason, OLD);
 });
 
@@ -84,8 +84,7 @@ test("R14 (DEC-149, render.mjs:480): a wait word never seen is neither the condi
     { pageUrl: "https://portal.example.gov/a", shellSha: "0".repeat(64), at: "2026-10-07T00:00:00Z" });
   assert.equal(b.render.completeness, "undetermined");
   const said = b.render.undetermined.find((u) => u.startsWith("completeness:"));
-  assert.ok(said.includes("the renderer reported the wait fired on `dom_settled`, which is neither the `networkidle` condition "
-    + `${CIVICSMITH} asked for nor a timeout`), said);
+  assert.ok(said.includes(word("capture-sources.render.the_renderer_reported_the_wait", { waitFired: "dom_settled", until: "networkidle" })), said);
   assert.doesNotMatch(said, OLD);
 });
 
@@ -95,6 +94,6 @@ test("R37 (DEC-149, memento.mjs:256): the memento's digest is computed by your g
     headers: { "Memento-Datetime": "Tue, 03 Mar 2026 12:00:00 GMT", Link: `<${ORIG}>; rel="original"` } });
   const chosen = selectCapture([mementoRow(answer, { sha256: SHA, bytes: 10 })]).chosen;
   const h = mementoHop(chosen, answer.memento_uri, { answer });
-  assert.ok(h.evidence.includes(localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: SHA })), h.evidence);
+  assert.ok(h.evidence.includes(word("capture-sources.memento.sha_256_digest_computed_by", { digest: SHA })), h.evidence);
   assert.doesNotMatch(h.evidence, OLD);
 });

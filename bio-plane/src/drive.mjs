@@ -301,10 +301,7 @@ export const DRIVE_CONVERT_ENGINE = "google-export";
    and CAP-11 is the measurement. A letter typed here is the move Bob's 5.8
    forbids — a letter now, lowered later under authored legs. */
 const DRIVE_CONVERT_CAP = null;
-const DRIVE_CONVERT_SOURCE = "unmeasured: Google's export is a conversion made at fetch time of a "
-  + "stored original nobody outside Google has seen, and its text stability and fidelity across "
-  + "fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the "
-  + "byte instability is D-351's)";
+const DRIVE_CONVERT_SOURCE = localize("capture-sources.drive.convert_source", "unmeasured: Google's export is a conversion made at fetch time of a stored original nobody outside Google has seen, and its text stability and fidelity across fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the byte instability is D-351's)");
 
 /** The `convert(google-export, <format>)` step for a recognised, harvestable
  *  Drive address. Pure, like everything in this module. */
