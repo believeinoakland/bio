@@ -58,6 +58,8 @@ import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
 import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
 import { csvEntry } from "./csv.mjs";
+import { STRUCTURED_TEXT_ENTRIES } from "./structured-text-reader/index.mjs";
+import { MAIL_ENTRIES } from "./mail-reader/index.mjs";
 import * as csv from "./csv.mjs";
 import * as ooxml from "./ooxml.mjs";
 import { localize, word, hasWord } from "./setup-words/index.mjs";
@@ -757,6 +759,10 @@ registerFormat(csvEntry);
 registerFormat(cfbEntry("doc", ["WordDocument"], "WordDocument", []));
 registerFormat(cfbEntry("xls", ["Workbook", "Book"], "Workbook", []));
 registerFormat(cfbEntry("ppt", ["PowerPoint Document"], "PowerPoint Document", []));
+/* The readers' own entries, unmodified (R33): structured-text-reader's (json, ndjson, xml, svg, kml, kmz, geojson, ics, vcf, srt, vtt) and
+   mail-reader's (eml, msg, mbox), before the archives so a `kmz` is asked before the plain ZIP. */
+for (const entry of STRUCTURED_TEXT_ENTRIES) registerFormat(entry);
+for (const entry of MAIL_ENTRIES) registerFormat(entry);
 for (const entry of ARCHIVE_ENTRIES) registerFormat(entry);
 
 /* THE ZIP ENTRY (T35-11; N688, K1844, K1852) — a plain ZIP archive, recognised

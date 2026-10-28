@@ -308,8 +308,10 @@ test("R17: DOCS T13 — a note that mentions <html> or <!DOCTYPE html> in its fi
       assert.notEqual((await detectFormat(source(b), ct)).format, "html", n);
     }
     // the declared type still decides when no entry claims the bytes (pass 2), and a real page is still a page
-    assert.equal(detectFormat(b, "text/html").format, "html");
-    assert.equal(detectFormat(b, "text/html").confidence, "likely");
+    /* a note laid out as a mail message is `eml` by its headers (mail-reader, R33), and bytes outrank the declared type */
+    const claimed = n.startsWith("From: ") ? "eml" : "html";
+    assert.equal(detectFormat(b, "text/html").format, claimed);
+    if (claimed === "html") assert.equal(detectFormat(b, "text/html").confidence, "likely");
   }
   isHit(detectFormat(enc("<!DOCTYPE html>\n<html><body>The page</body></html>"), "text/plain"), "html", "certain");
 });
