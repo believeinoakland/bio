@@ -17,7 +17,7 @@ import {
 } from "./fixtures.mjs";
 import { CASES, pairsOf } from "./golden-cases.mjs";
 import { registryOf, readWith, typeFor } from "./read.mjs";
-import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 const { DOCTYPES, registerDoctypes } = dt;
 const PA = view(PORT_ALDER);
@@ -255,15 +255,15 @@ test("R3 R8 the minutes-due date is the profile's practice counted by civil-time
   // Monday 2 March: ten business days, skipping two weekends and Harbor Day, end Tuesday 17 March
   const b = due("3/2/2026", bv);
   assert.equal(b.expected_by, "2026-03-17");
-  assert.match(b.why, /more than 10 business days ago/);
-  assert.equal(due("3/2/2026", bv, "2026-03-17T12:00:00Z").why, localize("doctypes.meeting-calendar.taken_place", "this meeting has taken place and no minutes are offered yet"),
+  assert.equal(b.why, word("doctypes.meeting-calendar.overdue", { amount: "10", unit: "business days" }));
+  assert.equal(due("3/2/2026", bv, "2026-03-17T12:00:00Z").why, word("doctypes.meeting-calendar.taken_place"),
     "on the due day itself, not yet late");
   // the same period in calendar days is not the same date
   assert.equal(due("3/2/2026", PA).expected_by, "2026-03-12");
   // a year the profile's closures do not cover: not counted, and why, never counted as though it had no holidays
   const late = due("12/28/2026", bv, "2027-02-01T12:00:00Z");
   assert.equal(late.expected_by, null);
-  assert.match(late.why, /could not be counted.*2027/);
+  assert.equal(late.why, word("doctypes.meeting-calendar.due_unknown", { why: word("doctypes.meeting-calendar.period_not_counted_here", { amount: "10", unit: "business days", reason: word("civil-time.calendar.uncovered_office", { year: "2027" }) }) }));
   // no weekend stated: a business count is not made (the weekend is never assumed)
   const noWeekend = { ...structuredClone(BUSINESS), id: "port-alder-noweekend-test" };
   delete noWeekend.weekend;
@@ -272,13 +272,13 @@ test("R3 R8 the minutes-due date is the profile's practice counted by civil-time
   // the held first profile: 10 business days (OMC 2.20.160) on the City's holiday list (K1504 (5)), as its practice names.
   // Tuesday 13 October 2026 gives 27 October; 19 November gives 7 December (Thanksgiving and the day after skipped)
   assert.equal(due("10/13/2026", HELD).expected_by, "2026-10-27");
-  assert.match(due("10/13/2026", HELD).why, /more than 10 business days ago/);
+  assert.equal(due("10/13/2026", HELD).why, word("doctypes.meeting-calendar.overdue", { amount: "10", unit: "business days" }));
   assert.equal(due("11/19/2026", HELD).expected_by, "2026-12-07");
   // the same practice naming no closure list, in a view holding its closures only as named lists: not counted, and why
   const unnamed = structuredClone(HELD);
   delete unnamed.practice.minutes_due_days.closures;
   assert.equal(due("10/13/2026", unnamed).expected_by, null);
-  assert.match(due("10/13/2026", unnamed).why, /10 business days could not be counted/);
+  assert.equal(due("10/13/2026", unnamed).why, word("doctypes.meeting-calendar.due_unknown", { why: word("doctypes.meeting-calendar.period_not_counted_here", { amount: "10", unit: "business days", reason: word("civil-time.calendar.uncovered_office", { year: "2026" }) }) }));
 });
 
 /* --------------------------------------------------------------------- R18 */
@@ -398,11 +398,11 @@ test("R23 a reading or a diff that found nothing is a failed reader, and a mass 
 
 test("R24 every no says which no and why", () => {
   assert.match(typeOf("regulation").parse({ text: "DOES ORDAIN", view: PA }).number_why, /no caption/);
-  assert.match(typeOf("regulation").parse({ text: PA_BYLAW, view: PA }).number_why, /carries no number/);
-  assert.equal(typeOf("regulation").parse({ text: "nothing", view: PA }).form_why, localize("doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section"));
+  assert.equal(typeOf("regulation").parse({ text: PA_BYLAW, view: PA }).number_why, word("doctypes.regulation.proposed_no_number"));
+  assert.equal(typeOf("regulation").parse({ text: "nothing", view: PA }).form_why, word("doctypes.regulation.no_form"));
   assert.match(typeOf("regulation").parse({ text: "DOES ORDAIN", view: PA }).sections_why, /SECTION 1/);
-  assert.equal(typeOf("meeting_agenda").parse({ text: PA_AGENDA, view: EMPTY }).references_why, localize("doctypes.meeting-agenda.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read"));
-  assert.equal(typeOf("meeting_minutes").parse({ text: PA_MINUTES, view: EMPTY }).body_why, localize("doctypes.meeting-minutes.no_body_profile", "no active jurisdiction profile says how a body is named, so which body met is not read"));
+  assert.equal(typeOf("meeting_agenda").parse({ text: PA_AGENDA, view: EMPTY }).references_why, word("doctypes.meeting-agenda.no_file_shape"));
+  assert.equal(typeOf("meeting_minutes").parse({ text: PA_MINUTES, view: EMPTY }).body_why, word("doctypes.meeting-minutes.no_body_profile"));
   assert.match(typeOf("staff_directory").parse({ text: PA_DIRECTORY.replace("Harbor Staff Directory", "Harbor"), view: PA }).title_why, /./);
   assert.match(typeFor(REG, { text: "plain", view: PA }).type.key, /generic/);
   const cal = typeOf("meeting_calendar");

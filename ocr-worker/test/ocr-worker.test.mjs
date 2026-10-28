@@ -42,6 +42,11 @@ import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels as realRenderPicture } from "../../pdf-worker/src/picturepixels.mjs";
 import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
 import { checkAnchor, checkConfidence } from "../../bio-plane/src/textchain.mjs";
+import { WORD_ROWS, word } from "../../bio-plane/src/setup-words/index.mjs";
+
+/* A note's text, read from the word table: the key's sentence with each `{placeholder}` free (K5313). */
+const noteRx = (key) => new RegExp(WORD_ROWS.find((r) => r[0] === key)[1].split(/\{[A-Za-z0-9_]+\}/)
+  .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\s\\S]*"));
 import { BASIS_GRADES } from "../../bio-plane/src/record-grammar/index.mjs";
 import { discoverMembers, verifyStatic } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
@@ -356,16 +361,15 @@ console.log("\n--- A3 · R4, R6: pages — a non-empty array; ONE page per call,
     [many.body.ok, many.body.pages.map((p) => p.page), w.render.calls.map((c) => c.page)], [true, [2], [2]]);
   t("R6 the rest of the distinct integers, ascending, are `deferred` and not attempted", many.body.deferred, [5, 9, 12]);
   t("R6 `notes` says why: one page per invocation, the measured memory bound, whole-document unmeasured",
-    [many.body.notes.some((n) => /ONE PAGE PER INVOCATION/.test(n) && /61\.3 MB/.test(n) && /75\.7 MB frame is killed/.test(n)
-                                && /UNMEASURED/.test(n) && /\(5, 9, 12\)/.test(n))], [true]);
+    [many.body.notes.includes(word("ocr-worker.member.this_member_transcribes_one_page", { length: "3", deferred: "5, 9, 12" }))], [true]);
   const one = await w.ask(good({ pages: [4, 4] }));
   t("R6 nothing deferred -> `deferred` is empty and no deferral note is written",
-    [one.body.deferred, one.body.notes.some((n) => /ONE PAGE PER INVOCATION/.test(n))], [[], false]);
+    [one.body.deferred, one.body.notes.some((n) => noteRx("ocr-worker.member.this_member_transcribes_one_page").test(n))], [[], false]);
 
   const wr = world({ render: stubRender({ ok: false, reason: "NO_SUCH_PAGE", pageCount: 1 }) });
   const refused = await wr.ask(good({ pages: [7, 3] }));
   t("R6 a refused page still names what it deferred, with the note",
-    [refused.body.ok, refused.body.page, refused.body.deferred, refused.body.notes.some((n) => /ONE PAGE PER INVOCATION/.test(n))],
+    [refused.body.ok, refused.body.page, refused.body.deferred, refused.body.notes.some((n) => noteRx("ocr-worker.member.this_member_transcribes_one_page").test(n))],
     [false, 3, [7], true]);
 }
 
@@ -399,11 +403,11 @@ console.log("\n--- A4 · R5: the binding, the key, and a capture genuinely absen
 console.log("\n--- A5 · R7: the page's refusals, in their order, every one 200 ok:false ---");
 {
   /* 1 · ENGINE_ABSENT, before any bytes are touched: the renderer is never called. */
-  const w1 = world({ engine: stubEngine({ check: "the wasm core did not arrive" }),
+  const w1 = world({ engine: stubEngine({ check: "stub-engine-check-reason" }),
                      render: stubRender({ ok: false, reason: "NOT_A_PDF" }) });
   const r1 = await w1.ask(good());
   t("R7.1 ENGINE_ABSENT is answered 200 ok:false, with the engine's reason",
-    [r1.status, r1.body.ok, r1.body.reason, r1.body.refusal.why], [200, false, "ENGINE_ABSENT", "the wasm core did not arrive"]);
+    [r1.status, r1.body.ok, r1.body.reason, r1.body.refusal.why], [200, false, "ENGINE_ABSENT", "stub-engine-check-reason"]);
   t("R7.1 checked before any bytes are touched: the page was never rendered", w1.render.calls.length, 0);
 
   /* 2 · PAGE_NOT_RENDERABLE forwards the renderer's own reason, whatever it is. */
@@ -439,7 +443,7 @@ console.log("\n--- A5 · R7: the page's refusals, in their order, every one 200 
     [r4.body.refusal.width, r4.body.refusal.height, r4.body.refusal.frame_bytes, r4.body.refusal.bound_bytes],
     [5000, 3066, 5000 * 3066 * 4, 61_300_000]);
   t("R7.4 and states a workload size, never a share of 128 MB",
-    [/NOT a share of any ceiling/.test(r4.body.refusal.why), /128/.test(r4.body.refusal.why)], [true, false]);
+    [r4.body.refusal.why === word("limit.ocr.frame_bytes", { width: "5000", height: "3066", frame: String(5000 * 3066 * 4), MAX_FRAME_BYTES: String(61_300_000) })], [true]);
   const w4b = world({ render: stubRender(pngPage(new Uint8Array([1, 2, 3]), 5000, 3065)) });
   const r4b = await w4b.ask(good());
   t("R7.4 a frame EXACTLY at the bound is not refused by it (it reaches the PNG reader, step 5)",
@@ -546,7 +550,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
   t("R10 regions with blank text or no four finite numbers are dropped: only the anchorable nine remain",
     got.map((r) => r.text), ["  lowest respon-", "sible\tbidder  ", "teh $50,000", "unrated", "over", "under", "nan", "string", "object"]);
   t("R10 the dropped are COUNTED on the wire, never kept as text with no anchor",
-    body.notes.some((n) => /^5 region\(s\) the engine returned carried no usable rectangle/.test(n)), true);
+    body.notes.includes(word("ocr-worker.member.unanchored_region_s_the_engine", { unanchored: "5" })), true);
   t("R18 the text is exactly what the decoder decoded: no joining, no trimming, no correction",
     got.slice(0, 3).map((r) => r.text), ["  lowest respon-", "sible\tbidder  ", "teh $50,000"]);
   t("R9 every region carries exactly text, source, confidence", [...new Set(got.map((r) => keys(r).join()))],
@@ -565,7 +569,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
     [...new Set(got.map((r) => (r.confidence === "none" ? "none" : r.confidence.basis)))].sort(), ["engine", "none"]);
   t("R9 R17 the PLANE's own confidence check accepts every region", got.filter((r) => checkConfidence(r.confidence) != null).length, 0);
   t("R17 the unrated are counted on the wire",
-    body.notes.some((n) => /^6 region\(s\) came back with no engine-computed confidence/.test(n)), true);
+    body.notes.includes(word("ocr-worker.member.unrated_region_s_came_back", { unrated: "6" })), true);
 
   const clean = world();
   const c = await clean.ask(good());
@@ -1415,7 +1419,7 @@ console.log("\n--- B1 · R11, R12, R13, R19: the committed bundle boots, and the
     [false, true, true]);
   const wd = await workerCall("ocr-wasm-as-data", "/version");
   t("R13 R19 a wasm core that did not arrive compiled: engine_loaded false, and it says so",
-    [wd.body.engine_loaded, /did not arrive as a compiled module/.test(wd.body.engine_unavailable)], [false, true]);
+    [wd.body.engine_loaded, wd.body.engine_unavailable === word("ocr-worker.tessengine.the_wasm_core_did_not_arrive")], [false, true]);
   for (const worker of ["ocr-wrong-model", "ocr-wasm-as-data"]) {
     const r = await ask("texty", [0], worker);
     t(`R7.1 R19 ${worker}: every page is refused ENGINE_ABSENT, before its bytes are looked at`,
@@ -1490,7 +1494,7 @@ console.log("\n--- B3 · R6: ONE page per invocation, on the real member ---");
   const { body } = await ask("scan", [2, 0, 1, 0]);
   t("R6 asked for three pages, it answers ONE — the lowest — and defers the rest",
     [body.ok, body.pages.map((p) => p.page), body.deferred], [true, [0], [1, 2]]);
-  t("R6 the note says why", body.notes.some((n) => /ONE PAGE PER INVOCATION/.test(n) && /UNMEASURED/.test(n)), true);
+  t("R6 the note says why", body.notes.some((n) => noteRx("ocr-worker.member.this_member_transcribes_one_page").test(n)), true);
   const past = await ask("scan", [3, 1, 1]);
   t("R6 R7.2 the lowest is taken even when the document has no such page, and the rest stay deferred",
     [past.body.reason, past.body.page, past.body.deferred, past.body.refusal.render.reason],
@@ -1502,7 +1506,7 @@ console.log("\n--- B3 · R6: ONE page per invocation, on the real member ---");
   const first = await ask("twopage", [1, 0]);
   t("R6 a two-page scan asked for both: page 0 transcribed, page 1 deferred with the note",
     [first.status, first.body.ok, first.body.pages.map((p) => p.page), first.body.deferred,
-     first.body.notes.some((n) => /ONE PAGE PER INVOCATION/.test(n))], [200, true, [0], [1], true]);
+     first.body.notes.some((n) => noteRx("ocr-worker.member.this_member_transcribes_one_page").test(n))], [200, true, [0], [1], true]);
   const second = await ask("twopage", first.body.deferred);
   t("R6 R8 R9 the deferred page, asked alone, is transcribed: page 1, nothing deferred, anchored to p1",
     [second.status, second.body.ok, second.body.pages.map((p) => p.page), second.body.deferred,

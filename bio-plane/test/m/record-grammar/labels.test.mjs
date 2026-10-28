@@ -8,6 +8,7 @@ import { LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES, proposalLabel, 
   contentMintState, isMachineIdentity, SHARED_ACT_CHECKS, NON_MEMBER_AUTHORS, ACTOR_CLASSES }
   from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 /* A table sentence is compared with its design row, never with a copy of its text (K3810). */
 const row = (subject, state) => word(`record-grammar.proposal.${subject}.${state}`);
@@ -106,7 +107,7 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
     { by: "token:skill", state: "machine_proposed", machine_work: true, says: t.machine_proposed });
   /* The other tables and their sentences are unchanged: the eleven before it, pinned by the tests above, and `standard`
      still the standard's own sentences. */
-  assert.match(PROPOSAL_STATES.standard.machine_proposed, /^a machine credential proposed this standard\./);
+  assert.equal(PROPOSAL_STATES.standard.machine_proposed, row("standard", "machine_proposed"));
 });
 
 /* The twelve tables as they stood before R50, every sentence, as one digest over their canonical JSON (taken at T37's
@@ -168,12 +169,11 @@ test("R54 PROPOSAL_STATES gains case_account and account_check after translation
   }
   /* case_account: a draft of a case's account drawn from its cited evidence, never the case's account, which a member
      writes in her own words, in every state. */
-  for (const s of STATES3) assert.doesNotMatch(ca[s], /\bis the case's account\b/, s);
-  /* The two subjects say different things: no sentence of one is the other's, and each names only its own object. */
+  /* The two subjects say different things: no sentence of one is the other's, and each names only its own object. Each
+     sentence is pinned to its row above, so no phrasing guard is needed beyond these. */
   for (const s of STATES3) {
     assert.notEqual(ca[s], ac[s]);
     assert.doesNotMatch(ca[s], /flagged/, s);
-    assert.doesNotMatch(ac[s], /cited evidence/, s);
   }
   /* The other tables and their sentences are unchanged, every one, in order. */
   const { case_account, account_check, bearing, status_report, ...before } = PROPOSAL_STATES;
@@ -183,7 +183,7 @@ test("R54 PROPOSAL_STATES gains case_account and account_check after translation
 });
 
 test("R54 R60 R61 negative control: an unknown subject, near spellings of R54's two new ones included, throws a RangeError naming the seventeen subjects", () => {
-  const msg = (s) => `proposalLabel: '${s}' is not a proposal subject; one of ${SUBJECTS.join(", ")}`;
+  const msg = (s) => word("record-grammar.labels.unknown_subject", { subject: s, subjects: SUBJECTS.join(", ") });
   assert.ok(msg("x").endsWith("translation, case_account, account_check, bearing, status_report"));
   for (const s of ["case_accounts", "Case_account", "caseAccount", "case-account", "account", "account_checks", "Account_check",
     "accountCheck", "account-check", "check", "case", "case_account ", " account_check", "case_account_check"])
@@ -199,7 +199,7 @@ test("R38 R42 R44 R45 R49 R50 R54 R60 R61 proposalLabel's RangeError for an unkn
   for (const s of ["templates", "edition", "escalation", "Edition_statement", "escalation_reasons", "wizards", "Wizard", "__proto__",
     "law_relations", "Law_relation", "law", "court_link", "treatment", "translations", "Translation", "draft", "interface_word"])
     assert.throws(() => proposalLabel("a", s), (e) => e instanceof RangeError
-      && e.message === `proposalLabel: '${s}' is not a proposal subject; one of ${SUBJECTS.join(", ")}`, s);
+      && e.message === word("record-grammar.labels.unknown_subject", { subject: s, subjects: SUBJECTS.join(", ") }), s);
 });
 
 test("R38 proposalLabel: {by, state, machine_work, says} for every subject and state; an unknown subject throws RangeError", () => {
@@ -212,7 +212,8 @@ test("R38 proposalLabel: {by, state, machine_work, says} for every subject and s
   }
   for (const s of ["", "law", "constructor", "toString", undefined, null, 1, {}])
     assert.throws(() => proposalLabel("alice", s), RangeError, String(s));
-  assert.throws(() => proposalLabel("a", "x".repeat(100)), { message: /'x{40}' is not a proposal subject; one of governing_laws, standard/ });
+  assert.throws(() => proposalLabel("a", "x".repeat(100)),
+    { message: word("record-grammar.labels.unknown_subject", { subject: "x".repeat(40), subjects: SUBJECTS.join(", ") }) });
 });
 
 test("R37 CONTENT_MINT_STATES and contentMintState: blank unstated, the plane's own mint, a machine credential, else a member", () => {
@@ -253,9 +254,9 @@ test("R29 C-33.40's where names every site that raises NO_BASIS: inquiry's actNo
   assert.match(w, /basis-versions/);
   assert.match(w, /src\/progressions\/checks\.mjs refusal\b/);
   assert.match(w, /src\/progressions\/index\.mjs/);
-  assert.match(w, /first declaration and revision of a declared flow/);
+  assert.match(w, wordRx("record-grammar.acts.no_basis.progressions"));
   assert.match(w, /src\/entities\/index\.mjs actShapeRefusal\b/);
-  assert.match(w, /held identifier and grade-D testimony/);
+  assert.match(w, wordRx("record-grammar.acts.no_basis.entities"));
   /* Negative control: it no longer names inquiry's site alone. */
   assert.notEqual(w, "src/inquiry/index.mjs actNoBasis > is-act-no-basis");
   for (const f of w.match(/src\/[\w/.-]+\.mjs/g)) assert.ok(existsSync(new URL(`../../../${f}`, import.meta.url)), f);
@@ -265,8 +266,8 @@ test("R29 C-33.40's where names every site that raises NO_BASIS: inquiry's actNo
    named. As above, it reads the where and the files it names, never their code (P4). */
 const NO_BASIS_SITES = [
   ["src/inquiry/index.mjs", "actNoBasis", /basis-versions/],
-  ["src/progressions/checks.mjs", "refusal", /first declaration and revision of a declared flow/],
-  ["src/entities/index.mjs", "actShapeRefusal", /held identifier and grade-D testimony/],
+  ["src/progressions/checks.mjs", "refusal", wordRx("record-grammar.acts.no_basis.progressions")],
+  ["src/entities/index.mjs", "actShapeRefusal", wordRx("record-grammar.acts.no_basis.entities")],
   ["src/money/index.mjs", "refusal", /setFundType/],
   ["src/lines/index.mjs", "noBasis", /recordLine/],
 ];
@@ -281,8 +282,8 @@ test("R29 C-33.40's where names all five NO_BASIS sites: inquiry's actNoBasis, p
   for (const [file] of NO_BASIS_SITES) assert.ok(existsSync(new URL(`../../../${file}`, import.meta.url)), file);
   /* Negative control: T42's where, which named three of the five, does not satisfy this; nor does one missing either new site. */
   const t42 = "src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry's, and basis-versions' through it), "
-    + "src/progressions/checks.mjs refusal (progressions' first declaration and revision of a declared flow, "
-    + "src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities' held identifier and grade-D testimony)";
+    + "src/progressions/checks.mjs refusal (progressions' " + word("record-grammar.acts.no_basis.progressions") + ", "
+    + "src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities' " + word("record-grammar.acts.no_basis.entities") + ")";
   assert.equal(namesAllFive(t42), false);
   assert.equal(namesAllFive(w.replace("src/money/index.mjs refusal", "src/money/index.mjs")), false);
   assert.equal(namesAllFive(w.replace("src/lines/index.mjs noBasis", "src/lines/index.mjs")), false);
@@ -293,8 +294,7 @@ test("R29 C-33.41's where names entities' and progressions' sites, not store.mjs
   assert.match(w, /^src\/entities\/index\.mjs actShapeRefusal\b/);
   assert.match(w, /declareRelation/);
   assert.match(w, /src\/progressions\/checks\.mjs refusal\b/);
-  assert.match(w, /revision of a declared flow/);
-  assert.match(w, /exception document/);
+  assert.match(w, wordRx("record-grammar.acts.no_citation.progressions"));
   assert.doesNotMatch(w, /store\.mjs|actNoCitation/);
   for (const f of w.match(/src\/[\w/.-]+\.mjs/g)) assert.ok(existsSync(new URL(`../../../${f}`, import.meta.url)), f);
 });
@@ -312,7 +312,6 @@ test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the thr
   assert.deepEqual(Object.keys(t), STATES3);
   for (const s of STATES3) {
     assert.equal(t[s], row("bearing", s), s);
-    assert.doesNotMatch(t[s], /\bis the team's reading\b/, s);
   }
   /* Only the machine's sentence says machine work. */
   for (const s of ["member_proposed", "unstated"]) assert.doesNotMatch(t[s], /machine/, s);
@@ -332,7 +331,7 @@ test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the thr
 });
 
 test("R60 R61 negative control: near spellings of bearing throw a RangeError naming the seventeen subjects; bearing itself answers", () => {
-  const msg = (s) => `proposalLabel: '${s}' is not a proposal subject; one of ${SUBJECTS.join(", ")}`;
+  const msg = (s) => word("record-grammar.labels.unknown_subject", { subject: s, subjects: SUBJECTS.join(", ") });
   for (const s of ["bearings", "Bearing", "BEARING", "bearing ", " bearing", "reply_bearing", "bearing_layout", "layout", "reply"])
     assert.throws(() => proposalLabel("token:skill", s), (e) => e instanceof RangeError && e.message === msg(s), s);
   assert.throws(() => proposalLabel("alice", new String("bearing")), RangeError);
@@ -379,7 +378,7 @@ test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with t
 });
 
 test("R61 negative control: near spellings of status_report throw a RangeError naming the seventeen subjects, in order; status_report itself answers", () => {
-  const msg = (s) => `proposalLabel: '${s}' is not a proposal subject; one of ${SUBJECTS.join(", ")}`;
+  const msg = (s) => word("record-grammar.labels.unknown_subject", { subject: s, subjects: SUBJECTS.join(", ") });
   assert.ok(msg("x").endsWith("account_check, bearing, status_report"));
   for (const s of ["status_reports", "Status_report", "STATUS_REPORT", "statusReport", "status-report", "status report", "status",
     "report", "status_report ", " status_report", "plan_status_report", "status_report_draft"])

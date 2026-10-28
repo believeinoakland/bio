@@ -55,12 +55,12 @@ const onePage = () => {
     counts: { chars: 0, undetermined: 1 } } };
 };
 
-test("R23: twelve entries, jpeg and png first; a picture is read as a picture whatever its first KiB carries (G130a; S14)", () => {
+test("R23: the roster, jpeg and png first; a picture is read as a picture whatever its first KiB carries (G130a; S14)", () => {
   const order = listFormats();
-  assert.deepEqual(order, ["jpeg", "png", "html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"]);
+  assert.deepEqual(order, ["jpeg", "png", "gif", "tiff", "webp", "bmp", "jp2", "heic", "heif", "avif", "html", "pdf", "rtf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "doc", "xls", "ppt", "json", "ndjson", "xml", "svg", "kml", "kmz", "geojson", "ics", "vcf", "srt", "vtt", "eml", "msg", "mbox", "tar", "gz", "7z", "zip", "text"]);
   assert.equal(order.indexOf("jpeg"), 0);
   assert.equal(order.indexOf("png"), 1);
-  assert.equal(order.indexOf("zip"), order.length - 1);
+  assert.equal(order.indexOf("zip"), order.length - 2, "zip last of the signature entries, `text` (a fallback) after it");
   // pass 1 asks the pictures before html and pdf: a marker inside a picture does not make it a PDF or a page
   assert.equal(detectFormat(cat(JPEG_SIG, [0xfe, 0, 12], "%PDF-1.4"), null).format, "jpeg");
   assert.equal(detectFormat(cat(JPEG_SIG, [0xe1, 0, 20], "Exif\0\0<html><body>"), null).format, "jpeg");
@@ -113,8 +113,8 @@ for (const P of PICTURES) {
     // bytes no entry claims fall to the declared picture type in pass 2, as likely
     assert.deepEqual(detectFormat(enc("plain words"), P.ct), entry.detect(null, P.ct));
     assert.deepEqual(detectFormat(null, P.ct), entry.detect(null, P.ct));
-    // an image format left unregistered stays undetermined
-    for (const [label, b] of OTHERS.slice(6)) assert.equal(detectFormat(b, null).format, "undetermined", label);
+    // the other picture kinds (R33) answer as their own format, never as this one
+    for (const [label, b] of OTHERS.slice(6)) assert.equal(detectFormat(b, null).format, { "a GIF": "gif", "a TIFF": "tiff", "a HEIC": "heic", "a WebP": "webp" }[label], label);
   });
 
   test(`${R}: ${P.format} structure — one page 0 with no text and one no_text_layer marker; ${P.refusal} without the signature; decodes nothing`, async () => {

@@ -26,10 +26,11 @@ const SOF_MARKER = { baseline: 0xc0, "extended-sequential-huffman": 0xc1 };
 
 /* The image-codecs refusal codes (its R1, R7) as this module's (R3): data that ends early is TRUNCATED_IMAGE_DATA,
  * data that cannot be read IMAGE_DATA_CORRUPT (K2173), each detail naming the fault. */
-function fromDct(e) {
+export function fromDct(e) {
   if (!(e instanceof DctRefusal)) throw e;
   const note = [e.detail?.process, e.detail?.precision && `precision ${e.detail.precision}`, e.detail?.note]
     .filter(Boolean).join("; ");
+  if (e.code === "IMAGE_TOO_LARGE") return new CoverRefusal("IMAGE_TOO_LARGE", localize("image-cover.jpeg.the_jpeg_is_past_a_bound", "the JPEG declares more than this module reads{v1}", { v1: String(note ? `: ${note}` : "") }));
   if (e.code === "NOT_A_JPEG") return new CoverRefusal("NOT_A_COVERABLE_FORMAT", `not a JPEG${note ? `: ${note}` : ""}`);
   if (e.code === "TRUNCATED")
     return new CoverRefusal("TRUNCATED_IMAGE_DATA", localize("image-cover.jpeg.the_jpeg_data_ends_before", "the JPEG data ends before the image does{v1}", { v1: String(note ? `: ${note}` : "") }));

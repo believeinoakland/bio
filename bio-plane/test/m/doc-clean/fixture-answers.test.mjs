@@ -3,6 +3,7 @@
 import "../../sandbox.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { encryptedRefusal } from "./fixtures.mjs";
 
 test("R3 ENCRYPTED: the encryptedRefusal fixture is doc-clean's real answer for an encrypted PDF, a refusal by code with nothing copied", async () => {
@@ -10,7 +11,7 @@ test("R3 ENCRYPTED: the encryptedRefusal fixture is doc-clean's real answer for 
   assert.deepEqual(Object.keys(r).sort(), ["code", "detail", "ok"], "nothing answered but the refusal");
   assert.equal(r.ok, false);
   assert.equal(r.code, "ENCRYPTED");
-  assert.match(r.detail, /security handler/);
+  assert.equal(r.detail, localize("doc-clean.pdf.the_pdf_is_encrypted_a", "the PDF is encrypted (a Standard security handler)"));
 });
 
 test("R3 ENCRYPTED: encryptedRefusal is made at call time, so each call answers afresh and equally", async () => {
