@@ -613,6 +613,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/screens-ai.md`
 **screens-intake**
 - T53-408 · N1269 (K5446) · largest file stated; over-limit refused, a way in
+- T53-585 · PLATFORM P-29 (K5733) · a failed upload or promote (a quick 5xx) shows the failure in words and offers a retry; never a silent stay on Add
 - T53-409 · K5425 (b) · fixtures-run line 27 orphan: marker or delete
 - T53-410 · A3, DEC-454-456 · R72, R73, display rows `[waits: design's row, r9-states R65]`
 - T53-411 · K5574, K5575 · hand-off: Queue item with the link; her file matched by address
