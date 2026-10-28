@@ -1343,6 +1343,8 @@ export class Membership {
   adminEndorse(...a) { return this.members.adminEndorse(...a); }
   adminRemove(...a) { return this.members.adminRemove(...a); }
   adminRemovalsOpen(...a) { return this.members.adminRemovalsOpen(...a); }
+  adminRemovals(...a) { return this.members.adminRemovals(...a); }
+  adminProposalCancel(...a) { return this.members.adminProposalCancel(...a); }
   hostingAccessSet(...a) { return this.members.hostingAccessSet(...a); }
   hostingAccess(...a) { return this.members.hostingAccess(...a); }
   memberPairingSet(...a) { return this.members.memberPairingSet(...a); }

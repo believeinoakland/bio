@@ -62,7 +62,7 @@ test("R151 every refusal row's translation is the words of its key (refusal.<COD
       assert.equal(row.translation, rowWord(code));
       assert.ok(HELD.includes(key), key);
     }
-  assert.equal(n, 47, "every row read");
+  assert.equal(n, 49, "every row read");
   assert.deepEqual([rowKey("HANDLE_CHECK_PAUSED"), rowKey("NOT_AN_ADMIN")], ["handle.refused.paused", "refusal.NOT_AN_ADMIN"]);
   /* a placeholder is left in place when the answer carries the value for the screen to fill */
   assert.match(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation, /\{minutes\}/);
@@ -130,16 +130,21 @@ test("R151 over fixtures, what the module answers equals word(key, vars): the re
 });
 
 test("R151 the carried removal's alsoDo and the audit's finding read their keys, with the values the finding names", async () => {
+  /* five administrators: the founder removes alone, and the others carry a removal by three of their votes (K5562, K5675) */
   const w = await world().group();
-  /* three administrators: the founder, second and third; a majority of two removes the third */
-  const added = await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "admin" });
-  assert.equal(added.reason, "CONSENSUS_REQUIRED");
-  const endorsed = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  assert.equal(endorsed.ok, true);
-  assert.equal((await w.m.enroll({ invite: endorsed.invite, handle: "third", password: "third-passphrase-x" })).ok, true);
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "r" }).reason, "VOTES_SHORT");
-  const carried = w.m.adminRemove({ memberId: "third", by: "second", reason: "r" });
+  for (const id of ["third", "fourth", "fifth"]) {
+    const p = await w.m.memberAdd({ memberId: id, cover: "c", role: "admin", by: "second" });
+    assert.equal(p.reason, "CONSENSUS_REQUIRED");
+    const e = await w.m.adminEndorse({ memberId: id, by: "admin" });
+    assert.equal(e.ok, true);
+    assert.equal((await w.m.enroll({ invite: e.invite, handle: id, password: `${id}-passphrase-x` })).ok, true);
+  }
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "second", reason: "r" }).reason, "VOTES_SHORT");
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "third", reason: "r" }).reason, "VOTES_SHORT");
+  const carried = w.m.adminRemove({ memberId: "fifth", by: "fourth", reason: "r" });
   assert.equal(carried.removed, true);
+  const alone = w.m.adminRemove({ memberId: "fourth", by: "admin", reason: "r" });
+  assert.equal(alone.alsoDo, word("membership.also_do"));
   assert.equal(carried.alsoDo, word("membership.also_do"));
   /* the audit finding for a member enrolled under the reserved id, and for none */
   let finding = null;
