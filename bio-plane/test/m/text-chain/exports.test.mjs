@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as tc from "../../../src/textchain.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const {
   weaker, stepCovers, CONFIDENCE_BASES, checkConfidence, perPageTierWinner, mergeTier2Text, TIER_RULE,
@@ -61,7 +62,7 @@ test("R102: perPageTierWinner is R76's award for one page, and TIER_RULE states 
   assert.equal(perPageTierWinner(pg("ab", 1), pg(" a \n b ", 0)), "tier1");
   assert.equal(perPageTierWinner(pg(null, 1), pg("a", 0)), "tier2");
   assert.equal(typeof TIER_RULE, "string");
-  for (const said of [/tier 2 replaces tier 1/, /strictly fewer undetermined/, /strictly more decoded GLYPHS/, /keeps tier 1/]) assert.match(TIER_RULE, said);
+  assert.equal(TIER_RULE, word("textchain.tier_rule"));
 });
 
 test("R103: READING_POSITION_KINDS is exactly R61's four arms; READING_POSITION_UNPRODUCED is dom, which readingSource refuses", () => {

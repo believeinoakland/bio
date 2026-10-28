@@ -13,6 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as dp from "../registry.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { PORT_ALDER, view } from "./fixtures.mjs";
 import { registerStubs, stubItems, stubFallback } from "./stubs.mjs";
 
@@ -38,7 +39,7 @@ test("R22 R23 the segment map: one segment per non-empty part, earned over docum
   assert.deepEqual([both.source, both.segments.length, both.position_why], ["document", 3, null]);
   const off = flattenText({ document: JOINED + "\nAN EXTRA LINE THE PAGES DO NOT CARRY", pages: PAGES });
   assert.equal(off.segments.length, 0);
-  assert.match(off.position_why, /not its pages joined/);
+  assert.equal(off.position_why, localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed"));
   // a blank page adds no segment and no separator, and the page after it is still placed
   const blank = flattenText({ pages: [{ page: 0, text: "first" }, { page: 1, text: "" }, { page: 2, text: "third" }] });
   assert.equal(blank.text, "first\nthird");
@@ -120,5 +121,5 @@ test("R18 text nobody decoded is a failed reading naming the producer's reason, 
   const scrap = readText({ document: "scrap", undetermined: [{ page: 0, reason: "no_tounicode", count: 4000 }],
                            counts: { chars: 5, undetermined: 4000 } }, { view: PA });
   assert.equal(scrap.determined, false);
-  assert.match(scrap.why, /could not decode most/);
+  assert.equal(scrap.why, localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: 4000, chars: 5, named: ": no_tounicode" }));
 });

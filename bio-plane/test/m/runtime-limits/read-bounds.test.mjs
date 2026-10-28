@@ -3,11 +3,14 @@
  * row changes none of these expectations (a row is checked by its invariants, never by counting the table). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { READ_BOUNDS, boundOf, statement, wholeReadRow } from "../../../src/read-bounds.mjs";
+import { READ_BOUNDS, BETA_STANDARD_ROWS, boundOf, statement, wholeReadRow } from "../../../src/read-bounds.mjs";
 
 const MiB = 1048576, GiB = 1073741824, MB50 = 52428800;
 const LIGHT = ["text", "csv", "tsv", "json", "xml"];
-const rows = () => Object.entries(READ_BOUNDS).flatMap(([kind, names]) => Object.entries(names).map(([name, row]) => [kind, name, row]));
+/* the kinds `level` and `time` carry their own fields (R38, R41); every other kind's rows are R29's four-field byte rows */
+const OWN_FIELDS = ["level", "time"];
+const isBeta = (kind, name) => LIGHT.includes(kind) || BETA_STANDARD_ROWS.some(([k, n]) => k === kind && n === name);
+const rows = () => Object.entries(READ_BOUNDS).filter(([kind]) => !OWN_FIELDS.includes(kind)).flatMap(([kind, names]) => Object.entries(names).map(([name, row]) => [kind, name, row]));
 const deepFrozen = (o) => Object.isFrozen(o) && Object.values(o).every((v) => v === null || typeof v !== "object" || deepFrozen(v));
 
 test("R29: READ_BOUNDS is a deeply frozen map kind -> name -> {standard, alpha, protective, key}", () => {
@@ -36,13 +39,10 @@ test("R29: no module's table is copied by hand: the frozen table cannot be edite
   assert.throws(() => { "use strict"; READ_BOUNDS.newkind = {}; }, TypeError);
 });
 
-test("R30: the light kinds hold the standard 50 MB (52,428,800 bytes) and 1,048,576 rows", () => {
-  for (const kind of ["text", "csv", "tsv", "json"]) {
-    assert.equal(READ_BOUNDS[kind].bytes.standard, 52428800, kind);
-    assert.equal(READ_BOUNDS[kind].rows.standard, 1048576, kind);
-  }
-  assert.equal(READ_BOUNDS.xml.bytes.standard, 52428800);
-  assert.equal(READ_BOUNDS.xml.rows.standard, 1048576);
+test("R30, R37: the spreadsheet light kinds hold 50 MB (52,428,800 bytes) and the text kinds 100 MB (K5427); all hold 1,048,576 rows", () => {
+  for (const kind of ["csv", "tsv"]) assert.equal(READ_BOUNDS[kind].bytes.standard, 52428800, kind);
+  for (const kind of ["text", "json", "xml"]) assert.equal(READ_BOUNDS[kind].bytes.standard, 104857600, kind);
+  for (const kind of LIGHT) assert.equal(READ_BOUNDS[kind].rows.standard, 1048576, kind);
 });
 
 test("R30: archives hold 500 MB uploaded and 2 GB unpacked at the standard, 256 MiB each at the alpha, depth 3, ratio 1,100, 10,000 members", () => {
@@ -54,17 +54,17 @@ test("R30: archives hold 500 MB uploaded and 2 GB unpacked at the standard, 256 
   assert.equal(a.depth.alpha, 3);
   assert.equal(a.ratio.alpha, 1100);
   assert.equal(a.members.alpha, 10000);
-  assert.equal(boundOf("archive", "uploaded_bytes"), 256 * MiB);
+  assert.equal(boundOf("archive", "uploaded_bytes"), 524288000, "R37: the beta's active figure is the standard");
 });
 
-test("R30: the alpha figures of the heavy kinds the plan names", () => {
-  assert.equal(boundOf("pdf", "bytes"), 24 * MiB);
-  assert.equal(boundOf("xlsx", "declared_text"), 32 * MiB);
-  assert.equal(boundOf("ods", "content_xml"), 20 * MiB);
+test("R30: the alpha figures of the heavy kinds the plan names (the alpha column; R37 makes the standard the active figure of the whole-read rows)", () => {
+  assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
+  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 32 * MiB);
+  assert.equal(READ_BOUNDS.ods.content_xml.alpha, 20 * MiB);
   assert.equal(boundOf("ods", "repeat_units"), 262144);
   assert.equal(boundOf("workbook", "cells"), 250000);
   assert.equal(boundOf("sheet_worker", "cells"), 250000);
-  assert.equal(boundOf("sheet_worker", "bytes"), 9000000);
+  assert.equal(READ_BOUNDS.sheet_worker.bytes.alpha, 9000000);
   assert.equal(boundOf("sheet_worker", "ms"), 120000);
   assert.equal(boundOf("office", "retained_objects"), 250000);
   assert.equal(READ_BOUNDS.workbook.cells.standard, 250000);
@@ -82,16 +82,16 @@ test("R30: the protective figures, each as proposed", () => {
   for (const [kind, names] of Object.entries(want)) for (const [name, f] of Object.entries(names)) assert.equal(READ_BOUNDS[kind][name].protective, f, `${kind}/${name}`);
 });
 
-test("R31: boundOf answers the alpha, except the light kinds, which answer the standard", () => {
-  for (const [kind, name, row] of rows()) assert.equal(boundOf(kind, name), LIGHT.includes(kind) ? row.standard : row.alpha, `${kind}/${name}`);
+test("R31, R37: boundOf answers the alpha, except the light kinds and the beta's whole-read rows, which answer the standard", () => {
+  for (const [kind, name, row] of rows()) assert.equal(boundOf(kind, name), isBeta(kind, name) ? row.standard : row.alpha, `${kind}/${name}`);
   assert.equal(boundOf("csv", "bytes"), 52428800);
   assert.equal(boundOf("csv", "rows"), 1048576);
   assert.equal(boundOf("image", "pixels"), 120000000);
 });
 
 test("R31: statement answers {size, bound, key} with the size the caller measured and the row's key", () => {
-  const s = statement("pdf", "bytes", 24 * MiB + 1);
-  assert.deepEqual(s, { size: 24 * MiB + 1, bound: 24 * MiB, key: READ_BOUNDS.pdf.bytes.key });
+  const s = statement("pdf", "bytes", 100 * MiB + 1);
+  assert.deepEqual(s, { size: 100 * MiB + 1, bound: 100 * MiB, key: READ_BOUNDS.pdf.bytes.key });
   assert.deepEqual(Object.keys(s), ["size", "bound", "key"]);
   assert.equal(statement("csv", "rows", 1048577).bound, 1048576);
   assert.equal(statement("image", "pixels", 0).size, 0);
@@ -110,7 +110,7 @@ test("R30 (K4845): the heavy kinds' standards are K4628's per kind: documents 10
   for (const [k, n] of [["pdf", "bytes"], ["pdf", "worker_bytes"], ["document", "clean_bytes"], ["file_safety", "grade_read"]]) assert.equal(std(k, n), 104857600, `${k}/${n}`);
   for (const [k, n] of [["xlsx", "declared_text"], ["ods", "content_xml"], ["sheet_worker", "bytes"], ["image", "cover_bytes"]]) assert.equal(std(k, n), 52428800, `${k}/${n}`);
   assert.equal(std("ocr", "frame_bytes"), 61300000);
-  assert.equal(boundOf("pdf", "bytes"), 24 * MiB);
+  assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
 });
 
 /* the rows the quoting jobs of batch B reported (K4857, K4858, K4859, K4860; R30: a quoting job's row, added by this module, K4842 (1)) */
@@ -146,8 +146,9 @@ test("R30: the rows quoting jobs reported (19, then K4862's 22) hold exactly the
     assert.ok(row, `${kind}/${name}`);
     assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard, alpha, protective }, `${kind}/${name}`);
     assert.equal(row.key, `limit.${kind}.${name}`);
-    assert.equal(boundOf(kind, name), alpha, `${kind}/${name} answers the alpha`);
-    assert.deepEqual(statement(kind, name, alpha + 1), { size: alpha + 1, bound: alpha, key: `limit.${kind}.${name}` });
+    const active = isBeta(kind, name) ? standard : alpha;
+    assert.equal(boundOf(kind, name), active, `${kind}/${name} answers its active figure`);
+    assert.deepEqual(statement(kind, name, active + 1), { size: active + 1, bound: active, key: `limit.${kind}.${name}` });
   }
 });
 
@@ -202,7 +203,7 @@ test("R30: the rows control-plane and content quote (text request_bytes 3 MiB, c
     assert.deepEqual(statement(kind, name, n + 1), { size: n + 1, bound: n, key: `limit.${kind}.${name}` });
   }
   /* text is a light kind (R31): it answers the standard, which here equals the alpha; its other rows are unmoved */
-  assert.equal(boundOf("text", "bytes"), 52428800);
+  assert.equal(boundOf("text", "bytes"), 104857600);
   assert.equal(READ_BOUNDS.text.bytes.alpha, 24 * MiB);
 });
 
@@ -260,7 +261,7 @@ test("R36: wholeReadRow(kind) gives pdf, csv and text their own bytes row, every
     assert.equal(boundOf(...wholeReadRow(kind)), boundOf(row[0], row[1]), `kind ${String(kind)} bound`);
   }
   assert.deepEqual(wholeReadRow(), ["pdf", "bytes"]);
-  assert.equal(boundOf(...wholeReadRow("pdf")), READ_BOUNDS.pdf.bytes.alpha);
+  assert.equal(boundOf(...wholeReadRow("pdf")), READ_BOUNDS.pdf.bytes.standard, "R37: the beta's active figure");
   assert.equal(boundOf(...wholeReadRow("csv")), READ_BOUNDS.csv.bytes.standard);
   assert.equal(boundOf(...wholeReadRow("text")), READ_BOUNDS.text.bytes.standard);
 });
