@@ -61,6 +61,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-25 · K4746, K5569 · three levels as rows of the bounds table
 - T53-26 · N824, K5527, N1259 · CAPABILITIES rows
 - T53-27 · K5565 · English in tests: its entry
+- T53-504 · R37, K5624 · after office-readers, odf-reader, doc-clean and ooxml merge T53-503 (BOB's CHANGE says when): every reader row's active figure becomes its `standard` (`pdf.worker_bytes`, `document.clean_bytes`, `file_safety.grade_read`, `office.text_bytes`, `office.streamed_text_bytes`, `xlsx.declared_text`, `ods.content_xml`, `sheet_worker.bytes`, `image.cover_bytes`, `archive.unpacked_bytes`, `archive.member_bytes`, `scan.max_bytes`), save a figure a reader reported it cannot hold, kept with that report cited
 - rows: `build/plan/T53-R1/runtime-limits.md`
 **signatures**
 - T53-28 · K5457, K5471 · three more namespaces; run-key check
@@ -92,9 +93,11 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - rows: `build/plan/T53-R1/csv-reader.md`
 **office-readers**
 - T53-39 · K5565 · English in tests: its entry
+- T53-503 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/office-readers.md`
 **odf-reader**
 - T53-40 · K5565 · English in tests: its entry
+- T53-503 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/odf-reader.md`
 **pdf-reader**
 - T53-41 · K5565 · English in tests: its entry
@@ -144,6 +147,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **doc-clean**
 - T53-59 · N824, K2334, K1485 · CAPABILITIES rows
 - T53-60 · K5565 · English in tests: its entry
+- T53-503 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/doc-clean.md`
 **pdf-worker**
 - T53-61 · K5565 · English in tests: its entry
@@ -161,6 +165,8 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **reader-container**
 - T53-65 · N1266, N1267 · conversion readers, archives as streams
 - rows: `build/plan/T53-R1/reader-container.md`
+**ooxml**
+- T53-503 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 ## Layer 2
 
 **member-roster**
@@ -244,6 +250,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-113 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-114 · DEC-479 · file-safety before doorbell in layer 3
 - T53-115 · K5565 · English in tests: its entry
+- T53-503 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/file-safety.md`
 **doorbell**
 - T53-116 · A3 · pulled knock carries file name
