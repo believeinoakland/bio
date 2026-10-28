@@ -450,6 +450,9 @@ export const PART_MIGRATION = "g33-part-readings";
 export const OWED_MIGRATION = "r105-owed-work";
 /* R105 (b) (fix round 9, G128j): stored readings in the old shapes, re-registered as reading jobs; its own row. */
 export const SHAPE_MIGRATION = "r105-reading-shapes";
+/* R120 (T53; N1266; RF10): the held-and-named readings a reader has since arrived for, owed once for each release: its row is named for the release (`r120-held-unread:<VERSION>`),
+   so a release whose roster lists more types scans them again, and one that does not changes nothing. */
+export const HELD_MIGRATION = "r120-held-unread";
 
 /* R92: every table that keeps a reading against a capture, for the repair that takes a part's reading away. */
 const PART_KEPT_IN = Object.freeze(["readings", "reading_history", "reading_refs", "reading_ref_terms", "reading_text_source", "capture_text",
@@ -933,8 +936,16 @@ export class Extraction {
        document was not read as text is read again once the held bytes now say what they are. */
     const fmt0 = document.profile && document.profile.format && typeof document.profile.format.format === "string"
       ? document.profile.format.format : null;
-    const repair = ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
+    /* (T53; R120) a held-and-named reading is read again when its held bytes now detect a LISTED type: the reader has arrived */
+    const heldUnread = !!held && !ocr && !!ev && this.#heldUnread(digest, heldReading);
+    const repair = heldUnread ? await this.#nowListed(digest)
+      : ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
       ? await this.#nowDetected(document, digest, ev) : null;
+    /* (T53; R120) a held-and-named reading whose type is still on no list is left as it is, and not owed again under this release (as R89's `reading_repairs`) */
+    if (heldUnread && !repair) {
+      this.#markRepairTried(home.bundleId, digest, "unlisted");
+      return left("READING_HELD", { held_unread: true });
+    }
     /* (fix round 6, G13; R90) a held reading of a text read in pieces that has more to read is not held: the next piece is read. */
     if (held && !ocr && stored && this.#moreOf(digest)) {
       if (defer === true) return left("READING_PENDING");
@@ -942,7 +953,7 @@ export class Extraction {
     }
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
-    if (held && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)
+    if (held && !ocr && !(repair && (notReadAsText(heldReading) || heldUnread)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)
         && !(heldReading && heldReading.odsTooLarge === true) && !this.#oldShapeOf(digest))
       return left("READING_HELD");
     /* (fix round 6, G6; R88) a digest that no stored document names (a bare stub) is read as no document: it has no parts, size or
@@ -972,7 +983,7 @@ export class Extraction {
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
                                           ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages, stampUnit: stamp });
     if (out.refused) return left(out.refused.code);
-    if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
+    if (repair && held && (notReadAsText(out.reading) || (heldUnread && out.reading && out.reading.found === false && out.reading.held_unread))) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     /* (fix round 9, G126a; R102) the OCR pages the read left are owed in the same transaction as the reading (the registrar's row commits or rolls back
        with it), before the answer */
@@ -1405,15 +1416,34 @@ export class Extraction {
               json_type(reading, '$.basis') AS bt, json_extract(reading, '$.basis') AS basis,
               json_type(reading, '$.entities') AS et, json_array_length(reading, '$.entities') AS en,
               json_type(reading, '$.tier3_candidate') AS tt, json_extract(reading, '$.too_large.key') AS tlk,
-              json_extract(reading, '$.text_container') AS tc, capture_format AS cf
+              json_extract(reading, '$.text_container') AS tc, capture_format AS cf, json_extract(reading, '$.held_unread') AS hu
          FROM readings WHERE capture_sha=? AND json_valid(reading) AND json_type(reading)='object'`, sha);
     if (!r) return null;
+    const heldUnread = r.hu ? safeJson(r.hu) : null;
     return { found: r.ft === "true" ? true : r.ft === "false" ? false : undefined,
              failure: r.ut === "text" ? r.failure : undefined, basis: r.bt === "text" ? r.basis : undefined,
              entities: r.et === "array" ? new Array(r.en) : undefined,
              tier3_candidate: r.tt === "true" ? true : r.tt === "false" ? false : undefined,
              /* (fix round 9, R105 (c)) an ODS reading stated too large for its cells, which odf-reader R49 now holds: read again once */
-             ...(r.tlk === "cells" && (r.cf === "ods" || r.tc === "ods") ? { odsTooLarge: true } : {}) };
+             ...(r.tlk === "cells" && (r.cf === "ods" || r.tc === "ods") ? { odsTooLarge: true } : {}),
+             /* (T53; R120) a held-and-named reading states `held_unread` (reading-pipeline R67): the type's plain name, no units, no failure */
+             ...(heldUnread && typeof heldUnread === "object" && !Array.isArray(heldUnread) ? { held_unread: heldUnread } : {}) };
+  }
+
+  /** R120 (T53; N1266; RF10): whether the stored reading of a capture is a held-and-named one still: it found nothing, states `held_unread` (a type on no
+   *  list, reading-pipeline R67) and no unit of it is indexed. A reading with units is never one, whatever else it says. */
+  #heldUnread(sha, facts = null) {
+    const f = facts ?? this.#readingFacts(sha);
+    return !!f && f.found === false && !!f.held_unread && !this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? LIMIT 1`, sha);
+  }
+
+  /** R120: the format the held bytes now detect when it is a LISTED one (a reader is registered for it): judged by the bytes' head alone, never by the name or the declared
+   *  type (`detectFormat(head, null)`); null for `unlisted`, `undetermined`, `refused` and for bytes not held. */
+  async #nowListed(digest) {
+    const head = await this.#heldHead(digest);
+    if (!head) return null;
+    const f = detectFormat(head, null);
+    return f && typeof f.format === "string" && !["unlisted", "undetermined", "refused"].includes(f.format) ? f : null;
   }
 
   /** R80 (fix round 4, C5b): whether a stored reading is a failed one that failed for want of the whole bytes: it found
@@ -2007,6 +2037,10 @@ export class Extraction {
              /* R89 (fix round 6, G8): a reading that says the document was not read as text, and that no read has found nothing to
                 repair it by under this release, states it may be repaired (the member's press, "Read it", is offered for it). */
              ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
+             /* R120 (T53; N1266): a reading held and named states it, with the type's name as the reading carries it (reading-pipeline R67), and whether a read under this
+                release has found its type still on no list; absent for any other reading, and once a reading with units replaces it. */
+             ...(reading && typeof reading.held_unread === "object" && reading.held_unread && this.#heldUnread(row.capture_sha)
+                 ? { held_unread: { ...reading.held_unread, still_unlisted: this.#repairTried(row.capture_sha) } } : {}),
              ...(omitted.length ? { reading_omitted: omitted } : {}),
              ...(text_units ? { text_units, next } : {}),
              ...(completeness ? { completeness, units_total: unitsTotal } : {}),
@@ -2705,7 +2739,7 @@ export class Extraction {
    *  `first_range`, `cut_units`, `pages_unread`, `stated_bare`, with `registered` and `existed`; R105 (a), (c)'s `ocr`, `ods` and `existed`; R92's
    *  `superseded`). It writes nothing and creates no row: a migration that has not run states zeros. Never throws. */
   migrationCounts() {
-    const names = [N26_MIGRATION, N439_MIGRATION, REPAIR_MIGRATION, PART_MIGRATION, OWED_MIGRATION, SHAPE_MIGRATION];
+    const names = [N26_MIGRATION, N439_MIGRATION, REPAIR_MIGRATION, PART_MIGRATION, OWED_MIGRATION, SHAPE_MIGRATION, `${HELD_MIGRATION}:${String(this.env.VERSION ?? "")}`];
     const shapes = { first_range: 0, cut_units: 0, pages_unread: 0, stated_bare: 0, registered: 0, existed: 0 };
     return {
       ok: true,
@@ -2822,6 +2856,7 @@ export class Extraction {
       this.#repairRun = (async () => {
         for (let n = 0; n < 10_000; n++) { const r = await this.migrateRepairs(); if (!r || r.done || !r.examined) break; }
         for (let n = 0; n < 10_000; n++) { const r = await this.migratePartReadings(); if (!r || r.done || !r.examined) break; }
+        for (let n = 0; n < 10_000; n++) { const r = await this.migrateHeldUnread(); if (!r || r.done || !r.examined) break; }
       })().catch(() => null);
       host.waitUntil(this.#repairRun);
     }
@@ -2884,6 +2919,48 @@ export class Extraction {
         out.done = shapes.done;
         out.examined += shapes.examined;
       }
+    }
+    return out;
+  }
+
+  /** R120 (T53; N1266, N1267; RF10): once for each release, each stored reading that is held and named (`held_unread`, no unit) whose held bytes now detect a LISTED type (a
+   *  reader has arrived: `detectFormat` over the bytes' head, never the name or the declared type) is owed to the ledger as a `reading` entry, so `readHeld` replaces it with the
+   *  new reading. A reading whose type is still on no list is not owed, and its release's `reading_repairs` row says so, so it is not looked at again under the same release; a
+   *  reading whose bytes are not held is left for the next call. In digest order from the release's own cursor (its row, `r120-held-unread:<VERSION>`), in batches; counted
+   *  (`owed`, `unlisted`, `existed`, `not_held`), idempotent (a second run in the same release changes nothing); with no registrar handed in it owes nothing and stays undone;
+   *  a refusing registrar stops it where it was. It writes no bundle, register row, promotion or upload. */
+  async migrateHeldUnread({ limit = REPAIR_BATCH } = {}) {
+    const name = `${HELD_MIGRATION}:${String(this.env.VERSION ?? "")}`;
+    const st = this.#migrationState(name);
+    const out = { migration: name, done: !!st.done, examined: 0, owed: 0, unlisted: 0, existed: 0, not_held: 0, refused: null };
+    if (st.done || !this.#owe) return out;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id FROM readings WHERE capture_sha > ? AND found = 0 AND json_valid(reading) AND json_type(reading, '$.held_unread') = 'object'
+        ORDER BY capture_sha LIMIT ?`, st.after || "", cap + 1);
+    for (const r of page.slice(0, cap)) {
+      let moved = 0;
+      if (this.#heldUnread(r.capture_sha) && !this.#repairTried(r.capture_sha)) {
+        const head = await this.#heldHead(r.capture_sha).catch(() => null);
+        if (!head) { out.not_held++; this.#bumpCounts(name, { not_held: 1 }); }
+        else if (await this.#nowListed(r.capture_sha)) {
+          const a = await this.#oweVia(null).owe({ kind: "reading", sha: r.capture_sha });
+          if (!a || a.ok !== true) { out.refused = (a && a.reason) || "REGISTRAR_REFUSED"; return out; }
+          out.owed++; moved = 1;
+          if (a.existed === true) out.existed++;
+          this.#bumpCounts(name, { owed: 1, existed: a.existed === true ? 1 : 0 });
+        } else {
+          this.#markRepairTried(r.bundle_id, r.capture_sha, "unlisted");
+          out.unlisted++; this.#bumpCounts(name, { unlisted: 1 });
+        }
+      }
+      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                     r.capture_sha, moved, stampInstant("second"), name);
+      out.examined++;
+    }
+    if (page.length <= cap) {
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), name);
+      out.done = true;
     }
     return out;
   }
@@ -3732,7 +3809,7 @@ export const DECLARED_OPS = Object.freeze({
   /* R76 amended (fix round 6, G13; K4577; K4208): `reading` takes `after`, a unit's `seq`, to page a capture's units. */
   reading: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("extraction.declared.reading", "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing"),
     fields: { accepts: ["sha256","after"], requires: ["sha256"] } },
-  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
+  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "reversible", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
     fields: { accepts: ["sha","defer"], requires: ["sha"] } },
   pdfstructure: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.pdfstructure.label.document",
     fields: { accepts: ["sha256","ocr"], requires: ["sha256"] } },
