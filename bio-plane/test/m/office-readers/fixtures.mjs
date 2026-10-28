@@ -4,6 +4,7 @@
  * reader trusts can be overridden per member (`cd: {usize, crc}`), so a
  * fixture can declare sizes it does not carry, or carry a corrupt member. */
 import { deflateRawSync, crc32 as zcrc32 } from "node:zlib";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 export const enc = (s) => (typeof s === "string" ? new TextEncoder().encode(s) : s);
 
@@ -188,9 +189,9 @@ export const tablePart = (name, ref) => `<?xml version="1.0"?><table ${S} id="1"
 export const CORRUPT = { crc: 0x12345678 };
 /** A declared uncompressed size over the streamed ceiling, 32 MiB (R12, R35: the text is neither held nor read in
  *  pieces); the bytes themselves are small. */
-export const OVER = { usize: 32 * 1024 * 1024 + 1 };
+export const OVER = { usize: boundOf("office", "streamed_text_bytes") + 1 };
 /** One over the 20 MiB bound a reader holds whole: such a part is read in pieces (R35). */
-export const OVER_WHOLE = { usize: 20 * 1024 * 1024 + 1 };
+export const OVER_WHOLE = { usize: boundOf("office", "text_bytes") + 1 };
 
 /* ------------------------------------------------------------------ VBA (R32) */
 
