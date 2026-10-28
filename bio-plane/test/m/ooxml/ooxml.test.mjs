@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { crc32 as zcrc32, deflateRawSync } from "node:zlib";
 import { registerHooks } from "node:module";
 import * as M from "../../../src/ooxml.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { buildZip, TYPES, MAIN, contentTypes, opc, odf, prng } from "./zip.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { makeVbaProject } from "./cfb.mjs";
@@ -326,11 +327,12 @@ test("R31 every part readPart inflates is capped before inflation: MEMBER_MAX, t
 
 /* ------------------------------------------------------------------ R6–R8 */
 
-test("R6 MEASURED_OOXML_TEXT_BOUND_BYTES is 20 MiB and is sizeGuard's default bound", () => {
-  assert.equal(MEASURED_OOXML_TEXT_BOUND_BYTES, 20 * 1024 * 1024);
-  assert.equal(MEASURED_OOXML_TEXT_BOUND_BYTES, 20971520);
-  assert.deepEqual(sizeGuard(20971520), { ok: true });
-  assert.equal(sizeGuard(20971521).bound, 20971520);
+test("R6 MEASURED_OOXML_TEXT_BOUND_BYTES is the office text row's active figure and is sizeGuard's default bound", () => {
+  const bound = boundOf("office", "text_bytes");
+  assert.equal(MEASURED_OOXML_TEXT_BOUND_BYTES, bound);
+  assert.deepEqual(sizeGuard(bound), { ok: true });
+  assert.equal(sizeGuard(bound + 1).bound, bound);
+  assert.equal(sizeGuard(bound + 1).boundName, "MEASURED_OOXML_TEXT_BOUND_BYTES");
 });
 
 test("R7 declaredTextBytes sums declared uncompressed sizes of matching parts, before inflation", () => {

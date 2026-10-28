@@ -46,9 +46,9 @@ function ranged(bytes, { fail = () => false } = {}) {
 /* ---------------------------------------------------------------- R3 / R30 */
 
 test("R3 readContainer refuses a count, a directory and a name over their limits, by name, final, before the directory is walked", () => {
-  assert.equal(OFFICE_ENTRIES_MAX, 100000);
-  assert.equal(ARCHIVE_DIRECTORY_MAX, 16 * MIB);
-  assert.equal(ARCHIVE_NAME_MAX, 4096);
+  assert.equal(OFFICE_ENTRIES_MAX, boundOf("office", "entries"));
+  assert.equal(ARCHIVE_DIRECTORY_MAX, boundOf("archive", "directory"));
+  assert.equal(ARCHIVE_NAME_MAX, boundOf("archive", "name"));
   const one = [{ name: "a", data: "a" }];
   // the end record (ZIP64's, past 65,535) declares more entries than the limit: refused whatever the directory holds
   const n = OFFICE_ENTRIES_MAX + 1;
@@ -93,18 +93,16 @@ test("R30 the limits are the READ_BOUNDS rows' active figures, taken through bou
   }
   assert.deepEqual(Object.keys(ARCHIVE_LIMITS), Object.keys(rows));
   assert.equal(STRUCTURAL_PART_MAX, boundOf("office", "structural_part_bytes"));
-  assert.equal(ARCHIVE_DEPTH_MAX, 3);
+  assert.equal(ARCHIVE_DEPTH_MAX, boundOf("archive", "depth"));
   assert.equal(ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TOTAL_MAX);
   assert.equal(ARCHIVE_TREE_ENTRIES_MAX, ARCHIVE_ENTRIES_MAX);
 });
 
 /* --------------------------------------------------------------------- R6 */
 
-test("R6 and R35 the 20 MiB text bound and the 32 MiB ceiling are the office rows' alpha figures, taken through boundOf", () => {
+test("R6 and R35 the text bound and the streamed ceiling are the office rows' active figures, taken through boundOf", () => {
   assert.equal(MEASURED_OOXML_TEXT_BOUND_BYTES, boundOf("office", "text_bytes"));
-  assert.equal(MEASURED_OOXML_TEXT_BOUND_BYTES, 20971520);
   assert.equal(STREAMED_TEXT_BOUND_BYTES, boundOf("office", "streamed_text_bytes"));
-  assert.equal(STREAMED_TEXT_BOUND_BYTES, 33554432);
   assert.deepEqual(sizeGuard(MEASURED_OOXML_TEXT_BOUND_BYTES + 1).bound, boundOf("office", "text_bytes"));
 });
 
@@ -266,10 +264,11 @@ test("R11 discriminate over a range source answers exactly as for the same bytes
 });
 
 test("R11 a file of any size is judged from its end record, its central directory and the small parts it names, never from its head", async () => {
-  // a docx of 24 MiB + 1 byte whose size is pictures: the flavour is read, and almost nothing of it
-  const pad = new Uint8Array(24 * MIB).map((_, i) => (i * 31 + (i >> 8)) & 255);
+  // a docx over the text bound, whose size is pictures: the flavour is read, and almost nothing of it
+  const padSize = Math.max(24 * MIB, MEASURED_OOXML_TEXT_BOUND_BYTES + 1);
+  const pad = new Uint8Array(padSize).map((_, i) => (i * 31 + (i >> 8)) & 255);
   const z = buildZip(opc("docx", [{ name: "word/media/huge.bin", data: pad, method: 0 }]));
-  assert.ok(z.length > 24 * MIB);
+  assert.ok(z.length > padSize);
   const { reads, source } = ranged(z);
   const r = await discriminate(source);
   assert.deepEqual(withoutSignals(r), { ok: true, format: "docx", variant: null, mainPart: "word/document.xml", confidence: "high" });
@@ -277,7 +276,7 @@ test("R11 a file of any size is judged from its end record, its central director
   assert.ok(bytesRead < 256 * 1024, `read ${bytesRead} bytes of ${z.length}`);
   assert.ok(reads.every(([offset, length]) => offset + length <= z.length));
   // the same for a stored-first ODF and for an 8 MiB - 1 / 8 MiB + 1 file: no size changes the answer
-  for (const size of [8 * MIB - 1, 8 * MIB + 1, 20 * MIB + 1]) {
+  for (const size of [8 * MIB - 1, 8 * MIB + 1, MEASURED_OOXML_TEXT_BOUND_BYTES + 1]) {
     const big = buildZip(odf("ods", [{ name: "Pictures/p.bin", data: new Uint8Array(size).fill(7), method: 0 }].length ? { extra: [{ name: "Pictures/p.bin", data: new Uint8Array(size).fill(7), method: 0 }] } : {}));
     const got = ranged(big);
     assert.equal((await discriminate(got.source)).format, "ods", `${size}`);
@@ -649,16 +648,16 @@ test("R35 readPartPieces decodes a member by its own encoding: UTF-16 by its BOM
 test("R7 the declared unpacked size of a container small on disk is large for every container kind, and a lying directory counts as large (G126d audit)", () => {
   const declared = (name, n) => ({ name, data: "x", local: { uncompressedSize: n }, central: { uncompressedSize: n } });
   const kinds = {
-    xlsx: [declared("xl/worksheets/sheet1.xml", 20 * MIB + 1)], docx: [declared("word/document.xml", 20 * MIB + 1)],
-    pptx: [declared("ppt/slides/slide1.xml", 20 * MIB + 1)], odt: [declared("content.xml", 20 * MIB + 1)],
-    zip: [declared("data/big.txt", 20 * MIB + 1)],
+    xlsx: [declared("xl/worksheets/sheet1.xml", MEASURED_OOXML_TEXT_BOUND_BYTES + 1)], docx: [declared("word/document.xml", MEASURED_OOXML_TEXT_BOUND_BYTES + 1)],
+    pptx: [declared("ppt/slides/slide1.xml", MEASURED_OOXML_TEXT_BOUND_BYTES + 1)], odt: [declared("content.xml", MEASURED_OOXML_TEXT_BOUND_BYTES + 1)],
+    zip: [declared("data/big.txt", MEASURED_OOXML_TEXT_BOUND_BYTES + 1)],
   };
   for (const [kind, members] of Object.entries(kinds)) {
     const z = makeZip(members);
     assert.ok(z.length < 3 * MIB, kind);
     const c = readContainer(z);
     const { total } = declaredTextBytes(c, (n) => /\.(xml|txt)$/.test(n));
-    assert.equal(total, 20 * MIB + 1, kind);
+    assert.equal(total, MEASURED_OOXML_TEXT_BOUND_BYTES + 1, kind);
     assert.equal(sizeGuard(total).ok, false, kind);
   }
   // a directory whose sizes are not numbers is never shown to be small
