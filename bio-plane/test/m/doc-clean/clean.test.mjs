@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateSync, gzipSync, gunzipSync } from "node:zlib";
 import { cleanDocument, CLEAN_MAX_BYTES, CLEAN_MAX_PART_BYTES, CLEAN_REFUSALS } from "../../../src/doc-clean/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { openPdf } from "../../../src/pdfstructure.mjs";
 import { readContainer, readPart, readCoreProperties } from "../../../src/ooxml.mjs";
 import { SECRETS, enc, latin, has, jpeg, jpegCoded, png, pngCoded, gif, jp2, pdf, incremental, objStm, makePdf, makeZip,
@@ -234,10 +235,10 @@ test("R3 HTML_EMBEDS_IMAGE, ARCHIVE and NOT_A_CLEANABLE_FORMAT", async () => {
 });
 
 test("R3 DOCUMENT_TOO_LARGE: a file over CLEAN_MAX_BYTES, nothing read; a part declaring more than CLEAN_MAX_PART_BYTES", async () => {
-  assert.equal(CLEAN_MAX_BYTES, 16777216);
+  assert.equal(CLEAN_MAX_BYTES, boundOf("document", "clean_bytes"));
   const big = new Uint8Array(CLEAN_MAX_BYTES + 1);
   big.set(enc("%PDF-1.7"));
-  refused(await cleanDocument(big), "DOCUMENT_TOO_LARGE", /16777217 bytes/);
+  refused(await cleanDocument(big), "DOCUMENT_TOO_LARGE", new RegExp(`${CLEAN_MAX_BYTES + 1} bytes`));
   const parts = partsOf(docx());
   const z = makeZip(parts.map((p) => ({ name: p.name, data: p.data, ...(p.name === "word/document.xml" ? { central: { uncompressedSize: CLEAN_MAX_PART_BYTES + 1 } } : {}) })));
   refused(await cleanDocument(z), "DOCUMENT_TOO_LARGE", /part word\/document\.xml declares/);

@@ -17,3 +17,8 @@
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 1 | file-scanner | 0 / 1 | 0 / 1 / 2 (3) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-520 · reader-container's finding, K5578 · the renderer's LibreOffice profile blocks linked pictures. Detail: as `reader-container` does (`BlockUntrustedRefererLinks`, with a control that shows the installed LibreOffice fetches a document's linked picture without it), the `SafeViewRenderer`'s profile makes a render never fetch an address the document names; test: a docx and an odt whose picture is linked to a local test address fetch nothing, and the same document with the setting off does. `[owed: BOB writes the line (behaviour: a render makes no network call); file-scanner is layer 1 and still open, so this goes to the open job, else a CHANGE]`
+- T53-521 · req-ahead-T52, FILE-SAFETY #1 (K5384) · R36 into `build/requirements/file-scanner.md`. Detail: the job (FILE-SCANNER, COMPLETE) meets R36 and reports the text only in `build/plan/req-ahead-T52.md` (line 7, section "file-scanner (completion round; K5384)"), so a live requirement has no line in the requirements file. Copy the line below at the end of "Provides", after the line of R33 (R35 and R36 are the last ids; R36 is free), then remove it from req-ahead-T52.md, and record the Met mark. The exact line, with only its `*(not yet met: T52)*` mark removed:

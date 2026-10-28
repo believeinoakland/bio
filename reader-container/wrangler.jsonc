@@ -1,0 +1,46 @@
+{
+  "$schema": "../bio-plane/node_modules/wrangler/config-schema.json",
+  "name": "reader-container",
+
+  // PINNED: the repository decides the account, never the machine's wrangler session (CLAUDE.md).
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // The committed bundle of src/worker.mjs deploys (built by `npm run build`, guarded by bundler R24).
+  "main": "dist/reader-container.bundled.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The release's version site (bundler R12), as every member's.
+  "vars": { "VERSION": "0.87.0" },
+
+  // Reachable only through the plane's READER_CONTAINER service binding: no public address of its own.
+  "workers_dev": false,
+  "preview_urls": false,
+
+  // The Worker only passes requests through; the paid plan's CPU ceiling, as file-scanner's.
+  "limits": { "cpu_ms": 300000 },
+
+  // The one container. Its image is named by the release's registry rule, as file-scanner's: the repository
+  // fleet-member.json states (Docker Hub, docker.io/civicsmith), @sha256:<64 hex>, the digest the release published
+  // (container-images.yml, recorded by bundler's recordContainerDigest; never built in a session, K1898). No internet
+  // (src/worker.mjs).
+  "containers": [
+    {
+      "class_name": "ReaderContainer",
+      "image": "docker.io/civicsmith/reader-container@sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
+      "instance_type": "standard-1",
+      "max_instances": 3
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "READER", "class_name": "ReaderContainer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ReaderContainer"] }
+  ],
+
+  "observability": { "enabled": true }
+}

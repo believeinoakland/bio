@@ -873,20 +873,20 @@ test("R25 (K4094): over the repository's own fleet, each member's Worker part st
 
 /* ------------------------------------------------------------------------ R35 */
 
-const HUB_IMAGE = /^docker\.io\/civicsmith\/(agent-runner|file-scanner-scanner|file-scanner-renderer)@sha256:[0-9a-f]{64}$/;
+const HUB_IMAGE = /^docker\.io\/civicsmith\/(agent-runner|file-scanner-scanner|file-scanner-renderer|reader-container)@sha256:[0-9a-f]{64}$/;
 /** R35's real-fleet test (K2266), as a function of the members it is given: every image the container members state
  *  that is not `docker.io/civicsmith/<repository>@sha256:<64 hex>`, as the part R25 would write it. */
 const imagesOf = (members) => members.filter(isContainer)
   .flatMap((m) => (m.containers ? m.containers.map((c) => c.image) : [m.image])).map((i) => imageReference(i).reference ?? "(none)");
 const notOnDockerHub = (members) => imagesOf(members).filter((r) => !HUB_IMAGE.test(r));
 
-test("R35: the real fleet's three container images (agent-runner's, file-scanner's two classes) are named docker.io/civicsmith/<repository>@sha256:<64 hex> by their markers, and the part R25 writes carries that address", () => {
+test("R35: the real fleet's four container images (agent-runner's, file-scanner's two classes, reader-container's) are named docker.io/civicsmith/<repository>@sha256:<64 hex> by their markers, and the part R25 writes carries that address", () => {
   const members = discoverMembers();
   const images = imagesOf(members);
-  assert.equal(images.length, 3, "agent-runner's image and file-scanner's two classes, no other");
+  assert.equal(images.length, 4, "agent-runner's image, file-scanner's two classes and reader-container's, no other");
   assert.deepEqual(notOnDockerHub(members), []);
   assert.deepEqual(images.map((r) => r.split("@")[0]).sort(),
-    ["docker.io/civicsmith/agent-runner", "docker.io/civicsmith/file-scanner-renderer", "docker.io/civicsmith/file-scanner-scanner"]);
+    ["docker.io/civicsmith/agent-runner", "docker.io/civicsmith/file-scanner-renderer", "docker.io/civicsmith/file-scanner-scanner", "docker.io/civicsmith/reader-container"]);
   const names = members.map((m) => m.name);
   for (const m of members.filter(isContainer)) {
     const d = containerParts(m, names, { packages: false });
@@ -1081,7 +1081,7 @@ const digestDisagreements = (members) => members.filter(isContainer).flatMap((m)
 
 test("R36 (T51-144): over the real fleet, each container class's fleet-member.json image.digest is the digest its wrangler.jsonc containers[] entry names, so a cut cannot leave one stale", () => {
   const members = discoverMembers();
-  assert.equal(members.filter(isContainer).flatMap((m) => containerClasses(m).classes).length, 3, "agent-runner's class and file-scanner's two, no other");
+  assert.equal(members.filter(isContainer).flatMap((m) => containerClasses(m).classes).length, 4, "agent-runner's class, file-scanner's two and reader-container's, no other");
   assert.deepEqual(digestDisagreements(members), []);
 });
 

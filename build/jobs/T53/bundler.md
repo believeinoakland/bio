@@ -20,3 +20,19 @@
 
 Tests: 173/173. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcecEeYk8AL3QJSwTuwv): test runs 1, module lines 4599
+
+## Completion (2026-10-28)
+
+# BUNDLER T53 report, CHANGE T53-523 (reader-container enrolment)
+
+**Applied:** the bundler needs no code change to enrol a member (discovery is by its `fleet-member.json`; READER-CONTAINER supplied the files). My tests moved: fleetbundles' member and container-member lists (reader-container added), R35 (four images; regex names reader-container), R36 (four classes); `third-party.json` lists reader-container's `@cloudflare/containers` (R28).
+
+**Counts:** my branch alone: reader-container expectations red as expected (170/173: R35, R36, fleetbundles) until it is merged with it; on a local merge of origin/job/T53/reader-container (digest recorded, f639ff0f): 173/173, fleetbundles, R35 and R36 included. Merge together: `proc merge --module bundler --with reader-container`.
+
+**Found in other modules:** none new.
+
+**Met** · R43
+
+Tests: 173/173. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Tested with: reader-container @ f639ff0f06 (it merges with them: proc merge --with)
+Size (session_018BhcecEeYk8AL3QJSwTuwv): test runs 2, module lines 4604

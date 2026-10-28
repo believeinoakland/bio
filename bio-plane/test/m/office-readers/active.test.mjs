@@ -278,8 +278,8 @@ test("R12 every part read passes ooxml's part cap: a part declared over MEMBER_M
 
 test("R12 the file's declared total: over ARCHIVE_TOTAL_MAX every read refuses by that name; at it, the file reads (and a member no reader inflates is never refused)", async () => {
   for (const { entry, format, build } of FORMATS) {
-    /* each member under MEMBER_MAX, together over the total */
-    const over = build({ extra: [{ name: "customXml/a.xml", data: "a", cd: { usize: 200 * MiB } }, { name: "customXml/b.xml", data: "b", cd: { usize: 200 * MiB } }] });
+    /* each member at MEMBER_MAX (not over it), together over the total */
+    const over = build({ extra: [{ name: "customXml/a.xml", data: "a", cd: { usize: MEMBER_MAX } }, { name: "customXml/b.xml", data: "b", cd: { usize: MEMBER_MAX } }] });
     const p = await entry.parts(over);
     assert.equal(p.ok, false, format);
     assert.equal(p.why, "content_types_unreadable:ARCHIVE_TOTAL_MAX", format);

@@ -165,7 +165,8 @@ const TABLE = {
     entries: same(100000, k("office", "entries")),
     retained_objects: same(250000, k("office", "retained_objects")),
     /* the ooxml reader's text figures: ooxml R6 `MEASURED_OOXML_TEXT_BOUND_BYTES`, R35 `STREAMED_TEXT_BOUND_BYTES` (K4857) */
-    text_bytes: row(MB100, 20 * MiB, MB100, k("office", "text_bytes")),
+    /* the Worker-safe whole read: OOXML measured 139 MB for a 100 MiB part, over a Worker's 128 MB, so the standard is 20 MiB and the 100 MB document is read by pieces (K5637) */
+    text_bytes: row(20 * MiB, 20 * MiB, MB100, k("office", "text_bytes")),
     streamed_text_bytes: row(MB100, 32 * MiB, MB100, k("office", "streamed_text_bytes")),
     /* a count of characters, not bytes (K4858) */
     decoded_chars: same(64 * MiB, k("office", "decoded_chars")),
@@ -190,7 +191,8 @@ const TABLE = {
     cell_kept_chars: same(MiB, k("sheet", "cell_kept_chars")),
     sheets: same(1000, k("sheet", "sheets")),
   },
-  xlsx: { declared_text: bytes(32 * MiB, k("xlsx", "declared_text"), MB50) },
+  /* the standard is 25 MB (25,000,000 bytes): OFFICE-READERS measured a 50 MB declared text not held under the 85 % memory bar (150,000 rows / 33.4 MB at 82-87 %, 120,000 rows / 26.6 MB at 77.8 %; K5648). The alpha was 32 MiB; R29 keeps it never above the standard, so it is 25,000,000 too (inert: the active figure is the standard). */
+  xlsx: { declared_text: row(25000000, 25000000, MB50, k("xlsx", "declared_text")) },
   ods: {
     content_xml: bytes(20 * MiB, k("ods", "content_xml"), MB50),
     repeat_units: same(262144, k("ods", "repeat_units")),
@@ -210,11 +212,16 @@ const TABLE = {
 };
 
 /* the rows whose ACTIVE figure is the beta's: the `standard` of the whole-read row of each kind R37 names (R36's `wholeReadRow`; K4628 (3) option B, K5427);
- * a row not listed keeps the alpha as its active figure (no bound moves, K1881): a reader's own rows (a worker's bytes, a part's text, a package's
- * declared text) take the standard when that reader's job moves them. The light kinds (below) take the standard already. */
+ * a row not listed keeps the alpha as its active figure (no bound moves, K1881). Two stay at the alpha on a measurement:
+ * `document.clean_bytes` and `document.part_bytes` (DOC-CLEAN measured 113-182 MB peaks, K5630). The light kinds (below) take the standard already. */
 export const BETA_STANDARD_ROWS = Object.freeze([
-  ["pdf", "bytes"], ["document", "bytes"], ["spreadsheet", "bytes"], ["image", "bytes"], ["archive", "uploaded_bytes"], ["message", "upload_bytes"],
-].map((r) => Object.freeze(r)));
+  Object.freeze(["pdf", "bytes"]), Object.freeze(["pdf", "worker_bytes"]), Object.freeze(["document", "bytes"]), Object.freeze(["spreadsheet", "bytes"]),
+  Object.freeze(["image", "bytes"]), Object.freeze(["message", "upload_bytes"]), Object.freeze(["archive", "uploaded_bytes"]),
+  /* the readers' own rows (K5624, K5637; T53-511): each reader's job has moved first and reads these figures from here */
+  Object.freeze(["file_safety", "grade_read"]), Object.freeze(["office", "text_bytes"]), Object.freeze(["office", "streamed_text_bytes"]),
+  Object.freeze(["xlsx", "declared_text"]), Object.freeze(["ods", "content_xml"]), Object.freeze(["sheet_worker", "bytes"]), Object.freeze(["image", "cover_bytes"]),
+  Object.freeze(["archive", "unpacked_bytes"]), Object.freeze(["archive", "member_bytes"]), Object.freeze(["scan", "max_bytes"]),
+]);
 
 /* The three service levels (R38-R40; PL20, PL21, PL45 of `service-levels-draft.md`). `design_stage` and `cf_plan` are identifiers, never
  * sentences (K3971); the words a team reads for a level are UX-DESIGN's. The figures are the draft's estimates until a load-test row is
@@ -251,7 +258,11 @@ const TIME = {
   explore: time(2000, 2, "K5571 (3)"),
 };
 
-const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === "object") deepFreeze(v); return Object.freeze(o); };
+const deepFreeze = (o) => {
+  const vs = Object.values(o);
+  for (let i = 0; i < vs.length; i++) if (vs[i] && typeof vs[i] === "object") deepFreeze(vs[i]);
+  return Object.freeze(o);
+};
 
 export const READ_BOUNDS = deepFreeze({ ...TABLE, level: LEVELS, time: TIME });
 
@@ -264,7 +275,12 @@ const rowOf = (kind, name) => {
   return r;
 };
 
-const isBeta = (kind, name) => LIGHT_KINDS.includes(kind) || BETA_STANDARD_ROWS.some(([k, n]) => k === kind && n === name);
+/* indexed loops, no iterator: a reader that imports this file is measured at start-up by what its evaluation iterates (ooxml R34) */
+const isBeta = (kind, name) => {
+  if (LIGHT_KINDS.includes(kind)) return true;
+  for (let i = 0; i < BETA_STANDARD_ROWS.length; i++) if (BETA_STANDARD_ROWS[i][0] === kind && BETA_STANDARD_ROWS[i][1] === name) return true;
+  return false;
+};
 
 /* the ACTIVE figure: the standard for the light kinds (K4834) and the beta's whole-read rows (R37), else the alpha */
 export const boundOf = (kind, name) => {

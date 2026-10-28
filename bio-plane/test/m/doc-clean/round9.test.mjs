@@ -14,7 +14,8 @@ import { TAG_MAX, newScan } from "../../../src/doc-clean/xml.mjs";
 import { readContainer } from "../../../src/ooxml.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { zipChunks64 } from "../../make-zip.mjs";
-import { docx, makeZip, unzipCopy, enc } from "./fixtures.mjs";
+import { docx, makeZip, unzipCopy, enc, makePdf } from "./fixtures.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const SRC = new URL("../../../src/doc-clean/", import.meta.url).pathname;
 const DIR = mkdtempSync(join(tmpdir(), "doc-clean-round9-"));
@@ -71,7 +72,7 @@ const pythonList = (z, tag) => {
 
 // ---- R5, R6 (G136c, DOCS C1): the written entry count equals the read count ----
 
-for (const extra of [65534, 65535, 70000, 100000 - 10]) {
+for (const extra of [65534, 65535, 70000, boundOf("office", "entries") - 10]) {
   test(`R5 R6 DOCS C1 a DOCX of ${extra + 10} entries is copied whole: written count == read count less the parts R6 removes, in order, the end record agreeing (Info-ZIP and Python list the same names)`, async () => {
     const original = await bigDocx(extra);
     const read = names(original);
@@ -141,7 +142,7 @@ test("R3 DOCUMENT_UNREADABLE: a part declaring a ratio past the table's is refus
   assert.equal(ok.ok, true, ok.detail);
   const small = enc("x".repeat(50));
   const lying = makeZip([...parts, { name: "word/extra/lie.txt", data: small, method: 0, central: { uncompressedSize: small.length * ratio + 1 } }]);
-  refused(await cleanDocument(lying), "DOCUMENT_UNREADABLE", /part word\/extra\/lie\.txt declares \d+ bytes in 50, over the ratio of 1100/);
+  refused(await cleanDocument(lying), "DOCUMENT_UNREADABLE", new RegExp(`part word/extra/lie\\.txt declares \\d+ bytes in 50, over the ratio of ${boundOf("archive", "ratio")}`));
   const edge = makeZip([...parts, { name: "word/extra/edge.txt", data: small, method: 0, central: { uncompressedSize: small.length * ratio } }]);
   const e = await cleanDocument(edge);
   assert.ok(e.ok === false ? !/ratio/.test(e.detail) : true, "at the ratio the bound is not the reason");
@@ -216,7 +217,7 @@ test("R11 a tag longer than boundOf(xml, tag) is DOCUMENT_UNREADABLE naming the 
   const ok = await cleanDocument(withBody(doc(exact(TAG_MAX))));
   assert.equal(ok.ok, true, ok.detail);
   const tag = (s) => withBody(doc(s));
-  refused(await cleanDocument(tag(exact(TAG_MAX + 1))), "DOCUMENT_UNREADABLE", /part word\/document\.xml has a tag of more than 65536 bytes/);
+  refused(await cleanDocument(tag(exact(TAG_MAX + 1))), "DOCUMENT_UNREADABLE", new RegExp(`part word/document\\.xml has a tag of more than ${TAG_MAX} bytes`));
   refused(await cleanDocument(tag("<w:ins w:author=\"A\"/><w:t " + "z".repeat(TAG_MAX))), "DOCUMENT_UNREADABLE", /part word\/document\.xml/);
   refused(await cleanDocument(tag("<w:ins w:author=\"A\"/></w:t" + " ".repeat(TAG_MAX) + ">")), "DOCUMENT_UNREADABLE", /part word\/document\.xml/);
   refused(await cleanDocument(tag("<w:ins w:author=\"A\"/><!DOCTYPE " + "d".repeat(TAG_MAX) + ">")), "DOCUMENT_UNREADABLE", /part word\/document\.xml/);
@@ -296,4 +297,19 @@ test("R12 every ceiling is read from READ_BOUNDS: CLEAN_MAX_BYTES, the entry bou
     });
   }
   assert.deepEqual(found, [], "a ceiling's figure written as a literal");
+});
+
+// ---- R3 (T53-539): a PDF whose single value passes pdf-reader's direct-object bound is refused naming the bound ----
+
+test("R3 DOCUMENT_UNREADABLE: a page-tree array past the direct-object bound is refused naming the object and the bound's figure, through its words key", async () => {
+  const dmax = boundOf("pdf", "direct_object");
+  const line = `\n${" ".repeat(16)}3 0 R`;
+  const kids = `[${line.repeat(Math.ceil(dmax / line.length) + 10)}\n]`;
+  assert.ok(kids.length > dmax, "the array's text is past the bound");
+  const bytes = makePdf(["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids 4 0 R /Count 1 >>", "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 9 9] >>", kids]);
+  const r = await cleanDocument(bytes);
+  assert.deepEqual(Object.keys(r).sort(), ["code", "detail", "ok"]);
+  assert.equal(r.code, "DOCUMENT_UNREADABLE");
+  assert.equal(r.detail, localize("doc-clean.pdf.object_num_gen_is_larger_than", "object {num} {gen} is a single value larger than the {figure} bytes this module reads of one", { num: "4", gen: "0", figure: String(dmax) }));
+  assert.ok(r.detail.includes(String(dmax)), "the figure is in the sentence");
 });

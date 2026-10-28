@@ -52,8 +52,10 @@ test("jurisdictions.index.time_zone_conflict: profiles naming different time zon
 
 test("jurisdictions.index.records_help_conflict: profiles giving different records-request help conflict at records_help; identical ones do not", () => {
   const r = pair((a, b) => { a.records_help.days = 10; b.records_help.days = 99; });
-  assertNote(conflictAt(r, "records_help"), "records help");
-  control("records help", "records_help");
+  /* R105: the conflict is at the field of the law's block */
+  const at = `records_help[${get(TEST).records_help.law}].days`;
+  assertNote(conflictAt(r, at), "records help");
+  control("records help", at);
 });
 
 test("jurisdictions.index.weekend_conflict: profiles naming different weekends conflict at weekend; identical ones do not", () => {

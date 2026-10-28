@@ -59,7 +59,7 @@ test("R30: archives hold 500 MB uploaded and 2 GB unpacked at the standard, 256 
 
 test("R30: the alpha figures of the heavy kinds the plan names (the alpha column; R37 makes the standard the active figure of the whole-read rows)", () => {
   assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
-  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 32 * MiB);
+  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 25000000, "K5648");
   assert.equal(READ_BOUNDS.ods.content_xml.alpha, 20 * MiB);
   assert.equal(boundOf("ods", "repeat_units"), 262144);
   assert.equal(boundOf("workbook", "cells"), 250000);
@@ -108,14 +108,15 @@ test("R31: boundOf and statement throw an Error naming the kind and the name whe
 test("R30 (K4845): the heavy kinds' standards are K4628's per kind: documents 100 MB, spreadsheets and images 50 MB, the alpha where it is above", () => {
   const std = (k, n) => READ_BOUNDS[k][n].standard;
   for (const [k, n] of [["pdf", "bytes"], ["pdf", "worker_bytes"], ["document", "clean_bytes"], ["file_safety", "grade_read"]]) assert.equal(std(k, n), 104857600, `${k}/${n}`);
-  for (const [k, n] of [["xlsx", "declared_text"], ["ods", "content_xml"], ["sheet_worker", "bytes"], ["image", "cover_bytes"]]) assert.equal(std(k, n), 52428800, `${k}/${n}`);
+  assert.equal(std("xlsx", "declared_text"), 25000000, "K5648");
+  for (const [k, n] of [["ods", "content_xml"], ["sheet_worker", "bytes"], ["image", "cover_bytes"]]) assert.equal(std(k, n), 52428800, `${k}/${n}`);
   assert.equal(std("ocr", "frame_bytes"), 61300000);
   assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
 });
 
 /* the rows the quoting jobs of batch B reported (K4857, K4858, K4859, K4860; R30: a quoting job's row, added by this module, K4842 (1)) */
 const ADDED = [
-  ["office", "text_bytes", 104857600, 20 * MiB, 104857600],
+  ["office", "text_bytes", 20 * MiB, 20 * MiB, 104857600],
   ["office", "streamed_text_bytes", 104857600, 32 * MiB, 104857600],
   ["archive", "member_bytes", 2 * GiB, 256 * MiB, 2 * GiB],
   ["office", "decoded_chars", 67108864, 67108864, 67108864],

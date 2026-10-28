@@ -3,14 +3,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odtEntry, odsEntry, odpEntry, odfEvidentiaryDigest, ODF_REPEAT_EXPANSION_MAX } from "../../../src/odf.mjs";
-import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { pkg, metaXml, sha256Hex } from "./pkg.mjs";
 
-const MAX = 262144;
+const MAX = ODF_REPEAT_EXPANSION_MAX;
 const UNITS = { text: "undetermined", why: "over_repeat_bound", units: MAX + 1, bound: MAX,
   boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units", final: true };
-const CHARS = { text: "undetermined", why: "over_repeat_bound", units: MEASURED_OOXML_TEXT_BOUND_BYTES + 1,
-  bound: MEASURED_OOXML_TEXT_BOUND_BYTES, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars", final: true };
+/* the repeated-text bound is the ods.content_xml row (read from runtime-limits, never pinned) */
+const TEXT_BOUND = boundOf("ods", "content_xml");
+const CHARS = { text: "undetermined", why: "over_repeat_bound", units: TEXT_BOUND + 1,
+  bound: TEXT_BOUND, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars", final: true };
 
 const table = (rows) => `<table:table table:name="S">${rows}</table:table>`;
 const row = (cells, attrs = "") => `<table:table-row${attrs ? " " + attrs : ""}>${cells}</table:table-row>`;
@@ -136,15 +138,17 @@ test("R45 a link at a repeated address after its cell's first costs a unit; the 
 
 test("R45 the text a repeat copies is bounded by the size guard's own figure", async () => {
   const big = "x".repeat(10000);
-  // 2,097 copies of 10,000 characters = 20,970,000, under 20,971,520
-  const at = await odsEntry.text(ods(row(cell(big, 2098))));
-  assert.equal(at.counts.cells, 2098);
-  assert.equal(at.document.length, 2098 * 10000 + 2097);
-  await refusedOds(ods(row(cell(big, 2099))), CHARS);
-  // copies made by a row repeat count the same way
-  await refusedOds(ods(row(cell(big, 2), 'table:number-rows-repeated="1050"')), CHARS);
-  // a cell holding 20 MB repeated across 27 columns (27 units) is refused, never a RangeError
-  await refusedOds(ods(row(cell("y".repeat(MEASURED_OOXML_TEXT_BOUND_BYTES - 4096), 27))), CHARS);
+  // the copies (every repeat but the first) stay under the bound: floor(bound / 10,000) of them; one more is over
+  const under = Math.floor(TEXT_BOUND / 10000) + 1;
+  const at = await odsEntry.text(ods(row(cell(big, under))));
+  assert.equal(at.counts.cells, under);
+  assert.equal(at.document.length, under * 10000 + (under - 1));
+  await refusedOds(ods(row(cell(big, under + 1))), CHARS);
+  // copies made by a row repeat count the same way: two cells a row, rows enough to pass the bound
+  const rows = Math.floor(TEXT_BOUND / 20000) + 2;
+  await refusedOds(ods(row(cell(big, 2), `table:number-rows-repeated="${rows}"`)), CHARS);
+  // a cell holding a bound's worth of text repeated across 27 columns (27 units) is refused, never a RangeError
+  await refusedOds(ods(row(cell("y".repeat(TEXT_BOUND - 4096), 27))), CHARS);
 });
 
 test("R45 outside content.xml is still answered, and the digest, which expands nothing, is unaffected", async () => {

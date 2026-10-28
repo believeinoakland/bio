@@ -45,7 +45,7 @@ test("R37: the second limit of each kind (pages, rows, unpacked bytes, members, 
 test("R37: the alpha figures stay in the alpha column; the beta is never below the alpha", () => {
   assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
   assert.equal(READ_BOUNDS.archive.uploaded_bytes.alpha, 256 * MiB);
-  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 32 * MiB);
+  assert.equal(READ_BOUNDS.xlsx.declared_text.alpha, 25000000, "K5648: R29 keeps the alpha never above the 25 MB standard");
   for (const kind of ["document", "text", "spreadsheet", "image", "archive", "message", "pdf", "csv"]) {
     const [k, n] = wholeReadRow(kind);
     assert.ok(boundOf(k, n) >= READ_BOUNDS[k][n].alpha, kind);
@@ -74,7 +74,8 @@ test("R37 (control): a row R37 does not name keeps its active figure", () => {
   assert.equal(boundOf("workbook", "bytes"), 20 * MiB);
   assert.equal(boundOf("capture", "keep_bytes"), 32 * MiB);
   assert.equal(boundOf("sheet", "columns"), 16384);
-  assert.equal(boundOf("scan", "max_bytes"), 256 * MiB);
+  assert.equal(boundOf("document", "clean_bytes"), 16 * MiB, "stays at the alpha: DOC-CLEAN measured 113-182 MB peaks (K5630)");
+  assert.equal(boundOf("document", "part_bytes"), 32 * MiB, "stays at the alpha (K5630)");
 });
 
 /* ---------- R38-R40: the service levels ---------- */
@@ -253,5 +254,19 @@ test("the ten image-cover rows hold one figure in all three columns, and boundOf
     assert.equal(boundOf("image", name), n, name);
     assert.deepEqual(statement("image", name, n + 1), { size: n + 1, bound: n, key: `limit.image.${name}` }, name);
   }
-  assert.equal(boundOf("archive", "unpacked_bytes"), 256 * MiB, "stays active at the alpha for now (BOB)");
+  assert.equal(boundOf("archive", "unpacked_bytes"), 2 * GiB, "T53-511: every reader row's active figure is its standard");
+});
+
+/* ---------- T53-511 (K5624, K5637): the readers' rows take the standard ---------- */
+test("T53-511: each reader row's active figure is its standard; the two document rows (K5630) and the Worker-safe text part (K5637) are the exceptions", () => {
+  for (const [k, n] of [["pdf", "worker_bytes"], ["file_safety", "grade_read"], ["office", "streamed_text_bytes"], ["xlsx", "declared_text"], ["ods", "content_xml"],
+    ["sheet_worker", "bytes"], ["image", "cover_bytes"], ["archive", "unpacked_bytes"], ["archive", "member_bytes"], ["scan", "max_bytes"]]) {
+    assert.equal(boundOf(k, n), READ_BOUNDS[k][n].standard, `${k}/${n}`);
+  }
+  assert.equal(READ_BOUNDS.office.streamed_text_bytes.standard, MB100);
+  assert.equal(READ_BOUNDS.office.text_bytes.standard, 20 * MiB);
+  assert.equal(boundOf("office", "text_bytes"), 20 * MiB);
+  assert.equal(boundOf("archive", "member_bytes"), 2 * GiB);
+  assert.equal(boundOf("xlsx", "declared_text"), 25000000);
+  assert.equal(boundOf("scan", "max_bytes"), 524288000);
 });
