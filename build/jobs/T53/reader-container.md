@@ -1,6 +1,6 @@
 # reader-container (T53)
 
-**Status** · session_018BhcedfcFpkDwfqT6uTLcn · depth 2 · WORKING
+**Status** · session_018BhcedfcFpkDwfqT6uTLcn · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -28,3 +28,20 @@
 
 Tests: 69/69. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 1, module lines 2145
+
+## Completion (2026-10-28)
+
+**CHANGE applied** · K5602 (runtime-limits merged): tranche/T53 merged; the stand-in rows replaced by K5578 (2)'s names. `src/limits.mjs` now quotes `document.bytes`, `spreadsheet.bytes`, `image.bytes`, `archive.uploaded_bytes` (R6), and `document.pages` (R3: a multi-page picture's page cap, always sent to the container now). No fallback rows remain.
+- The request time stays `scan.time_ms` (the other container member's row): the table has no container row, and `budgetOf`'s time classes are screen and op budgets, not a container request's.
+- R5's large-ZIP test is sized to the largest stored ZIP every bound lets open whole, `min(archive.uploaded_bytes, archive.unpacked_bytes, archive.member_bytes)`: today 256 MiB, and the full 500 MiB once the two unpacking bounds reach the upload bound. The uploaded bound + 1 is still refused before any read.
+
+**Found in another module (runtime-limits)** · Active figures: `archive.uploaded_bytes` is now 500 MiB (the beta's), but `archive.unpacked_bytes` and `archive.member_bytes` are still the alpha's 256 MiB. So an archive between 256 and 500 MiB is accepted at upload but always refused while unpacking (a stored 500 MiB ZIP: "A file in this archive is 500 MB, over the limit of 256 MB for one file"). Per K5578 (2), unpacked should be 2 GiB. The module refuses correctly and keeps both figures; the figures are runtime-limits'.
+
+**Not done, and why** · As in the first report: fleet enrolment is BOB's to schedule; seven package versions in `packages.json` are pinned by the first release build.
+
+**Tests** · 69 pass, 0 fail, 0 skip. Checks for the module: architecture 0, coverage 8 of 8, words 0, fixtures 0, ownership 0.
+
+**Met** · R1, R2, R3, R4, R5, R6, R7, R8
+
+Tests: 69/69. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 2, module lines 2144
