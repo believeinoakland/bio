@@ -8,19 +8,58 @@
   "class_name": "ReaderContainer",
   "source": "https://snapshot.debian.org/archive/debian/20261006T000000Z bookworm main; https://snapshot.debian.org/archive/debian-security/20261006T000000Z bookworm-security main",
   "packages": [
-    { "name": "bzip2", "version": null },
-    { "name": "fonts-dejavu-core", "version": "2.37-6" },
-    { "name": "fonts-liberation2", "version": "2.1.5-1" },
-    { "name": "imagemagick", "version": null },
-    { "name": "libheif1", "version": null },
-    { "name": "libimage-exiftool-perl", "version": null },
-    { "name": "libopenjp2-7", "version": null },
-    { "name": "libreoffice-calc", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "libreoffice-core", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "libreoffice-impress", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "libreoffice-writer", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "p7zip-full", "version": null },
-    { "name": "xz-utils", "version": null }
+    {
+      "name": "bzip2",
+      "version": "1.0.8-5+b1"
+    },
+    {
+      "name": "fonts-dejavu-core",
+      "version": "2.37-6"
+    },
+    {
+      "name": "fonts-liberation2",
+      "version": "2.1.5-1"
+    },
+    {
+      "name": "imagemagick",
+      "version": "8:6.9.11.60+dfsg-1.6+deb12u13"
+    },
+    {
+      "name": "libheif1",
+      "version": "1.15.1-1+deb12u1"
+    },
+    {
+      "name": "libimage-exiftool-perl",
+      "version": "12.57+dfsg-1"
+    },
+    {
+      "name": "libopenjp2-7",
+      "version": "2.5.0-2+deb12u3"
+    },
+    {
+      "name": "libreoffice-calc",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-core",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-impress",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-writer",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "p7zip-full",
+      "version": "16.02+really26.02+dfsg-0+deb12u1"
+    },
+    {
+      "name": "xz-utils",
+      "version": "5.4.1-1+deb12u2"
+    }
   ],
-  "note": "The package statement of the container reader's image (bundler R27): each Debian package the Dockerfile installs. LibreOffice and the fonts are file-scanner's pinned versions; a null version is pinned by the release that first builds the image from the snapshot named. Its server is container/*.mjs and src/records.mjs; no npm package is installed."
+  "note": "The package statement of the container reader's image (bundler R27): each Debian package the Dockerfile installs, pinned, from the snapshots named (versions read from their bookworm and bookworm-security indexes, 2026-10-06), over the base pinned by digest (as file-scanner's statements). p7zip-full 16.02+really26.02 is 7-Zip 26.02. Its server is container/*.mjs and src/records.mjs; no npm package is installed in the image."
 }
