@@ -118,12 +118,13 @@ console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them 
    `docker.io/civicsmith/…@sha256`, which an installer pulls with no credential; red until file-scanner's (T51-9) and
    agent-runner's (T51-64) own jobs merge their markers. */
 t("members discovered by their own marker file, never a list kept here",
-  members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
-t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
+  members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "reader-container", "sheet-worker"]);
+t("agent-runner, file-scanner and reader-container are listed as container members, each with its images (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind,
     ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
   [["agent-runner", "container", "docker.io/civicsmith/agent-runner"],
-   ["file-scanner", "container", "docker.io/civicsmith/file-scanner-scanner", "docker.io/civicsmith/file-scanner-renderer"]]);
+   ["file-scanner", "container", "docker.io/civicsmith/file-scanner-scanner", "docker.io/civicsmith/file-scanner-renderer"],
+   ["reader-container", "container", "docker.io/civicsmith/reader-container"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
