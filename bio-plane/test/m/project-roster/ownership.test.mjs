@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, snapshot } from "./fixture.mjs";
 import { Membership, notAnAdmin, noSuchProject, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { PROJECT_ROSTER_CHECKS } from "../../../src/project-roster/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* P owned by ann; bob, cal, dee joined; eve invited */
 async function owned() {
@@ -58,7 +59,7 @@ test("R3 TARGET_NOT_JOINED carries its row C-56.5 at its one site, this module's
     const r = add(w, h, "ann");
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.handle], [false, "TARGET_NOT_JOINED",
       "TARGET_NOT_JOINED", "C-56.5", row.translation, h]);
-    assert.match(r.detail, /joins the project first/);
+    assert.equal(r.detail, word("project-roster.index.owner_must_be_joined_first"));
   }
   assert.equal(snapshot(w), before, "nothing written by a refusal");
 });

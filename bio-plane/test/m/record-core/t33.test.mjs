@@ -340,10 +340,11 @@ const TABLE_DECLARED_SHAPE = { ok: false, reason: "TABLE_DECLARED", code: "TABLE
 const TABLE_NAME_INVALID_SHAPE = { ok: false, reason: "TABLE_NAME_INVALID", code: "TABLE_NAME_INVALID", check: "C-102.26",
                                    translation: RECORD_CORE_CHECKS.TABLE_NAME_INVALID.translation, detail: "<sentence>" };
 /* A refusal with its detail checked and set aside: one sentence naming the table and saying nothing was declared. */
+const DECLARED_DETAIL = { TABLE_NAME_INVALID: "record-core.index.table_was_not_declared_a", TABLE_DECLARED: "record-core.index.table_is_already_declared_by" };
 function declaredRefusal(r) {
   assert.equal(typeof r.detail, "string");
   assert.ok(r.detail.includes(String(r.table)), `the detail names the table: ${r.detail}`);
-  assert.match(r.detail, /nothing was declared\.$/);
+  assert.equal(r.detail, word(DECLARED_DETAIL[r.reason], { table: String(r.table), declaredBy: String(r.declaredBy) }), "the detail is the refusal's word");
   assert.equal(r.detail.split(". ").length, 1, "one sentence");
   return { ...r, detail: "<sentence>" };
 }
@@ -657,11 +658,13 @@ test("R78: a second registration for a table is STORE_GATE_DECLARED (C-102.23) n
 
 /* ---- R79, R29: expunge with a tombstone ---- */
 
+/* the content of the two rows the expunge removes; the tombstone must hold neither */
+const REMOVED_CONTENT = ["a home address", "a phone"];
 function expungeFixture() {
   const { s, rc } = fresh();
   s.db.exec(`CREATE TABLE person_facts (fact_id TEXT, person TEXT, value TEXT); CREATE TABLE claims (claim_id TEXT, v TEXT)`);
   rc.declareTable("people", [entry("person_facts", { expunge: "tombstone", sight: "owner" }), entry("claims")]);
-  s.sql.exec(`INSERT INTO person_facts VALUES ('PFA-1','ENT-1','a home address'), ('PFA-2','ENT-1','a phone'), ('PFA-3','ENT-2','x')`);
+  s.sql.exec(`INSERT INTO person_facts VALUES ('PFA-1','ENT-1',?), ('PFA-2','ENT-1',?), ('PFA-3','ENT-2','x')`, REMOVED_CONTENT[0], REMOVED_CONTENT[1]);
   s.sql.exec(`INSERT INTO claims VALUES ('IDC-1','y')`);
   put(rc, "INFO-2026-0001-a", "K1"); put(rc, "INFO-2026-0001-a", "K2");
   return { s, rc };
@@ -675,7 +678,7 @@ test("R79: expunge removes the matching rows of a tombstone table in one transac
   assert.ok(!Number.isNaN(Date.parse(r.tombstone.at)));
   assert.deepEqual(rows(s, `SELECT fact_id FROM person_facts`).map((x) => x.fact_id), ["PFA-3"]);
   const held = JSON.stringify(rows(s, `SELECT * FROM tombstones`));
-  assert.ok(!/home address|a phone|PFA-1|PFA-2/.test(held), "the tombstone holds none of the removed content");
+  assert.ok(![...REMOVED_CONTENT, "PFA-1", "PFA-2"].some((x) => held.includes(x)), "the tombstone holds none of the removed content");
   /* every column of the key must match; each ground's own field is recorded with it alone */
   const co = rc.expunge({ module: "people", table: "person_facts", key: { fact_id: "PFA-3", person: "ENT-2" }, ground: "court_order", order: "DKT-2026-0001", demandKind: "ignored", by: "m2" });
   assert.deepEqual([co.removed, co.tombstone.order, "demandKind" in co.tombstone], [1, "DKT-2026-0001", false]);

@@ -73,8 +73,8 @@ test("R112 the sweep's row index.mjs:801: a registered signer is not an owner; t
                                 subject: "CASE-1" });
   assert.equal(r.check, "C-57.1");
   assert.equal(r.translation, word("refusal.CASE_SIGNER_NOT_AN_OWNER"));
-  assert.match(r.detail, /^CASE-1 is PROJ-1's production, .* The signature is kit's, who is not an owner of it\./);
-  assert.match(r.detail, /your team's Civicsmith is not authority over a project\. Nothing was committed\.$/);
+  assert.equal(r.detail, word("membership.index.subject_is_v1_production_and",
+    { subject: "CASE-1", v1: "PROJ-1's", v2: "kit" }));
 });
 
 test("R112 the sweep's row index.mjs:2246: the founder is not removed, because your team's Civicsmith runs in somebody's hosting account", async () => {

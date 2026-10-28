@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V } from "./fixture.mjs";
 import { notTheOwner, notAnAdmin, Membership, MEMBERSHIP_CHECKS, PROJECT_AUTHORITY_CHECKS }
   from "../../../src/membership/index.mjs";
@@ -48,7 +49,7 @@ test("R122 notTheOwner answers PROJECT_ACT_NOT_THE_OWNER in R84's shape, with C-
   assert.deepEqual(Object.keys(r).sort(), ["by", "check", "code", "detail", "ok", "project", "reason", "translation"]);
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.by, r.project],
     [false, "PROJECT_ACT_NOT_THE_OWNER", "PROJECT_ACT_NOT_THE_OWNER", "C-56.2", row.translation, "ann", "PROJ-1"]);
-  assert.match(r.detail, /Nothing was changed\.$/);
+  assert.equal(r.detail, word("membership.index.not_the_owner_detail"));
   /* the detail is one fixed sentence: the same for every caller and project */
   assert.equal(notTheOwner("bob", "PROJ-2").detail, r.detail);
   assert.deepEqual([notTheOwner().by, notTheOwner().project], [null, null]);
