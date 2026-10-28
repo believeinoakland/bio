@@ -12,6 +12,7 @@
 - T53-580 · K5715, ACQUISITION's finding · `register-readers` R9: `createReducer` offers a `snapshot()`/resume of its carry (the unfinished row, the row number, the hashes), so acquisition R127's offset checkpoint can be built; and `createRowParser` reads a separate header file in the header piece's own delimiter (acquisition's `headerInDelimiter` work-around then removed). With acquisition R127 after it
 **runtime-limits** (also)
 - T53-581 · K5715, acquisition R126 · the two `register` rows of `READ_BOUNDS` (runtime-limits R47) once M-R7 records them; acquisition R126 then met
+- T53-586 · K5736, extraction R122 · the alarm reading's units-and-index-rows budget becomes a runtime-limits row, extraction reading it from there
 
 ## Layer 2
 **promotion**
