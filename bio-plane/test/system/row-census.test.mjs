@@ -263,9 +263,9 @@
    12 changed, none retired; none declared here) stamped in 1.80.0. A row a T52 job adds or changes turns this suite red
    until T53's stamp, so none is declared.
    RE-PINNED 2026-10-28 (PROMOTION #1, T53, K5006): over 1.81.0, the stamp's own lines (`fixtures/row-census-1.81.0.jsonl`,
-   written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in `build/jobs/T53/promotion.md`; 1974 rows,
-   e558e463...); the 1.80.0 snapshot (no stamp reads it) renamed to it; the rows added or changed after 1.80.0 (3 new,
-   6 changed, none retired; none declared here) stamped in 1.81.0. A row a T53 job adds or changes turns this suite red
+   written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in `build/jobs/T53/promotion.md`; 1987 rows,
+   90258148...); the 1.80.0 snapshot (no stamp reads it) renamed to it; the rows added or changed after 1.80.0 (16 new,
+   7 changed, none retired; none declared here) stamped in 1.81.0. A row a T53 job adds or changes turns this suite red
    until T54's stamp, so none is declared. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";

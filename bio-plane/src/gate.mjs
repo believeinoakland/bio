@@ -1186,12 +1186,12 @@ import { localize } from "./setup-words/index.mjs";
 /* 1.81.0 (PROMOTION #1, T53, 2026-10-28; K5006): MINOR. The stamp of every row the jobs after 1.80.0's tree added or
    changed (modules after layer 2, merged after PROMOTION #1's 1.80.0 stamp; no job record named them `awaiting stamp`),
    read by diffing R50's census lines of this tree against 1.80.0's own (`test/fixtures/row-census-1.80.0.jsonl`: 1971
-   rows, 17406b47...): three new rows, six changed, none retired. THE CAUSE of T53's red `row-census`: the pin was stamped
+   rows, 17406b47...): sixteen new rows, seven changed, none retired. THE CAUSE of T53's red `row-census`: the pin was stamped
    once and rows moved after it with no stamp, which the suite refuses by name; this is the layer-2 stamp it waits for.
-   ARRIVED (3): C-102.40 SETTING_AT_INVALID, C-2.8 CUTTING_LEG_IN_GROUND, C-33.65 WHICH_PASSAGE.
-   CHANGED (6), code and number unmoved, each its translation: C-115.40, C-120.4, C-124.8, C-137.5, C-140.45, C-53.13.
-   THE FAMILIES THAT ARRIVED: none. This module adds no row.
-   ROW_CENSUS (R50) re-pinned to this tree: 1974 rows. Rows a T53 job adds or changes are T54's stamp. */
+   ARRIVED (16): C-102.40 SETTING_AT_INVALID; C-156.1-.13, the new family `CATALOGUE_CHECKS` (ai-catalogue, rows {check, where, word}, the census reads them as it reads any table); C-2.8 CUTTING_LEG_IN_GROUND, C-33.65 WHICH_PASSAGE.
+   CHANGED (7), code and number unmoved, each its translation or `where`: C-96.6, C-115.40, C-120.4, C-124.8, C-137.5, C-140.45, C-53.13.
+   THE FAMILIES THAT ARRIVED: `CATALOGUE_CHECKS` C-156 (ai-catalogue; it enters the census by being an exported table of rows, no listing here). This module adds no row.
+   ROW_CENSUS (R50) re-pinned to this tree: 1987 rows. Rows a T53 job adds or changes are T54's stamp. */
 export const CATALOG_VERSION = "1.81.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
@@ -1284,8 +1284,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1974,
-  digest: "e558e463829e7561a7f9a013b4b7d81b1a833dbb3ea64b4774d2df88badd35e0" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1987,
+  digest: "90258148cc0899c067db6399dda4f23c3750ebe42304d9a1a17ae48c590084dc" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
