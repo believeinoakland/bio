@@ -119,7 +119,7 @@ async function readConvert(source, p, container) {
 async function readFrames(source, p, container) {
   const bytes = await readAll(source);
   if (!bytes) return refuse.unreadable('source');
-  const bounds = { bytes: p.bound, pixels: IMAGE.pixels, edge: IMAGE.edge, timeMs: TIME_MS, ...(IMAGE.pages != null ? { pages: IMAGE.pages } : {}) };
+  const bounds = { bytes: p.bound, pixels: IMAGE.pixels, edge: IMAGE.edge, timeMs: TIME_MS, pages: IMAGE.pages };
   const res = await ask(container, `/frames?kind=${p.kind}`, bounds, bytes);
   if (!res) return refuse.unreachable();
   const frames = [];

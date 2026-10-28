@@ -74,14 +74,18 @@ test('R5 a single-file .gz, .bz2 and .xz is a one-member archive, named from the
   }
 });
 
-test('R5 a ZIP of the uploaded bound opens and every member streams through; one byte more is refused before any read', { skip: needs('sevenZip'), timeout: 900000 }, async () => {
+/* the largest stored ZIP every bound lets open whole: the uploaded bound (500 MB) once the unpacked and one-member bounds
+ * are at least it, as the beta's are; the smallest of the three until then */
+const WHOLE = Math.min(ARCHIVE.uploaded, ARCHIVE.unpacked, ARCHIVE.member);
+
+test('R5 a large ZIP (the uploaded bound, or the most the other bounds let unpack) opens and every member streams through; the uploaded bound + 1 is refused before any read', { skip: needs('sevenZip'), timeout: 900000 }, async () => {
   const dir = scratch('big');
   const path = join(dir, 'big.zip');
   const out = createWriteStream(path);
-  for await (const c of zipChunks64Sized([{ name: 'readme.txt', data: enc.encode('a large archive') }], ARCHIVE.uploaded)) { if (!out.write(c)) await new Promise((r) => out.once('drain', r)); }
+  for await (const c of zipChunks64Sized([{ name: 'readme.txt', data: enc.encode('a large archive') }], WHOLE)) { if (!out.write(c)) await new Promise((r) => out.once('drain', r)); }
   await new Promise((r) => out.end(r));
   const source = fileSource(path);
-  assert.equal(source.size, ARCHIVE.uploaded);
+  assert.equal(source.size, WHOLE);
   const r = await read(source, 'zip', { container: box.container });
   assert.equal(r.ok, true, r.detail);
   const seen = [];

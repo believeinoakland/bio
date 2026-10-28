@@ -1,22 +1,17 @@
 /* reader-container's ceilings (R3, R5, R6, R7): every one is a row of runtime-limits' READ_BOUNDS, read through
- * `boundOf`; this module holds no numeric literal for a ceiling. The per-kind byte rows of N1267 (image, document,
- * spreadsheet, and the page count) are runtime-limits' T53 entry; until a row is in the table the nearest row it
- * already keeps stands in (`rowOr`), so nothing here is a figure of its own. Pure; nothing at load but the frozen table. */
-import { READ_BOUNDS, boundOf, statement } from '../../bio-plane/src/read-bounds.mjs';
-
-const has = (kind, name) => Object.hasOwn(READ_BOUNDS, kind) && Object.hasOwn(READ_BOUNDS[kind], name);
-/* the first row of `rows` the table holds, as [kind, name]; null when it holds none */
-const rowOr = (...rows) => rows.find(([kind, name]) => has(kind, name)) ?? null;
+ * `boundOf`, by the row names K5578 (2) set (its R37 per-kind rows); this module holds no numeric literal for a ceiling.
+ * Pure; nothing at load but the frozen table. */
+import { boundOf, statement } from '../../bio-plane/src/read-bounds.mjs';
 
 /* R6: the bound a whole file of each route is judged against before any read, as its READ_BOUNDS row */
 export const BYTE_ROWS = Object.freeze({
-  document: rowOr(['document', 'bytes'], ['pdf', 'bytes']),
-  spreadsheet: rowOr(['spreadsheet', 'bytes'], ['workbook', 'bytes']),
-  image: rowOr(['image', 'bytes'], ['image', 'cover_bytes']),
+  document: ['document', 'bytes'],
+  spreadsheet: ['spreadsheet', 'bytes'],
+  image: ['image', 'bytes'],
   archive: ['archive', 'uploaded_bytes'],
 });
-/* the most pages one document or multi-page image yields (N1267's 5,000), when the table holds the row */
-export const PAGES_ROW = rowOr(['document', 'pages']);
+/* the most pages one document or multi-page picture yields (N1267's 5,000; a TIFF's pages count toward it) */
+export const PAGES_ROW = ['document', 'pages'];
 
 export const ARCHIVE = Object.freeze({
   uploaded: boundOf('archive', 'uploaded_bytes'),
@@ -31,12 +26,12 @@ export const ARCHIVE = Object.freeze({
 export const IMAGE = Object.freeze({
   pixels: boundOf('image', 'pixels'),
   edge: boundOf('image', 'edge'),
-  pages: PAGES_ROW ? boundOf(...PAGES_ROW) : null,
+  pages: boundOf(...PAGES_ROW),
 });
 
-/* the most time one container request may take: the container's own row once runtime-limits keeps one, until then the
- * file scanner's, the other container member (both milliseconds) */
-export const TIME_ROW = rowOr(['container', 'time_ms'], ['scan', 'time_ms']);
+/* the most time one container request may take: the file scanner's row, the other container member's (milliseconds);
+ * the table keeps no row of the container reader's own */
+export const TIME_ROW = ['scan', 'time_ms'];
 export const TIME_MS = boundOf(...TIME_ROW);
 
 /* the bound of a route's whole file, and the statement a refusal carries (size, bound, key) */
