@@ -596,6 +596,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-354 · K4168, N824, N858 · CAPABILITIES rows
 - rows: `build/plan/T53-R1/op-capabilities.md`
 **op-declarations**
+- T53-556 · K5678, ai-accounts R35 and the ops K5457 retired · the tests of retired ops (R19, R20, R24, R30, R34, R41, R47, R68) re-pointed to the nineteen new ops, red on the tranche until then
 - T53-355 · K4599 · `screenread`, budget class per op
 - T53-356 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-357 · N1220 · every machine result labelled with its AI
