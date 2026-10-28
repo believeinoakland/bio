@@ -242,3 +242,16 @@ test("R46: the mail figures are rows of READ_BOUNDS, one figure in all three col
 
 /* ---------- R47: waits on the M-R7 measure ---------- */
 test.todo("R47: the register rows stream_max and segment_max (they do not exist until M-R7 is recorded, `acquisition` R126)");
+
+/* ---------- image-cover's rows (BOB #326): one figure in all three columns ---------- */
+test("the ten image-cover rows hold one figure in all three columns, and boundOf and statement answer them", () => {
+  const want = { redraw_bytes: 33554432, photo_profile_max: 1048576, photo_profile_tags: 256, photo_exif_bytes: 1048576, photo_directory_entries: 1024,
+    photo_field_chars: 256, photo_text_chars: 4096, photo_list_items: 64, photo_xmp_bytes: 262144, photo_inflated_bytes: 262144 };
+  for (const [name, n] of Object.entries(want)) {
+    const row = READ_BOUNDS.image[name];
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard: n, alpha: n, protective: n }, name);
+    assert.equal(boundOf("image", name), n, name);
+    assert.deepEqual(statement("image", name, n + 1), { size: n + 1, bound: n, key: `limit.image.${name}` }, name);
+  }
+  assert.equal(boundOf("archive", "unpacked_bytes"), 256 * MiB, "stays active at the alpha for now (BOB)");
+});
