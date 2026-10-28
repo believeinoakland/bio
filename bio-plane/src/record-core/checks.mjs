@@ -220,6 +220,12 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.39', where: at("putFromParts", "is-evidence-parts-refused"),
     translation: localize('record-core.checks.evidence_store_refused', 'The place where your team\'s Civicsmith keeps documents would not take a large document whole, so it was not kept and nothing was written. Try again; if it happens again, tell whoever hosts your team\'s Civicsmith.'),
   }),
+  /* New (T53, R92; N1257): `getSettingAt` reads a setting as of an instant; an `at` that is not one is refused. The row
+     takes the next free number of C-102, after C-102.39. */
+  SETTING_AT_INVALID: Object.freeze({
+    check: 'C-102.40', where: at("getSettingAt", "is-setting-at-refused"),
+    translation: localize('record-core.checks.setting_at_invalid', 'A part of your team\'s Civicsmith asked what a setting was at a moment it could not read, so nothing was read. {BUILD_FAULT}', { BUILD_FAULT: String(BUILD_FAULT) }),
+  }),
 });
 
 /* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection), MOVED from the catalogue
