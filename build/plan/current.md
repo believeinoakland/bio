@@ -765,6 +765,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-448 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-449 · K5571 · R-40's `person` half (6)
 - T53-450 · K5565 · English in tests: its entry
+- T53-550 · K5671, promotion R53, R62 · `explore.mjs` (~218-239) sends a raw-id title and no project to promotion; send both as R53 asks
 - rows: `build/plan/T53-R1/screens-investigate.md`
 **screens-publish**
 - T53-451 · A7 · document pickers
