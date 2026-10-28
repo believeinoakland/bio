@@ -1,0 +1,13 @@
+Round R1, layer 3, module file-safety, tranche T53. Your depth: 2. BOB: BOB #329 (session_018BhcefYrW3vwL3mYqzy8xd).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module file-safety`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-110 · A4 · safe picture of a photograph, `file_says`
+- T53-111 · DEC-454 · partial-scan reason in words
+- T53-112 · N1266 · held-and-named file safe-graded
+- T53-113 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-114 · DEC-479 · file-safety before doorbell in layer 3
+- T53-115 · K5565 · English in tests: its entry
+- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
+- rows: `build/plan/T53-R1/file-safety.md`

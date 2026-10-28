@@ -1,0 +1,14 @@
+Round R1, layer 3, module acquisition, tranche T53. Your depth: 2. BOB: BOB #329 (session_018BhcefYrW3vwL3mYqzy8xd).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module acquisition`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-97 · K5513 (C22) · daemon fetch only for a followed case
+- T53-98 · N1266, N1267 · held-and-named filed, refused not filed
+- T53-99 · K5574 · same recognition if it fetches directly
+- T53-100 · N1259, K4403, K1485 · CAPABILITIES rows
+- T53-101 · K5565 · English in tests: its entry
+- T53-526 · format-registry's finding (T53-42, R38, R39) · "known" is not `format !== "undetermined"`
+- T53-527 · runtime-limits, `archive.uploaded_bytes` · CAPTURE_MAX is 500 MB
+- T53-547 · K5666 · the officers lookup's `keyedFetch` service id is `ca-officers` (credentials R84)
+- rows: `build/plan/T53-R1/acquisition.md`

@@ -2,7 +2,7 @@
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #329 · session_018BhcefYrW3vwL3mYqzy8xd · depth 1
 **Jobs** · none
-**Owed** · none
+**Owed** · start provenance; start attestation; start provenance-routes; start capture-sources; start acquisition; start capture; start file-safety; start doorbell; start mail-door; start sources
 
 # Plan T53 · round R1, the beta's build
 

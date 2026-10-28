@@ -1,0 +1,14 @@
+Round R1, layer 3, module capture, tranche T53. Your depth: 2. BOB: BOB #329 (session_018BhcefYrW3vwL3mYqzy8xd).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module capture`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-102 · K5513 (C22) · daemon fetch only for a followed case
+- T53-103 · N1266, N1267 · held-and-named filed, refused not filed
+- T53-104 · DEC-455 · `previewmore` (R121)
+- T53-105 · K5574, K5575 · challenge or CAPTCHA recognised, refused, counted per host; her file matches the waiting request
+- T53-106 · N824, K5506, K5527 · CAPABILITIES rows
+- T53-107 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-108 · P9 (P-22) · Add door under three uploaders: acceptance within the Add budget `first: settle where the wait is`
+- T53-109 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/capture.md`

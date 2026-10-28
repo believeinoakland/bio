@@ -1,0 +1,10 @@
+Round R1, layer 3, module doorbell, tranche T53. Your depth: 2. BOB: BOB #329 (session_018BhcefYrW3vwL3mYqzy8xd).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module doorbell`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-116 · A3 · pulled knock carries file name
+- T53-117 · DEC-479 · `inboxview` (R31)
+- T53-118 · N824, DEC-108 · CAPABILITIES rows
+- T53-119 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/doorbell.md`

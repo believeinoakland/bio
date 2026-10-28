@@ -1,0 +1,8 @@
+Round R1, layer 3, module sources, tranche T53. Your depth: 2. BOB: BOB #329 (session_018BhcefYrW3vwL3mYqzy8xd).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module sources`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-121 · A3 (DEC-459) · `sourceLinksFor` (R23)
+- T53-122 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/sources.md`

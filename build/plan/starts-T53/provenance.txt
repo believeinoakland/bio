@@ -1,0 +1,9 @@
+Round R1, layer 3, module provenance, tranche T53. Your depth: 2. BOB: BOB #329 (session_018BhcefYrW3vwL3mYqzy8xd).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module provenance`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-91 · N824, K2425 · CAPABILITIES rows
+- T53-92 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-93 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/provenance.md`
