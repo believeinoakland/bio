@@ -10,7 +10,7 @@ import { start, sleep, measuredOn, snapOf } from "./lib.mjs";
 
 const arg = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, ...v] = a.replace(/^--/, "").split("="); return [k, v.join("=") || "1"]; }));
 const seed = arg.seed; if (!seed) { console.error("--seed required"); process.exit(2); }
-const bundle = "/home/user/wt-mem/proto-mem/dist/meas.bundled.mjs";
+const bundle = "/home/user/wt-chain/proto-mem/dist/meas.bundled.mjs";
 const modes = (arg.modes || "due,forced").split(",");
 const name = arg.out || "consumers-cold";
 const out = { when: new Date().toISOString(), seed: JSON.parse(readFileSync(seed + "/seed-summary.json", "utf8")), results: [] };
@@ -43,6 +43,6 @@ for (const mode of modes) {
     console.error(`${mode} ${n}: base ${r.baseline} peak ${r.op.peak_rss} +${r.op.peak_above_start} heapused ${r.baseline_heap.used}->${r.op.heap_used_peak_seen} due ${r.was_due}`);
   }
 }
-mkdirSync("/home/user/wt-mem/proto-mem/results", { recursive: true });
-writeFileSync(`/home/user/wt-mem/proto-mem/results/${name}.json`, JSON.stringify(out, null, 1));
+mkdirSync("/home/user/wt-chain/proto-mem/results", { recursive: true });
+writeFileSync(`/home/user/wt-chain/proto-mem/results/${name}.json`, JSON.stringify(out, null, 1));
 console.error("wrote", name);

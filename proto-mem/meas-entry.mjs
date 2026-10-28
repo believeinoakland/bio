@@ -49,7 +49,10 @@ export class Store extends Base {
   async measGc(mode = "try", mb = 400) {
     const out = {};
     try { out.hs0 = v8.getHeapStatistics ? v8.getHeapStatistics() : null; } catch (e) { out.hs_error = String(e && e.message); }
-    if (mode === "try") {
+    if (mode === "direct") {   /* workerd started with v8Flags ["--expose-gc"] (MF_V8_FLAGS): gc is a global */
+      out.gc_fn = typeof globalThis.gc;
+      if (typeof globalThis.gc === "function") { const t0 = Date.now(); globalThis.gc(); out.gc_called = true; out.gc_ms = Date.now() - t0; }
+    } else if (mode === "try") {
       try { v8.setFlagsFromString("--expose-gc"); const g = (await import("node:vm")).runInNewContext("gc"); out.gc_fn = typeof g; if (typeof g === "function") { g(); out.gc_called = true; } } catch (e) { out.gc_error = String(e && e.message).slice(0, 200); }
     } else if (mode === "old") {
       /* long-lived allocations (held across several turns, so V8 promotes them to old space) dropped again: old space grows past its limit and V8 runs a major collection */

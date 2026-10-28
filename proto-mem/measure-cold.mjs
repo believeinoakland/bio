@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { start, makeText, uploadFile, promoteDoc, sleep, measuredOn, snapOf } from "./lib.mjs";
 
 const arg = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, ...v] = a.replace(/^--/, "").split("="); return [k, v.join("=") || "1"]; }));
-const bundle = arg.bundle || "/home/user/wt-mem/proto-mem/dist/meas.bundled.mjs";
+const bundle = arg.bundle || "/home/user/wt-chain/proto-mem/dist/meas.bundled.mjs";
 const files = (arg.files || "1000000,1900000").split(",").map(Number);
 const env = { MEAS_GATE: "1", ...(arg.piece ? { PROTO_PIECE_UNITS: String(arg.piece) } : {}) };
 const name = arg.out || `cold-piece${arg.piece || "default"}`;
@@ -53,7 +53,7 @@ for (const bytes of files) {
   out.files.push(rec);
   console.error("done", bytes);
 }
-mkdirSync("/home/user/wt-mem/proto-mem/results", { recursive: true });
-writeFileSync(`/home/user/wt-mem/proto-mem/results/${name}.json`, JSON.stringify(out, null, 1));
+mkdirSync("/home/user/wt-chain/proto-mem/results", { recursive: true });
+writeFileSync(`/home/user/wt-chain/proto-mem/results/${name}.json`, JSON.stringify(out, null, 1));
 rmSync(dir, { recursive: true, force: true });
 console.error("wrote", name);

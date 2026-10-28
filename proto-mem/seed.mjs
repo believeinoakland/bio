@@ -10,7 +10,7 @@ const arg = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, ...v
 const dir = arg.dir, DOCS = Number(arg.docs || 100), BYTES = Number(arg.bytes || 100000);
 if (!dir) { console.error("--dir required"); process.exit(2); }
 mkdirSync(dir, { recursive: true });
-const bundle = "/home/user/wt-mem/proto-mem/dist/meas.bundled.mjs";
+const bundle = "/home/user/wt-chain/proto-mem/dist/meas.bundled.mjs";
 const w = await start({ bundle, env: { MEAS_GATE: "1" }, persist: dir });
 await w.meas("registry"); await w.signin();
 const t0 = Date.now(); let ok = 0; const fail = [];

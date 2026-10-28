@@ -11,7 +11,7 @@ const arg = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, ...v
 const seed = arg.seed;
 if (seed) { try { process.env.PROTO_MEM_TOKEN = readFileSync(seed + "/token.txt", "utf8").trim(); } catch { /* an older seed: --extra needs token.txt */ } }
 const { start, status, sleep, snapOf, resetHwm, r1, makeText, uploadFile, promoteDoc } = await import("./lib.mjs"); if (!seed) { console.error("--seed required"); process.exit(2); }
-const bundle = "/home/user/wt-mem/proto-mem/dist/meas.bundled.mjs";
+const bundle = "/home/user/wt-chain/proto-mem/dist/meas.bundled.mjs";
 const t = mkdtempSync(join(tmpdir(), "proto-mem-n-"));
 cpSync(seed + "/do", t + "/do", { recursive: true }); symlinkSync(seed + "/r2", t + "/r2");
 if (arg.extra) {   /* one more unread document of --extra bytes, registered by its own process (gate shut) so the measured process meets it cold */
@@ -68,6 +68,6 @@ try {
   out.heap_timeline = heapSeries.filter((_, i) => i % 4 === 0);
   out.heap_all = heapSeries;   /* every probe: [ms, used MB, total MB] */
 } finally { await w.close(); rmSync(t, { recursive: true, force: true }); }
-mkdirSync("/home/user/wt-mem/proto-mem/results", { recursive: true });
-writeFileSync(`/home/user/wt-mem/proto-mem/results/${arg.out || "natural"}.json`, JSON.stringify(out, null, 1));
+mkdirSync("/home/user/wt-chain/proto-mem/results", { recursive: true });
+writeFileSync(`/home/user/wt-chain/proto-mem/results/${arg.out || "natural"}.json`, JSON.stringify(out, null, 1));
 console.log(JSON.stringify({ finished: out.finished, wall_ms: out.wall_ms, rss: out.rss, heap: out.heap, consumers_logged: out.consumer_lines.length }));

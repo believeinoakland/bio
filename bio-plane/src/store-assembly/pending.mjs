@@ -797,9 +797,12 @@ export function pendingOf(ctx, deps = {}) {
                 protoChain.line(env, { event: "rest_begin", rest_ms: protoChain.restOf(env) });
               }
               if (t < protoChain.restUntil) {
-                sql.exec(`UPDATE keeps_pending SET due_at=? WHERE sha=? AND kind=?`, now() + (protoChain.restUntil - t), row.sha, row.kind);
+                /* every owed read row waits the rest, not only this one: a row left past due would be the wake the scheduler reads, equal before and after the tick, and its hold against a spin (R27) would leave no alarm armed */
+                /* each at its own instant (a second apart, in the ledger's order): rows due at one instant would leave the wake unchanged by a tick that ran one of them, and the hold would stall the rest */
+                const woke = now() + (protoChain.restUntil - t);
+                live().filter((r) => r.kind === "reading" || r.kind === "ocr").forEach((r, i) => sql.exec(`UPDATE keeps_pending SET due_at=? WHERE sha=? AND kind=?`, woke + i * 1000, r.sha, r.kind));
                 out.results.push({ sha: row.sha, kind: row.kind, outcome: "rest" });
-                continue;
+                break;
               }
               protoChain.bytes = 0; protoChain.restUntil = null; protoChain.justRested = true;
               protoChain.line(env, { event: "rest_end" });

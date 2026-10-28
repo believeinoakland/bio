@@ -1,6 +1,6 @@
 /* (a) BASELINE: workerd + the bundle loaded, Store instantiated and idle.  node proto-mem/baseline.mjs [bundle]  (default: the committed plane bundle) */
 import { start, status, rollup, sleep, r1, workerdPids } from "./lib.mjs";
-const bundle = process.argv[2] || "/home/user/wt-mem/bio-plane/dist/bio-plane.bundled.mjs";
+const bundle = process.argv[2] || "/home/user/wt-chain/bio-plane/dist/bio-plane.bundled.mjs";
 const before = status(process.pid);   /* the node driver itself, for scale */
 const w = await start({ bundle });
 const out = { bundle, workerd_pids: w.pids };
