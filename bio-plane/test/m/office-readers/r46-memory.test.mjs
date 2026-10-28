@@ -93,10 +93,10 @@ test("R46 a 150,000-row workbook of 3 cells a row (the platform's shape) is read
 /* The whole case at the platform's shape is plane's `g41.probe.mjs` (the shape harness: the real plane's ledger in a child under `capFor`'s cap, the xlsx case of
    `g41-shape.test.mjs`). It is run here as the process it is, not imported (it is plane's, a later module than this one), and its own report is read: the cap it ran
    at and the most memory any tick held. */
-test("R46 the shape harness's 150,000-row xlsx (plane's g41 probe, run as its own process) peaks at most 85 % of its cap, the child alive", async (t) => {
-  const probe = join(HERE, "..", "plane", "shape", "g41.probe.mjs");
+test("R46 the shape harness's xlsx, sized to just under xlsx.declared_text (run as its own process) peaks at most 85 % of its cap, the child alive", async (t) => {
+  const probe = join(HERE, "r46-shape-child.mjs");
   const platform = join(HERE, "..", "..", "platform-sqlite.mjs");
-  const out = (await run(process.execPath, ["--import", platform, probe, "xlsx"], { maxBuffer: 1 << 26, timeout: 1_800_000 })).stdout;
+  const out = (await run(process.execPath, ["--import", platform, probe], { maxBuffer: 1 << 26, timeout: 1_800_000 })).stdout;
   const cap = Number(/cap (\d+) MB, child survived/.exec(out)?.[1]);
   const peaks = [...out.matchAll(/^ {2}(?:tick \d+:.*peak heap\+buffers|done:.*, peak) ([\d.]+) MB/gm)].map((m) => Number(m[1]));
   t.diagnostic(`cap ${cap} MB; the ticks' peaks ${peaks.join(", ")} MB`);
