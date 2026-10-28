@@ -151,6 +151,11 @@ test("R97 capture declares capturegrade (K4208): its requires alone raise no ref
     refusedNaming: (answer, field) => named({})(answer, field === "capture" ? "captureSha" : field), values: { capture: HELD_SHA, captureSha: HELD_SHA } });
 });
 
+test("R121 capture declares previewmore (T53): its requires alone raise no refusal naming a field, a call without the digest or without fromRow is refused naming it, and a field outside accepts is dropped", async () => {
+  await declaredOpHolds({ op: "previewmore", declaration: DECLARED_OPS["previewmore"], call: mk("previewmore", { viewer: "member:ann" }),
+    refusedNaming: (answer, field) => named({})(answer, field === "capture" ? "captureSha" : field), values: { capture: HELD_SHA, captureSha: HELD_SHA, fromRow: 1 } });
+});
+
 test("R97 capture declares captureaccounts (K4208): it requires nothing (an absent digest reads as an unknown one), accepts the digest as capture or captureSha, and a field outside accepts is dropped", async () => {
   await declaredOpHolds({ op: "captureaccounts", declaration: DECLARED_OPS["captureaccounts"], call: mk("captureaccounts", { viewer: "member:ann" }),
     refusedNaming: named({}), values: { capture: HELD_SHA, captureSha: HELD_SHA } });

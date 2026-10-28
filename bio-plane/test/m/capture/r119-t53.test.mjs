@@ -111,3 +111,7 @@ test("R119: a file exactly at its kind's bound is filed (control for the bound p
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.equal(r.capture.bytes, bound);
 });
+
+/* R120 (T53; P9, PLATFORM P-22; T53-108): the Add door accepts within its budget at three concurrent uploaders. Not yet met: where the wait is has not been measured
+   (BOB's ruling K5699: PLATFORM re-runs its three-uploader study with stage timings per upload; the figures arrive as a CHANGE). */
+test.todo("R120 (T53-108; waits: PLATFORM stage timings): on PLATFORM's study driver, three uploaders with reading running, every acceptance within the Add budget; control: one uploader alone, as today");
