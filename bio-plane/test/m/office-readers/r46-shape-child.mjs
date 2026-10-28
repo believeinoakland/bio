@@ -8,12 +8,19 @@ import { declaredSheetBytes, failures, g41Cap } from "../plane/shape/g41.probe.m
 import { boundOf } from "../../../src/read-bounds.mjs";
 
 const bound = boundOf("xlsx", "declared_text");
-/* the generator's declared bytes per row, from a small sheet of the same shape */
-const sample = await xlsxRowsDoc(1000);
-const perRow = (await declaredSheetBytes(sample.recipe)) / 1000;
-const rows = Math.floor((0.99 * bound) / perRow);
-const doc = await xlsxRowsDoc(rows);
-const declared = await declaredSheetBytes(doc.recipe);
+/* the generator's declared bytes per row, from two small sheets of the same shape (the fixed part of the sheet cancels) */
+const a = 1000, b = 2000;
+const da = await declaredSheetBytes((await xlsxRowsDoc(a)).recipe), db = await declaredSheetBytes((await xlsxRowsDoc(b)).recipe);
+const perRow = (db - da) / (b - a);
+let rows = Math.floor((0.99 * bound - (da - a * perRow)) / perRow);
+/* the declared size of the candidate is the generator's own; correct the estimate until the sheet is just under the bound */
+let doc, declared;
+for (let i = 0; i < 4; i++) {
+  doc = await xlsxRowsDoc(rows);
+  declared = await declaredSheetBytes(doc.recipe);
+  if (declared < bound && declared > 0.97 * bound) break;
+  rows = Math.floor(rows * (0.985 * bound) / declared);
+}
 if (!(declared < bound)) throw new Error(`the sheet declares ${declared} B, not under the bound ${bound} B`);
 
 const cap = g41Cap(doc.bytes);
