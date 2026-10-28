@@ -1,4 +1,4 @@
 # mail-door (T53)
 
-**Status** · session_018Bhced233u828vot13hTyX · depth 2 · WAITING: R5 needs capture R116 emailCapture (same-layer job, not yet on tranche); R7 is publication's filter; R12 email() waits M1 — best reading: build R1-R6,R8-R14 here, R5 calls capture.emailCapture when present else test.todo, R7/R12-email as test.todo
+**Status** · session_018Bhced233u828vot13hTyX · depth 2 · WAITING: built R1-R14 against capture R116 (K5692); completes after the CHANGE at capture's merge, when R5's tests run; C-157, R7 as reworded done
 **Sessions** · 1
