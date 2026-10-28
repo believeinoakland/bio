@@ -12,6 +12,7 @@
  * audit check (record-core R59, `provenanceOf`). */
 
 import { isMachineIdentity, ACTOR_CLASSES, BASIS_GRADES, TESTIMONY_GRADE } from "../record-grammar/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* The catalogue's finding shape (bio-checks' `f`): check id, severity, message, and optionally repairs and a code. */
 function f(check, severity, message, repairs, code) {
@@ -45,7 +46,13 @@ export const DOORBELL_ORIGIN = 'doorbell';
    evidence of its truth. One spelling each. */
 export const UPLOAD_ORIGIN = 'upload';
 export const UPLOADED_METHOD = 'uploaded';
-const ORIGIN_KINDS = ['named_request', 'sweep', 'member', DOORBELL_ORIGIN, UPLOAD_ORIGIN];
+/* R83 · N824: a message a member brought in by email, and a file that was one of its attachments. Received too, never
+   fetched. The origin kind, the two `capture.method`s, and the top-level `message` block of the message's headers. */
+export const EMAIL_ORIGIN = 'email';
+export const EMAILED_METHOD = 'emailed';
+export const EMAILED_ATTACHMENT_METHOD = 'emailed-attachment';
+const MESSAGE_FIELDS = ['from', 'to', 'cc', 'date', 'subject', 'message_id', 'received', 'authentication_results'];
+const ORIGIN_KINDS = ['named_request', 'sweep', 'member', DOORBELL_ORIGIN, UPLOAD_ORIGIN, EMAIL_ORIGIN];
 const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
 const HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const RAW_SHA_RE = /^[0-9a-f]{64}$/;
@@ -68,12 +75,20 @@ function checkContainer(ctx, findings, d, i) {
   const cap = d.capture && typeof d.capture === 'object' ? d.capture : null;
   const unpacked = !!cap && cap.method === UNPACKED_METHOD;
   const c = d.container;
+  /* R83 · N824: an attachment of a captured message carries the same block (R117), shape-checked here; the message's
+     grade and origin are the receipt's chain, read by `capture`, not asked of the archive's resolver. */
+  const attachment = !!cap && cap.method === EMAILED_ATTACHMENT_METHOD;
+  if (attachment) {
+    if (!c || typeof c !== 'object' || Array.isArray(c))
+      findings.push(f('C-18.1', 'error', localize('provenance.register.attachment_no_container', "provenance documents[{i}] was an attachment of a message (capture.method '{method}') and carries no container block naming the message and the attachment it came from", { i: String(i), method: EMAILED_ATTACHMENT_METHOD })));
+    return;
+  }
   if (!unpacked) {
     if (c !== undefined) findings.push(f('C-18.1', 'error', `provenance documents[${i}] carries a container block but its capture.method is '${cap ? cap.method : undefined}', not '${UNPACKED_METHOD}': only a file cut out of a captured archive names the archive it came from`));
     return;
   }
   if (!c || typeof c !== 'object' || Array.isArray(c)) {
-    findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of an archive (capture.method '${UNPACKED_METHOD}') and carries no container block naming the archive and the entry it came from`));
+    findings.push(f('C-18.1', 'error', localize('provenance.register.unpacked_no_container', "provenance documents[{i}] was cut out of an archive (capture.method '{method}') and carries no container block naming the archive and the entry it came from", { i: String(i), method: String(UNPACKED_METHOD) })));
     return;
   }
   const bad = [];
@@ -91,8 +106,8 @@ function checkContainer(ctx, findings, d, i) {
   }
   const r = ctx.resolve;
   if (!r) {
-    if (cap.grade !== undefined && cap.grade !== null && !CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
-    if ((cap.grade === undefined || cap.grade === null) && (typeof cap.grade_basis !== 'string' || !cap.grade_basis)) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of an archive and carries no capture.grade and no grade_basis: why it carries no letter is stated, never left to be inferred`));
+    if (cap.grade !== undefined && cap.grade !== null && !CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', localize('provenance.register.grade_not_one_of', "provenance documents[{i}].capture.grade '{grade}' is not one of: {grades}", { i: String(i), grade: String(cap.grade), grades: String(CAPTURE_GRADES.join(', ')) })));
+    if ((cap.grade === undefined || cap.grade === null) && (typeof cap.grade_basis !== 'string' || !cap.grade_basis)) findings.push(f('C-18.1', 'error', localize('provenance.register.unpacked_no_basis', 'provenance documents[{i}] was cut out of an archive and carries no capture.grade and no grade_basis: why it carries no letter is stated, never left to be inferred', { i: String(i) })));
     return;
   }
   const a = c.archive_sha256;
@@ -114,7 +129,7 @@ function checkContainer(ctx, findings, d, i) {
   /* The archive's own document, found by its capture digest through the record: its home's live register. Each file
      is its own document in its own bundle beside the archive (K1940 (1)), so this register never holds it. */
   const found = r.archiveOrigin(a) || { found: false };
-  if (!found.found) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's`));
+  if (!found.found) findings.push(f('C-18.1', 'error', localize('provenance.register.unpacked_archive_unread', "provenance documents[{i}] was cut out of archive {archive}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's", { i: String(i), archive: String(a.slice(0, 16)) })));
   else if (canon(d.origin ?? null) !== canon(found.origin ?? null)) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and its origin is ${canon(d.origin ?? null).slice(0, 120)}, not its archive's, ${canon(found.origin ?? null).slice(0, 120)}`));
 }
 
@@ -129,15 +144,16 @@ function checkUpload(findings, d, i) {
   /* A file cut out of an uploaded archive carries the archive's origin (R42's `container` rule) and its own method,
      `unpacked`; the statement is the archive's document's, so the file owes neither. */
   if (upload && cap && cap.method === UNPACKED_METHOD) return;
+  if (!upload && d.origin && typeof d.origin === 'object' && d.origin.kind === EMAIL_ORIGIN) return; /* checkEmail's */
   if (!upload) {
     if (cap && cap.method === UPLOADED_METHOD) findings.push(f('C-18.1', 'error', `provenance documents[${i}] states capture.method '${UPLOADED_METHOD}' but its origin.kind is not '${UPLOAD_ORIGIN}': only a file a member brought in by an upload was uploaded`));
     if (st !== undefined) findings.push(f('C-18.1', 'error', `provenance documents[${i}] carries an origin_statement but its origin.kind is not '${UPLOAD_ORIGIN}': only an upload records its member's statement of where the file came from`));
     return;
   }
-  if (cap && cap.method !== UPLOADED_METHOD) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and its capture.method is '${cap.method}', not '${UPLOADED_METHOD}'`));
+  if (cap && cap.method !== UPLOADED_METHOD) findings.push(f('C-18.1', 'error', localize('provenance.register.upload_wrong_method', "provenance documents[{i}] was brought in by a member's upload and its capture.method is '{stated}', not '{method}'", { i: String(i), stated: String(cap.method), method: String(UPLOADED_METHOD) })));
   const text = (v) => typeof v === 'string' && v.trim() !== '';
   if (!st || typeof st !== 'object' || Array.isArray(st)) {
-    findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and carries no origin_statement: a file brought in records where it came from, in the member's own words`));
+    findings.push(f('C-18.1', 'error', localize('provenance.register.upload_no_statement', "provenance documents[{i}] was brought in by a member's upload and carries no origin_statement: a file brought in records where it came from, in the member's own words", { i: String(i) })));
     return;
   }
   const bad = [];
@@ -145,6 +161,42 @@ function checkUpload(findings, d, i) {
   if (!text(st.words_of)) bad.push('words_of (who said them)');
   if (st.evidence_of_truth !== false) bad.push('evidence_of_truth (false: the member\'s words are never evidence of the file\'s truth)');
   if (bad.length) findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin_statement is malformed: ${bad.join('; ')}`));
+}
+
+/** R83 · N824: a message's document and its marks, paired as `upload` is with `uploaded`. A document of origin `email`
+ *  carries `capture.method` `emailed` (or `emailed-attachment` for a file that was an attachment, which owes neither the
+ *  statement nor the block), the member's `origin_statement` as an upload's, and a top-level `message` block
+ *  `{from, to, cc, date, subject, message_id, received, authentication_results}`, each as stated or null, `stated: true`.
+ *  A `message` block or method `emailed` on a document of any other origin is an error finding. */
+function checkEmail(findings, d, i) {
+  const email = !!d.origin && typeof d.origin === 'object' && d.origin.kind === EMAIL_ORIGIN;
+  const cap = d.capture && typeof d.capture === 'object' ? d.capture : null;
+  const st = d.origin_statement;
+  const msg = d.message;
+  if (email && cap && cap.method === EMAILED_ATTACHMENT_METHOD) return;
+  if (!email) {
+    if (cap && cap.method === EMAILED_METHOD) findings.push(f('C-18.1', 'error', localize('provenance.register.emailed_wrong_origin', "provenance documents[{i}] states capture.method '{method}' but its origin.kind is not '{origin}': only a message a member brought in by email was emailed", { i: String(i), method: EMAILED_METHOD, origin: EMAIL_ORIGIN })));
+    if (msg !== undefined) findings.push(f('C-18.1', 'error', localize('provenance.register.message_wrong_origin', "provenance documents[{i}] carries a message block but its origin.kind is not '{origin}': only a message brought in by email records its headers", { i: String(i), origin: EMAIL_ORIGIN })));
+    return;
+  }
+  if (cap && cap.method !== EMAILED_METHOD) findings.push(f('C-18.1', 'error', localize('provenance.register.email_wrong_method', "provenance documents[{i}] was brought in by email and its capture.method is '{stated}', not '{method}'", { i: String(i), stated: String(cap.method), method: EMAILED_METHOD })));
+  const text = (v) => typeof v === 'string' && v.trim() !== '';
+  if (!st || typeof st !== 'object' || Array.isArray(st))
+    findings.push(f('C-18.1', 'error', localize('provenance.register.email_no_statement', "provenance documents[{i}] was brought in by email and carries no origin_statement: a message brought in records where it came from, in the member's own words", { i: String(i) })));
+  else {
+    const bad = [];
+    if (!text(st.text)) bad.push('text (the member\'s words, not blank)');
+    if (!text(st.words_of)) bad.push('words_of (who said them)');
+    if (st.evidence_of_truth !== false) bad.push('evidence_of_truth (false: the member\'s words are never evidence of the message\'s truth)');
+    if (bad.length) findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin_statement is malformed: ${bad.join('; ')}`));
+  }
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
+    findings.push(f('C-18.1', 'error', localize('provenance.register.email_no_message', "provenance documents[{i}] was brought in by email and carries no message block of the message's headers", { i: String(i) })));
+    return;
+  }
+  const bad = MESSAGE_FIELDS.filter((k) => !(k in msg));
+  if (msg.stated !== true) bad.push('stated');
+  if (bad.length) findings.push(f('C-18.1', 'error', localize('provenance.register.message_malformed', 'provenance documents[{i}].message is malformed: {fields}', { i: String(i), fields: bad.join('; ') })));
 }
 
 /** C-18.1: intake provenance register shape, release authority, and the
@@ -211,7 +263,7 @@ function checkAuthorityPublishable(ctx, findings) {
        before produces an error now, which `test/m/provenance/convert-chain-marker.test.mjs`
        (R46) asserts arm by arm rather than leaving to inspection. */
     if (!('provenance_chain' in d)) {
-      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
+      findings.push(f('C-18.9', 'error', localize('provenance.register.chain_absent', 'provenance documents[{i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none', { i: String(i) }),
         ['record the chain of custody for this capture, one hop per party, from us back to the source',
          'or, where the capture record already holds the route, derive it from that evidence with op=provenancechain'],
         /* REC-56 / D-206: the codes REC-54's three findings needed to reach a
@@ -224,14 +276,14 @@ function checkAuthorityPublishable(ctx, findings) {
         ['record the chain of custody as an array of hops, one per party, from us back to the source'],
         'chain-not-an-array'));
     } else if (chain.length === 0) {
-      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route`,
+      findings.push(f('C-18.9', 'error', localize('provenance.register.chain_empty', 'provenance documents[{i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route', { i: String(i) }),
         ['name the parties that actually served these bytes, one hop each',
          'or state plainly that the route is undetermined rather than leaving an empty chain standing at verified'],
         'chain-empty'));
     } else {
       chain.forEach((hop, h) => {
         if (!hop || typeof hop !== 'object' || typeof hop.who !== 'string' || hop.who.trim() === '') {
-          findings.push(f('C-18.9', 'error', `provenance documents[${i}].provenance_chain[${h}] names no attestor: an unattributed hop cannot support the claim a published hash makes`,
+          findings.push(f('C-18.9', 'error', localize('provenance.register.hop_no_attestor', 'provenance documents[{i}].provenance_chain[{h}] names no attestor: an unattributed hop cannot support the claim a published hash makes', { i: String(i), h: String(h) }),
             ['name the party that served these bytes at this hop', 'or remove the hop if it did not happen']));
         }
       });
@@ -251,12 +303,12 @@ function checkAuthorityPublishable(ctx, findings) {
     if (aState === 'undetermined') {
       const basis = aBasis;
       if (typeof basis !== 'string' || basis.trim() === '') {
-        findings.push(f('C-18.9', 'error', `provenance documents[${i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
+        findings.push(f('C-18.9', 'error', localize('provenance.register.undetermined_no_basis', 'provenance documents[{i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when', { i: String(i) }),
           ['record a dated authority_basis saying what was tried and what it established',
            'or determine the authority through the task list and record the determination']));
       }
     } else if (aState === 'determined' && (typeof aName !== 'string' || aName.trim() === '')) {
-      findings.push(f('C-18.9', 'error', `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this record is at or past verified`,
+      findings.push(f('C-18.9', 'error', localize('provenance.register.determined_no_issuer', "provenance documents[{i}] declares authority_state 'determined' with no authority named, and this record is at or past verified", { i: String(i) }),
         ['name the issuing party', "or correct authority_state to 'undetermined' with a dated basis"]));
     }
   });
@@ -325,8 +377,14 @@ function checkReleaseAuthority(ctx, findings) {
            basis of none) is judged against the archive, with its container block (`checkContainer`, below). */
       } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === UPLOAD_ORIGIN) {
         /* R63: an upload is graded exactly as the doorbell's material, below: no letter, the basis stated. */
-        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and carries capture.grade '${cap.grade}': a file a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)`));
-        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', localize('provenance.register.upload_has_letter', "provenance documents[{i}] was brought in by a member's upload and carries capture.grade '{grade}': a file a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)", { i: String(i), grade: String(cap.grade) })));
+        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f('C-18.1', 'error', localize('provenance.register.upload_basis_wrong', "provenance documents[{i}] was brought in by a member's upload and its capture.grade_basis is '{stated}', not '{basis}': why it carries no letter is stated, never left to be inferred", { i: String(i), stated: String(cap.grade_basis), basis: String(RECEIVED_NOT_FETCHED) })));
+      } else if (cap.method === EMAILED_ATTACHMENT_METHOD) {
+        /* N824 (R84): an attachment earns what its message earns; its letter, or the basis of none, is the message's. */
+      } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === EMAIL_ORIGIN) {
+        /* R82, R83: a message by email is graded as an upload: no letter, the basis stated. */
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', localize('provenance.register.email_has_letter', "provenance documents[{i}] was brought in by email and carries capture.grade '{grade}': a message a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)", { i: String(i), grade: String(cap.grade) })));
+        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f('C-18.1', 'error', localize('provenance.register.email_basis_wrong', "provenance documents[{i}] was brought in by email and its capture.grade_basis is '{stated}', not '{basis}': why it carries no letter is stated, never left to be inferred", { i: String(i), stated: String(cap.grade_basis), basis: RECEIVED_NOT_FETCHED })));
       } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === DOORBELL_ORIGIN) {
         /* N381 (R51; K509 (3)): A PULLED KNOCK CARRIES NO FETCHED LETTER, and the basis is the statement. No instance
            asked any address for these bytes, so a letter would read as a measurement of a fetch that never happened;
@@ -334,11 +392,12 @@ function checkReleaseAuthority(ctx, findings) {
            authored arm admits no letter, this one admits none, and asks the basis be stated rather than inferred. */
         if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was received through the doorbell and carries capture.grade '${cap.grade}': received material was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)`));
         if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was received through the doorbell and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
-      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', localize('provenance.register.grade_not_one_of', "provenance documents[{i}].capture.grade '{grade}' is not one of: {grades}", { i: String(i), grade: String(cap.grade), grades: String(CAPTURE_GRADES.join(', ')) })));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
     checkContainer(ctx, findings, d, i);
     checkUpload(findings, d, i);
+    checkEmail(findings, d, i);
     const or = d.origin;
     /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
        fenced at the write (C-53.7) — an authored observation's origin is the
@@ -347,7 +406,7 @@ function checkReleaseAuthority(ctx, findings) {
       findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === 'object' ? or.kind : or}', not 'member'`));
     }
     if (!or || typeof or !== 'object' || !ORIGIN_KINDS.includes(or.kind)) {
-      findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(', ')}`));
+      findings.push(f('C-18.1', 'error', localize('provenance.register.origin_kind_one_of', 'provenance documents[{i}].origin.kind must be one of: {kinds}', { i: String(i), kinds: ORIGIN_KINDS.join(', ') })));
     } else if (or.kind === 'sweep') {
       sweepOrigin = true;
       if (!or.matched_sweep) findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin (sweep) missing 'matched_sweep'`));
@@ -393,7 +452,7 @@ function checkReleaseAuthority(ctx, findings) {
     /* REC-46: one predicate. The word list was one of three answers to this
        question and knew nothing of the two spellings the control plane mints. */
     if (!a || isMachineIdentity(a)) {
-      findings.push(f('C-18.1', 'error', `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
+      findings.push(f('C-18.1', 'error', localize('provenance.register.release_by_machine', "collected -> verified transition authored by '{author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)", { author: String(e.author) }),
         ['retire this record with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is',
          'or record the defect against this release in Review Notes and raise it, so the record carries the doubt rather than a repair nobody can perform',
          'the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine, so hand-editing current_state or state_history produces a second error on top of this one']));
@@ -408,7 +467,7 @@ function checkReleaseAuthority(ctx, findings) {
      with its complement above or the fence and the refusal disagree. */
   const memberRelease = releases.some(e => { const a = String(e.author || '').toLowerCase(); return a && !isMachineIdentity(a); });
   if (sweepOrigin && everVerified && !memberRelease) {
-    findings.push(f('C-18.1', 'error', 'sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)',
+    findings.push(f('C-18.1', 'error', localize('provenance.register.sweep_fence', 'sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)'),
       ['retire this record with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands',
        'or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a record already at verified, so the ratification cannot be re-made in place',
        'the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine']));

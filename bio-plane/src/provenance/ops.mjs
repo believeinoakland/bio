@@ -32,6 +32,7 @@ export function provenanceOps(provenance, url, body, { observer = null } = {}) {
       words: body ? body.words : null,
       observedAt: body ? body.observedAt : null,
       title: body ? body.title : null,
+      project: field("project"),
       author: q("author"),
       claimedAuthor: body ? (CLAIMED_AUTHOR_KEYS.map((k) => body[k]).find((v) => v !== undefined && v !== null) ?? null) : null,
     }),
@@ -94,7 +95,7 @@ export async function registerAuditOp(env, store, { json, doAnswer, storeSilent,
    a session act whose declarer is the plane's `author` stamp, refused a machine by name (R29). */
 export const DECLARED_OPS = Object.freeze({
   testify: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("provenance.declared.testify", "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle"),
-    fields: { accepts: ["words","observedAt","title"], requires: ["words","observedAt"] } },
+    fields: { accepts: ["words","observedAt","title","project"], requires: ["words","observedAt"] } },
   declareorigin: { classes: ["admin","member"], mutating: true, stamps: ["viewer","author"], needs: "contribute", weight: "reversible",
     description: localize("provenance.declared.declareorigin", "document-directed: a member states, with their name and the date, the system a document came from, keyed by bundleId; a second declaration is added beside the first and never replaces it, and the document itself does not change"),
     fields: { accepts: ["bundleId","system"], requires: ["bundleId","system"] } },
