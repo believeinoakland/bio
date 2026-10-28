@@ -1,6 +1,6 @@
 # file-scanner (T53)
 
-**Status** · session_018BhcecnyytTT3cMe1k3Zku · depth 2 · WORKING
+**Status** · session_018BhcecnyytTT3cMe1k3Zku · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -28,3 +28,19 @@ Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 1, module lines 6912
 
 Tests: 104/115. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 2, module lines 6945
+
+## Completion (2026-10-28)
+
+# file-scanner · T53 · report (CHANGE: R37)
+
+**Applied.** `test/render-fetch.test.mjs` (R37, a render fetches nothing): a docx (`a:blip r:link`, external relationship) and an odt (`draw:image xlink:href`) whose picture is linked to an address on a local HTTP listener are rendered through `/render` by the image's real server and the real LibreOffice (24.2.7.2, present here); no request reaches the listener. Control: the same documents converted in a private profile that differs only in `BlockUntrustedRefererLinks` false (Writer's link-update stays "never") make the request to the listener, so the documents do exercise the fetch. Run here: both tests pass (4.3 s, 5.2 s); the module suite is green. They skip where soffice or Poppler is absent. No code change was needed beyond the earlier profile (`PROFILE_SETTINGS`, exported from `container/renderer.mjs` for the control).
+
+Found while writing it: a `spawnSync` converter blocks the in-process listener and shows a false "no request"; the control uses an asynchronous spawn.
+
+The earlier notes stand: BOB deletes `"file-scanner/test/on-own.test.mjs": 1` from `build/tests-english-baseline.json`.
+
+**Met** · R37
+
+Tests: 104/117. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Inherited reds: ["R16 R8 /version states every read bound by name with its figure and its source, quoted from the table; no ceiling of the module is a literal","R16 the limits, by name; the bundle states the Worker's own limits once, equal to its configuration"]
+Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 3, module lines 7019
