@@ -79,6 +79,17 @@ const TABLE = {
   image: {
     /* an image (JPEG, PNG, TIFF, HEIC, GIF, WebP, BMP, AVIF) is 50 MB each (R37) */
     bytes: same(MB50, k("image", "bytes")),
+    /* image-cover's rows (BOB #326, T53): today's figures in all three columns */
+    redraw_bytes: same(33554432, k("image", "redraw_bytes")),
+    photo_profile_max: same(1048576, k("image", "photo_profile_max")),
+    photo_profile_tags: same(256, k("image", "photo_profile_tags")),
+    photo_exif_bytes: same(1048576, k("image", "photo_exif_bytes")),
+    photo_directory_entries: same(1024, k("image", "photo_directory_entries")),
+    photo_field_chars: same(256, k("image", "photo_field_chars")),
+    photo_text_chars: same(4096, k("image", "photo_text_chars")),
+    photo_list_items: same(64, k("image", "photo_list_items")),
+    photo_xmp_bytes: same(262144, k("image", "photo_xmp_bytes")),
+    photo_inflated_bytes: same(262144, k("image", "photo_inflated_bytes")),
     pixels: same(120000000, k("image", "pixels")),
     edge: same(65535, k("image", "edge")),
     chunks: same(65536, k("image", "chunks")),
