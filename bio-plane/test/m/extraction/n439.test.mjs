@@ -11,6 +11,7 @@ import { n439MigratedReading, n439Marked, pptxRenumberingMoves, n26Marked, N439_
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { pptxRenumbering, pptxEntry } from "../../../src/pptx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* The deck: slide 1 holds a title, a p14 graphic frame written as an mc:Choice (one shape) and its mc:Fallback copy
    (the same shape and a picture of it), then a shape after; slide 2 one shape. Under N439 slide 1 has three shapes
@@ -164,12 +165,12 @@ test("R68: a reading already marked moves nothing; one written after the migrati
   const c = await seeded({ reading: fresh439 });
   const oc = await c.x.migratePptxReadings();
   assert.equal(oc.migrated.length, 0);
-  assert.match(oc.skipped[0].why, /shape counts/);
+  assert.equal(oc.skipped[0].why, word("extraction.index.n439_not_old_walk"));
   assert.deepEqual(c.x.readingFor(c.digest).reading, fresh439);
   /* No pptx layer step to mark. */
   const unchained = { ...(await oldReading()), text_source: null };
   const u = await seeded({ reading: unchained });
-  assert.match((await u.x.migratePptxReadings()).skipped[0].why, /no pptx text layer/);
+  assert.equal((await u.x.migratePptxReadings()).skipped[0].why, word("extraction.index.n439_no_layer"));
   /* After the cutoff: two old readings; the first run takes one; the other is then written again (a promotion after
      the migration started, so N439's), and the second run leaves it as it is. */
   const evidence = bucket();
@@ -183,7 +184,7 @@ test("R68: a reading already marked moves nothing; one written after the migrati
   d.x.writeReading({ bundleId: "INFO-1", captureSha: late, reading: rewritten, profileFormat: "pptx", composed: true });
   const rest = await d.x.migratePptxReadings();
   assert.deepEqual([rest.done, rest.examined, rest.migrated.length], [true, 1, 0]);
-  assert.match(rest.skipped[0].why, /after the migration's cutoff/);
+  assert.equal(rest.skipped[0].why, word("extraction.index.n439_read_after"));
   assert.deepEqual(d.x.readingFor(late).reading, rewritten);
 });
 
@@ -200,7 +201,7 @@ test("R68: bytes not held, or a stored reading that changed while the bytes were
   const get = ev2.get.bind(ev2);
   ev2.get = async (k) => { b.x.writeReading({ bundleId: "INFO-1", captureSha: b.digest, reading: newer, composed: true }); return get(k); };
   const ob = await b.x.migratePptxReadings();
-  assert.match(ob.skipped[0].why, /changed while/);
+  assert.equal(ob.skipped[0].why, word("extraction.index.migrate_reading_changed"));
   assert.deepEqual(b.x.readingFor(b.digest).reading, newer);
 });
 

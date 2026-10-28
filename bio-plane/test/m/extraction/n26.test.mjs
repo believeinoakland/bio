@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle, hold, wp, wr, wtbl, box, alt, docx, doc, bucket } from "./fixture.mjs";
 import { n26MigratedReading, n26Marked, renumberingMoves, N26_READER_MARK, Extraction } from "../../../src/extraction/index.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 import { docxRenumbering } from "../../../src/docx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
 
@@ -168,7 +168,7 @@ test("R66: a reading already marked moves nothing; one written after the migrati
   const c = await seeded({ reading: fresh26 });
   const oc = await c.x.migrateDocxReadings();
   assert.equal(oc.migrated.length, 0);
-  assert.match(oc.skipped[0].why, /paragraph count/);
+  assert.equal(oc.skipped[0].why, word("extraction.index.n26_not_old_walk"));
   assert.deepEqual(c.x.readingFor(c.digest).reading, fresh26);
   /* After the cutoff: two old readings; the first run takes one; the other is then written again (a promotion after
      the migration started, so N26's), and the second run leaves it as it is. */
@@ -183,7 +183,7 @@ test("R66: a reading already marked moves nothing; one written after the migrati
   d.x.writeReading({ bundleId: "INFO-1", captureSha: late, reading: rewritten, profileFormat: "docx", composed: true });
   const rest = await d.x.migrateDocxReadings();
   assert.deepEqual([rest.done, rest.examined, rest.migrated.length], [true, 1, 0]);
-  assert.match(rest.skipped[0].why, /after the migration's cutoff/);
+  assert.equal(rest.skipped[0].why, word("extraction.index.n26_read_after"));
   assert.deepEqual(d.x.readingFor(late).reading, rewritten);
 });
 
@@ -202,7 +202,7 @@ test("R66: bytes not held, or a stored reading that changed while the bytes were
   const get = ev2.get.bind(ev2);
   ev2.get = async (k) => { b.x.writeReading({ bundleId: "INFO-1", captureSha: b.digest, reading: newer, composed: true }); return get(k); };
   const ob = await b.x.migrateDocxReadings();
-  assert.match(ob.skipped[0].why, /changed while/);
+  assert.equal(ob.skipped[0].why, word("extraction.index.migrate_reading_changed"));
   assert.deepEqual(b.x.readingFor(b.digest).reading, newer);
 });
 
@@ -273,7 +273,7 @@ test("R66: on a Durable Object the migration is started by migrate() and carried
 /* ---- T38 (N786): no reading carrying a `.docx` cell's `paras` (office-readers R11) is migrated ---- */
 
 const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const AFTER_N26 = "read after N26 (its reading was written after the migration's cutoff)";
+const AFTER_N26 = word("extraction.index.n26_read_after");
 /* A table cell whose paragraph holds a run-level mc:AlternateContent: the branch not read moves a run and no paragraph,
    so the paragraph-count check (`oldWalk`) alone does not tell this N26 reading from an old one. */
 const RUN_BODY = wp(wr("head")) + `<w:tbl><w:tblGrid><w:gridCol/></w:tblGrid><w:tr><w:tc>${wp(alt(wr("choice"), wr("fallback")))}</w:tc></w:tr></w:tbl>`;

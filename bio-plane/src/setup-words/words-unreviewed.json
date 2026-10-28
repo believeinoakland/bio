@@ -27102,21 +27102,21 @@
       "en": "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3490
+      "line": 3844
     },
     {
       "id": "extraction.declared.readheld",
       "en": "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3495
+      "line": 3849
     },
     {
       "id": "extraction.declared.reading",
       "en": "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3493
+      "line": 3847
     },
     {
       "id": "extraction.drift.this_text_was_graded_under",
@@ -27172,182 +27172,315 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2926
+      "line": 3259
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3118
+      "line": 3472
     },
     {
       "id": "extraction.index.cells_bytes_not_held",
       "en": "the file this document was read from could not be read just now, so its cells could not be made; try again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2228
+      "line": 2518
     },
     {
       "id": "extraction.index.cells_no_reading",
       "en": "no reading of this document is held, so none of its cells are",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2186
+      "line": 2476
     },
     {
       "id": "extraction.index.cells_not_interpretable",
       "en": "this document's cells cannot be made from its file here",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2220
+      "line": 2510
     },
     {
       "id": "extraction.index.cells_not_made",
       "en": "this document's cells could not be made ({reason})",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2232
+      "line": 2522
     },
     {
       "id": "extraction.index.cells_sheet_not_held",
       "en": "this sheet's cells were not made when it was read, and its file does not hold them to make now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2215
+      "line": 2505
     },
     {
       "id": "extraction.index.cells_sheet_not_named",
       "en": "no sheet was named, so no cells could be made",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2188
+      "line": 2478
     },
     {
       "id": "extraction.index.cells_sheet_not_named_in",
       "en": "the reading names no sheet called {sheet}",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2216
+      "line": 2506
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3268
+      "line": 3622
+    },
+    {
+      "id": "extraction.index.migrate_bytes_not_held",
+      "en": "the capture's bytes are not held in the evidence store",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 3169
+    },
+    {
+      "id": "extraction.index.migrate_reading_changed",
+      "en": "the stored reading changed while it was being read again, and the newer one stands",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 3197
+    },
+    {
+      "id": "extraction.index.n26_no_layer",
+      "en": "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 482
+    },
+    {
+      "id": "extraction.index.n26_not_old_walk",
+      "en": "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 478
+    },
+    {
+      "id": "extraction.index.n26_read_after",
+      "en": "read after N26 (its reading was written after the migration's cutoff)",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 481
+    },
+    {
+      "id": "extraction.index.n439_no_layer",
+      "en": "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 497
+    },
+    {
+      "id": "extraction.index.n439_not_old_walk",
+      "en": "its slides' shape counts are not the pre-N439 walk's, so it was not read by the old walk",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 493
+    },
+    {
+      "id": "extraction.index.n439_read_after",
+      "en": "read after N439 (its reading was written after the migration's cutoff)",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 496
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2826
+      "line": 3159
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2930
+      "line": 3263
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1997
+      "line": 2050
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2916
+      "line": 3249
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3113
+      "line": 3467
     },
     {
       "id": "extraction.index.part_omitted",
       "en": "this document's {key} ({bytes} bytes) is not kept with its reading, which would pass {limit} bytes; its text is kept whole and every line can be searched",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1606
+      "line": 1656
+    },
+    {
+      "id": "extraction.index.press_cost",
+      "en": "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 3350
     },
     {
       "id": "extraction.index.readheld_no_sha",
       "en": "a read of a held document is about one captured document, named by its fingerprint",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3476
+      "line": 3830
     },
     {
       "id": "extraction.index.reading_size",
       "en": "{mib} MiB ({bytes} bytes)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1641
+      "line": 1691
     },
     {
       "id": "extraction.index.reading_too_large",
       "en": "this document's reading is too large to keep whole: {size}; the largest part is {key}",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1643
+      "line": 1693
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
       "en": "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1244
+      "line": 1275
     },
     {
       "id": "extraction.index.the_ais_part_for_transcribing",
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3124
+      "line": 3478
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2935
+      "line": 3268
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3129
+      "line": 3483
+    },
+    {
+      "id": "extraction.interpret.failed",
+      "en": "this part's facts could not be made ({why}); nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 73
+    },
+    {
+      "id": "extraction.interpret.how_malformed",
+      "en": "a part is interpreted by being opened, cited, marked or accepted as a proposal, and no other way; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 63
+    },
+    {
+      "id": "extraction.interpret.limit",
+      "en": "this team has reached the limit of {limit} parts interpreted ({held} held); nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 69
+    },
+    {
+      "id": "extraction.interpret.member_session",
+      "en": "a part of a document is interpreted by a signed-in member, whose stamp names them; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 57
+    },
+    {
+      "id": "extraction.interpret.no_content",
+      "en": "this part's facts cannot be made here just now; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 71
+    },
+    {
+      "id": "extraction.interpret.no_project",
+      "en": "a part is interpreted for one investigation, and none was named; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 65
+    },
+    {
+      "id": "extraction.interpret.no_row",
+      "en": "no interpretation answers to that id here; nothing was withdrawn",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 75
+    },
+    {
+      "id": "extraction.interpret.not_found",
+      "en": "no document answers to that fingerprint here; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 59
+    },
+    {
+      "id": "extraction.interpret.not_standing",
+      "en": "that proposal is not standing for this investigation and document, so it was not accepted; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 67
+    },
+    {
+      "id": "extraction.interpret.part_malformed",
+      "en": "a part is a kind with its range, from a first to a last, in whole numbers; nothing was recorded",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/interpret.mjs",
+      "line": 61
     },
     {
       "id": "extraction.why.basis_changed",
       "en": "the stored reading changed while this {act} was being made, so it was not written over; it can be asked again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3364
+      "line": 3718
     },
     {
       "id": "extraction.why.press_owed",
       "en": "your team's Civicsmith reads {count} page(s) with its text recognition in the background, and the reading shows them as each is read",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3028
+      "line": 3361
     },
     {
       "id": "extraction.why.request_too_large",
       "en": "this file is {size} bytes, more than a request reads whole here ({limit} bytes), so it is read in the background",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 3009
+      "line": 3342
     },
     {
       "id": "file-safety.declared.deepercheck",
@@ -47871,7 +48004,7 @@
       "en": "the document was not read as text ({why}), so no reading was attempted",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 499
+      "line": 510
     },
     {
       "id": "reading-pipeline.index.encoding_unsupported",
@@ -47906,7 +48039,7 @@
       "en": "multipart",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 497
+      "line": 508
     },
     {
       "id": "reading-pipeline.index.no_progress",
@@ -47920,7 +48053,7 @@
       "en": "non-textual or too large",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 498
+      "line": 509
     },
     {
       "id": "reading-pipeline.index.ocr_not_asked_inline",

@@ -23,6 +23,9 @@ import { registeredHomes, heldParts } from "../provenance/fixtures.mjs";
    doctypes' readers, as the plane's store does (`plane/wiring.mjs`). */
 registerDoctypes(registerDoctype);
 
+// fixtures-contract: store-assembly job-registrar
+export const registrarStub = () => jobRegistrarStub();
+
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 
 /* The plane's shape (K316): `sql.exec` answers workerd's cursor, an iterator read once with `toArray()` and `one()`,
@@ -160,7 +163,7 @@ export function payingAccount({ key = "k", record = null, answer = null } = {}) 
 /* A fresh store with record-core, membership and this module (its figures registered, R67, as `extractionOf` does).
    `provenance` is handed to the module as `extractionOf` hands it (R65). */
 export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = null, provenance = null,
-                        readHooks = null, host = null, reader = null } = {}) {
+                        readHooks = null, host = null, reader = null, interpreter = null, interpretationCeiling = undefined } = {}) {
   const s = storage();
   const ctx = { storage: s };
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
@@ -175,7 +178,7 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
   /* promotion's real registry over this store's record-core and membership: what registers is read back as `prom.steps` */
   const realPromotion = prom ? null : promotionOver({ record: core, membership });
   if (!prom) prom = { p: realPromotion, get steps() { return registeredSteps(realPromotion); } };
-  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: realPromotion || prom, env, readHooks, host, reader,
+  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: realPromotion || prom, env, readHooks, host, reader, interpreter, interpretationCeiling,
                                 provenance: typeof provenance === "function" ? provenance(ctx, core, membership) : provenance });
   x.registerFigures();
   x.migrate();

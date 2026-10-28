@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, withEntry, i2, noText, pageUnits, payingAccount } from "./fixture.mjs";
-import { WORD } from "./words.mjs";
+import { WORD, wordHolesRx } from "./words.mjs";
 import { noAccount, keptAwayProject } from "../ai-accounts/fixtures.mjs";
 
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
@@ -99,7 +99,7 @@ test("R71 (T44; N869; DEC-191 (4)): nothing sent (AGENT_WORKER_UNBOUND, EVIDENCE
   }
   const none = (await act({ answer: { ok: true, engine: "claude-test", version: "1", pages: [] } })).r;
   assert.equal(none.body.says, fill("transcribe.none", { pages: "2, 3", why: none.body.transcription.why }));
-  assert.doesNotMatch(none.body.says, /^Nothing was sent/);
+  assert.doesNotMatch(none.body.says, wordHolesRx("transcribe.notsent", ["why"]));
 });
 
 test("R71 (T44; N869; DEC-191 (5)): a photo whose page plane R36's refused names IMAGE_TOO_LARGE, or UNSUPPORTED_JPEG_PROCESS in a progressive process, says transcribe.picture.unprepared with its transcribe.picture.why.*; any other refusal of a picture's page, NO_PAGE_RENDERED without refused, and a PDF's page too large say transcribe.notsent with transcribe.why.norender", async () => {
@@ -137,7 +137,7 @@ test("R71 (T44; N876; DEC-192 (2)): sent and nothing back: AGENT_WORKER_SILENT s
     const { r, written } = await act({ answer });
     assert.deepEqual(unfilled(r), [200, true, false, false], answer.reason);
     assert.equal(r.body.says, fill("transcribe.failed", { why: WORD(why) }), answer.reason);
-    assert.doesNotMatch(r.body.says, /found no words/);
+    assert.doesNotMatch(r.body.says, wordHolesRx("transcribe.none", ["pages", "why"]));
     assert.equal(written, false);
   }
 });

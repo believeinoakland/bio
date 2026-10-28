@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, hold, doc } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { identify, doctypeFor } from "../../../../docprofile/registry.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { acquireReadingOp } from "../../../src/extraction/ops.mjs";
@@ -20,13 +21,13 @@ test("R1 R45: the bytes come from the evidence store under the digest; no store,
   const noStore = fresh({ evidence: null });
   const a = await noStore.x.read(doc({ digest: "a".repeat(64), fromText: true }));
   assert.equal(a.reading.found, false);
-  assert.match(a.reading.basis, /no evidence store/);
+  assert.equal(a.reading.basis, word("reading-pipeline.no_evidence_store"));
   const w = fresh();
   const absent = await w.x.read(doc({ digest: "b".repeat(64), fromText: true }));
   assert.equal(absent.reading.found, false);
-  assert.match(absent.reading.basis, /not held in the evidence store/);
+  assert.equal(absent.reading.basis, word("reading-pipeline.index.bytes_not_held"));
   const none = await w.x.read({ ...doc({ digest: "c".repeat(64) }), capture: {} });
-  assert.match(none.reading.basis, /names no capture digest/);
+  assert.equal(none.reading.basis, word("reading-pipeline.index.no_capture_digest"));
   /* a caller's text and reading on the document are ignored: the stored bytes are read */
   const html = CAL(ROW("2101", "City Council", "7/15/2026"));
   const d = await hold(w.evidence, html);
