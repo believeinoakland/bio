@@ -34616,1110 +34616,1740 @@
       "line": 168
     },
     {
+      "id": "jurisdictions.index.a_call_count_is_a_positive",
+      "en": "a call count is a positive integer",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 630
+    },
+    {
+      "id": "jurisdictions.index.a_column_is_listed_once",
+      "en": "a column is listed once",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1453
+    },
+    {
       "id": "jurisdictions.index.a_different_profile_with_id",
       "en": "a different profile with id '{id}' was given earlier",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1716
+      "line": 2327
+    },
+    {
+      "id": "jurisdictions.index.a_federal_layer_is_present",
+      "en": "a layer below the federal one needs the federal layer in the list",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 2465
+    },
+    {
+      "id": "jurisdictions.index.a_federal_layer_sits_within_none",
+      "en": "a federal layer sits within none",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 532
+    },
+    {
+      "id": "jurisdictions.index.a_figure_s_value_is_a",
+      "en": "a figure's value is a count",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1484
+    },
+    {
+      "id": "jurisdictions.index.a_governments_level_is_one",
+      "en": "a government's level is one of {levels}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 562
+    },
+    {
+      "id": "jurisdictions.index.a_guide_rests_on_the_ruling",
+      "en": "a guide rests on the ruling that approved it (K<n>)",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1890
+    },
+    {
+      "id": "jurisdictions.index.a_key_is_given_once",
+      "en": "a key is given once",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1400
+    },
+    {
+      "id": "jurisdictions.index.a_kind_filed_in_a_court",
+      "en": "a kind filed in a court has no file template; a brief may serve it",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1137
+    },
+    {
+      "id": "jurisdictions.index.a_layer_below_the_federal_one",
+      "en": "a layer below the federal one sits within another layer",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 534
+    },
+    {
+      "id": "jurisdictions.index.a_layer_does_not_sit_within",
+      "en": "a layer does not sit within itself",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 531
+    },
+    {
+      "id": "jurisdictions.index.a_layer_sits_within_a_higher",
+      "en": "{id} sits within {pid}, which is not a layer of a higher level",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 2472
+    },
+    {
+      "id": "jurisdictions.index.a_level_layer_holds_only",
+      "en": "a {ownLevel} layer holds only {ownLevel_2} laws, not {level}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 871
+    },
+    {
+      "id": "jurisdictions.index.a_level_layer_holds_only_2",
+      "en": "a {ownLevel} layer holds only {ownLevel_2} sources, not {level}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 978
+    },
+    {
+      "id": "jurisdictions.index.a_level_layer_holds_only_3",
+      "en": "a {ownLevel} layer holds only {ownLevel_2} offices (or district), not {level}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1065
+    },
+    {
+      "id": "jurisdictions.index.a_machine_does_not_approve_a",
+      "en": "a machine does not approve a text",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1140
+    },
+    {
+      "id": "jurisdictions.index.a_machine_draft_declares_itself_in",
+      "en": "a machine draft declares itself in non-empty notes",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1143
+    },
+    {
+      "id": "jurisdictions.index.a_machine_is_not_the_writer",
+      "en": "a machine is not the writer of a text; declare a machine draft with a named person as writer",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1139
+    },
+    {
+      "id": "jurisdictions.index.a_machine_is_not_the_writer_2",
+      "en": "a machine is not the writer of a text",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1877
+    },
+    {
+      "id": "jurisdictions.index.a_package_does_not_name_itself",
+      "en": "a package does not name itself",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 508
+    },
+    {
+      "id": "jurisdictions.index.a_package_holds_only_its_layers",
+      "en": "a package holds only its layers' ids, besides its id, name and covers",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 504
+    },
+    {
+      "id": "jurisdictions.index.a_piece_key_is_given_once",
+      "en": "a piece key is given once",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1430
+    },
+    {
+      "id": "jurisdictions.index.a_profile_guide_has_no_review",
+      "en": "a profile guide has no review opt-out: that is a team's own guide's",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1853
+    },
+    {
+      "id": "jurisdictions.index.a_register_of_a_gated_system",
+      "en": "a register of the {gated}-gated system {system} is not gate: none",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1416
+    },
+    {
+      "id": "jurisdictions.index.a_scheme_has_one_template_for",
+      "en": "a scheme has one template for a register",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1535
     },
     {
       "id": "jurisdictions.index.a_source_has_a_citation",
       "en": "a source has one field, citation, which is non-empty",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 903
+      "line": 1154
+    },
+    {
+      "id": "jurisdictions.index.a_team_entry_is_researched_it",
+      "en": "a team entry is researched: it is read from a capture",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 573
+    },
+    {
+      "id": "jurisdictions.index.a_team_entry_names_the_government",
+      "en": "a team entry names the government it is about",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 571
+    },
+    {
+      "id": "jurisdictions.index.a_team_entry_rests_on_the",
+      "en": "a team entry rests on the capture it was read from (team:<capture sha>)",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 388
+    },
+    {
+      "id": "jurisdictions.index.a_team_layer_holds_only_the",
+      "en": "a team layer holds only {TEAM_LAYER_SECTIONS}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 568
     },
     {
       "id": "jurisdictions.index.a_template_is_fields_never_bare",
       "en": "a template is {{fields}}, never bare text",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 853
+      "line": 1108
     },
     {
       "id": "jurisdictions.index.a_v1_entry_carries_a",
       "en": "a {v1} entry carries a level, one of {LAW_LEVELS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 759
+      "line": 982
+    },
+    {
+      "id": "jurisdictions.index.a_watch_is_by_a_number",
+      "en": "a watch is by a number: a name has no hole",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1541
+    },
+    {
+      "id": "jurisdictions.index.abbreviations_is_a_list_of_upper",
+      "en": "abbreviations is a list of upper-case words, each once",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 760
+    },
+    {
+      "id": "jurisdictions.index.address_is_the_source_s_own",
+      "en": "address is the source's own page, an https address",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1156
     },
     {
       "id": "jurisdictions.index.amount_is_amount_and_units",
       "en": "an amount is {amount, units}, a positive integer of one of {units_list}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 710
+      "line": 932
     },
     {
       "id": "jurisdictions.index.an_entry_with_no_level",
       "en": "an entry with no level names its issuer's sector, one of {SECTORS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 765
+      "line": 988
+    },
+    {
+      "id": "jurisdictions.index.an_estimate_states_its_method_in",
+      "en": "an estimate states its method in how",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1486
+    },
+    {
+      "id": "jurisdictions.index.an_unflagged_text_names_no_change",
+      "en": "an unflagged text names no change",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1104
     },
     {
       "id": "jurisdictions.index.applies_on_is_a_non",
       "en": "applies_on is a non-empty list of {WEEKDAYS}, each once",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1083
+      "line": 1348
+    },
+    {
+      "id": "jurisdictions.index.at_most_one_federal_layer",
+      "en": "at most one layer is federal",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 2464
+    },
+    {
+      "id": "jurisdictions.index.body_is_the_government_s_name",
+      "en": "body is the government's name, 1 to 200 characters on one line, never *",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 581
     },
     {
       "id": "jurisdictions.index.body_keeps_one_fiscal_year",
       "en": "{body} keeps one fiscal year",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1187
+      "line": 1650
+    },
+    {
+      "id": "jurisdictions.index.citation_is_the_rule_as_cited",
+      "en": "citation is the rule as cited",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1372
     },
     {
       "id": "jurisdictions.index.code_is_given_twice",
       "en": "{code} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1312
+      "line": 1775
     },
     {
       "id": "jurisdictions.index.column_is_one_of_budget",
       "en": "column is one of {BUDGET_COLUMNS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 612
+      "line": 827
+    },
+    {
+      "id": "jurisdictions.index.columns_is_a_non_empty_list",
+      "en": "columns is a non-empty list",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1447
     },
     {
       "id": "jurisdictions.index.copy_is_one_of_code",
       "en": "copy is one of {CODE_COPIES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 575
+      "line": 790
     },
     {
       "id": "jurisdictions.index.covers_is_a_non_empty",
       "en": "covers is a non-empty list from {DEMAND_COVERS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1333
+      "line": 1796
+    },
+    {
+      "id": "jurisdictions.index.currency_is_a_three_letter_code",
+      "en": "currency is a three-letter code",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1458
     },
     {
       "id": "jurisdictions.index.date_is_given_twice",
       "en": "{date} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1171
+      "line": 1634
     },
     {
       "id": "jurisdictions.index.day_is_one_of_weekdays",
       "en": "day is one of {WEEKDAYS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 336
+      "line": 425
     },
     {
       "id": "jurisdictions.index.days_is_a_non_empty",
       "en": "days is a non-empty list of {WEEKDAYS}, each once",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 734
+      "line": 956
     },
     {
       "id": "jurisdictions.index.does_says_what_the_body",
       "en": "does says what the body does and for whom, 1 to {POINTER_DOES_MAX} characters",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1432
+      "line": 1917
+    },
+    {
+      "id": "jurisdictions.index.export_is_never_this_release_accepts",
+      "en": "export is never: this release accepts no other value",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1374
     },
     {
       "id": "jurisdictions.index.fact_is_given_twice_for",
       "en": "{fact} is given twice for this venue",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 936
+      "line": 1189
     },
     {
       "id": "jurisdictions.index.fact_is_one_of_venue",
       "en": "fact is one of {VENUE_FACTS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 935
+      "line": 1188
     },
     {
       "id": "jurisdictions.index.family_dropped_from_view",
       "en": "the family is dropped from the view: a citation of it is recognised by no profile until they agree",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1942
+      "line": 2884
     },
     {
       "id": "jurisdictions.index.field_is_one_of_policy",
       "en": "field is one of {POLICY_HEADER_FIELDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 609
+      "line": 824
+    },
+    {
+      "id": "jurisdictions.index.field_is_plain_text",
+      "en": "{field} is plain text",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1402
+    },
+    {
+      "id": "jurisdictions.index.flag_is_true_or_false",
+      "en": "flag is true or false",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1102
     },
     {
       "id": "jurisdictions.index.form_is_named_twice_in",
       "en": "'{form}' is named twice in {name}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 469
+      "line": 673
     },
     {
       "id": "jurisdictions.index.forum_kind_is_one_of",
       "en": "forum_kind is one of {FORUM_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1235
+      "line": 1698
     },
     {
       "id": "jurisdictions.index.forum_kind_is_one_of_2",
       "en": "forum_kind is one of {FORUM_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1506
+      "line": 2007
     },
     {
       "id": "jurisdictions.index.freq_is_one_of_rrule",
       "en": "FREQ is one of {RRULE_FREQS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1575
+      "line": 2076
+    },
+    {
+      "id": "jurisdictions.index.government_is_level_place_the",
+      "en": "government is {level, place}: the government an entry is about",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 559
+    },
+    {
+      "id": "jurisdictions.index.governs_is_a_non_empty_list",
+      "en": "governs is a non-empty list of levels of office, each once",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 875
     },
     {
       "id": "jurisdictions.index.grade_is_one_of_basis",
       "en": "grade is one of {BASIS_GRADES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 990
+      "line": 1243
     },
     {
       "id": "jurisdictions.index.host_is_mixed_and_also",
       "en": "{host} is mixed and also in {get}, which has no path",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 447
+      "line": 651
     },
     {
       "id": "jurisdictions.index.how_is_one_of_contact",
       "en": "how is one of {CONTACT_HOW}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1114
+      "line": 1577
     },
     {
       "id": "jurisdictions.index.how_is_one_of_pointer",
       "en": "how is one of {POINTER_HOW}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1438
+      "line": 1923
     },
     {
       "id": "jurisdictions.index.how_is_one_of_venue",
       "en": "how is one of {VENUE_HOW}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 925
+      "line": 1178
+    },
+    {
+      "id": "jurisdictions.index.how_is_to_characters_saying_how",
+      "en": "how is 1 to 500 characters saying how the member checked it",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 592
     },
     {
       "id": "jurisdictions.index.id_is_given_twice_in",
       "en": "'{id}' is given twice in the profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 860
+      "line": 1116
     },
     {
       "id": "jurisdictions.index.instrument_key_conflict",
       "en": "the active profiles give different instrument-key segments, so no key is composed",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2164
+      "line": 3112
     },
     {
       "id": "jurisdictions.index.k_is_not_a_field",
       "en": "'{k}' is not a field here",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 406
+      "line": 495
     },
     {
       "id": "jurisdictions.index.k_is_not_a_section",
       "en": "'{k}' is not a section of a profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 289
+      "line": 373
+    },
+    {
+      "id": "jurisdictions.index.keep_is_true_or_false",
+      "en": "keep is true or false",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1456
     },
     {
       "id": "jurisdictions.index.key_is_given_twice",
       "en": "'{key}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 720
+      "line": 942
     },
     {
       "id": "jurisdictions.index.key_is_given_twice_2",
       "en": "'{key}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1364
+      "line": 1827
     },
     {
       "id": "jurisdictions.index.key_is_not_one_of",
       "en": "'{key}' is not one of {VOCABULARY}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 544
+      "line": 748
     },
     {
       "id": "jurisdictions.index.kind_at_level_is_ranked",
       "en": "{kind} at {level} is ranked twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1209
+      "line": 1672
     },
     {
       "id": "jurisdictions.index.kind_has_one_flow",
       "en": "{kind} has one flow",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1245
+      "line": 1708
     },
     {
       "id": "jurisdictions.index.kind_has_one_guide",
       "en": "{kind} has one guide",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1391
+      "line": 1857
     },
     {
       "id": "jurisdictions.index.kind_is_given_twice",
       "en": "'{kind}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 912
+      "line": 1165
     },
     {
       "id": "jurisdictions.index.kind_is_given_twice_2",
       "en": "'{kind}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1232
+      "line": 1695
     },
     {
       "id": "jurisdictions.index.kind_is_given_twice_3",
       "en": "'{kind}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1329
+      "line": 1792
     },
     {
       "id": "jurisdictions.index.kind_is_one_of_classification",
       "en": "kind is one of {CLASSIFICATION_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1303
+      "line": 1766
     },
     {
       "id": "jurisdictions.index.kind_is_one_of_local",
       "en": "kind is one of {LOCAL_NAME_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1531
+      "line": 2032
     },
     {
       "id": "jurisdictions.index.kind_is_one_of_phrasing",
       "en": "kind is one of {PHRASING_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1416
+      "line": 1901
     },
     {
       "id": "jurisdictions.index.kind_is_one_of_pointer",
       "en": "kind is one of {POINTER_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1428
+      "line": 1913
     },
     {
       "id": "jurisdictions.index.kind_is_one_of_standard",
       "en": "kind is one of {STANDARD_SOURCE_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 752
+      "line": 974
     },
     {
       "id": "jurisdictions.index.kind_is_one_of_standard_2",
       "en": "kind is one of {STANDARD_SOURCE_KINDS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1205
+      "line": 1668
     },
     {
       "id": "jurisdictions.index.kind_is_roster_kinds_absent",
       "en": "kind is {ROSTER_KINDS} (absent: both)",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 602
+      "line": 817
     },
     {
       "id": "jurisdictions.index.label_is_a_template_using",
       "en": "label is a template using {FISCAL_PLACEHOLDERS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1193
+      "line": 590
+    },
+    {
+      "id": "jurisdictions.index.law_has_one_block",
+      "en": "{law} has one block",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1992
     },
     {
       "id": "jurisdictions.index.level_is_one_of_counterparty",
       "en": "level is one of {COUNTERPARTY_LEVELS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 841
+      "line": 1064
+    },
+    {
+      "id": "jurisdictions.index.level_is_one_of_counterparty_2",
+      "en": "level is one of {GOVERNS_LEVELS}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 876
     },
     {
       "id": "jurisdictions.index.level_is_one_of_law",
       "en": "level is one of {LAW_LEVELS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 655
+      "line": 870
     },
     {
       "id": "jurisdictions.index.level_is_one_of_law_2",
       "en": "level is one of {LAW_LEVELS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 760
+      "line": 983
     },
     {
       "id": "jurisdictions.index.level_is_one_of_law_3",
       "en": "level is one of {LAW_LEVELS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1206
+      "line": 1669
+    },
+    {
+      "id": "jurisdictions.index.level_is_one_of_law_4",
+      "en": "level is one of {LAW_LEVELS}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 525
     },
     {
       "id": "jurisdictions.index.local_day_undetermined",
       "en": "its local day is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2048
+      "line": 2990
     },
     {
       "id": "jurisdictions.index.locale_conflict",
       "en": "the active profiles name different locales, so none is given: a render asks for its fallback",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1868
+      "line": 2789
+    },
+    {
+      "id": "jurisdictions.index.locator_is_an_https_address",
+      "en": "locator is an https address, or a template with the holes {cycle}, {cycle2} or {table}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1434
     },
     {
       "id": "jurisdictions.index.marker_is_one_of_meeting",
       "en": "marker is one of {MEETING_MARKERS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 595
+      "line": 810
     },
     {
       "id": "jurisdictions.index.markers_is_the_order_of",
       "en": "markers is the order of subsection markers, from {SECTION_MARKERS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 587
+      "line": 802
+    },
+    {
+      "id": "jurisdictions.index.member_is_a_zip_member_s",
+      "en": "member is a zip member's name",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1436
     },
     {
       "id": "jurisdictions.index.minutes_due_conflict",
       "en": "the active profiles give different periods after which absent minutes raise a question, so none is given",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1859
+      "line": 2780
     },
     {
       "id": "jurisdictions.index.name_is_a_title_of",
       "en": "name is a title of at most {TEMPLATE_NAME_MAX} characters on one line",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 897
+      "line": 1148
     },
     {
       "id": "jurisdictions.index.name_is_not_one_of",
       "en": "'{name}' is not one of {SPACES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 457
+      "line": 661
     },
     {
       "id": "jurisdictions.index.name_is_the_bodys_own",
       "en": "name is the body's own name, 1 to {POINTER_NAME_MAX} characters on one line",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1430
+      "line": 1915
+    },
+    {
+      "id": "jurisdictions.index.name_is_the_column_s_header",
+      "en": "name is the column's header",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1452
     },
     {
       "id": "jurisdictions.index.named_body_variants",
       "en": "body-variant keys",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2006
+      "line": 2948
     },
     {
       "id": "jurisdictions.index.named_identifiers",
       "en": "identifiers",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2006
+      "line": 2948
     },
     {
       "id": "jurisdictions.index.named_within",
       "en": "organisations it is part of",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2006
+      "line": 2948
     },
     {
       "id": "jurisdictions.index.no_computation_entry_of_this",
       "en": "no computation entry of this profile has key '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1051
+      "line": 1325
     },
     {
       "id": "jurisdictions.index.no_counterparty_of_this_profile",
       "en": "no counterparty of this profile has role '{o}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1143
+      "line": 1606
     },
     {
       "id": "jurisdictions.index.no_holidays_entry_of_this",
       "en": "no holidays entry of this profile is in a list named '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 634
+      "line": 849
     },
     {
       "id": "jurisdictions.index.no_holidays_entry_of_this_2",
       "en": "no holidays entry of this profile is in a list named '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1049
+      "line": 1323
     },
     {
       "id": "jurisdictions.index.no_holidays_entry_of_this_3",
       "en": "no holidays entry of this profile is in a list named '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1076
+      "line": 1266
     },
     {
       "id": "jurisdictions.index.no_identifier_scheme_of_this",
       "en": "no identifier scheme of this profile is '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 807
+      "line": 1030
     },
     {
       "id": "jurisdictions.index.no_kind_of_this_profile",
       "en": "no kind of this profile with a venue is '{venue}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1145
+      "line": 1608
+    },
+    {
+      "id": "jurisdictions.index.no_layer_of_the_branch_holds",
+      "en": "{id}: {path} names '{name}', which no layer of the branch holds",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 2486
     },
     {
       "id": "jurisdictions.index.no_profile_item_is_held",
       "en": "no profile '{item}' is held",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1706
+      "line": 2302
     },
     {
       "id": "jurisdictions.index.no_records_laws_or_standard",
       "en": "no records_laws or standard_sources entry is named '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 917
+      "line": 1170
+    },
+    {
+      "id": "jurisdictions.index.no_register_of_this_profile",
+      "en": "no register of this profile has key '{String}'",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1533
     },
     {
       "id": "jurisdictions.index.no_system_of_this_profile",
       "en": "no system of this profile has origin '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 499
+      "line": 703
     },
     {
       "id": "jurisdictions.index.no_system_of_this_profile_2",
       "en": "no system of this profile has origin '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 615
+      "line": 830
     },
     {
       "id": "jurisdictions.index.no_system_of_this_profile_3",
       "en": "no system of this profile has origin '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1284
+      "line": 1747
+    },
+    {
+      "id": "jurisdictions.index.no_system_of_this_profile_4",
+      "en": "no system of this profile has origin '{String}'",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1408
+    },
+    {
+      "id": "jurisdictions.index.no_use_limit_of_this_profile",
+      "en": "no use limit of this profile is '{key}'",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1381
     },
     {
       "id": "jurisdictions.index.no_vocabulary_codes_entry_has",
       "en": "no vocabulary.codes entry has key '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 768
+      "line": 991
     },
     {
       "id": "jurisdictions.index.one_active_profile_says_host",
       "en": "one active profile says {host} serves many offices' publications and another names a system for it, so an address there names no system",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1817
+      "line": 2738
     },
     {
       "id": "jurisdictions.index.organisation_is_a_key_the",
       "en": "organisation is a key the body-variant map names, not '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 563
+      "line": 778
+    },
+    {
+      "id": "jurisdictions.index.origin_is_one_of_layer",
+      "en": "origin is one of {LAYER_ORIGINS}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 519
     },
     {
       "id": "jurisdictions.index.outcome_is_one_of_review",
       "en": "outcome is one of {REVIEW_OUTCOMES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 883
+      "line": 1088
+    },
+    {
+      "id": "jurisdictions.index.package_is_a_non_empty_list",
+      "en": "package is a non-empty list of layer ids, each once",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 507
+    },
+    {
+      "id": "jurisdictions.index.phase_is_alpha_or_beta",
+      "en": "phase is alpha or beta",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1417
     },
     {
       "id": "jurisdictions.index.phrase_is_phrase_min_phrase",
       "en": "phrase is {PHRASE_MIN}–{PHRASE_MAX} characters on one line",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1418
+      "line": 1903
+    },
+    {
+      "id": "jurisdictions.index.pieces_is_a_non_empty_list",
+      "en": "pieces is a non-empty list",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1424
+    },
+    {
+      "id": "jurisdictions.index.place_is_the_government_s_name",
+      "en": "place is the government's name, 1 to 200 characters on one line",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 564
+    },
+    {
+      "id": "jurisdictions.index.place_is_the_place_s_name",
+      "en": "place is the place's name, 1 to 200 characters on one line",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 527
     },
     {
       "id": "jurisdictions.index.receipt_on_closed_day",
       "en": "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2047
+      "line": 2989
     },
     {
       "id": "jurisdictions.index.records_help_conflict",
       "en": "the active profiles give different records-request help, so none is given: the page has no figure to show",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1886
+      "line": 2820
+    },
+    {
+      "id": "jurisdictions.index.register_refused",
+      "en": "register {key} is refused: {code}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1521
     },
     {
       "id": "jurisdictions.index.relation_is_one_of_amending",
       "en": "relation is one of {AMENDING_RELATIONS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 592
+      "line": 807
     },
     {
       "id": "jurisdictions.index.response_is_the_rule_of_a_deadline",
       "en": "response is the rule of a deadline",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 683
+      "line": 905
     },
     {
       "id": "jurisdictions.index.response_names_no_records_deadline",
       "en": "response '{rule}' is no rule of a deadline that applies to records_request",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1092
+      "line": 1357
+    },
+    {
+      "id": "jurisdictions.index.role_is_one_of_register",
+      "en": "role is one of {REGISTER_ROLES}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1455
     },
     {
       "id": "jurisdictions.index.role_is_one_of_roster",
       "en": "role is one of {ROSTER_ROLES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 605
+      "line": 820
     },
     {
       "id": "jurisdictions.index.rule_is_one_of_computation",
       "en": "rule is one of {COMPUTATION_RULES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 722
+      "line": 944
     },
     {
       "id": "jurisdictions.index.rule_is_one_of_receipt",
       "en": "rule is one of {RECEIPT_RULES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 381
+      "line": 470
     },
     {
       "id": "jurisdictions.index.scheme_is_given_twice",
       "en": "{scheme} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1275
+      "line": 1738
     },
     {
       "id": "jurisdictions.index.scheme_is_given_twice_2",
       "en": "{scheme} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1300
+      "line": 1763
+    },
+    {
+      "id": "jurisdictions.index.schemes_is_a_list_of_the",
+      "en": "schemes is a list of the profile's identifier scheme names",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1466
     },
     {
       "id": "jurisdictions.index.sector_is_one_of_sectors",
       "en": "sector is one of {SECTORS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 763
+      "line": 986
     },
     {
       "id": "jurisdictions.index.shape_is_one_of_kind",
       "en": "shape is one of {KIND_SHAPES}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 970
+      "line": 1223
     },
     {
       "id": "jurisdictions.index.sources_lists_one_public_source",
       "en": "sources lists at least one public source, each with a citation",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 900
+      "line": 1151
     },
     {
       "id": "jurisdictions.index.starts_is_one_of_starts",
       "en": "starts is one of {STARTS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1029
+      "line": 1303
     },
     {
       "id": "jurisdictions.index.status_is_fact_statuses_naming",
       "en": "status is {FACT_STATUSES}, naming what the fact rests on",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 314
+      "line": 403
     },
     {
       "id": "jurisdictions.index.string_is_neither_claim_nor",
       "en": "'{String}' is neither claim nor a kind of this profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1015
+      "line": 1289
     },
     {
       "id": "jurisdictions.index.string_is_no_kind_of",
       "en": "'{String}' is no kind of this profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 567
+      "line": 782
     },
     {
       "id": "jurisdictions.index.string_is_no_kind_of_2",
       "en": "'{String}' is no kind of proceeding_kinds",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1244
+      "line": 1707
     },
     {
       "id": "jurisdictions.index.string_is_no_kind_of_3",
       "en": "'{String}' is no kind of this profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1376
+      "line": 1839
     },
     {
       "id": "jurisdictions.index.string_is_no_kind_of_4",
       "en": "'{String}' is no kind of this profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1390
+      "line": 1856
     },
     {
       "id": "jurisdictions.index.string_is_not_a_space",
       "en": "'{String}' is not a space",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 512
+      "line": 716
     },
     {
       "id": "jurisdictions.index.string_is_not_a_tier",
       "en": "'{String}' is not a Tier 2 or 3 kind of this profile",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1105
+      "line": 1568
     },
     {
       "id": "jurisdictions.index.string_names_no_measurement_or",
       "en": "'{String}' names no measurement or ruling",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 303
+      "line": 392
+    },
+    {
+      "id": "jurisdictions.index.suffix_is_the_suffix_s_primary",
+      "en": "suffix is the suffix's primary name, upper-case letters",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 756
+    },
+    {
+      "id": "jurisdictions.index.supports_is_a_list_of_filter",
+      "en": "supports is a list of filter criteria",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1500
+    },
+    {
+      "id": "jurisdictions.index.system_is_a_system_s_origin",
+      "en": "system is a system's origin",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1407
+    },
+    {
+      "id": "jurisdictions.index.template_has_exactly_one_hole",
+      "en": "template has exactly one hole, {value}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1542
+    },
+    {
+      "id": "jurisdictions.index.template_is_an_https_address_one",
+      "en": "template is an https address with one hole {value}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1537
+    },
+    {
+      "id": "jurisdictions.index.template_is_an_https_address_template",
+      "en": "template is an https address template",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1498
+    },
+    {
+      "id": "jurisdictions.index.template_is_an_https_address_with",
+      "en": "template is an https address with its hole outside the host",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1547
     },
     {
       "id": "jurisdictions.index.the_active_profiles_define_the",
       "en": "the active profiles define the {space} form '{form}' differently, so it is withheld: a value in it is recognised by no profile until they agree",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1755
+      "line": 2676
     },
     {
       "id": "jurisdictions.index.the_active_profiles_disagree_on",
       "en": "the active profiles disagree on whether {role} ({body}) is an oversight or audit body, so it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1992
+      "line": 2934
     },
     {
       "id": "jurisdictions.index.the_active_profiles_disagree_on_2",
       "en": "the active profiles disagree on the {f} of {rule} for {applies_to}, so it is withheld: the deadline is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2115
+      "line": 3057
     },
     {
       "id": "jurisdictions.index.the_active_profiles_explain_name",
       "en": "the active profiles explain {name} differently in {l}, so no explanation is given there",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2211
+      "line": 3159
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different",
       "en": "the active profiles give different coverage floors for {kind}, so no floor is given: whether a number is inside the record's reach is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1771
+      "line": 2692
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_2",
       "en": "the active profiles give different hours for {role} ({body}), so its hours are undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1998
+      "line": 2940
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_3",
       "en": "the active profiles give different time zones for {role} ({body}), so its local day is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2004
+      "line": 2946
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_4",
       "en": "the active profiles give different {v1} for {role} ({body}), so none is given: it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2011
+      "line": 2953
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_5",
       "en": "the active profiles give different {v1} for {kind}, so none is given{v2}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2042
+      "line": 2984
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_6",
       "en": "the active profiles give different {v1} for {kind}'s venue, so {v2}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2054
+      "line": 2996
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_7",
       "en": "the active profiles give different {purpose} templates for {kind}, so none is given",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2088
+      "line": 3030
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_8",
       "en": "the active profiles give different {what} for {replace}, so it is withheld: it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2177
+      "line": 3125
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_different_9",
       "en": "the active profiles give different official translations of {name} in {l}, so none is given: the name is shown as it is",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2210
+      "line": 3158
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_name",
       "en": "the active profiles give {name} different stages, so which stages it has is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1920
+      "line": 2862
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_name_different_windows",
       "en": "the active profiles give {name} different first-request windows, so which one it has is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1921
+      "line": 2863
     },
     {
       "id": "jurisdictions.index.the_active_profiles_give_what",
       "en": "the active profiles give {what} ({replace}) different {v1}, so it is withheld: {says}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1958
+      "line": 2900
     },
     {
       "id": "jurisdictions.index.the_active_profiles_list_different",
       "en": "the active profiles list different closure days for {year}{whose}, so the year is withheld there: a business-day count reaching into it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2146
+      "line": 3088
     },
     {
       "id": "jurisdictions.index.the_active_profiles_map_the",
       "en": "the active profiles map the MemberType '{t}'{v1} to different capacities, so it maps to none there: a seat's capacity is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1840
+      "line": 2761
     },
     {
       "id": "jurisdictions.index.the_active_profiles_say_differently",
       "en": "the active profiles say differently who may request under {name}, so it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1922
+      "line": 2864
     },
     {
       "id": "jurisdictions.index.the_active_profiles_say_host",
       "en": "the active profiles say {host} publishes different systems' material ({origins}), so an address there names no system",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1804
+      "line": 2725
     },
     {
       "id": "jurisdictions.index.the_active_profiles_state_kind",
       "en": "the active profiles state {kind}'s venue's {fact} differently, so it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2071
+      "line": 3013
+    },
+    {
+      "id": "jurisdictions.index.the_approver_is_not_the_guide",
+      "en": "the approver is not the guide's writer",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1880
     },
     {
       "id": "jurisdictions.index.the_body_variant_map_names",
       "en": "the body-variant map names no organisation '{organisation}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 834
+      "line": 1057
+    },
+    {
+      "id": "jurisdictions.index.the_count_validator_needs_a_count",
+      "en": "the count validator needs a count query",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1511
     },
     {
       "id": "jurisdictions.index.the_family_key_key_2",
       "en": "the family {key}/{key_2} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 780
+      "line": 1003
+    },
+    {
+      "id": "jurisdictions.index.the_federal_government_has_no_place",
+      "en": "the federal government has no place",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 563
     },
     {
       "id": "jurisdictions.index.the_forum_label_is_given",
       "en": "the forum '{label}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1509
+      "line": 2010
+    },
+    {
+      "id": "jurisdictions.index.the_guides_f_is_missing",
+      "en": "the guide's {f} is missing",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1873
     },
     {
       "id": "jurisdictions.index.the_kind_name_is_given",
       "en": "the {kind} '{name}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1534
+      "line": 2035
+    },
+    {
+      "id": "jurisdictions.index.the_layer_within_is_not",
+      "en": "{id} sits within {pid}, which is not in the list",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 2470
+    },
+    {
+      "id": "jurisdictions.index.the_locator_s_host_is_not",
+      "en": "the locator's host is not one of the system's hosts",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1435
     },
     {
       "id": "jurisdictions.index.the_purpose_purpose_is_given",
       "en": "the purpose {purpose} is given twice in {String}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 964
+      "line": 1217
     },
     {
       "id": "jurisdictions.index.the_reviews_f_is_missing",
       "en": "the review's {f} is missing",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 878
+      "line": 1083
     },
     {
       "id": "jurisdictions.index.the_scheme_scheme_identifies_no",
       "en": "the scheme {scheme} identifies no {kind}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 808
+      "line": 1031
     },
     {
       "id": "jurisdictions.index.the_space_has_no_form",
       "en": "the space has no form '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 518
+      "line": 722
     },
     {
       "id": "jurisdictions.index.the_space_space_has_no",
       "en": "the space {space} has no form '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1281
+      "line": 1744
     },
     {
       "id": "jurisdictions.index.the_stage_stage_is_given",
       "en": "the stage {stage} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 667
+      "line": 889
     },
     {
       "id": "jurisdictions.index.the_stage_stage_is_given_2",
       "en": "the stage {stage} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1255
+      "line": 1718
     },
     {
       "id": "jurisdictions.index.the_standard_is_text_of",
       "en": "the standard is text of at most {EVIDENCE_STANDARD_MAX} characters",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 985
+      "line": 1238
+    },
+    {
+      "id": "jurisdictions.index.the_team_layer_has_no_level",
+      "en": "the team layer has no level and no place",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 522
+    },
+    {
+      "id": "jurisdictions.index.the_team_layer_holds_one_fiscal",
+      "en": "the team layer holds one fiscal year for each government",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 584
+    },
+    {
+      "id": "jurisdictions.index.the_team_layer_s_id_is",
+      "en": "the team layer's id is team",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 523
+    },
+    {
+      "id": "jurisdictions.index.the_template_s_host_is_not",
+      "en": "the template's host is not one of the system's hosts",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1499
+    },
+    {
+      "id": "jurisdictions.index.the_template_s_host_is_not_2",
+      "en": "the template's host is not one of the register's system hosts",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1550
     },
     {
       "id": "jurisdictions.index.the_templates_f_is_missing",
       "en": "the template's {f} is missing",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 857
+      "line": 1113
+    },
+    {
+      "id": "jurisdictions.index.the_url_s_host_is_not",
+      "en": "the url's host is not one of the system's hosts",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1412
     },
     {
       "id": "jurisdictions.index.this_profile_has_no_space",
       "en": "this profile has no space '{String}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1280
+      "line": 1743
     },
     {
       "id": "jurisdictions.index.time_zone_conflict",
       "en": "the active profiles name different time zones, so none is given: a time of day there is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1875
+      "line": 2796
     },
     {
       "id": "jurisdictions.index.trigger_is_one_of_legal",
       "en": "trigger is one of {LEGAL_FACT_TRIGGERS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1366
+      "line": 1829
     },
     {
       "id": "jurisdictions.index.units_is_one_of_units",
       "en": "units is one of {UNITS}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1020
+      "line": 1294
+    },
+    {
+      "id": "jurisdictions.index.url_is_the_register_s_own",
+      "en": "url is the register's own public https page",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1411
     },
     {
       "id": "jurisdictions.index.v1_in_locale_is_given",
       "en": "{v1} in {locale} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1545
+      "line": 2046
     },
     {
       "id": "jurisdictions.index.v1_is_given_twice",
       "en": "{v1} is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1572
+      "line": 2073
     },
     {
       "id": "jurisdictions.index.v1_is_outside_civil_times",
       "en": "{v1} is outside civil-time's subset ({RRULE_PARTS})",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1571
+      "line": 2072
     },
     {
       "id": "jurisdictions.index.v_is_given_twice",
       "en": "'{v}' is given twice",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 558
+      "line": 773
     },
     {
       "id": "jurisdictions.index.v_is_given_twice_v1",
       "en": "'{v}' is given twice {v1}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 558
+      "line": 757
     },
     {
       "id": "jurisdictions.index.v_is_not_a_value",
       "en": "'{v}' is not a value in form '{v1}'",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 526
+      "line": 730
+    },
+    {
+      "id": "jurisdictions.index.validators_is_a_list_of",
+      "en": "validators is a list of {REGISTER_VALIDATORS}",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 1509
     },
     {
       "id": "jurisdictions.index.value_is_text_of_at",
       "en": "value is text of at most {VENUE_FACT_MAX} characters",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 938
+      "line": 1191
+    },
+    {
+      "id": "jurisdictions.index.volatile_is_a_non_empty_list",
+      "en": "volatile is a non-empty list of patterns",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 638
     },
     {
       "id": "jurisdictions.index.weekend_conflict",
       "en": "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 2163
+      "line": 3111
     },
     {
       "id": "jurisdictions.index.what_is_a_non_empty",
       "en": "{what} is a non-empty string",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 408
+      "line": 497
     },
     {
       "id": "jurisdictions.index.who_issues_undetermined",
       "en": "who issues it is undetermined",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1947
+      "line": 2889
     },
     {
       "id": "jurisdictions.index.within_is_amount_and_units",
       "en": "within is {amount, units}, units one of {units_list}",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1336
+      "line": 1799
+    },
+    {
+      "id": "jurisdictions.index.within_is_the_id_of_the",
+      "en": "within is the id of the layer this one sits in",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 530
+    },
+    {
+      "id": "jurisdictions.index.within_loops_back",
+      "en": "following within from {id} loops back",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 2474
     },
     {
       "id": "jurisdictions.index.year_listed_twice_for_all_offices",
       "en": "{year} is listed twice for all offices",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1162
+      "line": 1625
     },
     {
       "id": "jurisdictions.index.year_listed_twice_for_list_and_all_offices",
       "en": "{year} is listed twice for the list {list} and all offices",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1159
+      "line": 1622
     },
     {
       "id": "jurisdictions.index.year_listed_twice_for_list_and_the_same_offices",
       "en": "{year} is listed twice for the list {list} and the same offices",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1158
+      "line": 1621
     },
     {
       "id": "jurisdictions.index.year_listed_twice_for_the_same_offices",
       "en": "{year} is listed twice for the same offices",
       "module": "jurisdictions",
       "file": "jurisdictions/index.mjs",
-      "line": 1161
+      "line": 1624
+    },
+    {
+      "id": "jurisdictions.use_limit.fec_contributor_names",
+      "en": "Names and addresses of individual contributors taken from federal election reports may not be sold or used to solicit contributions or for any commercial purpose.",
+      "module": "jurisdictions",
+      "file": "jurisdictions/index.mjs",
+      "line": 95
     },
     {
       "id": "law-relations.index.no_effective_detail",
