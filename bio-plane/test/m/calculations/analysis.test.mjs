@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, V, MACHINE, R, saved } from "./fixture.mjs";
 import { draw as gDraw, interval } from "../../../src/calc-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const PERIOD = { from: "2025-04-01", to: "2027-03-31" };
@@ -29,7 +30,7 @@ test("R16 a unit cost is a ratio of a money fact's amount over its buys quantity
   assert.deepEqual(bva.results.periods.map((p) => [p.fiscal_period, p.adopted.value, p.actual.value, p.difference.value, p.difference.sign, p.comparison.relation]),
     [["FY2025-26", "150", "120", "30", "-", "lower"], ["FY2026-27", "200", "190", "10", "-", "lower"]]);
   assert.deepEqual(bva.results.bases, { adopted: ["budgetary"], actual: ["modified accrual"] }, "the bases stated beside the result");
-  assert.match(bva.results.bases_says, /budgetary.*modified accrual/);
+  assert.equal(bva.results.bases_says, word("calculations.adopted_basis_actual", { adopted: "budgetary", actual: "modified accrual" }));
   assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: actual }, { name: "actual", money: actual }], by: V("bob") })), "BUDGET_INPUTS");
   const mixed = [...adopted, w.fact({ amount: "1", kind: "expenditure", phase: "adopted", stage: undefined, basis: "cash", period: FY["2025"] })];
   const m = await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: mixed }, { name: "actual", money: actual }], by: V("bob") });

@@ -1504,12 +1504,12 @@ export class Calculations {
   /** R4: `create({question, terms, period, inputs, recipe, kind, threshold?, methodNote?, evidences?, project, by})`.
    *  Async (inputs may be read from the evidence store). */
   async create({ question = null, terms = null, period = null, inputs = null, recipe = null, kind = null, threshold = null,
-                 methodNote = null, evidences = null, project = null, column = null, part = null, by = null } = {}) {
+                 methodNote = null, evidences = null, project = null, column = null, part = null, by = null, owner = null } = {}) {
     if (!stamped(by)) return no("NO_AUTHOR", "a calculation is recorded under the control plane's stamp. Nothing was written.");
     if (!str(question)) return no("NO_QUESTION", "a calculation states the question it answers. Nothing was written.");
     const p = periodOf(period);
     if (!p) return no("NO_PERIOD", "a calculation states its period: {from, to}, each a date YYYY-MM-DD or null (not both), or a period key. Nothing was written.");
-    const sel = this.#freezeSelections(inputs, by);
+    const sel = this.#freezeSelections(inputs, by, owner);
     if (!sel.ok) return sel;
     inputs = sel.inputs;
     const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer: by, pending: sel.pending });
@@ -1563,10 +1563,10 @@ export class Calculations {
 
   /** R7: `evaluate({recipe, inputs, viewer, kind?, threshold?, period?, terms?})`: what `create` would store, writing
    *  nothing. */
-  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null, column = null, part = null } = {}) {
+  async evaluate({ recipe = null, inputs = null, viewer = null, owner = null, kind = null, threshold = null, period = null, terms = null, column = null, part = null } = {}) {
     if (!stamped(viewer)) return no("NO_VIEWER", "an evaluation is asked under the control plane's stamp.");
     const p = period === null || period === undefined ? {} : periodOf(period) || {};
-    const sel = this.#freezeSelections(inputs, viewer);
+    const sel = this.#freezeSelections(inputs, viewer, owner);
     if (!sel.ok) return { ...sel, detail: String(sel.detail || "").replace(/ Nothing was written\.$/, "") };
     const c = await this.#compute({ kind, recipe, inputs: sel.inputs, threshold, period: p, terms, column, part, viewer, requireKind: false, pending: sel.pending });
     if (!c.ok) return { ...c, detail: String(c.detail || "").replace(/ Nothing was written\.$/, "") };
@@ -2441,11 +2441,12 @@ export class Calculations {
     } catch { return absent; }
   }
 
-  /* R52: each input `{name, set}` whose `set` is a selection handle (`sel-…`, `retrieval`) is resolved under the asking
-     member and its ids frozen as a record set with its sha (as `freezeSet` freezes a query's), the input rewritten to
+  /* R52, R53: each input `{name, set}` whose `set` is a selection handle (`sel-…`, `retrieval`) is resolved under the asking
+     member, the selection's owner being the door's `owner` stamp (the identity that made it; the viewer when none is
+     stamped), and its ids frozen as a record set with its sha (as `freezeSet` freezes a query's), the input rewritten to
      name that set. Answers `{ok, inputs, pending}`: `pending` holds the sets not yet held, which `create` writes in its
      own transaction (`evaluate` writes none, R7). A handle retrieval refuses is refused as it answers, naming the input. */
-  #freezeSelections(inputs, viewer) {
+  #freezeSelections(inputs, viewer, owner = null) {
     const pending = new Map();
     if (!Array.isArray(inputs)) return { ok: true, inputs, pending };
     const out = [];
@@ -2455,7 +2456,7 @@ export class Calculations {
       if (!retrieval || typeof retrieval.selectionResolve !== "function")
         return no("RETRIEVAL_NOT_REACHABLE", localize("calculations.index.the_held_selection_cannot_be", "the held selection cannot be read here. Nothing was written."), { input: inp.name });
       let r;
-      try { r = retrieval.selectionResolve({ handle: inp.set, viewer, owner: viewer, weight: "report" }); } catch (e) { r = { ok: false, reason: "RETRIEVAL_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
+      try { r = retrieval.selectionResolve({ handle: inp.set, viewer, owner: owner || viewer, weight: "report" }); } catch (e) { r = { ok: false, reason: "RETRIEVAL_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
       if (!r || r.ok === false) {
         const why = r && r.detail ? String(r.detail) : localize("calculations.index.the_selection_could_not_be_read", "it could not be read");
         return { ...(r || no("RETRIEVAL_FAILED", why)), input: inp.name,
@@ -2746,7 +2747,7 @@ export class Calculations {
 
   #gate(pattern, version) {
     const g = this.#one(`SELECT * FROM calc_pattern_gates WHERE pattern=? AND version=? ORDER BY seq DESC LIMIT 1`, pattern, version);
-    if (!g) return { open: false, reason: "this pattern's false-alarm rate has not been measured on a gold set, so its results are not shown (K1504, M-C8)" };
+    if (!g) return { open: false, reason: localize("calculations.index.this_patterns_false_alarm_rate", "this pattern's false-alarm rate has not been measured on a gold set, so its results are not shown (K1504, M-C8)") };
     const rate = Number(g.false_alarm_rate);
     if (!(rate <= GATE_MAX_RATE)) return { open: false, reason: word("calculations.pattern_measured_false", { false_alarm_rate: String(g.false_alarm_rate), gate_max_rate: String(GATE_MAX_RATE) }), gate: g };
     return { open: true, gate: g };
@@ -2923,7 +2924,7 @@ export function calculationsOps(c, url, body) {
   const b = plain(body) ? body : {};
   const viewer = q(url, "viewer");
   const by = viewer;
-  const strip = (o) => { const { by: _b, viewer: _v, author: _a, ...rest } = o; return rest; };
+  const strip = (o) => { const { by: _b, viewer: _v, author: _a, owner: _o, ...rest } = o; return rest; };
   return {
     tabledeclare: () => c.declareTable({ ...strip(b), by }),
     table: () => c.readTable({ sha: q(url, "sha") ?? b.sha, viewer, limit: q(url, "limit") ?? b.limit ?? 100, after: q(url, "after") ?? b.after ?? 0 }),
@@ -2931,8 +2932,8 @@ export function calculationsOps(c, url, body) {
     bindingadopt: () => c.adoptBinding({ ...strip(b), by }),
     moneyingest: () => c.ingestMoney({ ...strip(b), by }),
     moneyingestread: () => c.ingestRead({ ingest: q(url, "ingest") ?? b.ingest, kind: q(url, "kind") ?? b.kind ?? "state", after: q(url, "after") ?? b.after ?? 0, limit: q(url, "limit") ?? b.limit ?? 100, viewer }),
-    calculationcreate: () => c.create({ ...strip(b), by }),
-    calculationevaluate: () => c.evaluate({ ...strip(b), viewer }),
+    calculationcreate: () => c.create({ ...strip(b), by, owner: q(url, "owner") }),
+    calculationevaluate: () => c.evaluate({ ...strip(b), viewer, owner: q(url, "owner") }),
     calculationaccept: () => c.accept({ calcId: q(url, "id") ?? b.calcId, by }),
     calculation: () => c.read({ calcId: q(url, "id") ?? b.calcId, viewer }),
     calculationdraw: () => c.draw({ ...strip(b), by }),

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { seeded, world, V, MACHINE, R } from "./fixture.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { PATTERNS, GATE_MAX_RATE } from "../../../src/calculations/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const PERIOD = { from: "2025-07-01", to: "2026-06-30" };
@@ -81,7 +82,7 @@ test("R20 at start it registers with people.registerRosterSource: for an organis
   assert.ok(r.not_read.some((x) => x.table === a.sha && x.row === 3), "an organisation value that resolves to none is stated");
   assert.equal(source({ organisation: pw, at: "2026-03-01" }).rows[0].table, b.sha);
   assert.equal(w.count("calc_tables"), lines, "no row is read into a line, nor anything written");
-  assert.match(r.says, /never copied into lines/);
+  assert.equal(r.says, word("calculations.says.roster_rows_answered"));
 });
 
 /* The duty fixture the lateness patterns read: three occurrences of the clerk's duty, one met late by 5 days. */
@@ -166,7 +167,7 @@ test("R23 a pattern's results are answered only once its gate is recorded at a f
   await w.c.runPatterns({ budgetMs: 100000 });
   const gated = await w.c.patternResults({ pattern: "office_lateness", viewer: V("alice") });
   assert.equal(gated.patterns[0].gated, true);
-  assert.match(gated.patterns[0].reason, /not been measured/);
+  assert.equal(gated.patterns[0].reason, localize("calculations.index.this_patterns_false_alarm_rate", "this pattern's false-alarm rate has not been measured on a gold set, so its results are not shown (K1504, M-C8)"));
   assert.equal("results" in gated.patterns[0], false);
   assert.equal(told.length, 0, "nothing is told before the gate opens");
   /* the gate: an administrator's act, with its refusals */

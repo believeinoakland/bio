@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8054 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8055 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21302,6 +21302,7 @@ export const WORD_ROWS = Object.freeze([
   ["calculations.index.the_selection_could_not_be_read","it could not be read",null,null,false,"code"],
   ["calculations.index.the_standard_holds_no_target","the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_table_has_no_such_column","the table has no column \"{column}\". Nothing was written.",null,null,false,"code"],
+  ["calculations.index.this_patterns_false_alarm_rate","this pattern's false-alarm rate has not been measured on a gold set, so its results are not shown (K1504, M-C8)",null,null,false,"code"],
   ["calculations.index.v1_is_a_hypothesis_hunches","\"{v1}\" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.",null,null,false,"code"],
   ["calculations.index.your_teams_civicsmith_has_no","your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.",null,null,false,"code"],
   ["calculations.index.your_teams_civicsmith_has_no_2","your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.",null,null,false,"code"],
