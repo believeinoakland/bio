@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #330 · session_018BhcedfM8dV8rPodwgBjD3 · depth 1
-**Jobs** · doorbell: DOORBELL #1 session_018BhcecgyadihJwzejgvKmY; mail-door: MAIL-DOOR #1 session_018Bhced233u828vot13hTyX; sources: SOURCES #1 session_018BhcegmVJVqgECaQJcGU5q
-**Owed** · archive doorbell; archive mail-door; archive sources
+**Jobs** · mail-door: MAIL-DOOR #1 session_018Bhced233u828vot13hTyX; sources: SOURCES #1 session_018BhcegmVJVqgECaQJcGU5q
+**Owed** · archive mail-door; archive sources
 
 # Plan T53 · round R1, the beta's build
 
