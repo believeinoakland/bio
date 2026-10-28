@@ -47,7 +47,7 @@
     {
       "path": "../bio-plane/src/setup-words/rows.mjs",
       "bytes": 31430,
-      "sha256": "41ea05460a9424bff2989916504d46727be90e9c7583a1997900e6946beb3281"
+      "sha256": "9e0dcbb156fb18a8d46b160fa544127a82b2d695211336585ca999bc2600b65d"
     },
     {
       "path": "../bio-plane/src/subresources.mjs",

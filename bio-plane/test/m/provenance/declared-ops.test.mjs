@@ -52,7 +52,7 @@ test("R80 provenance declares authority: its requires alone raise no refusal nam
 test("R68, R69, R70, R80: the module declares those four ops and no other, each with the fields its arm reads", () => {
   assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["authority", "declareorigin", "origins", "testify"]);
   assert.deepEqual(DECLARED_OPS.authority.fields, { accepts: ["bundleId", "capture"], requires: ["bundleId"] });
-  assert.deepEqual(DECLARED_OPS.testify.fields, { accepts: ["words", "observedAt", "title"], requires: ["words", "observedAt"] });
+  assert.deepEqual(DECLARED_OPS.testify.fields, { accepts: ["words", "observedAt", "title", "project"], requires: ["words", "observedAt"] });
   assert.deepEqual(DECLARED_OPS.declareorigin.fields, { accepts: ["bundleId", "system"], requires: ["bundleId", "system"] });
   assert.deepEqual(DECLARED_OPS.origins.fields, { accepts: ["bundleId"], requires: ["bundleId"] });
   for (const [op, d] of Object.entries(DECLARED_OPS)) {
