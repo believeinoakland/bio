@@ -1,6 +1,6 @@
 # bundler (T53)
 
-**Status** · session_018BhcecEeYk8AL3QJSwTuwv · depth 2 · WORKING
+**Status** · session_018BhcecEeYk8AL3QJSwTuwv · depth 2 · WAITING: T53-523: green 173/173 on local merge with reader-container; job complete refuses alone (R35, R36, fleetbundles red without it); BOB's call
 **Sessions** · 1
 
 ## Completion (2026-10-27)
