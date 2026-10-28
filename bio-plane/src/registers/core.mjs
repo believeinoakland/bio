@@ -3,11 +3,11 @@
  * the watch are `runner.mjs`, `search.mjs` and `watch.mjs`, whose methods are installed on this class by `index.mjs`. */
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
 import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index.mjs";
 import { validateFilter, filterFingerprint, prefillFrom, autoWatchable, CONTACT_ROLES } from "../register-readers/index.mjs";
 import { validateRegisterDefinition } from "../../../jurisdictions/index.mjs";
 import { profileView } from "../acquisition/index.mjs";
-import { normalizeAddress } from "../subresources.mjs";
 import { localize } from "../setup-words/index.mjs";
 import { migrateRegisters, registersTables } from "./schema.mjs";
 import { sqliteRowStore, memoryRowStore } from "./port.mjs";
@@ -45,11 +45,12 @@ export class Registers {
    *  (their registrations go the other way); `view` (the combined jurisdiction view, default the instance's active profiles);
    *  `bounds`, `phase`, `port` (a rowStore), `now`, `onImportQueued`, `freeBytes`. */
   constructor({ storage, record, membership, acquisition = null, store = null, content = null, extraction = null, entities = null,
-                view = null, bounds = {}, phase = null, port = null, now = null, freeBytes = null, evidence = null, subjects = null, evidencePurge = null } = {}) {
+                view = null, promotion = null, bounds = {}, phase = null, port = null, now = null, freeBytes = null, evidence = null, subjects = null, evidencePurge = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record || recordOf({ storage });
     this.membership = membership || membershipOf({ storage }, { record: this.record });
+    this.promotion = promotion || promotionOf({ storage }, { record: this.record, membership: this.membership });
     this.acq = acquisition;
     this.store = store;
     this.content = content;
@@ -252,7 +253,8 @@ export class Registers {
       return isPublicHttpsLocator(u) === true;
     } catch { return false; }
   }
-  normUrl(u) { try { return normalizeAddress(u); } catch { return u.toLowerCase(); } }
+  /** a proposal's address as text, for finding the same one again: scheme and host folded, no fragment, no trailing slash */
+  normUrl(u) { try { const x = new URL(u); x.hash = ""; return `${x.protocol}//${x.host.toLowerCase()}${x.pathname.replace(/\/+$/, "")}${x.search}`; } catch { return String(u).toLowerCase(); } }
 
   /** R6: the held proposals, as data for an administrator to send on by their own act; this module sends nothing. */
   proposalsForUpstream({ viewer } = {}) {

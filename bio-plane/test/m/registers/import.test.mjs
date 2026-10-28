@@ -274,7 +274,7 @@ test("R18: every request names the register purpose in its agent and passes the 
   void first;
 });
 
-test("R19: a hidden project's import, its filter and its rows stay inside it: no list, count, delta, search, compare, status or change names them for a non-participant; a participant sees them", async () => {
+test("R19, R70 (G13): a hidden project's import, its filter and its rows stay inside it: no list, count, delta, search, compare, status or change names them for a non-participant; a participant sees them", async () => {
   const mk = () => seeded();
   const withHidden = mk(), without = mk();
   const H = withHidden.project("Secret", "bob", [], { hidden: true });

@@ -5,7 +5,7 @@
  * stored as captures) → `reading` (the arrived segments read into the row store, a bounded batch at a time) → `indexed`;
  * `failed` (with its reason and retries), `paused` (`member`, `shelf`, `host_paused`, `host_cooling`) and `stopped`.
  * Every position is in the import's own row, so a restart between any two slices is the same import as an uninterrupted one. */
-import { sha256HexSync } from "../record-grammar/index.mjs";
+import { sha256HexSync, createSha256, MACHINE_AUTHOR_PREFIX } from "../record-grammar/index.mjs";
 import { ROW_KEY_SEPARATOR, filterFingerprint, matches, estimate, autoWatchable, createReducer } from "../register-readers/index.mjs";
 import { noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { contentHashOf } from "./port.mjs";
@@ -352,16 +352,9 @@ export const runnerMethods = {
     const at = this.nowIso();
     let landed = [];
     for (const doc of r.documents ?? []) {
-      let bundle = null;
-      if (host && typeof host.land === "function") {
-        const landed1 = this.tx(() => host.land({ id: `register import ${row.import_id}`, bundle: row.project, locators: [doc.locator], target: null }, { locator: doc.locator, doc }, at, {
-          title: localize("registers.land.title", "Register {register}, import {import}, segment {n}", { register: def.key, import: String(row.import_id), n: String(doc.origin.segment) }),
-          summary: localize("registers.land.summary", "A segment of the register {register} as it was brought in, with the columns that must not be kept left out; import {import}.", { register: def.key, import: String(row.import_id) }),
-          notes: localize("registers.land.notes", "Brought in by import {import} at {at} under the register's definition; the original is not kept, only its fingerprint.", { import: String(row.import_id), at }),
-          trigger: `register import ${row.import_id}` }));
-        if (!landed1 || !landed1.ok) { save(pieces, cursor); return this.failSlice(row, "NOT_FILED", String(landed1 && (landed1.reason || landed1.detail) || "").slice(0, 160), now); }
-        bundle = landed1.bundle_id ?? null;
-      }
+      const filed = this.tx(() => this.landDocument(row, def, doc, at));
+      if (!filed.ok) { save(pieces, cursor); return this.failSlice(row, "NOT_FILED", String(filed.reason || filed.detail || "").slice(0, 160), now); }
+      const bundle = filed.bundle_id;
       landed.push({ doc, bundle });
     }
     const oneDoc = (r.documents ?? [])[0];
@@ -390,6 +383,34 @@ export const runnerMethods = {
       this.sql.exec(`UPDATE register_imports SET bytes_in = bytes_in + ?, due_ms=? WHERE import_id=?`, r.original.bytes, now, row.import_id);
     });
     return { fetched: true };
+  },
+  /** R14, R19: a segment filed as an information document through `promotion`, in the project it belongs to (frontmatter `project`), collected and never verified;
+   *  the reduced bytes were stored by `acquisition`, and the document carries their provenance. Answers `{ok, bundle_id}` or the promotion's refusal. */
+  landDocument(row, def, doc, at) {
+    try {
+      const cap = doc.capture;
+      if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes)) return { ok: false, reason: "capture's answer named no primary file and size to land" };
+      const enc = (t) => { const b = new TextEncoder().encode(t); return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() }; };
+      const id = `${this.record.allocId("INFO", at.slice(0, 4)).id}-register`;
+      const title = localize("registers.land.title", "Register {register}, import {import}, segment {n}", { register: def.key, import: String(row.import_id), n: String(doc.origin.segment) }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+      const md = ["---", `id: ${id}`, "object_type: information", "schema: information@2", `title: ${JSON.stringify(title)}`, "current_state: collected", "prior_state: null",
+        `created: "${at}"`, `last_updated: "${at}"`, "produced_by:", "  mode: agent", "  capability_tier: session", ...(row.project ? [`project: ${row.project}`] : []),
+        "references: []", "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting",
+        "source_status: unchanged", "source:", `  locator: ${JSON.stringify(doc.locator)}`, `  retrieved: ${doc.retrieved}`, "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "",
+        localize("registers.land.summary", "A segment of the register {register} as it was brought in, with the columns that must not be kept left out; import {import}. Its bytes are `{file}`; nothing here summarises them.", { register: def.key, import: String(row.import_id), file: doc.file }),
+        "", "## Provenance Notes", "",
+        localize("registers.land.notes", "Brought in by import {import} at {at} under the register's definition; the original is not kept, only its fingerprint.", { import: String(row.import_id), at }),
+        "", "## Session Log", "", `### Session ${at} | Collected | ${MACHINE_AUTHOR_PREFIX}registers`, `Trigger: register import ${row.import_id}`,
+        localize("registers.land.changes", "Changes: created from a register import's reduced segment."), "", "## Review Notes", ""].join("\n");
+      const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || "")) && Number.isSafeInteger(f.bytes) ? { path: f.file, blobSha: f.sha256, sha256: f.sha256, bytes: f.bytes } : null);
+      const blobs = [blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }), blob(doc.shell), ...(Array.isArray(doc.parts) ? doc.parts.map(blob) : [])].filter(Boolean);
+      const seen = new Set();
+      const files = [{ path: "bundle.md", ...enc(md) }, { path: "data/provenance.json", ...enc(JSON.stringify({ documents: [doc] }, null, 2)) }, ...blobs.filter((f) => (seen.has(f.path) ? false : seen.add(f.path)))];
+      const p = this.promotion.promote({ bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${row.import_id}_${doc.origin.segment}`, author: `${MACHINE_AUTHOR_PREFIX}registers`, files,
+        meta: { object_type: "information", title, current_state: "collected", prior_state: null, created: at, last_updated: at, criticality: "supporting" },
+        register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }] });
+      return p && p.ok ? { ok: true, bundle_id: id } : { ok: false, reason: (p && (p.reason || p.code)) || null, detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
+    } catch (e) { return { ok: false, reason: "LAND_FAILED", detail: String((e && e.message) || e).slice(0, 200) }; }
   },
   refreshProbe(previousId, piece) {
     const prev = this.one(`SELECT pieces FROM register_imports WHERE import_id=?`, previousId);

@@ -7,7 +7,7 @@ import { world as acquisitionWorld, network, governor } from "../acquisition/fix
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
-import { monitoringOf } from "../../../src/monitoring/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
 import { streamRegister, probeRegister, sourceChanged, keyedFetch } from "../../../src/acquisition/index.mjs";
 import { registersOf, Registers, registersOps } from "../../../src/registers/index.mjs";
 import { get, combine } from "../../../../jurisdictions/index.mjs";
@@ -70,16 +70,19 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
   content.migrate();
   record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
   const store = { core: record, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9", BIO_NOW_MS: String(now) }, governor: w0.gov, provenance: content.provenance };
-  const monitoring = monitoringOf(host, { record, membership, promotion, intent: null });
-  const sweep = monitoring.sweepHost();
+  /* the daemon's host as `importTick` is handed it (monitoring's `sweepHost`, its R65): the pause, and the epoch with its claims. Monitoring is later in the order than
+     this module, so its object is not imported; this is the contract's shape. */
+  // fixtures-contract: monitoring registers-sweep-host
+  const sweep = (() => { const claims = new Set(); let epoch = 0; return { paused: () => ({ paused: false }), openEpoch: () => ++epoch, claim: (c, s, e) => { const k = `${c}|${s}|${e}`; if (claims.has(k)) return false; claims.add(k); return true; }, closeEpoch: () => {}, running: new Set() }; })();
+  const entities = entitiesOf(host, { record, membership, provenance: () => content.provenance });
   const acq = { streamRegister, probeRegister, sourceChanged, keyedFetch };
   const depsBounds = { stream_max: 5 * 1024 ** 3, segment_max: 64 * 1024 * 1024, ...bounds };
   const evidencePurge = async (sha) => { await w0.b.delete(`bio/captures/${sha}`); };
-  const registers = registersOf(host, { record, membership, evidencePurge, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
+  const registers = registersOf(host, { record, membership, promotion, evidencePurge, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
     ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}), ...(subjects ? { subjects } : {}) });
   let n = 0;
   const w = {
-    ...w0, refuse, host, record, membership, promotion, content, store, registers, sweep, monitoring, clock, acq,
+    ...w0, refuse, entities, host, record, membership, promotion, content, store, registers, sweep, clock, acq,
     sql: (q, ...a) => [...w0.s.sql.exec(q, ...a)],
     count: (t) => [...w0.s.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
     member(id, { role = "member" } = {}) {
@@ -96,7 +99,7 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
     },
     /** the object restarted: a fresh instance over the same storage, as a Durable Object's is after eviction */
     restart() {
-      w.registers = new Registers({ storage: host.storage, record, membership, evidencePurge, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
+      w.registers = new Registers({ storage: host.storage, record, membership, promotion, evidencePurge, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
         ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}), ...(subjects ? { subjects } : {}) });
       return w.registers;
     },
