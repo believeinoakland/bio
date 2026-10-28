@@ -1,0 +1,75 @@
+{
+ "bundle": "/home/user/wt-mem/proto-mem/dist/meas.bundled.mjs",
+ "workerd_pids": [
+  14626
+ ],
+ "after_ready_no_request": {
+  "rss": 244.3,
+  "hwm": 244.3,
+  "anon": 201.4,
+  "file": 42.9,
+  "threads": 9,
+  "js_heap": {
+   "used": 52.4,
+   "total": 62.7,
+   "backing": 0.9
+  }
+ },
+ "after_ready_2s_idle": {
+  "rss": 245.3,
+  "hwm": 245.3,
+  "anon": 201.4,
+  "file": 44,
+  "threads": 9,
+  "js_heap": {
+   "used": 52.4,
+   "total": 62.7,
+   "backing": 0.9
+  }
+ },
+ "first_request_status": 200,
+ "after_first_stats_request": {
+  "rss": 255.9,
+  "hwm": 261.4,
+  "anon": 201.8,
+  "file": 54.1,
+  "threads": 9,
+  "js_heap": {
+   "used": 54.7,
+   "total": 69,
+   "backing": 0.9
+  }
+ },
+ "after_first_request_plus_3s": {
+  "rss": 256.1,
+  "hwm": 261.4,
+  "anon": 202,
+  "file": 54.1,
+  "threads": 9,
+  "js_heap": {
+   "used": 54.7,
+   "total": 69,
+   "backing": 0.9
+  }
+ },
+ "after_5_more_stats": {
+  "rss": 256.8,
+  "hwm": 261.4,
+  "anon": 202.7,
+  "file": 54.1,
+  "threads": 9,
+  "js_heap": {
+   "used": 59.3,
+   "total": 69.2,
+   "backing": 0.9
+  }
+ },
+ "rollup": {
+  "rss": 256.8,
+  "pss": 230.5,
+  "anon": 202.7,
+  "private_dirty": 202.8,
+  "private_clean": 3.1,
+  "shared_clean": 50.9
+ }
+}

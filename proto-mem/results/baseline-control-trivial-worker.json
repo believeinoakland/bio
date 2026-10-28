@@ -1,0 +1,12 @@
+{
+ "after_ready_no_request": {
+  "rss": 81.6,
+  "anon": 48.1,
+  "file": 33.5
+ },
+ "after_first_request": {
+  "rss": 86.2,
+  "anon": 48.7,
+  "file": 37.5
+ }
+}
