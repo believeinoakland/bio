@@ -153,6 +153,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-59 · N824, K2334, K1485 · CAPABILITIES rows
 - T53-60 · K5565 · English in tests: its entry
 - T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
+- T53-539 · K5641 · a PDF refusal names pdf-reader's `over` bound (`doc.notes`), never only "cannot be read"
 - rows: `build/plan/T53-R1/doc-clean.md`
 **pdf-worker**
 - T53-61 · K5565 · English in tests: its entry
