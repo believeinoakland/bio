@@ -1,6 +1,6 @@
 # bundler (T53)
 
-**Status** · session_018BhcecEeYk8AL3QJSwTuwv · depth 2 · WAITING: T53-523: every file enrolment needs is reader-container's; sent BOB the list; my tests/floors move after those land
+**Status** · session_018BhcecEeYk8AL3QJSwTuwv · depth 2 · WORKING
 **Sessions** · 1
 
 ## Completion (2026-10-27)
