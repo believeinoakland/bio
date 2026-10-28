@@ -294,7 +294,7 @@ export const runnerMethods = {
   shelfPause(row, extra = 0) {
     const s = this.shelf(extra);
     if (s.free_bytes === null || !s.warn) return null;
-    this.sql.exec(`UPDATE register_imports SET state='paused', paused_reason='shelf', reason=? WHERE import_id=?`, `shelf: ${s.would_use_pct}% of the object would be used`, row.import_id);
+    this.sql.exec(`UPDATE register_imports SET state='paused', paused_reason='shelf', reason=? WHERE import_id=?`, localize("registers.pause.shelf", "shelf: {pct}% of the object would be used", { pct: String(s.would_use_pct) }), row.import_id);
     return { paused: "shelf", shelf: s };
   },
 
@@ -389,7 +389,7 @@ export const runnerMethods = {
   landDocument(row, def, doc, at) {
     try {
       const cap = doc.capture;
-      if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes)) return { ok: false, reason: "capture's answer named no primary file and size to land" };
+      if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes)) return { ok: false, reason: localize("registers.land.no_file", "capture's answer named no primary file and size to land") };
       const enc = (t) => { const b = new TextEncoder().encode(t); return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() }; };
       const id = `${this.record.allocId("INFO", at.slice(0, 4)).id}-register`;
       const title = localize("registers.land.title", "Register {register}, import {import}, segment {n}", { register: def.key, import: String(row.import_id), n: String(doc.origin.segment) }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
@@ -400,7 +400,7 @@ export const runnerMethods = {
         localize("registers.land.summary", "A segment of the register {register} as it was brought in, with the columns that must not be kept left out; import {import}. Its bytes are `{file}`; nothing here summarises them.", { register: def.key, import: String(row.import_id), file: doc.file }),
         "", "## Provenance Notes", "",
         localize("registers.land.notes", "Brought in by import {import} at {at} under the register's definition; the original is not kept, only its fingerprint.", { import: String(row.import_id), at }),
-        "", "## Session Log", "", `### Session ${at} | Collected | ${MACHINE_AUTHOR_PREFIX}registers`, `Trigger: register import ${row.import_id}`,
+        "", "## Session Log", "", `### Session ${at} | Collected | ${MACHINE_AUTHOR_PREFIX}registers`, localize("registers.land.trigger", "Trigger: register import {import}", { import: String(row.import_id) }),
         localize("registers.land.changes", "Changes: created from a register import's reduced segment."), "", "## Review Notes", ""].join("\n");
       const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || "")) && Number.isSafeInteger(f.bytes) ? { path: f.file, blobSha: f.sha256, sha256: f.sha256, bytes: f.bytes } : null);
       const blobs = [blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }), blob(doc.shell), ...(Array.isArray(doc.parts) ? doc.parts.map(blob) : [])].filter(Boolean);

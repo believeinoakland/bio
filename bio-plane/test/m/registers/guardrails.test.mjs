@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { seeded, world, V, MACHINE, served, csv, csvRows, rowOf, enc, URL_, HOST, HEADER, DEF, network, viewWith, sourceKeyed } from "./fixture.mjs";
 import { DECLARED_OPS, REGISTERS_OPS, registersOps, REGISTERS_SCHEMA } from "../../../src/registers/index.mjs";
 import { declaredOpHolds } from "../../declared-ops.mjs";
-import { localize, hasWord } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const START = (w, over = {}) => w.registers.importStart({ register: "town_filings", filter: {}, scope: "team", author: V("alice"), viewer: V("alice"), holes: { table: "2025" }, ...over });
 const TABLES = [...REGISTERS_SCHEMA.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
@@ -325,12 +325,12 @@ test("R39: refusals, states and absence sentences are words by key: a refusal's 
   const w = seeded();
   const r = w.registers.importStart({ register: "nope", filter: {}, scope: "project", project: w.P, author: V("bob"), viewer: V("bob") });
   /* the sentence is the word table's for the code's key (rows.mjs is regenerated at the merge; until then the sentence is the one written at its use) */
-  assert.equal(r.detail, hasWord("registers.refusal.NO_SUCH_REGISTER") ? localize("registers.refusal.NO_SUCH_REGISTER", "x") : r.detail);
+  assert.equal(r.detail, hasWord("registers.refusal.NO_SUCH_REGISTER") ? word("registers.refusal.NO_SUCH_REGISTER") : r.detail);
   assert.ok(typeof r.detail === "string" && r.detail.length > 0);
   const none = w.registers.searchRows({ scope: {}, name: "Nobody", viewer: V("bob") });
   assert.equal(none.text_key, "register.absence.no_import");
   const gated = w.registers.importStart({ register: "trades_licences", filter: {}, scope: "team", author: V("alice"), viewer: V("alice") });
-  assert.equal(gated.detail, hasWord("registers.refusal.member_act_required") ? localize("registers.refusal.member_act_required", "x") : gated.detail);
+  assert.equal(gated.detail, hasWord("registers.refusal.member_act_required") ? word("registers.refusal.member_act_required") : gated.detail);
 });
 
 test("R40: every op answers within its stated time on the test copy (the figures are N1259-e §3's): the reads and the act that queues an import within 2,000 ms", async () => {

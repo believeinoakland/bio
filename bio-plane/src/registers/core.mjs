@@ -281,7 +281,7 @@ export class Registers {
     const at = this.nowIso();
     const prior = this.one(`SELECT MAX(version) AS v FROM register_definitions WHERE key=?`, k);
     const version = (prior && prior.v ? prior.v : 0) + 1;
-    const own = { ...definition, key: k, own: true, by, at, terms_statement: "stated by the team, not checked", gate: "none", phase: "alpha" };
+    const own = { ...definition, key: k, own: true, by, at, terms_statement: localize("registers.define.terms_statement", "stated by the team, not checked"), gate: "none", phase: "alpha" };
     this.sql.exec(`INSERT INTO register_definitions (key, version, definition, terms, proposal_id, by, at) VALUES (?,?,?,?,?,?,?)`,
                   k, version, json(own), terms, Number.isSafeInteger(Number(proposal)) ? Number(proposal) : null, by, at);
     if (Number.isSafeInteger(Number(proposal))) this.sql.exec(`UPDATE register_proposals SET state='defined' WHERE proposal_id=?`, Number(proposal));

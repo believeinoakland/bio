@@ -36,7 +36,7 @@ export const watchMethods = {
     if (!checked.ok) return checked;
     const watchable = autoWatchable(checked.filter);
     if (watch === true && !watchable)
-      return refusal("INTEREST_NOT_WATCHABLE", localize("registers.refusal.INTEREST_NOT_WATCHABLE", "a filter naming a person or an organization is re-checked by a member's act, never watched unattended"), { names: "re-checked by a member's act" });
+      return refusal("INTEREST_NOT_WATCHABLE", localize("registers.refusal.INTEREST_NOT_WATCHABLE", "a filter naming a person or an organization is re-checked by a member's act, never watched unattended"), { names: localize("registers.watch.names_by_act", "re-checked by a member's act") });
     const wantWatch = watch === false ? false : watchable;
     const prior = this.one(`SELECT interest_id, MAX(version) AS v FROM register_interests WHERE project=? AND register=? GROUP BY interest_id ORDER BY interest_id DESC LIMIT 1`, p, d.definition.key);
     const id = prior ? prior.interest_id : (Number(this.one(`SELECT COALESCE(MAX(interest_id), 0) AS m FROM register_interests`).m) + 1);
@@ -197,7 +197,7 @@ export const watchMethods = {
     const reg = t ? this.shipped().find((r) => r.key === t.register) : null;
     if (!reg) return refusal("NO_SUCH_REGISTER", localize("registers.refusal.NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), {});
     const addr = queryAddress(view, "company", reg.key, typeof query === "string" ? query.trim() : query);
-    if (!addr.ok) return refusal(addr.reason === "VALUE_NOT_OF_FORM" ? "QUERY_NOT_NAMED" : addr.reason, localize("registers.refusal.QUERY_NOT_NAMED", "the lookup is by a company number, never by a name"), { field: "query" });
+    if (!addr.ok) return refusal(addr.reason === "VALUE_NOT_OF_FORM" ? "QUERY_NOT_NAMED" : addr.reason, localize("registers.refusal.LOOKUP_NOT_NUMBERED", "the lookup is by a company number, never by a name"), { field: "query" });
     const r = await this.acq.keyedFetch(this.store, { service: "ca-officers", purpose: "officers-lookup", request: { url: addr.address, method: "GET" }, viewer: by });
     if (!r || r.ok !== true) return r && r.reason ? { ...r, ok: false } : refusal("LOOKUP_FAILED", localize("registers.refusal.LOOKUP_FAILED", "the lookup did not complete"), {});
     const day = new Date(this.nowMs()).toISOString().slice(0, 10);
