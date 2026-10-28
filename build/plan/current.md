@@ -1,7 +1,7 @@
 **Round** · R1 · layer 1 OPEN · layer 2 OPEN · layer 3 OPEN · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
-**Status** · OPEN · BOB #326 · session_018BhcecwedTZuFi4aJevK1N · depth 1
-**Jobs** · setup-words: SETUP-WORDS #1 session_018BhcedGkL4WZVApjwDazfX; record-grammar: RECORD-GRAMMAR #1 session_018Bhceem2iUdAZcA7dscA4j; jurisdictions: JURISDICTIONS #1 session_018BhcegAjkjssUAZ4hFC43r; civil-time: CIVIL-TIME #1 session_018BhcefMpVQvXKBiGcUYBvE; calc-grammar: CALC-GRAMMAR #1 session_018BhcefSWG1wRZtFGbsrFuA; connection-grammar: CONNECTION-GRAMMAR #1 session_018BhcegRDtn8p6dt8ssxJKJ; test-support: TEST-SUPPORT #1 session_018BhcecgY3PBTrL4y2Ck7MT; runtime-limits: RUNTIME-LIMITS #1 session_018BhcegsnZTq6ndhV2RKA4f; signatures: SIGNATURES #1 session_018BhceeVjx2uYzrUetpWc1A; bundler: BUNDLER #1 session_018BhcecEeYk8AL3QJSwTuwv; court-citations: COURT-CITATIONS #1 session_018Bhced5Zt4Dzas5JyDcobU; id-spaces: ID-SPACES #1 session_018BhcefQuX8MaDHHFsk3hQ2; subresources: SUBRESOURCES #1 session_018Bhceg41wru6Q7DdChuvfB; structured-text-reader: STRUCTURED-TEXT-READER #1 session_018BhcedH8QG1p1M2ABfYXVF; mail-reader: MAIL-READER #1 session_018Bhcefa3SdZX44kR48Ukpf; csv-reader: CSV-READER #1 session_018BhcedVAhBAdjjiLzwetSC; office-readers: OFFICE-READERS #1 session_018BhcegdvdcHawV5kVZ1wKW; odf-reader: ODF-READER #1 session_018BhcefXKEEqrV3LsP4yTXY; pdf-reader: PDF-READER #1 session_018Bhcefr6qakyreu8WK9cuR; format-registry: FORMAT-REGISTRY #1 session_018BhcegEQXWdwyKyz85ehDj; text-chain: TEXT-CHAIN #1 session_018BhcefLjzJMZjCWK4WMZtR; docprofile: DOCPROFILE #1 session_018BhcedMxNPcZhctb9emQwK; doctypes: DOCTYPES #1 session_018Bhcecc4twXKUaZ83a4k6m; legistar-reader: LEGISTAR-READER #1 session_018Bhcedw3wLYumisgwbSDYf; roster-reader: ROSTER-READER #1 session_018BhcegL9Z2aotsAHfwYdpm; court-doctypes: COURT-DOCTYPES #1 session_018BhceeKJPr2wV1i3F1M6U6; register-readers: REGISTER-READERS #1 session_018BhceejwjKtfM2xJWBwiY8; budget-doctypes: BUDGET-DOCTYPES #1 session_018BhcefzxPPbS2J62Txnk3L; image-codecs: IMAGE-CODECS #1 session_018BhcegW9K1yhVCSYsMB8Ve; pdf-pixels: PDF-PIXELS #1 session_018BhcedB5GgMUpTVDfuXRuA; image-cover: IMAGE-COVER #1 session_018BhcecpR3Z1ErVEX6eAheX; doc-clean: DOC-CLEAN #1 session_018BhcedJp6SW8wmUGjgoTVP; pdf-worker: PDF-WORKER #1 session_018BhcegpWcawG1J18QR2ZJE; ocr-worker: OCR-WORKER #1 session_018BhceeL6Gsvfy3WXU2DyNM; sheet-worker: SHEET-WORKER #1 session_018BhceeMaKWRBqJpfWkzYJg; file-scanner: FILE-SCANNER #1 session_018BhcecnyytTT3cMe1k3Zku; reader-container: READER-CONTAINER #1 session_018BhcedfcFpkDwfqT6uTLcn
+**Status** · OPEN · BOB #327 · session_018Bhcee9DRsThq3toTorHkE · depth 1
+**Jobs** · setup-words: SETUP-WORDS #1 session_018BhcedGkL4WZVApjwDazfX; record-grammar: RECORD-GRAMMAR #1 session_018Bhceem2iUdAZcA7dscA4j; civil-time: CIVIL-TIME #1 session_018BhcefMpVQvXKBiGcUYBvE; calc-grammar: CALC-GRAMMAR #1 session_018BhcefSWG1wRZtFGbsrFuA; connection-grammar: CONNECTION-GRAMMAR #1 session_018BhcegRDtn8p6dt8ssxJKJ; test-support: TEST-SUPPORT #1 session_018BhcecgY3PBTrL4y2Ck7MT; runtime-limits: RUNTIME-LIMITS #1 session_018BhcegsnZTq6ndhV2RKA4f; signatures: SIGNATURES #1 session_018BhceeVjx2uYzrUetpWc1A; bundler: BUNDLER #1 session_018BhcecEeYk8AL3QJSwTuwv; court-citations: COURT-CITATIONS #1 session_018Bhced5Zt4Dzas5JyDcobU; id-spaces: ID-SPACES #1 session_018BhcefQuX8MaDHHFsk3hQ2; subresources: SUBRESOURCES #1 session_018Bhceg41wru6Q7DdChuvfB; structured-text-reader: STRUCTURED-TEXT-READER #1 session_018BhcedH8QG1p1M2ABfYXVF; mail-reader: MAIL-READER #1 session_018Bhcefa3SdZX44kR48Ukpf; csv-reader: CSV-READER #1 session_018BhcedVAhBAdjjiLzwetSC; office-readers: OFFICE-READERS #1 session_018BhcegdvdcHawV5kVZ1wKW; odf-reader: ODF-READER #1 session_018BhcefXKEEqrV3LsP4yTXY; pdf-reader: PDF-READER #1 session_018Bhcefr6qakyreu8WK9cuR; format-registry: FORMAT-REGISTRY #1 session_018BhcegEQXWdwyKyz85ehDj; text-chain: TEXT-CHAIN #1 session_018BhcefLjzJMZjCWK4WMZtR; docprofile: DOCPROFILE #1 session_018BhcedMxNPcZhctb9emQwK; doctypes: DOCTYPES #1 session_018Bhcecc4twXKUaZ83a4k6m; legistar-reader: LEGISTAR-READER #1 session_018Bhcedw3wLYumisgwbSDYf; roster-reader: ROSTER-READER #1 session_018BhcegL9Z2aotsAHfwYdpm; court-doctypes: COURT-DOCTYPES #1 session_018BhceeKJPr2wV1i3F1M6U6; register-readers: REGISTER-READERS #1 session_018BhceejwjKtfM2xJWBwiY8; budget-doctypes: BUDGET-DOCTYPES #1 session_018BhcefzxPPbS2J62Txnk3L; image-codecs: IMAGE-CODECS #1 session_018BhcegW9K1yhVCSYsMB8Ve; pdf-pixels: PDF-PIXELS #1 session_018BhcedB5GgMUpTVDfuXRuA; image-cover: IMAGE-COVER #1 session_018BhcecpR3Z1ErVEX6eAheX; doc-clean: DOC-CLEAN #1 session_018BhcedJp6SW8wmUGjgoTVP; pdf-worker: PDF-WORKER #1 session_018BhcegpWcawG1J18QR2ZJE; ocr-worker: OCR-WORKER #1 session_018BhceeL6Gsvfy3WXU2DyNM; sheet-worker: SHEET-WORKER #1 session_018BhceeMaKWRBqJpfWkzYJg; file-scanner: FILE-SCANNER #1 session_018BhcecnyytTT3cMe1k3Zku; reader-container: READER-CONTAINER #1 session_018BhcedfcFpkDwfqT6uTLcn; jurisdictions: JURISDICTIONS #2 session_018BhcefMFW1bhVhh3w9sjUp; ooxml: OOXML #1 session_018BhcedTff8SmCMqu2EScxc
 **Owed** · none
 
 T53 is the beta's build. By Bob's direction (K5417) nothing is built until the beta is designed whole and integrated into one comprehensive build plan: the design lanes (`build/plan/beta/LANES.md`) design, the PLANNING lane turns their designs into drafted requirement lines and this plan, BOB reviews and writes them, and only then does round R1 open. The entries T52 left are in `build/plan/carried-T52-R1.md`; the test sweep (option A, K5258) is the TESTS-SWEEP lane's, merged before R1.
@@ -61,11 +61,13 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-25 · K4746, K5569 · three levels as rows of the bounds table
 - T53-26 · N824, K5527, N1259 · CAPABILITIES rows
 - T53-27 · K5565 · English in tests: its entry
+- T53-511 · R37, K5624 · after office-readers, odf-reader, doc-clean and ooxml merge T53-510 (BOB's CHANGE says when): every reader row's active figure becomes its `standard` (`pdf.worker_bytes`, `document.clean_bytes`, `file_safety.grade_read`, `office.text_bytes`, `office.streamed_text_bytes`, `xlsx.declared_text`, `ods.content_xml`, `sheet_worker.bytes`, `image.cover_bytes`, `archive.unpacked_bytes`, `archive.member_bytes`, `scan.max_bytes`), save a figure a reader reported it cannot hold, kept with that report cited
 - rows: `build/plan/T53-R1/runtime-limits.md`
 **signatures**
 - T53-28 · K5457, K5471 · three more namespaces; run-key check
 - T53-29 · K5565 · English in tests: its entry
 - T53-504 · K5577 (5) · `CATALOGUE_KEYS` with test keys; the ceremony's public lines arrive as a CHANGE
+- T53-512 · K5625 · R57: the offline catalogue-keys page for the key ceremony
 - rows: `build/plan/T53-R1/signatures.md`
 **bundler**
 - T53-30 · K5457 · agent Worker `HEALTH` object; `deleted_classes` `RemoteSession`
@@ -92,9 +94,11 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - rows: `build/plan/T53-R1/csv-reader.md`
 **office-readers**
 - T53-39 · K5565 · English in tests: its entry
+- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/office-readers.md`
 **odf-reader**
 - T53-40 · K5565 · English in tests: its entry
+- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/odf-reader.md`
 **pdf-reader**
 - T53-41 · K5565 · English in tests: its entry
@@ -140,10 +144,12 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **image-cover**
 - T53-57 · A4 (DEC-460) · `redrawPicture`, `photoFactsOf`
 - T53-58 · K5565 · English in tests: its entry
+- T53-513 · K5628 · stream filtered rows into the deflater: peak bounded by a band, never the whole bitmap; frame and redraw limits unchanged
 - rows: `build/plan/T53-R1/image-cover.md`
 **doc-clean**
 - T53-59 · N824, K2334, K1485 · CAPABILITIES rows
 - T53-60 · K5565 · English in tests: its entry
+- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/doc-clean.md`
 **pdf-worker**
 - T53-61 · K5565 · English in tests: its entry
@@ -161,6 +167,8 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **reader-container**
 - T53-65 · N1266, N1267 · conversion readers, archives as streams
 - rows: `build/plan/T53-R1/reader-container.md`
+**ooxml**
+- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 ## Layer 2
 
 **member-roster**
@@ -244,6 +252,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-113 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-114 · DEC-479 · file-safety before doorbell in layer 3
 - T53-115 · K5565 · English in tests: its entry
+- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - rows: `build/plan/T53-R1/file-safety.md`
 **doorbell**
 - T53-116 · A3 · pulled knock carries file name

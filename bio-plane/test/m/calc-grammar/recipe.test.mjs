@@ -221,13 +221,13 @@ test("R11 join compares values only through the caller's resolver for the named 
   assert.deepEqual(r.result.rows, []);
   // No resolver for the space: undetermined, why named.
   r = run([step], { t: P, u: Q });
-  assert.equal(r.result.undetermined, true); assert.match(r.result.why, /no resolver for the space/);
+  assert.equal(r.result.undetermined, true); assert.equal(r.result.why, word("calc-grammar.no_resolver_space", { space: "person" }));
   // A crosswalk's pairs.
   const cw = { fields: [{ name: "a", type: "string" }, { name: "b", type: "string" }], rows: [{ a: "Smith, J.", b: "smith j" }, { a: "Unknown", b: "Doe" }] };
   const steps = [{ op: "join", as: "j", left: "t", right: "u", on: { left: "pid", right: "who" }, crosswalk: { input: "x", left: "a", right: "b" } }];
   r = evaluate(recipe(steps, "j", [{ name: "t", kind: "table" }, { name: "u", kind: "table" }, { name: "x", kind: "table" }]), { t: P, u: Q, x: cw });
   assert.deepEqual(r.result.rows.map((x) => [x.pid, x["u.role"]]), [["Smith, J.", "clerk"], ["Unknown", "mayor"]]);
-  assert.ok(r.trace[0].undetermined.some((u) => u.side === "left" && u.row === 2 && /not in the crosswalk/.test(u.why)));
+  assert.ok(r.trace[0].undetermined.some((u) => u.side === "left" && u.row === 2 && u.why === word("calc-grammar.crosswalk", { value: "J SMITH" })));
   // Unkeyed.
   const unkeyed = recipe([{ op: "join", as: "j", left: "t", right: "u", on: { left: "pid", right: "who" } }]);
   assert.equal(checkRecipe(unkeyed).errors[0].code, "JOIN_UNKEYED");
@@ -279,7 +279,7 @@ test("R14 the trace lists each step's input rows, output, the rows set aside and
 test("R20 undetermined never reads as zero: a total with an undetermined amount is undetermined, naming the rows; unbound and invalid inputs are refused by name", () => {
   const t = { fields: [{ name: "v", type: "number" }], rows: [{ v: "1" }, { v: "" }, { v: "n/a" }] };
   let r = run([{ op: "sum", as: "s", from: "t", field: "v" }], { t });
-  assert.equal(r.result.undetermined, true); assert.match(r.result.why, /never read as zero/);
+  assert.equal(r.result.undetermined, true); assert.equal(r.result.why, word("calc-grammar.amount_undetermined_total", { text: "2", text_2: "s are" }));
   assert.deepEqual(r.trace[0].undetermined.map((u) => u.row), [1, 2]);
   r = run([{ op: "sum", as: "s", from: "t", field: "v" }, { op: "difference", as: "d", a: "s", b: "x" }], { t });
   assert.equal(r.result.undetermined, true);

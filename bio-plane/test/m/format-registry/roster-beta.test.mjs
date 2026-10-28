@@ -5,6 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerFormat, unregisterFormat, getFormat, listFormats, detectFormat, formatNameFor, kindTable } from "../../../src/formats.mjs";
+import { READ_BOUNDS, boundOf } from "../../../src/read-bounds.mjs";
+import { STRUCTURED_TEXT_ENTRIES } from "../../../src/structured-text-reader/index.mjs";
+import { MAIL_ENTRIES } from "../../../src/mail-reader/index.mjs";
 import { WORD_ROWS, hasWord } from "../../../src/setup-words/index.mjs";
 import { makeZip, officeZip, odfZip } from "./zipfix.mjs";
 
@@ -109,7 +112,17 @@ test("R33: the roster holds every type of the list that is built in this module,
     assert.equal(r.confidence, "likely");
   }
 });
-test.todo("R33: json, ndjson, xml, svg, kml, kmz, geojson, ics, vcf, srt, vtt (structured-text-reader) and eml, msg, mbox (mail-reader) are registered unmodified, and listFormats() equals the list (waits: both modules' entries, a CHANGE)");
+test("R33: structured-text-reader's and mail-reader's entries are registered unmodified", () => {
+  for (const e of [...STRUCTURED_TEXT_ENTRIES, ...MAIL_ENTRIES]) assert.equal(getFormat(e.format), e, e.format);
+  const ours = ["json", "ndjson", "xml", "svg", "kml", "kmz", "geojson", "ics", "vcf", "srt", "vtt", "eml", "msg", "mbox"];
+  assert.deepEqual(listFormats().filter((f) => ours.includes(f)), ours);
+  assert.ok(listFormats().indexOf("kmz") < listFormats().indexOf("zip"), "kmz is asked before the plain ZIP");
+  assert.ok(listFormats().indexOf("xml") < listFormats().indexOf("text"));
+  const cases = { json: '{"a": [1, 2, 3]}\n', xml: '<?xml version="1.0"?><root><a/></root>', svg: '<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>',
+    ics: "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n", vcf: "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:A B\r\nEND:VCARD\r\n",
+    eml: "From: a@example.org\r\nTo: b@example.org\r\nSubject: hi\r\n\r\nbody\r\n" };
+  for (const [f, body] of Object.entries(cases)) assert.equal(detectFormat(enc(body), null).format, f, f);
+});
 test.todo("R33: tsv and xlsm are keys of the list; csv-reader answers a tab table as csv with its dialect and R36 answers an .xlsm as xlsx with variant macro (BOB: which governs)");
 
 test("R34: a file is judged from its bytes; a name that disagrees is named in a signal, and the answer is the content's", () => {
@@ -141,7 +154,11 @@ test("R35: valid text no entry claims is text; a binary file is never text", () 
   assert.notEqual(random.format, "text");
   assert.equal(detectFormat(noise(2000, 9), "text/plain", "x.txt").format, "unlisted", "a binary file is not text whatever it is called or declared");
 });
-test.todo("R35: ndjson, ics, vcf, srt, vtt and mbox are answered by their leading structure (waits: structured-text-reader and mail-reader entries, a CHANGE)");
+test("R35: ndjson, srt, vtt and mbox are answered by their leading structure", () => {
+  const cases = { ndjson: '{"a":1}\n{"a":2}\n{"a":3}\n', srt: "1\n00:00:01,000 --> 00:00:02,000\nHello\n\n2\n00:00:03,000 --> 00:00:04,000\nBye\n",
+    vtt: "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello\n", mbox: "From a@example.org Mon Oct  5 10:00:00 2026\nFrom: a@example.org\nSubject: x\n\nbody\n" };
+  for (const [f, body] of Object.entries(cases)) assert.equal(detectFormat(enc(body), null).format, f, f);
+});
 
 test("R36: a package that holds a VBA project is its base format with variant macro and macros true, read as that format", () => {
   const cases = [["docx", DOCX_TYPE, "word/document.xml", "word/vbaProject.bin"], ["xlsx", XLSX_TYPE, "xl/workbook.xml", "xl/vbaProject.bin"], ["pptx", PPTX_TYPE, "ppt/presentation.xml", "ppt/vbaProject.bin"]];
@@ -295,4 +312,23 @@ test("R42: the table has a row for each roster key, each named unlisted type and
   assert.equal(table.find((r) => r.key === "txt"), undefined);
   assert.ok(Object.isFrozen(table[0]));
 });
-test.todo("R42: each limit equals the runtime-limits figure for its kind, a changed runtime-limits row changing it (waits: runtime-limits' per-kind rows, R37 there, a CHANGE; the row names are set by that job)");
+test("R42: each limit is the runtime-limits figure for its kind, read through boundOf, never a literal here", () => {
+  const MiB = 1048576;
+  const bound = (key, what) => kindTable().find((r) => r.key === key).limit.figures.find((f) => f.what === what);
+  for (const row of kindTable()) {
+    for (const f of row.limit.figures) {
+      assert.notEqual(f.bound, null, `${row.key}.${f.what}: runtime-limits holds row ${f.row.join(".")}`);
+      assert.equal(f.bound, boundOf(...f.row), `${row.key}.${f.what}`);
+      assert.equal(f.key, READ_BOUNDS[f.row[0]][f.row[1]].key);
+    }
+  }
+  assert.deepEqual([bound("pdf", "bytes").bound, bound("pdf", "pages").bound], [100 * MiB, 5000]);
+  assert.deepEqual([bound("xlsx", "bytes").bound, bound("xlsx", "rows").bound], [50 * MiB, 1048576]);
+  assert.equal(bound("xls", "rows_per_sheet").bound, 65536);
+  assert.equal(bound("jpeg", "bytes").bound, 50 * MiB);
+  assert.equal(bound("json", "nesting").bound, 1000);
+  assert.equal(bound("ics", "events").bound, 100000);
+  assert.equal(bound("mbox", "messages").bound, 100000);
+  assert.equal(bound("audio", "bytes").bound, bound("pdf", "bytes").bound, "audio and video take the document class's bound (K5571 (3))");
+  assert.equal(kindTable().find((r) => r.key === "rar").limit.figures.length, 0);
+});

@@ -11,6 +11,8 @@ import { CleanRefusal, latin1 } from "./images.mjs";
 import { cleanPdf } from "./pdf.mjs";
 import { cleanPackage, tooManyEntries, CLEAN_MAX_PART_BYTES, CLEAN_MAX_ENTRIES } from "./package.mjs";
 import { newScan } from "./xml.mjs";
+import { cleanMessage } from "./mail.mjs";
+import { detectFormat } from "../formats.mjs";
 import { boundOf } from "../read-bounds.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -40,15 +42,24 @@ const FAMILY = { docx: "ooxml", xlsx: "ooxml", pptx: "ooxml", odt: "odf", ods: "
 /** Clean one document (R1–R12). Never throws. `options.yieldNow` is awaited at least every 65,536 tokens of markup
  *  scanned (R11; default: a turn of the microtask queue); `options.scan`, when given, is filled with the counts of the
  *  scan (`scanned` bytes, `tokens`, `yields`), so a caller can see that the work was bounded by count, not by time
- *  (R-CLOCK). Nothing is kept between calls (R7). */
-export async function cleanDocument(bytes, { yieldNow, scan = newScan(yieldNow) } = {}) {
+ *  (R-CLOCK). `options.materialNames` (R13, K5534) is the display names the case's author marked material: the only
+ *  names an email's published copy will show; none given, every name is withheld. A message (`eml`, `msg`) is judged
+ *  by `format-registry`'s detection and answered as an EML copy (`mail.mjs`). Nothing is kept between calls (R7). */
+export async function cleanDocument(bytes, { yieldNow, scan = newScan(yieldNow), materialNames = [] } = {}) {
   try {
+    if (!Array.isArray(materialNames) || materialNames.some((n) => typeof n !== "string"))
+      throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.the_material_names_are_not", "the material names are not a list of names"));
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
     if (!d) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.the_document_s_bytes_are_not", "the document's bytes are not a byte array"));
     if (d.length > CLEAN_MAX_BYTES)
       throw new CleanRefusal("DOCUMENT_TOO_LARGE", localize("doc-clean.index.the_document_is_length_bytes", "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads", { length: String(d.length), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }));
     let format, done;
-    if (latin1(d, 0, Math.min(d.length, 1024)).includes("%PDF-")) {
+    const found = detectFormat(d, null).format, mail = found === "eml" || found === "msg" || found === "mbox" ? found : null;
+    if (mail === "mbox") throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.a_mailbox_of_messages_not_a", "a mailbox of messages, not a format this module cleans"));
+    if (mail) {
+      format = mail;
+      done = await cleanMessage(d, materialNames, (b) => cleanDocument(b, { yieldNow, materialNames }));
+    } else if (latin1(d, 0, Math.min(d.length, 1024)).includes("%PDF-")) {
       format = "pdf";
       done = await cleanPdf(d, CLEAN_MAX_PART_BYTES);
     } else if (hasZipMagic(d)) {
