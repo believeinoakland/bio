@@ -53086,28 +53086,28 @@
       "en": "a source, proving who they are by their knocker secret and holding no account, consents to or withdraws from one disclosure for one audience (sources R11)",
       "module": "sources",
       "file": "bio-plane/src/sources/index.mjs",
-      "line": 839
+      "line": 897
     },
     {
       "id": "sources.declared.sourceconsentwithdraw",
       "en": "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published",
       "module": "sources",
       "file": "bio-plane/src/sources/index.mjs",
-      "line": 835
+      "line": 893
     },
     {
       "id": "sources.declared.sourcedisclose",
       "en": "source-directed: a member appends one disclosure to a source's history — what was revealed, how, to whom it is known, with its evidence — keyed by source id; never edited, a later entry superseding it on read",
       "module": "sources",
       "file": "bio-plane/src/sources/index.mjs",
-      "line": 829
+      "line": 887
     },
     {
       "id": "sources.declared.sourcelink",
       "en": "source-directed: a member claims that two sources are one person, with evidence, keyed by the source pair; recorded as a disclosure and merging nothing",
       "module": "sources",
       "file": "bio-plane/src/sources/index.mjs",
-      "line": 831
+      "line": 889
     },
     {
       "id": "standards.declared.courtlink",

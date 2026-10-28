@@ -31,7 +31,8 @@
  * `sourcelink` (R6), `sourceconsent` and `sourceconsentwithdraw` (R7), `knockerconsent` (R11, no account), `sourcekeyed`
  * (R16; `keyedResultOf`, R17, is read in process by the modules that grade a fact citing a capture), and the
  * reads `sourceof` (R1), `sourcerung` (R9), `sourcereadlog` (R5) and `sourcepublishable` (R8, at this module's own
- * instant: a request names none). `sourceChangesSince` (R20) is read in process by `case-carriage` and has no route. */
+ * instant: a request names none). `sourceChangesSince` (R20) is read in process by `case-carriage` and has no route.
+ * `sourceLinksFor` (R23, T53) is read in process by the screens' owners' reads and has no route yet. */
 
 import { isMachineIdentity, BASIS_GRADES, TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
@@ -106,6 +107,8 @@ export function isInstant(v) {
 
 /** R20: the most changes one answer carries, and the default (N90's bound). */
 export const CHANGES_LIMIT_DEFAULT = 200, CHANGES_LIMIT_MAX = 1000;
+/** R23: the most captures one `sourceLinksFor` answers (as the held list reads 50 a page). */
+export const LINKS_MAX = 50;
 /** The first instant `stampInstant` no longer spells with a four-digit year. */
 const INSTANT_SPELLED_MAX = Date.parse("+010000-01-01T00:00:00Z");
 
@@ -669,6 +672,61 @@ export class Sources {
                limit: lim, truncated, next: truncated ? `${last.r === 0 ? "d" : "c"}${last.seq}` : null };
     } catch {
       return noSuchSource(source);
+    }
+  }
+
+  /* ---- R23: a handed-in capture's source, linked for listed members only ---- */
+
+  /** R23: the source already held for one pulled knock, or null; never minted here (this read writes nothing). A source
+   *  about which nothing is recorded has no listed member, so an unminted source changes no answer. */
+  #heldSourceFor(k) {
+    const held = this.#one(`SELECT source_id FROM source_knocks WHERE knock_id = ?`, k.knock_id);
+    if (held) return held.source_id;
+    const row = k.pseudonym
+      ? this.#one(`SELECT source_id FROM sources WHERE pseudonym = ?`, k.pseudonym)
+      : this.#one(`SELECT source_id FROM sources WHERE first_knock = ? AND pseudonym IS NULL`, k.knock_id);
+    return row ? row.source_id : null;
+  }
+
+  /** R23: whether `member` is named in the sight list of any recorded detail of `sourceId`. */
+  #listedFor(sourceId, member) {
+    return !!this.#one(`SELECT 1 AS x FROM source_sight s JOIN source_entries e ON e.entry_id = s.entry_id
+                         WHERE e.source_id = ? AND e.recorded = 1 AND s.member_id = ? LIMIT 1`, sourceId, member);
+  }
+
+  /** R23 (T53; DEC-459; K5456, K5518, K5544): for each capture asked (at most `LINKS_MAX`; the rest are not answered and
+   *  `truncated` says so), `{captureSha, handed_in, source?}`. `handed_in` is true for a capture the viewer may see whose
+   *  receipt route is `doorbell`, whoever the viewer is; `source` (the source's id) only to a member listed for that
+   *  capture's source. A capture the viewer may not see, one with no source and one the viewer is not listed for are
+   *  answered alike, with no `source`, so the source's existence is not told. Holds no pseudonym, knock id, digest, entry
+   *  or rung; writes nothing, logs no read (R5) and never throws. */
+  sourceLinksFor(args = {}) {
+    const { captureShas, viewer } = isObj(args) ? args : {};
+    const shas = Array.isArray(captureShas) ? captureShas : [];
+    const asked = shas.slice(0, LINKS_MAX).map((x) => (typeof x === "string" ? x.trim().toLowerCase() : ""));
+    const base = { ok: true, links: asked.map((captureSha) => ({ captureSha, handed_in: false })), truncated: shas.length > LINKS_MAX };
+    try {
+      const reader = this.#memberOf(viewer);
+      const seen = asked.map((sha) => {
+        if (!HEX64.test(sha)) return false;
+        const home = this.#provenance.homeOf(sha);
+        return !!home && this.#membership.inSight(home.bundleId, viewer);
+      });
+      const at = asked.flatMap((sha, i) => (seen[i] ? [i] : []));
+      if (!at.length) return base;
+      const grades = this.#provenance.captureGrades(at.map((i) => asked[i]));
+      at.forEach((i, j) => {
+        if (!grades[j] || grades[j].route !== "doorbell") return;
+        base.links[i].handed_in = true;
+        if (!reader) return;
+        for (const k of this.#pulledKnocks(asked[i])) {
+          const id = this.#heldSourceFor(k);
+          if (id && this.#listedFor(id, reader)) { base.links[i].source = id; break; }
+        }
+      });
+      return base;
+    } catch {
+      return base;
     }
   }
 

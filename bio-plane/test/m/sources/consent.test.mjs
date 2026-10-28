@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET, OTHER_SECRET } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { SOURCES_CHECKS, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT, AUDIENCES } from "../../../src/sources/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -80,7 +81,7 @@ test("R7 a consent covers one entry for one audience, stated as permanent; a wit
   const g = c({});
   assert.equal(g.ok, true);
   assert.equal(g.statement, CONSENT_STATEMENT);
-  assert.match(g.statement, /permanent for anything published under it/);
+  assert.equal(g.statement, word("sources.consent_permanent_anything"));
   assert.equal(g.standing, "group");
   assert.equal(w.s.publishableAt({ source: a.sourceId, audience: "group" }).entries.some((x) => x.entry === f.entry), false,
                "it covers its own entry, not another");
