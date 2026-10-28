@@ -467,7 +467,7 @@
      "www.courtlistener.com"
     ],
     "path": {
-     "re": "^\\/docket\\/\\d+\\/"
+     "re": "^\\/(?:docket\\/\\d+\\/|api\\/rest\\/v[34]\\/docket-entries\\/)"
     },
     "basis": "2026-10-05 courts-workbooks"
    },

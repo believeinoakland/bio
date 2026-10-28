@@ -662,7 +662,7 @@ export default {
         "www.courtlistener.com"
       ],
       "path": {
-        "re": "^\\/docket\\/\\d+\\/"
+        "re": "^\\/(?:docket\\/\\d+\\/|api\\/rest\\/v[34]\\/docket-entries\\/)"
       },
       "basis": "2026-10-05 courts-workbooks"
     },
@@ -676,6 +676,19 @@ export default {
         "re": "^\\/apex\\/f\\?p=401:5[67]:"
       },
       "basis": "2026-10-05 courts-workbooks"
+    },
+    {
+      "origin": "oakland.opendata",
+      "name": "the City of Oakland's open-data portal (campaign filing and lobbyist datasets)",
+      "hosts": [
+        "data.oaklandca.gov"
+      ],
+      "path": {
+        "re": "^\\/(?:d|api\\/views|resource)\\/(?:3xq4-ermg|rsxe-vvuw|bvfu-nq99|ss9a-d595|ucs9-a92d|xvc7-ctj7|f4dq-mk8d)(?:[/.]|$)"
+      },
+      "gated": "none",
+      "terms": "Creative Commons 1.0 Universal (Public Domain Dedication); attribution: City of Oakland Public Ethics Commission",
+      "basis": "2026-10-21 M-R1"
     }
   ],
   "pointers": [
@@ -2432,6 +2445,753 @@ export default {
         }
       ],
       "basis": "2026-10-05 money-people"
+    }
+  ],
+  "registers": [
+    {
+      "key": "oakland_form460_schedule_a",
+      "label": "Campaign filings: Form 460 Schedule A, monetary contributions",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/3xq4-ermg",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/3xq4-ermg/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "filer_id",
+          "role": "filer_id",
+          "keep": true
+        },
+        {
+          "name": "filer_naml",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "report_num",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "rpt_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "form_type",
+          "role": "form",
+          "keep": true
+        },
+        {
+          "name": "tran_id",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "tran_naml",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "tran_namf",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "tran_adr1",
+          "role": "home_address",
+          "keep": false
+        },
+        {
+          "name": "tran_adr2",
+          "role": "home_address",
+          "keep": false
+        },
+        {
+          "name": "tran_city",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "tran_state",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "tran_zip4",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "tran_emp",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "tran_occ",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "tran_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "tran_amt1",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "cmte_id",
+          "role": "filer_id",
+          "keep": true
+        },
+        {
+          "name": "cand_naml",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "cand_namf",
+          "role": "name",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "filer_id",
+        "report_num",
+        "tran_id"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 73043,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "oakland_form460_summary",
+      "label": "Campaign filings: Form 460 summary totals",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/rsxe-vvuw",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/rsxe-vvuw/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "filer_id",
+          "role": "filer_id",
+          "keep": true
+        },
+        {
+          "name": "filer_naml",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "report_num",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "rpt_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "form_type",
+          "role": "form",
+          "keep": true
+        },
+        {
+          "name": "line_item",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "amount_a",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "amount_b",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "amount_c",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        }
+      ],
+      "row_key": [
+        "filer_id",
+        "report_num",
+        "line_item"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 100032,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "oakland_form460_schedule_e",
+      "label": "Campaign filings: Form 460 Schedule E, payments made",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/bvfu-nq99",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/bvfu-nq99/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "filer_id",
+          "role": "filer_id",
+          "keep": true
+        },
+        {
+          "name": "filer_naml",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "report_num",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "rpt_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "form_type",
+          "role": "form",
+          "keep": true
+        },
+        {
+          "name": "tran_id",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "payee_naml",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "payee_namf",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "payee_adr1",
+          "role": "home_address",
+          "keep": false
+        },
+        {
+          "name": "payee_adr2",
+          "role": "home_address",
+          "keep": false
+        },
+        {
+          "name": "payee_city",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "payee_state",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "payee_zip4",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "expn_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "amount",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "expn_dscr",
+          "role": "other",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "filer_id",
+        "report_num",
+        "tran_id"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 28292,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "oakland_lobbyist_clients",
+      "label": "Lobbyist clients",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/ss9a-d595",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/ss9a-d595/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "report_period",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "filing_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "lobbyist_name",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "client_name",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "client_address_line_1",
+          "role": "home_address",
+          "keep": false
+        },
+        {
+          "name": "client_address_line_2",
+          "role": "home_address",
+          "keep": false
+        },
+        {
+          "name": "client_city",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "client_state",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "client_zipcode",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "client_phone",
+          "role": "phone",
+          "keep": false
+        },
+        {
+          "name": "client_type",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "client_payments",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        }
+      ],
+      "row_key": [
+        "report_period",
+        "lobbyist_name",
+        "client_name"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 2912,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "oakland_lobbyist_contacts",
+      "label": "Lobbyist contacts with public officials (Schedule A)",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/ucs9-a92d",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/ucs9-a92d/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "report_period",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "filing_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "public_official_name",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "public_official_department",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "municipal_decision",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "lobbyist_name",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "client_name",
+          "role": "organization",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "report_period",
+        "lobbyist_name",
+        "client_name",
+        "public_official_name"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 5501,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "oakland_lobbyist_contributions",
+      "label": "Lobbyist political contributions (Schedule D)",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/xvc7-ctj7",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/xvc7-ctj7/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "filing_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "report_period",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "lobbyist_name",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "lobbyist_employer",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "official_name",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "committee",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "fund_source",
+          "role": "other",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "filing_date",
+        "lobbyist_name",
+        "official_name",
+        "committee"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 31,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "oakland_behested_payments",
+      "label": "Behested payment reports (Form 803)",
+      "publisher": "City of Oakland Public Ethics Commission (OakData)",
+      "system": "oakland.opendata",
+      "url": "https://data.oaklandca.gov/d/f4dq-mk8d",
+      "delimiter": "comma",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "all",
+          "label": "the whole dataset, all years",
+          "locator": "https://data.oaklandca.gov/api/views/f4dq-mk8d/rows.csv?accessType=DOWNLOAD"
+        }
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "filing_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "official",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "office",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "payor",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "payor_city",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "payor_state",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "payor_zip",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "payee",
+          "role": "organization",
+          "keep": true
+        },
+        {
+          "name": "payee_city",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "payee_state",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "payee_zip",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "payment_date",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "amount",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "purpose",
+          "role": "other",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "id"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the dataset's catalogue licence: Creative Commons 1.0 Universal (Public Domain Dedication), attribution City of Oakland Public Ethics Commission",
+      "listing": {
+        "bytes": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "rows": {
+          "value": 226,
+          "basis": "counted"
+        },
+        "measured_at": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
     }
   ]
 };

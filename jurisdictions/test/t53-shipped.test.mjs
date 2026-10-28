@@ -65,6 +65,12 @@ test("R114 the split changes no answer: the view of oakland-alameda after equals
     ? Object.fromEntries(Object.keys(v).filter((k) => !DROP.has(k)).map((k) => [k, strip(v[k])])) : v);
   const after = strip(r.view), before = strip(fx.view);
   /* the exceptions K5618 (b) names, and the one R109 makes: the federal records_request names FOIA, so the kind's laws gain it */
+  /* and the one section the federal layer adds (T53-502): the street suffixes */
+  delete after.vocabulary.street_types;
+  /* and the registers' sources, registers and limit (R127-R133) */
+  const ADDED = new Set(["oakland.opendata", "calaccess.cdn", "fec.bulk"]);
+  after.systems = after.systems.filter((s) => !ADDED.has(s.origin));
+  delete after.registers; delete after.use_limits;
   delete after.records_help; delete before.records_help;
   after.weekend = { ...after.weekend, citation: undefined }; before.weekend = { ...before.weekend, citation: undefined };
   const rr = after.action_kinds.find((k) => k.kind === "records_request");
@@ -200,4 +206,20 @@ test("R112 R105 the city layer adds records help for the Public Records Act besi
   assert.ok(laws.includes("California Public Records Act"));
   assert.equal(get(STATE).records_help[0].law, "California Public Records Act");
   assert.deepEqual(Object.keys(get(CITY).records_help[0]).sort(), ["basis", "faster", "law", "portal", "status"]);
+});
+
+test("T53-502 the federal layer holds the street suffixes as data: each with its abbreviations; a malformed one is VALUE_INVALID", () => {
+  const f = get(FED);
+  const st = f.vocabulary.street_types;
+  assert.ok(st.length > 150);
+  const street = st.find((s) => s.suffix === "STREET");
+  assert.deepEqual(street.abbreviations.sort(), ["ST", "STR", "STRT"]);
+  assert.ok(st.every((s) => s.basis.includes("usps-pub28")));
+  assert.deepEqual(validate(f).errors, []);
+  assert.deepEqual(combine([FED]).view.vocabulary.street_types.length, st.length);
+  const bad = (fn) => { const p = structuredClone(f); fn(p.vocabulary.street_types); return validate(p); };
+  assert.ok(codes(bad((l) => { l[0].suffix = "alley"; })).includes("VALUE_INVALID"));
+  assert.ok(codes(bad((l) => { l[1].suffix = l[0].suffix; })).includes("VALUE_INVALID"), "a suffix once");
+  assert.ok(codes(bad((l) => { l[0].abbreviations = ["ALY", "ALY"]; })).includes("VALUE_INVALID"));
+  assert.ok(codes(bad((l) => { delete l[0].basis; })).length > 0);
 });

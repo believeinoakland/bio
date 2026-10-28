@@ -77,14 +77,18 @@ export default {
       { form: "docket-####", pattern: { re: R`^D(\d{6})$`, flags: "i" }, normal: ["D", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     person: { label: "registered person number", forms: [
       { form: "minute-person", pattern: { re: R`^P(\d{3})$`, flags: "i" }, normal: ["P", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
-      { form: "bar-number", pattern: { re: R`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+      { form: "bar-number", pattern: { re: R`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "filer-number", pattern: { re: R`^F(\d{5})$`, flags: "i" }, normal: ["F", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "licence-number", pattern: { re: R`^L(\d{6})$`, flags: "i" }, normal: ["L", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     /* T34 (R62): a body's and a seat's numbers in the minute book, and an institution's in the county registry */
     body: { label: "minute-book body number", forms: [
       { form: "minute-body", pattern: { re: R`^B-?(\d{2})$`, flags: "i" }, normal: ["B-", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     office: { label: "minute-book seat number", forms: [
       { form: "minute-seat", pattern: { re: R`^SEAT-?(\d{3})$`, flags: "i" }, normal: ["SEAT-", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     institution: { label: "county registry number", forms: [
-      { form: "marlow-registry", pattern: { re: R`^MR(\d{4})$`, flags: "i" }, normal: ["MR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+      { form: "marlow-registry", pattern: { re: R`^MR(\d{4})$`, flags: "i" }, normal: ["MR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "committee-number", pattern: { re: R`^CM(\d{6})$`, flags: "i" }, normal: ["CM", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "company-number", pattern: { re: R`^C(\d{7})$`, flags: "i" }, normal: ["C", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     parcel: {
       label: "lot and block number",
       forms: [
@@ -110,10 +114,23 @@ export default {
       hosts: ["lands.marlow-county.example"], basis: "TEST" },
     /* the court-register origins court-doctypes reads (K1514), on made-up hosts */
     { origin: "courtlistener_docket", name: "the national docket mirror", hosts: ["dockets.registry.example"],
-      path: { re: R`^\/case\/\d+$` }, basis: "TEST" },
+      path: { re: R`^\/(?:case\/\d+$|api\/docket-entries\/)` }, basis: "TEST" },
     { origin: "cpuc_proceeding", name: "the Marlow utilities board's proceeding cards", hosts: ["board.marlow-county.example"],
       path: { re: R`^\/proceeding\/` }, basis: "TEST" },
     { origin: "ecourt_roa", name: "the Marlow County Court's register of actions", hosts: ["court.marlow-county.example"], basis: "TEST" },
+    /* R132, R133: the registers' sources: an open-data portal with stated call limits, a file store, a federal file host with a
+       use limit, a fee-gated board, and the state's company service (keyed) */
+    { origin: "marlow.opendata", name: "the Marlow County open-data portal", hosts: ["data.marlow-county.example"], gated: "none",
+      terms: "Test terms: the portal's data may be reused with credit to the County.", volatile: [{ re: R`generated at \d{2}:\d{2}` }],
+      rate_limits: { per_minute: 12, per_hour: 300, basis: "TEST", measured_at: "2026-09-02" }, basis: "TEST" },
+    { origin: "marlow.files", name: "the Marlow County file store", hosts: ["files.marlow-county.example"], gated: "none",
+      terms: "Test terms: none stated on the page read 2026-09-02.", basis: "TEST" },
+    { origin: "ellery.federal_files", name: "the federal bulk-file host", hosts: ["bulk.federal.example", "store.federal.example"], gated: "none",
+      terms: "Test terms: contributor names may not be used to solicit.", use_limit: "federal_contributor_use", basis: "TEST" },
+    { origin: "marlow.board", name: "the Marlow trades board's licence file", hosts: ["board.trades.example"], gated: "fee",
+      terms: "Test terms: the file is sold by the board.", basis: "TEST" },
+    { origin: "state.company_service", name: "the state's company service", hosts: ["api.company.state.example"], gated: "account",
+      terms: "Test terms: a keyed account is needed.", rate_limits: { per_minute: 3, per_day: 90, basis: "TEST", measured_at: "2026-09-03" }, basis: "TEST" },
   ],
   mixed_hosts: [
     { host: "www.port-ellery.example", why: "the city's general website, serving every department", basis: "TEST" },
@@ -220,6 +237,9 @@ export default {
       { pattern: { re: R`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" },
     ],
     /* T35 (R69) */
+    street_types: [
+      { suffix: "WYND", abbreviations: ["WYN", "WND"], basis: "TEST" },
+      { suffix: "STRAND", abbreviations: ["STRD"], basis: "TEST" }],
     policy_headers: [
       { field: "type", pattern: { re: R`^HARBOUR\s+STANDING\s+ORDER$` }, basis: "TEST" },
       { field: "number", pattern: { re: R`^Order\s+No\.` }, basis: "TEST" },
@@ -430,6 +450,16 @@ export default {
       form: "marlow-registry", basis: "TEST" },
     { scheme: "port_ellery_registry", label: "Marlow County registry of institutions", entity_kinds: ["institution"], space: "institution",
       form: "marlow-registry", basis: "TEST" },
+    /* R130: filers, committees, licences, dockets and companies */
+    { scheme: "filer", label: "filer number", entity_kinds: ["person"], space: "person", form: "filer-number", systems: ["marlow.opendata"],
+      registers: ["town_filings"], basis: "TEST" },
+    { scheme: "committee", label: "committee number", entity_kinds: ["institution"], space: "institution", form: "committee-number",
+      systems: ["ellery.federal_files"], registers: ["federal_individual"], basis: "TEST" },
+    { scheme: "licence", label: "trades licence number", entity_kinds: ["person"], space: "person", form: "licence-number", systems: ["marlow.board"],
+      registers: ["trades_licences"], basis: "TEST" },
+    { scheme: "docket", label: "docket number", entity_kinds: ["forum"], space: "proceeding", form: "docket-####", basis: "TEST" },
+    { scheme: "company", label: "company number", entity_kinds: ["institution"], space: "institution", form: "company-number",
+      systems: ["state.company_service"], registers: ["company_officers"], basis: "TEST" },
   ],
   classification_schemes: [
     { scheme: "ellery_funds", label: "ledger funds", kind: "fund", codes: [{ code: "100-01", label: "General" }, { code: "200-01", label: "Harbour" }], basis: "TEST" },
@@ -559,5 +589,61 @@ export default {
       { locale: "en", text: "The town's own local laws, numbered by section.", basis: "TEST" }], basis: "TEST" },
     { name: "Harbour Renters' Fund", kind: "program", basis: "TEST" },
     { name: "Marlow County", kind: "place", basis: "TEST" },
+  ],
+
+  /* R131: the one data-use limit */
+  use_limits: [
+    { key: "federal_contributor_use", citation: "Test Reg. § 9.15; Test Stat. § 301(a)(4)", text_key: "jurisdictions.use_limit.test_contributor_names",
+      export: "never", on_publish: "warn", basis: "TEST" },
+  ],
+  /* R127, R129, R133: a comma file with a header row, a tab file in a zip, a pipe file with a separate header file, registers with a
+     use limit, with a fee gate, with phase beta and with a content row key; a column of each role */
+  registers: [
+    { key: "town_filings", label: "Town campaign filings", publisher: "Town of Port Ellery clerk", system: "marlow.opendata",
+      url: "https://data.marlow-county.example/filings", delimiter: "comma", gate: "none", phase: "alpha",
+      pieces: [{ key: "all", label: "all years", locator: "https://data.marlow-county.example/files/{table}.csv" }],
+      columns: [
+        { name: "filer", role: "filer_id", keep: true }, { name: "donor_name", role: "name", keep: true }, { name: "donor_org", role: "organization", keep: true },
+        { name: "paid", role: "amount", keep: true, currency: "USD" }, { name: "received", role: "date", keep: true, date_format: "MM/DD/YYYY" },
+        { name: "form_no", role: "form", keep: true }, { name: "donor_city", role: "city", keep: true }, { name: "donor_state", role: "state", keep: true },
+        { name: "donor_zip", role: "zip5", keep: true }, { name: "donor_street", role: "home_address", keep: false },
+        { name: "donor_tel", role: "phone", keep: false }, { name: "note", role: "other", keep: true }],
+      row_key: ["filer", "received", "paid", "form_no"], row_key_basis: "content", schemes: ["filer"],
+      terms_basis: "none stated, read 2026-09-02", listing: { bytes: { value: null, basis: "not_stated" },
+        rows: { value: 4200, basis: "counted" }, source_date: "2026-09-01", measured_at: "2026-09-02" },
+      count: { kind: "source_count_query", template: "https://data.marlow-county.example/count?table={table}", supports: ["date_from", "date_to"] },
+      refresh: { cadence_hours: 24, validators: ["etag", "count"] }, basis: "TEST" },
+    { key: "county_raw", label: "County raw tables", publisher: "Marlow County clerk", system: "marlow.files",
+      url: "https://files.marlow-county.example/raw", delimiter: "tab", gate: "none", phase: "alpha",
+      pieces: [{ key: "receipts", label: "receipts table", locator: "https://files.marlow-county.example/raw.zip", member: "RECEIPTS.TSV" },
+               { key: "spending", label: "spending table", locator: "https://files.marlow-county.example/raw.zip", member: "SPENDING.TSV" }],
+      columns: [{ name: "FILING", role: "filer_id", keep: true }, { name: "PAYER", role: "name", keep: true }, { name: "SUM", role: "amount", keep: true },
+        { name: "WHEN", role: "date", keep: true }, { name: "REFNO", role: "docket_no", keep: true }],
+      row_key: ["FILING", "REFNO"], row_key_basis: "source", terms_basis: "none stated, read 2026-09-02",
+      listing: { bytes: { value: 1048576, basis: "stated" }, rows: { value: 90000, basis: "estimated", how: "bytes divided by a sampled row length" }, measured_at: "2026-09-02" },
+      refresh: { cadence_hours: 168, validators: ["last_modified", "content_length"], append_only: true }, basis: "TEST" },
+    { key: "federal_individual", label: "Federal individual contributions", publisher: "the federal election agency", system: "ellery.federal_files",
+      url: "https://bulk.federal.example/contributions", delimiter: "pipe", gate: "none", phase: "alpha", use_limit: "federal_contributor_use",
+      pieces: [{ key: "header", label: "header file", locator: "https://bulk.federal.example/headers/indiv_header.csv", delimiter: "comma" },
+               { key: "cycle", label: "one zip per two-year cycle", locator: "https://store.federal.example/indiv{cycle}.zip", member: "itcont.txt", header_from: "header" }],
+      columns: [{ name: "CMTE_ID", role: "filer_id", keep: true }, { name: "NAME", role: "name", keep: true }, { name: "AMT", role: "amount", keep: true },
+        { name: "DT", role: "date", keep: true }, { name: "CITY", role: "city", keep: true }, { name: "ZIP", role: "zip5", keep: true }],
+      row_key: ["CMTE_ID", "NAME", "AMT", "DT"], row_key_basis: "content", terms_basis: "2026-09-03 the bulk page: contributor names may not be used to solicit",
+      refresh: { cadence_hours: 24, validators: ["etag"] }, basis: "TEST" },
+    { key: "trades_licences", label: "Trades licences", publisher: "the Marlow trades board", system: "marlow.board",
+      url: "https://board.trades.example/licences", delimiter: "comma", gate: "fee", phase: "alpha",
+      pieces: [{ key: "all", label: "the licence file", locator: "https://board.trades.example/file.csv" }],
+      columns: [{ name: "LICENCE", role: "licence_no", keep: true }, { name: "HOLDER", role: "name", keep: true }, { name: "STATUS", role: "other", keep: true }],
+      row_key: ["LICENCE"], row_key_basis: "source", terms_basis: "the board sells the file, page read 2026-09-03", basis: "TEST" },
+    { key: "company_officers", label: "Company officers", publisher: "the state's company registrar", system: "state.company_service",
+      url: "https://api.company.state.example/officers", gate: "account", phase: "beta", pieces: [],
+      columns: [{ name: "company", role: "company_no", keep: true }, { name: "entity", role: "organization", keep: true }, { name: "officer", role: "name", keep: true },
+        { name: "office", role: "other", keep: true }, { name: "residence", role: "home_address", keep: false }, { name: "telephone", role: "phone", keep: false }],
+      row_key: ["company", "officer", "office"], row_key_basis: "source", schemes: ["company"], terms_basis: "a keyed account is needed, page read 2026-09-03", basis: "TEST" },
+  ],
+  /* R130: addresses composed from a number, never from a name */
+  query_templates: [
+    { scheme: "docket", register: "county_raw", template: "https://files.marlow-county.example/docket/{value}.json", basis: "TEST" },
+    { scheme: "company", register: "company_officers", template: "https://api.company.state.example/officers?company={value}", basis: "TEST" },
   ],
 };

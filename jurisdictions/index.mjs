@@ -35,7 +35,10 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   /* T50 (R93, R94) */
   "records_help", "forums",
   /* T53 (R99, R108, R114): a layer's place in the forest, how far its facts reach, a package of layers */
-  "layer", "coverage", "package"]);
+  "layer", "coverage", "package",
+  /* T53 (R127-R133; N1259): the registers a reader reads and the listing shows, the data-use limits of a source, the number-only
+     address a watch is composed from */
+  "registers", "use_limits", "query_templates"]);
 /* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
    `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
    institution scheme, N574, K1729). */
@@ -50,7 +53,9 @@ export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles",
   /* T34 (R58, R60): the values a vote is recorded in, a response's reported statuses, the MemberType map. Data, not patterns. */
   "vote_values", "response_statuses", "member_types",
   /* T35 (R69): the labels a policy document prints in its header block */
-  "policy_headers"]);
+  "policy_headers",
+  /* T53 (K5577 (2), T53-502): the street suffixes an address ends in, a federal-layer vocabulary: `register-readers` reads them as data */
+  "street_types"]);
 /* R58, R60: the vocabulary keys whose entries carry no pattern, with each entry's fields. */
 const DATA_VOCABULARY = Object.freeze({ vote_values: ["value", "label", "citation", "basis"],
   response_statuses: ["status", "label", "citation", "applies_to", "basis"], member_types: ["member_type", "capacity", "organisation", "basis"] });
@@ -74,6 +79,22 @@ export const TEAM_LAYER_SECTIONS = Object.freeze(["records_laws", "deadlines", "
 const TEAM_ENTRY_SECTIONS = ["records_laws", "deadlines", "holidays", "counterparties", "action_kinds", "systems", "fiscal_year"];
 /* R115: a team's entry rests on the capture it was read from. */
 const TEAM_BASIS = /^team:[0-9a-f]{64}$/;
+/* R127-R133 (T53; N1259): what a register definition may say. */
+export const REGISTER_ROLES = Object.freeze(["name", "organization", "amount", "date", "filer_id", "form", "licence_no", "docket_no",
+  "company_no", "city", "state", "zip5", "home_address", "phone", "other"]);
+export const REGISTER_GATES = Object.freeze(["none", "account", "fee", "people_search"]);
+export const REGISTER_PHASES = Object.freeze(["alpha", "beta"]);
+export const REGISTER_DELIMITERS = Object.freeze(["comma", "tab", "pipe"]);
+export const REGISTER_VALIDATORS = Object.freeze(["etag", "last_modified", "content_length", "count"]);
+export const REGISTER_FIGURE_BASES = Object.freeze(["stated", "counted", "estimated", "not_stated"]);
+export const SYSTEM_GATES = Object.freeze(["none", "account", "fee"]);
+export const USE_LIMIT_ON_PUBLISH = Object.freeze(["warn", "refuse", "allow"]);
+const REGISTER_KEY_RE = /^[a-z][a-z0-9_]*$/;
+/* R131 (T53): the notice a data-use limit carries, by the `text_key` the shipped limit names (the design draws it beside a row) */
+export const USE_LIMIT_WORDS = Object.freeze({
+  "jurisdictions.use_limit.fec_contributor_names": localize("jurisdictions.use_limit.fec_contributor_names",
+    "Names and addresses of individual contributors taken from federal election reports may not be sold or used to solicit contributions or for any commercial purpose.", {}),
+});
 /* R23: `SOURCE_KINDS` stays the six `standards` reads (its R1, R12); the seven, with T35's `standard`, are
    `STANDARD_SOURCE_KINDS`, which validate accepts and `standards` adopts in its own job (K1902 (1)). */
 export const SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
@@ -297,6 +318,51 @@ export function validate(profile) {
   try { validateInto(profile, errors); }
   catch (e) { errors.push({ path: "", code: "NOT_A_PROFILE", detail: `unreadable: ${String(e && e.message || e)}` }); }
   return { ok: errors.length === 0, errors };
+}
+
+/**
+ * R128 (T53): whether a register definition may be held: it keeps no home address or phone, states its terms, names the use limit its
+ * system carries, reaches no paid people-search, and keys its rows by columns it lists. `view` holds `systems` (the combined view,
+ * or the profile's own). The one rule for a shipped and a team's own definition. Never throws.
+ * `{ok: true, definition}` or `{ok: false, code, field, key}`.
+ */
+export function validateRegisterDefinition(definition, view) {
+  try {
+    const d = definition;
+    const key = isObj(d) && typeof d.key === "string" ? d.key : null;
+    const refuse = (code, field) => ({ ok: false, code, field, key });
+    if (!isObj(d)) return refuse("REGISTER_INVALID", "");
+    if (d.gate === "people_search") return refuse("REGISTER_PEOPLE_SEARCH", "gate");
+    const cols = Array.isArray(d.columns) ? d.columns : [];
+    const kept = cols.findIndex((c) => isObj(c) && (c.role === "home_address" || c.role === "phone") && c.keep !== false);
+    if (kept >= 0) return refuse("REGISTER_KEEPS_CONTACT", `columns[${kept}].keep`);
+    if (d.status === "not_measured") return { ok: true, definition: d };
+    if (!isStr(d.terms_basis)) return refuse("REGISTER_NO_TERMS", "terms_basis");
+    const sys = (view && Array.isArray(view.systems) ? view.systems : []).find((s) => isObj(s) && s.origin === d.system);
+    if (sys && isStr(sys.use_limit) && d.use_limit !== sys.use_limit) return refuse("REGISTER_NO_USE_LIMIT", "use_limit");
+    const roleOf = new Map(cols.filter(isObj).map((c) => [c.name, c.role]));
+    if (!Array.isArray(d.row_key) || !d.row_key.length || d.row_key.some((n) => !roleOf.has(n))) return refuse("REGISTER_ROW_KEY_INVALID", "row_key");
+    if (d.row_key_basis === "source" && d.row_key.every((n) => roleOf.get(n) === "other")) return refuse("REGISTER_ROW_KEY_INVALID", "row_key");
+    return { ok: true, definition: d };
+  } catch { return { ok: false, code: "REGISTER_INVALID", field: "", key: null }; }
+}
+
+/**
+ * R130 (T53): the address a watch reads, composed from a query template and a number of the scheme's form: `{ok: true, address}`
+ * or `{ok: false, reason}` (`NO_QUERY_TEMPLATE`, `SCHEME_UNKNOWN`, `VALUE_NOT_OF_FORM`). The value is percent-encoded, so it can never
+ * add a path or a second parameter; it is never a name. `view` is the combined view. Never throws.
+ */
+export function queryAddress(view, scheme, register, value) {
+  try {
+    const t = (view && Array.isArray(view.query_templates) ? view.query_templates : []).find((x) => x.scheme === scheme && x.register === register);
+    if (!t) return { ok: false, reason: "NO_QUERY_TEMPLATE" };
+    const sc = (Array.isArray(view.identifier_schemes) ? view.identifier_schemes : []).find((x) => x.scheme === scheme);
+    const form = sc && view.spaces && view.spaces[sc.space] ? (view.spaces[sc.space].forms || []).find((f) => f.form === sc.form) : null;
+    const re = form ? compile(form.pattern) : null;
+    if (!sc || !re) return { ok: false, reason: "SCHEME_UNKNOWN" };
+    if (typeof value !== "string" || !re.test(value)) return { ok: false, reason: "VALUE_NOT_OF_FORM" };
+    return { ok: true, address: t.template.replace("{value}", encodeURIComponent(value)) };
+  } catch { return { ok: false, reason: "SCHEME_UNKNOWN" }; }
 }
 
 function validateInto(p, errors) {
@@ -534,7 +600,7 @@ function validateInto(p, errors) {
   if (own(p, "systems")) list("systems", p.systems).forEach((s, i) => {
     const at = `systems[${i}]`;
     if (!entry(at, s)) return;
-    fields(at, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "government", ...(teamLayer ? ["status"] : []), "basis"]);
+    fields(at, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "rate_limits", "gated", "terms", "volatile", "use_limit", "government", ...(teamLayer ? ["status"] : []), "basis"]);
     str(`${at}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
     str(`${at}.name`, s.name, "name");
@@ -554,6 +620,25 @@ function validateInto(p, errors) {
     }
     if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at}.republishes`, "VALUE_INVALID", "true or false");
     if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at}.provenance_stated`, "VALUE_INVALID", "true or false");
+    /* R132 (T53): the source's stated call limits, whether it is gated, the terms its definitions quote, text that changes on every read */
+    if (own(s, "rate_limits")) {
+      const rl = s.rate_limits;
+      if (!isObj(rl)) err(`${at}.rate_limits`, "VALUE_INVALID", "rate_limits is {per_minute?, per_hour?, per_day?, basis, measured_at}");
+      else {
+        fields(`${at}.rate_limits`, rl, ["per_minute", "per_hour", "per_day", "basis", "measured_at"]);
+        if (!["per_minute", "per_hour", "per_day"].some((k) => own(rl, k))) err(`${at}.rate_limits`, "VALUE_INVALID", "rate_limits states at least one count");
+        for (const k of ["per_minute", "per_hour", "per_day"]) if (own(rl, k) && !isPosInt(rl[k])) err(`${at}.rate_limits.${k}`, "VALUE_INVALID", "a call count is a positive integer");
+        if (!isDate(rl.measured_at)) err(`${at}.rate_limits.measured_at`, "VALUE_INVALID", "measured_at is the date the limit was read, YYYY-MM-DD");
+        basis(`${at}.rate_limits`, rl);
+      }
+    }
+    if (own(s, "gated") && !SYSTEM_GATES.includes(s.gated)) err(`${at}.gated`, "VALUE_INVALID", `gated is ${SYSTEM_GATES.join(", ")}`);
+    if (own(s, "terms")) str(`${at}.terms`, s.terms, "terms");
+    if (own(s, "volatile")) {
+      if (!Array.isArray(s.volatile) || !s.volatile.length) err(`${at}.volatile`, "VALUE_INVALID", "volatile is a non-empty list of patterns");
+      else s.volatile.forEach((v, j) => pattern(`${at}.volatile[${j}]`, v));
+    }
+    if (own(s, "use_limit") && !isStr(s.use_limit)) err(`${at}.use_limit`, "USE_LIMIT_INVALID", "use_limit names a use_limits key");
     basis(at, s);
   });
   if (own(p, "mixed_hosts")) list("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
@@ -665,6 +750,17 @@ function validateInto(p, errors) {
       list(at, entries).forEach((e, i) => {
         const ea = `${at}[${i}]`;
         if (!entry(ea, e)) return;
+        /* T53-502: a street suffix as the Postal Service writes it, with the abbreviations it accepts for it */
+        if (key === "street_types") {
+          fields(ea, e, ["suffix", "abbreviations", "basis"]);
+          if (typeof e.suffix !== "string" || !/^[A-Z]+$/.test(e.suffix)) err(`${ea}.suffix`, "VALUE_INVALID", "suffix is the suffix's primary name, upper-case letters");
+          else if (once.has(e.suffix)) err(`${ea}.suffix`, "VALUE_INVALID", localize("jurisdictions.index.v_is_given_twice_v1", "'{v}' is given twice {v1}", { v: String(e.suffix), v1: "" }));
+          else once.add(e.suffix);
+          if (!Array.isArray(e.abbreviations) || !e.abbreviations.every((x) => typeof x === "string" && /^[A-Z]+$/.test(x)) || new Set(e.abbreviations).size !== e.abbreviations.length)
+            err(`${ea}.abbreviations`, "VALUE_INVALID", "abbreviations is a list of upper-case words, each once");
+          basis(ea, e);
+          return;
+        }
         if (own(DATA_VOCABULARY, key)) {
           fields(ea, e, DATA_VOCABULARY[key]);
           const name = DATA_VOCABULARY[key][0];
@@ -1248,6 +1344,204 @@ function validateInto(p, errors) {
     if (!hit) err(r.at, "VALUE_INVALID", localize("jurisdictions.index.response_names_no_records_deadline", "response '{rule}' is no rule of a deadline that applies to records_request", { rule: String(r.rule).slice(0, 80) }));
   }
 
+  /* R127-R133 (T53; N1259): use limits, registers and the number-only query templates. The shape is judged here; what a definition
+     may keep, hide or reach is `validateRegisterDefinition`'s one rule, which a team's own definition meets too (R128). */
+  const useLimitKeys = new Set();
+  if (own(p, "use_limits")) {
+    const seen = new Set();
+    list("use_limits", p.use_limits).forEach((u, i) => {
+      const at = `use_limits[${i}]`;
+      if (!entry(at, u)) return;
+      fields(at, u, ["key", "citation", "text_key", "export", "on_publish", "basis"]);
+      if (typeof u.key !== "string" || !REGISTER_KEY_RE.test(u.key)) err(`${at}.key`, "USE_LIMIT_INVALID", "key matches ^[a-z][a-z0-9_]*$");
+      else if (seen.has(u.key)) err(`${at}.key`, "USE_LIMIT_INVALID", localize("jurisdictions.index.v_is_given_twice_v1", "'{v}' is given twice {v1}", { v: String(u.key), v1: "" }));
+      else { seen.add(u.key); useLimitKeys.add(u.key); }
+      if (!isStr(u.citation)) err(`${at}.citation`, "USE_LIMIT_INVALID", "citation is the rule as cited");
+      if (!isStr(u.text_key)) err(`${at}.text_key`, "USE_LIMIT_INVALID", "text_key is a words key stating the limit");
+      if (u.export !== "never") err(`${at}.export`, "USE_LIMIT_INVALID", "export is never: this release accepts no other value");
+      if (!USE_LIMIT_ON_PUBLISH.includes(u.on_publish)) err(`${at}.on_publish`, "USE_LIMIT_INVALID", `on_publish is ${USE_LIMIT_ON_PUBLISH.join(", ")}`);
+      basis(at, u);
+    });
+  }
+  if (own(p, "systems") && Array.isArray(p.systems)) p.systems.forEach((s, i) => {
+    if (isObj(s) && isStr(s.use_limit) && !inheritsLists && !useLimitKeys.has(s.use_limit))
+      err(`systems[${i}].use_limit`, "USE_LIMIT_INVALID", localize("jurisdictions.index.no_use_limit_of_this_profile", "no use limit of this profile is '{key}'", { key: String(s.use_limit) }));
+  });
+  const registerKeys = new Map();
+  if (own(p, "registers")) {
+    const ownSystems = new Map((Array.isArray(p.systems) ? p.systems : []).filter((s) => isObj(s) && isStr(s.origin)).map((s) => [s.origin, s]));
+    const schemeNames = new Set((Array.isArray(p.identifier_schemes) ? p.identifier_schemes : []).filter(isObj).map((x) => x.scheme));
+    const httpsHost = (v, holes) => {
+      if (typeof v !== "string" || /\s/.test(v)) return null;
+      const bare = holes ? v.replace(/\{(?:cycle2|cycle|table)\}/g, "x") : v;
+      if (/[{}]/.test(bare)) return null;
+      try { const u = new URL(bare); return u.protocol === "https:" ? u.hostname : null; } catch { return null; }
+    };
+    list("registers", p.registers).forEach((r, i) => {
+      const at = `registers[${i}]`;
+      if (!entry(at, r)) return;
+      const bad = (path, detail) => err(path, "REGISTER_INVALID", `${r && typeof r.key === "string" ? r.key : at}: ${detail}`);
+      fields(at, r, ["key", "label", "publisher", "system", "url", "pieces", "delimiter", "header_from", "columns", "row_key", "row_key_basis",
+        "schemes", "use_limit", "terms_basis", "gate", "phase", "status", "listing", "refresh", "count", "basis"]);
+      if (typeof r.key !== "string" || !REGISTER_KEY_RE.test(r.key)) bad(`${at}.key`, "key matches ^[a-z][a-z0-9_]*$");
+      else if (registerKeys.has(r.key)) bad(`${at}.key`, "a key is given once");
+      else registerKeys.set(r.key, r);
+      for (const f of ["label", "publisher"]) if (!isStr(r[f])) bad(`${at}.${f}`, `${f} is plain text`);
+      const notMeasured = r.status === "not_measured";
+      if (own(r, "status") && !notMeasured) bad(`${at}.status`, "status is absent or not_measured");
+      const sys = isStr(r.system) ? ownSystems.get(r.system) : undefined;
+      if (own(r, "system") || !notMeasured) {
+        if (!isStr(r.system)) bad(`${at}.system`, "system is a system's origin");
+        else if (!sys && !inheritsLists) bad(`${at}.system`, `no system of this profile has origin '${r.system}'`);
+      }
+      const urlHost = httpsHost(r.url, false);
+      if (!urlHost) bad(`${at}.url`, "url is the register's own public https page");
+      else if (sys && !sys.hosts.includes(urlHost)) bad(`${at}.url`, "the url's host is not one of the system's hosts");
+      if (own(r, "delimiter") && !REGISTER_DELIMITERS.includes(r.delimiter)) bad(`${at}.delimiter`, `delimiter is ${REGISTER_DELIMITERS.join(", ")}`);
+      if (!own(r, "gate") && !notMeasured) bad(`${at}.gate`, "gate is none, account, fee or people_search");
+      if (own(r, "gate") && !REGISTER_GATES.includes(r.gate)) bad(`${at}.gate`, "gate is none, account, fee or people_search");
+      if (sys && r.gate === "none" && sys.gated && sys.gated !== "none") bad(`${at}.gate`, `a register of the ${sys.gated}-gated system ${r.system} is not gate: none`);
+      if (own(r, "phase") ? !REGISTER_PHASES.includes(r.phase) : !notMeasured) bad(`${at}.phase`, "phase is alpha or beta");
+      if (notMeasured && !own(r, "phase")) { /* a bare listing entry: key, label, publisher, url, status */ }
+      /* pieces */
+      const pieceKeys = new Set();
+      const pieces = own(r, "pieces") ? r.pieces : (notMeasured ? [] : undefined);
+      if (!Array.isArray(pieces)) bad(`${at}.pieces`, "pieces is a list");
+      else {
+        if (!pieces.length && r.phase !== "beta" && !(notMeasured && !own(r, "phase"))) bad(`${at}.pieces`, "pieces is a non-empty list");
+        pieces.forEach((pc, j) => {
+          const pa = `${at}.pieces[${j}]`;
+          if (!entry(pa, pc)) return;
+          fields(pa, pc, ["key", "label", "locator", "member", "delimiter", "header_from"]);
+          if (typeof pc.key !== "string" || !REGISTER_KEY_RE.test(pc.key)) bad(`${pa}.key`, "key matches ^[a-z][a-z0-9_]*$");
+          else if (pieceKeys.has(pc.key)) bad(`${pa}.key`, "a piece key is given once");
+          else pieceKeys.add(pc.key);
+          if (!isStr(pc.label)) bad(`${pa}.label`, "label is plain text");
+          const host = httpsHost(pc.locator, true);
+          if (!host) bad(`${pa}.locator`, "locator is an https address, or a template with the holes {cycle} or {table}");
+          else if (sys && !sys.hosts.includes(host)) bad(`${pa}.locator`, "the locator's host is not one of the system's hosts");
+          if (own(pc, "member") && !isStr(pc.member)) bad(`${pa}.member`, "member is a zip member's name");
+          if (own(pc, "delimiter") && !REGISTER_DELIMITERS.includes(pc.delimiter)) bad(`${pa}.delimiter`, `delimiter is ${REGISTER_DELIMITERS.join(", ")}`);
+        });
+        pieces.forEach((pc, j) => {
+          if (isObj(pc) && own(pc, "header_from") && (!pieceKeys.has(pc.header_from) || pc.header_from === pc.key)) bad(`${at}.pieces[${j}].header_from`, "header_from is the key of another piece");
+        });
+      }
+      if (own(r, "header_from") && !pieceKeys.has(r.header_from)) bad(`${at}.header_from`, "header_from is the key of a piece");
+      /* columns */
+      const colNames = new Set();
+      if (own(r, "columns") || !notMeasured) {
+        if (!Array.isArray(r.columns) || !r.columns.length) bad(`${at}.columns`, "columns is a non-empty list");
+        else r.columns.forEach((c, j) => {
+          const ca = `${at}.columns[${j}]`;
+          if (!entry(ca, c)) return;
+          fields(ca, c, ["name", "role", "keep", "date_format", "currency"]);
+          if (!isStr(c.name)) bad(`${ca}.name`, "name is the column's header");
+          else if (colNames.has(c.name)) bad(`${ca}.name`, "a column is listed once");
+          else colNames.add(c.name);
+          if (!REGISTER_ROLES.includes(c.role)) bad(`${ca}.role`, `role is one of ${REGISTER_ROLES.join(", ")}`);
+          if (typeof c.keep !== "boolean") bad(`${ca}.keep`, "keep is true or false");
+          if (own(c, "date_format") && !isStr(c.date_format)) bad(`${ca}.date_format`, "date_format is a format name");
+          if (own(c, "currency") && !/^[A-Z]{3}$/.test(String(c.currency))) bad(`${ca}.currency`, "currency is a three-letter code");
+        });
+      }
+      if (own(r, "row_key") || !notMeasured) {
+        if (!Array.isArray(r.row_key) || !r.row_key.length || !r.row_key.every(isStr)) bad(`${at}.row_key`, "row_key is a non-empty list of column names");
+        if (!["source", "content"].includes(r.row_key_basis)) bad(`${at}.row_key_basis`, "row_key_basis is source or content");
+      }
+      if (own(r, "schemes")) {
+        if (!Array.isArray(r.schemes) || !r.schemes.every((x) => isStr(x) && (inheritsLists || schemeNames.has(x)))) bad(`${at}.schemes`, "schemes is a list of the profile's identifier scheme names");
+      }
+      if (own(r, "use_limit") && (!isStr(r.use_limit) || (!inheritsLists && !useLimitKeys.has(r.use_limit)))) err(`${at}.use_limit`, "USE_LIMIT_INVALID", "use_limit names a use_limits key of this profile");
+      /* R129: the listing's figures each with their basis, a count query, a refresh */
+      if (own(r, "listing")) {
+        const L = r.listing;
+        if (!isObj(L)) bad(`${at}.listing`, "listing is {bytes, rows, source_date?, measured_at}");
+        else {
+          fields(`${at}.listing`, L, ["bytes", "rows", "source_date", "measured_at"]);
+          if (!isDate(L.measured_at)) bad(`${at}.listing.measured_at`, "measured_at is the date the figures were taken, YYYY-MM-DD");
+          if (own(L, "source_date") && !isDate(L.source_date)) bad(`${at}.listing.source_date`, "source_date is YYYY-MM-DD");
+          for (const f of ["bytes", "rows"]) {
+            const fg = L[f];
+            if (!isObj(fg)) { bad(`${at}.listing.${f}`, `${f} is {value, basis}`); continue; }
+            fields(`${at}.listing.${f}`, fg, ["value", "basis", "how"]);
+            if (!REGISTER_FIGURE_BASES.includes(fg.basis)) bad(`${at}.listing.${f}.basis`, `basis is ${REGISTER_FIGURE_BASES.join(", ")}`);
+            else if (fg.basis === "not_stated") { if (fg.value !== null) bad(`${at}.listing.${f}.value`, "a not_stated figure's value is null"); }
+            else {
+              if (!Number.isInteger(fg.value) || fg.value < 0) bad(`${at}.listing.${f}.value`, "a figure's value is a count");
+              if (!isDate(L.measured_at)) bad(`${at}.listing.measured_at`, "a figure with a basis needs measured_at");
+              if (fg.basis === "estimated" && !isStr(fg.how)) bad(`${at}.listing.${f}.how`, "an estimate states its method in how");
+            }
+          }
+        }
+      }
+      if (own(r, "count")) {
+        const C = r.count;
+        if (!isObj(C)) bad(`${at}.count`, "count is {kind, template, supports}");
+        else {
+          fields(`${at}.count`, C, ["kind", "template", "supports"]);
+          if (C.kind !== "source_count_query") bad(`${at}.count.kind`, "kind is source_count_query");
+          const h = httpsHost(typeof C.template === "string" ? C.template.replace(/\{[a-z_]+\}/g, "x") : null, false);
+          if (!h) bad(`${at}.count.template`, "template is an https address template");
+          else if (sys && !sys.hosts.includes(h)) bad(`${at}.count.template`, "the template's host is not one of the system's hosts");
+          if (!Array.isArray(C.supports) || !C.supports.every(isStr)) bad(`${at}.count.supports`, "supports is a list of filter criteria");
+        }
+      }
+      if (own(r, "refresh")) {
+        const F = r.refresh;
+        if (!isObj(F)) bad(`${at}.refresh`, "refresh is {cadence_hours, validators, append_only?}");
+        else {
+          fields(`${at}.refresh`, F, ["cadence_hours", "validators", "append_only"]);
+          if (!isPosInt(F.cadence_hours)) bad(`${at}.refresh.cadence_hours`, "cadence_hours is a positive integer");
+          if (!Array.isArray(F.validators) || !F.validators.every((v) => REGISTER_VALIDATORS.includes(v))) bad(`${at}.refresh.validators`, `validators is a list of ${REGISTER_VALIDATORS.join(", ")}`);
+          if (own(F, "append_only") && typeof F.append_only !== "boolean") bad(`${at}.refresh.append_only`, "append_only is true or false");
+          if (Array.isArray(F.validators) && F.validators.includes("count") && !own(r, "count")) bad(`${at}.refresh.validators`, "the count validator needs a count query");
+        }
+      }
+      if (own(r, "basis") || !notMeasured) {
+        const ok = basis(at, r);
+        if (ok && !test && !/^\d{4}-\d{2}-\d{2} \S/.test(String(r.basis))) bad(`${at}.basis`, "a register rests on a dated entry, such as 2026-10-21 M-R1");
+      }
+      /* R128: what a definition may keep, hide or reach: the one rule a team's own definition meets too */
+      const v = validateRegisterDefinition(r, { systems: Array.isArray(p.systems) ? p.systems : [] });
+      if (!v.ok && !(v.code === "REGISTER_NO_USE_LIMIT" && inheritsLists))
+        err(`${at}.${v.field}`, v.code, localize("jurisdictions.index.register_refused", "register {key} is refused: {code}", { key: String(v.key), code: String(v.code) }));
+    });
+  }
+  if (own(p, "query_templates")) {
+    const seen = new Set();
+    const schemesByName = new Map((Array.isArray(p.identifier_schemes) ? p.identifier_schemes : []).filter(isObj).map((x) => [x.scheme, x]));
+    list("query_templates", p.query_templates).forEach((q, i) => {
+      const at = `query_templates[${i}]`;
+      if (!entry(at, q)) return;
+      fields(at, q, ["scheme", "register", "template", "basis"]);
+      if (!schemesByName.has(q.scheme) && !inheritsLists) err(`${at}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.no_identifier_scheme_of_this", "no identifier scheme of this profile is '{String}'", { String: String(String(q.scheme)) }));
+      const reg = registerKeys.get(q.register);
+      if (!reg && !inheritsLists) err(`${at}.register`, "REGISTER_INVALID", `no register of this profile has key '${String(q.register)}'`);
+      const k = `${q.scheme}\u0000${q.register}`;
+      if (seen.has(k)) err(`${at}.scheme`, "QUERY_TEMPLATE_INVALID", "a scheme has one template for a register");
+      seen.add(k);
+      if (typeof q.template !== "string" || /\s/.test(q.template)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "template is an https address with one hole {value}");
+      else {
+        const holes = [...q.template.matchAll(/\{([^{}]*)\}/g)].map((m) => m[1]);
+        const stripped = q.template.replace(/\{[^{}]*\}/g, "");
+        if (holes.some((h) => ["name", "first", "last", "person"].includes(h))) err(`${at}.template`, "QUERY_TEMPLATE_NOT_NUMBER", "a watch is by a number: a name has no hole");
+        else if (holes.length !== 1 || holes[0] !== "value" || /[{}]/.test(stripped)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "template has exactly one hole, {value}");
+        else {
+          let host = null;
+          try { const u = new URL(q.template.replace("{value}", "x")); host = u.protocol === "https:" ? u.hostname : null; } catch { host = null; }
+          const authority = q.template.replace(/^https:\/\//, "").split("/")[0].split("?")[0];
+          if (!host || authority.includes("{")) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "template is an https address with its hole outside the host");
+          else if (reg) {
+            const rs = (Array.isArray(p.systems) ? p.systems : []).find((s) => isObj(s) && s.origin === reg.system);
+            if (rs && !rs.hosts.includes(host)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "the template's host is not one of the register's system hosts");
+          }
+        }
+      }
+      basis(at, q);
+    });
+  }
+
   if (own(p, "legal_organisations")) list("legal_organisations", p.legal_organisations).forEach((o, i) => {
     const at = `legal_organisations[${i}]`;
     if (!entry(at, o)) return;
@@ -1426,7 +1720,7 @@ function validateInto(p, errors) {
     list("identifier_schemes", p.identifier_schemes).forEach((x, i) => {
       const at = `identifier_schemes[${i}]`;
       if (!entry(at, x)) return;
-      fields(at, x, ["scheme", "label", "entity_kinds", "space", "form", "systems", "basis"]);
+      fields(at, x, ["scheme", "label", "entity_kinds", "space", "form", "systems", "registers", "basis"]);
       if (!isStr(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
       else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice", "{scheme} is given twice", { scheme: String(x.scheme) }));
       else seen.add(x.scheme);
@@ -2859,4 +3153,8 @@ const ONE_PER_KEY = [
   /* R79, R80 (T45) */
   ["legal_facts", (e) => e.key, "legal facts"],
   ["procedure_guides", (e) => e.kind, "procedure guides"],
+  /* R127, R131, R130 (T53) */
+  ["registers", (e) => e.key, "registers"],
+  ["use_limits", (e) => e.key, "use limits"],
+  ["query_templates", (e) => `${e.scheme} ${e.register}`, "query templates"],
 ];

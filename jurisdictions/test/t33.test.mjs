@@ -32,7 +32,7 @@ test("R3 T33 spaces: account, object, vendor, proceeding and person are known sp
   assert.ok(hasError(breakT((p) => { p.spaces.licence = p.spaces.person; }), "UNKNOWN_SPACE", "spaces.licence"));
   assert.ok(hasError(breakT((p) => { p.spaces.person.kinds = []; }), "UNKNOWN_SECTION", "spaces.person.kinds"), "kinds are enactment's only");
   /* one form per person scheme */
-  assert.deepEqual(t.spaces.person.forms.map((f) => f.form), ["minute-person", "bar-number"]);
+  assert.deepEqual(t.spaces.person.forms.map((f) => f.form), ["minute-person", "bar-number", "filer-number", "licence-number"]); /* R130: the filer and licence schemes need forms */
   assert.deepEqual(get(FIRST).spaces.person.forms.map((f) => f.form), ["legistar-person"]);
   /* the view carries them */
   const v = combine([TEST]).view;

@@ -642,10 +642,11 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.ok(matched > 500, `${matched}`);
   /* systems: every legacy entry, in order, with the same answers for their addresses */
   /* the snapshot's systems first; T33 adds the three court registers (K1514), on hosts the snapshot never named */
-  assert.equal(f.systems.length, legacy.ID_SYSTEMS.length + 3);
+  /* T53 (R133): the registers' sources are added: the open-data portal, the state's raw-data store, the federal bulk files */
+  assert.equal(f.systems.length, legacy.ID_SYSTEMS.length + 6);
   /* the layers lay their systems end to end (R114), so the legacy ones are found by what they are, not by place */
   const legacyKeys = new Set(legacy.ID_SYSTEMS.map((s) => JSON.stringify([s.origin, s.hosts])));
-  assert.deepEqual(f.systems.filter((s) => !legacyKeys.has(JSON.stringify([s.origin, s.hosts]))).map((s) => s.origin).sort(), ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"]);
+  assert.deepEqual(f.systems.filter((s) => !legacyKeys.has(JSON.stringify([s.origin, s.hosts]))).map((s) => s.origin).sort(), ["calaccess.cdn", "courtlistener_docket", "cpuc_proceeding", "ecourt_roa", "fec.bulk", "oakland.opendata"]);
   for (const address of legacy.addresses()) {
     const was = legacy.systemOfAddress(address);
     const now = systemOf(view, address);

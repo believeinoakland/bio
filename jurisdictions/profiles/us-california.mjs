@@ -900,5 +900,305 @@ export default {
       "citation": "Cal. Code Civ. Proc. § 904.1(a)",
       "basis": "2026-10-25 ccp-904-1"
     }
+  ],
+  "systems": [
+    {
+      "origin": "calaccess.cdn",
+      "name": "the Secretary of State's CAL-ACCESS raw-data export",
+      "hosts": [
+        "campaignfinance.cdn.sos.ca.gov"
+      ],
+      "gated": "none",
+      "terms": "The Secretary of State's page states no terms or licence.",
+      "basis": "2026-10-21 M-R1"
+    }
+  ],
+  "registers": [
+    {
+      "key": "calaccess_receipts",
+      "label": "CAL-ACCESS campaign receipts",
+      "publisher": "California Secretary of State (CAL-ACCESS)",
+      "system": "calaccess.cdn",
+      "url": "https://campaignfinance.cdn.sos.ca.gov/dbwebexport.zip",
+      "delimiter": "tab",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "receipts",
+          "label": "RCPT_CD.TSV in the raw-data zip",
+          "locator": "https://campaignfinance.cdn.sos.ca.gov/dbwebexport.zip",
+          "member": "CalAccess/DATA/RCPT_CD.TSV"
+        }
+      ],
+      "columns": [
+        {
+          "name": "FILING_ID",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "AMEND_ID",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "LINE_ITEM",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "FORM_TYPE",
+          "role": "form",
+          "keep": true
+        },
+        {
+          "name": "TRAN_ID",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_NAML",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_NAMF",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_CITY",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_ST",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_ZIP4",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_EMP",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "CTRIB_OCC",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "RCPT_DATE",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "AMOUNT",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "CMTE_ID",
+          "role": "filer_id",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "FILING_ID",
+        "AMEND_ID",
+        "LINE_ITEM"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the Secretary of State's raw-data page: no terms or licence stated",
+      "listing": {
+        "bytes": {
+          "value": 599250395,
+          "basis": "stated",
+          "how": "the member's compressed size in the zip's directory"
+        },
+        "rows": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "measured_at": "2026-10-21",
+        "source_date": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified",
+          "content_length"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "calaccess_expenditures",
+      "label": "CAL-ACCESS campaign expenditures",
+      "publisher": "California Secretary of State (CAL-ACCESS)",
+      "system": "calaccess.cdn",
+      "url": "https://campaignfinance.cdn.sos.ca.gov/dbwebexport.zip",
+      "delimiter": "tab",
+      "gate": "none",
+      "phase": "alpha",
+      "pieces": [
+        {
+          "key": "expenditures",
+          "label": "EXPN_CD.TSV in the raw-data zip",
+          "locator": "https://campaignfinance.cdn.sos.ca.gov/dbwebexport.zip",
+          "member": "CalAccess/DATA/EXPN_CD.TSV"
+        }
+      ],
+      "columns": [
+        {
+          "name": "FILING_ID",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "AMEND_ID",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "LINE_ITEM",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "FORM_TYPE",
+          "role": "form",
+          "keep": true
+        },
+        {
+          "name": "TRAN_ID",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "PAYEE_NAML",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "PAYEE_NAMF",
+          "role": "name",
+          "keep": true
+        },
+        {
+          "name": "PAYEE_CITY",
+          "role": "city",
+          "keep": true
+        },
+        {
+          "name": "PAYEE_ST",
+          "role": "state",
+          "keep": true
+        },
+        {
+          "name": "PAYEE_ZIP4",
+          "role": "zip5",
+          "keep": true
+        },
+        {
+          "name": "EXPN_DATE",
+          "role": "date",
+          "keep": true
+        },
+        {
+          "name": "AMOUNT",
+          "role": "amount",
+          "keep": true,
+          "currency": "USD"
+        },
+        {
+          "name": "EXPN_DSCR",
+          "role": "other",
+          "keep": true
+        },
+        {
+          "name": "CMTE_ID",
+          "role": "filer_id",
+          "keep": true
+        }
+      ],
+      "row_key": [
+        "FILING_ID",
+        "AMEND_ID",
+        "LINE_ITEM"
+      ],
+      "row_key_basis": "content",
+      "terms_basis": "2026-10-21 the Secretary of State's raw-data page: no terms or licence stated",
+      "listing": {
+        "bytes": {
+          "value": 399727941,
+          "basis": "stated",
+          "how": "the member's compressed size in the zip's directory"
+        },
+        "rows": {
+          "value": null,
+          "basis": "not_stated"
+        },
+        "measured_at": "2026-10-21",
+        "source_date": "2026-10-21"
+      },
+      "refresh": {
+        "cadence_hours": 24,
+        "validators": [
+          "last_modified",
+          "content_length"
+        ]
+      },
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "form_700",
+      "label": "Statements of economic interests (Form 700)",
+      "publisher": "Fair Political Practices Commission",
+      "url": "https://www.fppc.ca.gov/search-filings/form-700-search",
+      "status": "not_measured",
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "ca_licences_dca",
+      "label": "California professional licence files (DCA boards)",
+      "publisher": "California Department of Consumer Affairs",
+      "url": "https://www.dca.ca.gov/data/index.shtml",
+      "status": "not_measured",
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "ca_licences_cslb",
+      "label": "Contractors' licences",
+      "publisher": "Contractors State License Board",
+      "url": "https://cslb.ca.gov/onlineservices/dataportal/",
+      "status": "not_measured",
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "ca_company_bulk",
+      "label": "Company records, bulk file",
+      "publisher": "California Secretary of State",
+      "url": "https://www.sos.ca.gov/administration/public-records-act-requests/business-entity-records",
+      "status": "not_measured",
+      "basis": "2026-10-21 M-R1"
+    },
+    {
+      "key": "ca_company_officers",
+      "label": "Company officers",
+      "publisher": "California Secretary of State",
+      "url": "https://www.sos.ca.gov/administration/public-records-act-requests/business-entity-records",
+      "status": "not_measured",
+      "phase": "beta",
+      "gate": "account",
+      "pieces": [],
+      "basis": "2026-10-21 M-R1"
+    }
   ]
 };
