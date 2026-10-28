@@ -48,7 +48,7 @@ import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } fr
 /* R116 (fix round 2; C15): the interface words kept for the release and compressed */
 import { interfaceWordsCache } from "./words-cache.mjs";
 import { probe as probeOfCache } from "./shared-cache.mjs";
-const PROTO_ADMIN_READS = ["tablebytes", "protocprobe", "protobprobe"];   /* PROTOTYPE: see the gate after admission */
+const PROTO_ADMIN_READS = ["tablebytes", "protocprobe", "protobprobe", "protopackedprobe"];   /* PROTOTYPE: see the gate after admission */
 /* R121 (fix round 4, C5a, P9): the door's clock, in its own isolate */
 import { makeClock, clockedEnv, withClock, withServerTiming } from "./phase-clock.mjs";
 import { interfacePage, interfaceScript, interfaceScriptHash, pageWork } from "../interface-shell/index.mjs";

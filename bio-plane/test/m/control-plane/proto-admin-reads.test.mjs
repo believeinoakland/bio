@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world, call, member, hex64 } from "./harness.mjs";
 
 const ADM = hex64();
-for (const op of ["tablebytes", "protocprobe", "protobprobe"]) {
+for (const op of ["tablebytes", "protocprobe", "protobprobe", "protopackedprobe"]) {
   test(`${op}: administrator session and admin bearer pass the gate; plain member and no credential are refused`, async () => {
     const { env, S } = world({ sessions: { [ADM]: member("zed", ["contribute"], { administer: true }) } });
     const notForbidden = (r) => assert.notEqual(r.json?.reason, "CLASS_FORBIDDEN", `${op}: ${r.text.slice(0, 200)}`);

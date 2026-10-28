@@ -3,6 +3,7 @@
    left is which handler answers which op, and the stamps and helpers each is handed. Every stamp is control-plane's,
    set from the authenticated caller; every answer is the handler's (R9). */
 import { protobProbeOp } from "../proto-b/probe.mjs";   /* PROTO-B (throwaway) */
+import { protoPackedProbeOp } from "../proto-b/packed.mjs";   /* PROTO-PACKED (throwaway) */
 import { bootstrapOp, INSTANCE_SETUP_OPS, instanceSetupOp } from "../setup.mjs";
 import { caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
@@ -98,6 +99,7 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   if (op === "registeraudit") return registerAuditOp(env, store(), { json, doAnswer, storeSilent, storeRefusal, captureKey,
     storeName, cls, ...hook });
   if (op === "protobprobe") { const pb = await protobProbeOp(url, env, store(), { cls, json, administer: viaSession && !!(sessRights && sessRights.administer) }); if (pb) return pb; }   /* PROTO-B: null unless PROTO_B=1 */
+  if (op === "protopackedprobe") { const pp = await protoPackedProbeOp(url, env, store(), { cls, json, administer: viaSession && !!(sessRights && sessRights.administer) }); if (pp) return pp; }   /* PROTO-PACKED: null unless PROTO_PACKED=1 */
   if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, { cls, scratch: SCRATCH, json, doAnswer,
     storeSilent, storeRefusal, viewer, ...hook });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, { json, doAnswer, storeRefusal, storeSilent,

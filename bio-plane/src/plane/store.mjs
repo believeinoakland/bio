@@ -11,6 +11,7 @@ import { schedulerOf } from "../scheduler/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
 import { deliverOwedRender } from "../control-plane/index.mjs";
+import { protoPackedProbe } from "../proto-b/packed.mjs";   /* PROTO-PACKED (throwaway): behind env PROTO_PACKED=1 */
 import { protobProbe } from "../proto-b/probe.mjs";   /* PROTO-B (throwaway): behind env PROTO_B=1 */
 import { stagesOn, installStages, collect } from "./stages.mjs";   /* PROTO STAGES (throwaway): behind env PROTO_STAGES=1 */
 
@@ -96,6 +97,13 @@ export class Store extends DurableObject {
       const q = new URL(req0.url).searchParams, args = {};
       for (const [a, b] of q) args[a] = b;
       const body = await protobProbe({ sql: this.ctx.storage.sql, bucket: this.env.CAPTURES, store: (this.ctx.id && this.ctx.id.name) || "bio", args });
+      return new Response(JSON.stringify(body), { headers: { "content-type": "application/json", [OBJECT_TIMING_HEADER]: objectTiming(t0, this.#startedAt) } });
+    }
+    /* PROTO-PACKED (throwaway): only with PROTO_PACKED=1, the packed probe's route; with the flag unset this block changes nothing */
+    if (this.env && this.env.PROTO_PACKED === "1" && this.env.CAPTURES && new URL(req0.url).pathname === "/protopackedprobe") {
+      const q = new URL(req0.url).searchParams, args = {};
+      for (const [a, b] of q) args[a] = b;
+      const body = await protoPackedProbe({ sql: this.ctx.storage.sql, bucket: this.env.CAPTURES, store: (this.ctx.id && this.ctx.id.name) || "bio", args });
       return new Response(JSON.stringify(body), { headers: { "content-type": "application/json", [OBJECT_TIMING_HEADER]: objectTiming(t0, this.#startedAt) } });
     }
     const req = await traceStamped(req0);   /* store-assembly R60: `acquire`'s trace, from the header capture sends */

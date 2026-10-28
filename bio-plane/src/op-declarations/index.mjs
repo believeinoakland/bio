@@ -968,6 +968,8 @@ const OPS_HAND = aliasRows({
      member's session. */
   /* PROTO-B (throwaway; answers only with env PROTO_B=1): timings of text units and a term search, room against R2. */
   protobprobe: { classes: ["admin", "member"],                            mutating: false },
+  /* PROTO-PACKED (throwaway; answers only with env PROTO_PACKED=1): the packed layout, room against R2. */
+  protopackedprobe: { classes: ["admin", "member"],                       mutating: false },
   cpuprobe:   { classes: ["admin", "probe"],                     mutating: true  },
   /* M2', the fetch layer; REC-33: `daemon` is admitted so the class can reach the archive arm, and the direct arm
      refuses it in the handler. */
