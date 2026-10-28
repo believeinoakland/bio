@@ -1,0 +1,22 @@
+/* proto-mem (THROWAWAY): does workerd's inspector answer the sampling heap profiler? */
+import { mkdtempSync, cpSync, symlinkSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os"; import { join } from "node:path";
+const seed = "/home/user/seed100";
+process.env.PROTO_MEM_TOKEN = readFileSync(seed + "/token.txt", "utf8").trim();
+const { start } = await import("./lib.mjs");
+const t = mkdtempSync(join(tmpdir(), "alloc-p-")); cpSync(seed + "/do", t + "/do", { recursive: true }); symlinkSync(seed + "/r2", t + "/r2");
+const w = await start({ bundle: "/home/user/wt-alloc/proto-mem/dist/meas.bundled.mjs", env: { MEAS_GATE: "1" }, persist: t });
+await w.meas("registry");
+const list = await (await fetch(`http://127.0.0.1:${w.inspectorPort}/json`)).json();
+const tg = list.find((x) => x.id === "core:user:bio-plane");
+const ws = new WebSocket(tg.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
+let id = 0; const pend = new Map();
+ws.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && pend.has(d.id)) { pend.get(d.id)(d); pend.delete(d.id); } };
+const send = (method, params = {}) => new Promise((r) => { const i = ++id; const to = setTimeout(() => r({ timeout: true }), 8000); pend.set(i, (d) => { clearTimeout(to); r(d); }); ws.send(JSON.stringify({ id: i, method, params })); });
+console.log("enable", JSON.stringify(await send("HeapProfiler.enable")).slice(0, 200));
+console.log("start", JSON.stringify(await send("HeapProfiler.startSampling", { samplingInterval: 4096, includeObjectsCollectedByMajorGC: true, includeObjectsCollectedByMinorGC: true })).slice(0, 300));
+await w.call("/?op=stats");
+const r = await send("HeapProfiler.stopSampling");
+const p = r.result && r.result.profile;
+console.log("stop", r.timeout ? "timeout" : r.error ? JSON.stringify(r.error) : p ? "profile ok, samples=" + (p.samples || []).length + " headChildren=" + p.head.children.length : JSON.stringify(r).slice(0, 300));
+await w.close(); process.exit(0);

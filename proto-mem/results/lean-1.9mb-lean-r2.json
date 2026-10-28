@@ -1,0 +1,151 @@
+{
+ "when": "2026-10-28T19:44:35.592Z",
+ "seed_summary": {
+  "docs_asked": 100,
+  "bytes_each": 100000,
+  "docs_promoted": 100,
+  "failures": [],
+  "read_ticks": 100,
+  "seed_s": 28,
+  "capture_text_rows": 111703,
+  "capture_text_fts_rows": 111703,
+  "keeps_pending_rows": 101,
+  "owed_reading_registered": true,
+  "rss_at_end": 434.5
+ },
+ "env": {
+  "PROTO_LEAN": "1"
+ },
+ "extra_bytes": null,
+ "only_extra": false,
+ "recycle_ms": null,
+ "segments": [
+  {
+   "n": 0,
+   "baseline": {
+    "rss": 255.4,
+    "heap": {
+     "used": 52.8,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "wall_ms": 3301,
+   "rss": {
+    "start": 255.4,
+    "end": 306.2,
+    "vm_hwm": 306.2,
+    "peak_sampled": 306.2,
+    "peak_above_baseline": 50.8
+   },
+   "heap": {
+    "baseline_used": 52.8,
+    "peak_used": 79.7,
+    "peak_total": 104.2,
+    "floor_windows_3s": 2,
+    "floor_first": 52.8,
+    "floor_last": 65,
+    "floor_min": 52.8,
+    "floor_max": 65,
+    "floors": [
+     [
+      0,
+      52.8
+     ],
+     [
+      3,
+      65
+     ]
+    ]
+   },
+   "chain_lines": [],
+   "readout_reads": 0,
+   "rests": [],
+   "gc_probes": [],
+   "timeline": [
+    [
+     11,
+     255.7
+    ],
+    [
+     559,
+     269.8
+    ],
+    [
+     1076,
+     271.3
+    ],
+    [
+     1597,
+     288.2
+    ],
+    [
+     2115,
+     292.9
+    ],
+    [
+     2633,
+     297.8
+    ],
+    [
+     3147,
+     304.1
+    ]
+   ],
+   "heap_series": [
+    [
+     3,
+     52.8,
+     68.7
+    ],
+    [
+     453,
+     54,
+     72.7
+    ],
+    [
+     697,
+     54.5,
+     72.9
+    ],
+    [
+     1005,
+     55.9,
+     72.9
+    ],
+    [
+     1369,
+     69.7,
+     89
+    ],
+    [
+     1750,
+     74.1,
+     93.1
+    ],
+    [
+     2113,
+     74,
+     94.1
+    ],
+    [
+     2377,
+     62.3,
+     93.1
+    ],
+    [
+     2687,
+     62.8,
+     94.5
+    ],
+    [
+     3033,
+     79.3,
+     101.9
+    ]
+   ]
+  }
+ ],
+ "finished": true,
+ "wall_ms": 11529
+}

@@ -18,7 +18,7 @@ import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
 import { identify, doctypeFor, doctypeForYielding, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
 import { extractPdfRange, openPdfRange } from "../pdfstructure.mjs";
-import { readingProvenance, describePages, yieldNow } from "./readingprov.mjs";
+import { readingProvenance, describePages, yieldNow, setLean } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf, statement } from "../read-bounds.mjs";
 import { decodeText } from "../ooxml.mjs";
@@ -2766,6 +2766,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
                                         killedPages, stampUnit, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
   maxUnits = clampPieceUnits(env, maxUnits); // PROTO_PIECE_UNITS
+  setLean(env); // PROTO_LEAN
   { const pw = protoWindowBytes(env, Number.isInteger(maxUnits) && maxUnits > 0 ? maxUnits : PIECE_UNITS_MAX); if (pw !== null) windowBytes = pw; } // PROTO_WINDOW_BYTES
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");

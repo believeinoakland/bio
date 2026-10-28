@@ -1,5 +1,5 @@
 /* proto-mem: shared harness. One Miniflare, one workerd process, memory read from OUTSIDE (/proc/<pid>/status), nothing leaves the machine. */
-const { Miniflare } = await import(process.env.MF_PATH || "/home/user/wt-chain/bio-plane/node_modules/miniflare/dist/src/index.js");   /* MF_PATH: a copy patched to pass MF_V8_FLAGS to workerd (see README) */
+const { Miniflare } = await import(process.env.MF_PATH || "/home/user/wt-alloc/bio-plane/node_modules/miniflare/dist/src/index.js");   /* MF_PATH: a copy patched to pass MF_V8_FLAGS to workerd (see README) */
 import { randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 

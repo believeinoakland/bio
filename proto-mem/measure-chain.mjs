@@ -13,7 +13,7 @@ const seed = arg.seed;
 if (!seed) { console.error("--seed required"); process.exit(2); }
 try { process.env.PROTO_MEM_TOKEN = readFileSync(seed + "/token.txt", "utf8").trim(); } catch { /* */ }
 const { start, status, sleep, resetHwm, r1, makeText, uploadFile, promoteDoc } = await import("./lib.mjs");
-const bundle = process.env.MEAS_BUNDLE || "/home/user/wt-chain/proto-mem/dist/meas.bundled.mjs";
+const bundle = process.env.MEAS_BUNDLE || "/home/user/wt-alloc/proto-mem/dist/meas.bundled.mjs";
 const envKV = Object.fromEntries(String(arg.env || "").split(",").filter(Boolean).map((kv) => { const i = kv.indexOf("="); return [kv.slice(0, i), kv.slice(i + 1)]; }));
 const t = mkdtempSync(join(tmpdir(), "proto-mem-c-"));
 const prepared = arg.prepared;   /* --prepared=DIR: a room made by --save-prepared (the extra file already registered); its own r2 and do are copied, no session is needed */
@@ -88,6 +88,6 @@ try {
   }
   out.finished = done; out.wall_ms = Date.now() - T0;
 } finally { rmSync(t, { recursive: true, force: true }); }
-mkdirSync("/home/user/wt-chain/proto-mem/results", { recursive: true });
-writeFileSync(`/home/user/wt-chain/proto-mem/results/${arg.out || "chain"}.json`, JSON.stringify(out, null, 1));
+mkdirSync("/home/user/wt-alloc/proto-mem/results", { recursive: true });
+writeFileSync(`/home/user/wt-alloc/proto-mem/results/${arg.out || "chain"}.json`, JSON.stringify(out, null, 1));
 console.log(JSON.stringify({ out: arg.out, finished: out.finished, wall_ms: out.wall_ms, segments: out.segments.map((s) => ({ wall_ms: s.wall_ms, rss: s.rss, heap: { ...s.heap, floors: undefined }, rests: s.rests.length })) }));

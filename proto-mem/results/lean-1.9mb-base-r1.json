@@ -1,0 +1,165 @@
+{
+ "when": "2026-10-28T19:43:06.727Z",
+ "seed_summary": {
+  "docs_asked": 100,
+  "bytes_each": 100000,
+  "docs_promoted": 100,
+  "failures": [],
+  "read_ticks": 100,
+  "seed_s": 28,
+  "capture_text_rows": 111703,
+  "capture_text_fts_rows": 111703,
+  "keeps_pending_rows": 101,
+  "owed_reading_registered": true,
+  "rss_at_end": 434.5
+ },
+ "env": {
+  "PROTO_NONE": "1"
+ },
+ "extra_bytes": null,
+ "only_extra": false,
+ "recycle_ms": null,
+ "segments": [
+  {
+   "n": 0,
+   "baseline": {
+    "rss": 255.2,
+    "heap": {
+     "used": 52.8,
+     "total": 68.2,
+     "backing": 0.9
+    }
+   },
+   "wall_ms": 3952,
+   "rss": {
+    "start": 255.2,
+    "end": 306.5,
+    "vm_hwm": 306.5,
+    "peak_sampled": 306.5,
+    "peak_above_baseline": 51.3
+   },
+   "heap": {
+    "baseline_used": 52.8,
+    "peak_used": 79.3,
+    "peak_total": 102.4,
+    "floor_windows_3s": 2,
+    "floor_first": 52.8,
+    "floor_last": 62.1,
+    "floor_min": 52.8,
+    "floor_max": 62.1,
+    "floors": [
+     [
+      0,
+      52.8
+     ],
+     [
+      3,
+      62.1
+     ]
+    ]
+   },
+   "chain_lines": [],
+   "readout_reads": 0,
+   "rests": [],
+   "gc_probes": [],
+   "timeline": [
+    [
+     10,
+     255.5
+    ],
+    [
+     540,
+     269.8
+    ],
+    [
+     1061,
+     270.4
+    ],
+    [
+     1578,
+     285.6
+    ],
+    [
+     2099,
+     290.4
+    ],
+    [
+     2618,
+     296.3
+    ],
+    [
+     3144,
+     298.3
+    ],
+    [
+     3669,
+     303.1
+    ]
+   ],
+   "heap_series": [
+    [
+     4,
+     52.8,
+     68.2
+    ],
+    [
+     514,
+     54.1,
+     72.7
+    ],
+    [
+     840,
+     54.5,
+     73.2
+    ],
+    [
+     1132,
+     55.1,
+     73.2
+    ],
+    [
+     1564,
+     71.2,
+     90.5
+    ],
+    [
+     1910,
+     72.4,
+     92.9
+    ],
+    [
+     2200,
+     60.6,
+     89.9
+    ],
+    [
+     2604,
+     61.2,
+     93.6
+    ],
+    [
+     2844,
+     62.7,
+     93.6
+    ],
+    [
+     3176,
+     62.4,
+     95
+    ],
+    [
+     3431,
+     64.4,
+     95
+    ],
+    [
+     3815,
+     70.8,
+     99.2
+    ]
+   ]
+  }
+ ],
+ "finished": true,
+ "wall_ms": 12358
+}

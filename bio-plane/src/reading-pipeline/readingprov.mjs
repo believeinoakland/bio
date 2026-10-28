@@ -53,6 +53,11 @@ const K = new Uint32Array([
 /* G82 (fix round 7): the object's one thread is given back between the slices of a big digest, so a cheap read waits for a slice, not for
    the book. A real macrotask turn (a timer), not a resolved promise, which gives nothing back. */
 export const yieldNow = () => new Promise((r) => setTimeout(r, 0));
+/* PROTO_LEAN (throwaway measuring prototype): env.PROTO_LEAN === "1" (set by `read()` through `setLean`) makes the streamed SHA-256 below compress each 64-byte block IN PLACE
+   (an offset into the slice, not `bytes.subarray(i, i + 64)`) and read the eight state words by index (not by `let [a, ...] = h`, which runs the typed array's iterator
+   once a block). The digest is the same; unset = the code as it was. The measured allocation: proto-mem/results/alloc-*.json (compress 98.9 MB + subarray 9.1 MB for one 8 MB text). */
+let LEAN = false;
+export const setLean = (env) => { LEAN = !!env && typeof env === "object" && env.PROTO_LEAN === "1"; };
 function sha256Core() {
   const h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
   const w = new Uint32Array(64), block = new Uint8Array(64);
@@ -73,6 +78,22 @@ function sha256Core() {
     }
     h[0] += a; h[1] += b2; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
   };
+  const lean = LEAN;   /* PROTO_LEAN: fixed when the digest begins */
+  const compressAt = (b, o) => {
+    for (let i = 0; i < 16; i++) w[i] = (b[o + 4 * i] << 24) | (b[o + 4 * i + 1] << 16) | (b[o + 4 * i + 2] << 8) | b[o + 4 * i + 3];
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let a = h[0], b2 = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+    for (let i = 0; i < 64; i++) {
+      const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b2) ^ (a & c) ^ (b2 & c))) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b2; b2 = a; a = (t1 + t2) | 0;
+    }
+    h[0] += a; h[1] += b2; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+  };
   const feed = (bytes) => {
     total += bytes.length;
     let i = 0;
@@ -80,7 +101,8 @@ function sha256Core() {
       while (i < bytes.length && fill < 64) block[fill++] = bytes[i++];
       if (fill === 64) { compress(block); fill = 0; }
     }
-    for (; i + 64 <= bytes.length; i += 64) compress(bytes.subarray(i, i + 64));
+    if (lean) for (; i + 64 <= bytes.length; i += 64) compressAt(bytes, i);
+    else for (; i + 64 <= bytes.length; i += 64) compress(bytes.subarray(i, i + 64));
     while (i < bytes.length) block[fill++] = bytes[i++];
   };
   const end = () => {

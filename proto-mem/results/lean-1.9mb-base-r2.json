@@ -1,0 +1,151 @@
+{
+ "when": "2026-10-28T19:44:07.607Z",
+ "seed_summary": {
+  "docs_asked": 100,
+  "bytes_each": 100000,
+  "docs_promoted": 100,
+  "failures": [],
+  "read_ticks": 100,
+  "seed_s": 28,
+  "capture_text_rows": 111703,
+  "capture_text_fts_rows": 111703,
+  "keeps_pending_rows": 101,
+  "owed_reading_registered": true,
+  "rss_at_end": 434.5
+ },
+ "env": {
+  "PROTO_NONE": "1"
+ },
+ "extra_bytes": null,
+ "only_extra": false,
+ "recycle_ms": null,
+ "segments": [
+  {
+   "n": 0,
+   "baseline": {
+    "rss": 255.4,
+    "heap": {
+     "used": 52.8,
+     "total": 68,
+     "backing": 0.9
+    }
+   },
+   "wall_ms": 3238,
+   "rss": {
+    "start": 255.4,
+    "end": 307.7,
+    "vm_hwm": 307.7,
+    "peak_sampled": 307.7,
+    "peak_above_baseline": 52.3
+   },
+   "heap": {
+    "baseline_used": 52.8,
+    "peak_used": 80.9,
+    "peak_total": 103.3,
+    "floor_windows_3s": 2,
+    "floor_first": 52.8,
+    "floor_last": 66.2,
+    "floor_min": 52.8,
+    "floor_max": 66.2,
+    "floors": [
+     [
+      0,
+      52.8
+     ],
+     [
+      3,
+      66.2
+     ]
+    ]
+   },
+   "chain_lines": [],
+   "readout_reads": 0,
+   "rests": [],
+   "gc_probes": [],
+   "timeline": [
+    [
+     9,
+     255.7
+    ],
+    [
+     528,
+     278.3
+    ],
+    [
+     1042,
+     282.2
+    ],
+    [
+     1558,
+     291.5
+    ],
+    [
+     2075,
+     296.1
+    ],
+    [
+     2595,
+     299.5
+    ],
+    [
+     3111,
+     305.6
+    ]
+   ],
+   "heap_series": [
+    [
+     3,
+     52.8,
+     68
+    ],
+    [
+     448,
+     65.1,
+     76.2
+    ],
+    [
+     730,
+     63.1,
+     82.7
+    ],
+    [
+     1202,
+     62.8,
+     94.1
+    ],
+    [
+     1430,
+     69.3,
+     94.1
+    ],
+    [
+     1748,
+     72.9,
+     96.8
+    ],
+    [
+     2099,
+     72.6,
+     98
+    ],
+    [
+     2340,
+     63.6,
+     94.8
+    ],
+    [
+     2708,
+     64.8,
+     96.1
+    ],
+    [
+     3019,
+     80.9,
+     103.3
+    ]
+   ]
+  }
+ ],
+ "finished": true,
+ "wall_ms": 10925
+}
