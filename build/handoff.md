@@ -25,10 +25,11 @@ Merged today: signatures (K5607, K5634), id-spaces, subresources, structured-tex
 Open jobs (all live sessions; `proc status` for each):
 1. **RUNTIME-LIMITS** (`session_018BhcegsnZTq6ndhV2RKA4f`): T53-511 sent: flip every reader row to its standard except `document.clean_bytes`/`part_bytes` (alpha, K5630) and `office.text_bytes` (standard 20 MiB; `streamed_text_bytes` 100 MB, K5637); fix ooxml's inherited R34 red. Merge it, then tell OFFICE-READERS "runtime-limits merged" (it then fixes its 14 fixtures, T53-537, and completes).
 2. **OFFICE-READERS** (`session_018BhcegdvdcHawV5kVZ1wKW`): waits on (1).
-3. **OOXML #1** (`session_018BhcedTff8SmCMqu2EScxc`): T53-524 sent (export `readCfb`). When merged, tell MAIL-READER (`session_018Bhcefa3SdZX44kR48Ukpf`) the export's name: T53-525 (drop `cfb.mjs`).
+3. **OOXML #1** (`session_018BhcedTff8SmCMqu2EScxc`): T53-524 merged (K5640; ooxml R39, K5641). Its R34 red is RUNTIME-LIMITS' to fix (item 1). Nothing owed.
+   **MAIL-READER** (`session_018Bhcefa3SdZX44kR48Ukpf`): T53-525 sent (import ooxml's `readCfb`, delete `cfb.mjs`); merge when COMPLETE.
 4. **READER-CONTAINER** (`session_018BhcedfcFpkDwfqT6uTLcn`): T53-538 sent (fleet-member files). After it merges, BOB runs `container-images.yml` for reader-container (K5120; never built in a session, K1898), records the digest (`node bio-plane/scripts/bundles.mjs --record-image reader-container ReaderContainer <digest>` per BUNDLER's note), then tells BUNDLER (`session_018BhcecEeYk8AL3QJSwTuwv`, WAITING) to move its own tests (fleetbundles lists, R35 image count 3→4, bundler.test.mjs:1084 class count). If enrolment cannot be green this round, its hard reason is the image publish (P19, a deployment); say so in a ruling.
-5. **IMAGE-COVER** (`session_018BhcecpR3Z1ErVEX6eAheX`): T53-513 sent (stream filtered rows into the deflater; limits unchanged, K5628).
-6. **PDF-READER** (`session_018Bhcefr6qakyreu8WK9cuR`): sent doc-clean's finding (~270,000-reference array refused at 64 MiB).
+5. **IMAGE-COVER**: merged with T53-513 (K5638). Nothing owed.
+6. **PDF-READER** (`session_018Bhcefr6qakyreu8WK9cuR`): R51 sent (an `unresolved` entry names `over: "direct_object"`, K5641). When it merges, tell DOC-CLEAN (`session_018BhcedJp6SW8wmUGjgoTVP`) "pdf-reader R51 merged": T53-539 (its refusal states the bound).
 7. **JURISDICTIONS #2** (`session_018BhcefMFW1bhVhh3w9sjUp`, titled "#1", sonnet): T53-6 (the four shipped layers), R127-R133, T53-14, T53-502; its four points answered (K5618). It is the biggest job left; if it blocks on context, archive and start its successor with `job archived` then `layer start --modules jurisdictions`.
 8. **file-scanner**: R37 (a render fetches nothing, K5629) is met by its K5633 work but not struck (its Met named R36 only): strike it at its next completion, or as a wording edit with a ruling.
 
@@ -47,9 +48,9 @@ Then **layer 1 close** (`situations/merge-close.md`): first prune `build/tests-e
 
 PLATFORM #2 working (its folder merged at d908b67898; it will ask BOB to deploy plat-s1 steps 1d-1f: deploy per BOB #325's handoff item 5, `deploy-plane-only.mjs plat-s1`, account 20b5…7f72 only). JOURNEYS #4 idle: asks whether the walkers' leftovers on biosmoke8 are removed (BOB's: leave them until the re-walk) and a redeploy before its re-walk (after this round's fixes). PLANNING #5 stopped (L58). TESTS-SWEEP #1 archived (its civicos-process change is in main). AI-DESIGN, CAPABILITIES, FILES READY, nothing owed.
 
-## Rulings today, mine (K5606-K5637)
+## Rulings today, mine (K5606-K5641)
 
-K5606 generated artifacts in jobs; K5607-K5623, K5626, K5627, K5631-K5636 merges; K5618 jurisdictions' four points; K5624 the readers' rows (T53-510 is the entry; messages and ooxml's START named it T53-503); K5625 the key ceremony's route and R57; K5628 image-cover streams rows; K5629 layer-1 findings folded (format-registry wording, file-scanner R36/R37, entries T53-520 to T53-536); K5630 signatures' page path, doc-clean's rows stay alpha; K5637 reader bounds (office.text_bytes 20 MiB), office-readers fixtures (T53-537), reader-container enrolment (T53-538).
+K5606 generated artifacts in jobs; K5607-K5623, K5626, K5627, K5631-K5636 merges; K5618 jurisdictions' four points; K5624 the readers' rows (T53-510 is the entry; messages and ooxml's START named it T53-503); K5625 the key ceremony's route and R57; K5628 image-cover streams rows; K5629 layer-1 findings folded (format-registry wording, file-scanner R36/R37, entries T53-520 to T53-536); K5630 signatures' page path, doc-clean's rows stay alpha; K5637 reader bounds (office.text_bytes 20 MiB), office-readers fixtures (T53-537), reader-container enrolment (T53-538); K5638-K5640 merges; K5641 ooxml R39 (CFB export), pdf-reader R51, doc-clean T53-539.
 
 ## State worth knowing
 
