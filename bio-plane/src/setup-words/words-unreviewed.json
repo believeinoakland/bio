@@ -36856,6 +36856,104 @@
       "line": 1080
     },
     {
+      "id": "mail-reader.refusal.attachment_no_such",
+      "en": "This message has no attachment {index}.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 46
+    },
+    {
+      "id": "mail-reader.refusal.attachment_not_cut",
+      "en": "Attachment {index} is a message kept inside this Outlook message; it is read with the message, not on its own.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 47
+    },
+    {
+      "id": "mail-reader.refusal.boundary_bad",
+      "en": "This message's parts are not separated the way it declares, so it cannot be read. Ask the sender for a fresh copy.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 39
+    },
+    {
+      "id": "mail-reader.refusal.empty",
+      "en": "This file is empty, so there is no message to read.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 41
+    },
+    {
+      "id": "mail-reader.refusal.is_mailbox",
+      "en": "This file is a mailbox of messages, not one message; it is read as a mailbox.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 43
+    },
+    {
+      "id": "mail-reader.refusal.mailbox_malformed",
+      "en": "This file does not begin like a mailbox, so its messages cannot be found.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 44
+    },
+    {
+      "id": "mail-reader.refusal.mailbox_too_large",
+      "en": "This mailbox is {size} bytes, more than the {bound} bytes a mailbox may be. Split it into smaller mailboxes and bring each in.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 38
+    },
+    {
+      "id": "mail-reader.refusal.mailbox_too_many",
+      "en": "This mailbox holds more than {bound} messages, so it is not read. Split it into smaller mailboxes and bring each in.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 37
+    },
+    {
+      "id": "mail-reader.refusal.malformed",
+      "en": "This message is damaged in a way that stops it being read. Ask the sender for a fresh copy.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 48
+    },
+    {
+      "id": "mail-reader.refusal.msg_container_bad",
+      "en": "This Outlook message is damaged or cut short, so it cannot be read. Save it again from Outlook and bring it in.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 40
+    },
+    {
+      "id": "mail-reader.refusal.not_a_message",
+      "en": "This file is not an email message, so it is not read as one.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 42
+    },
+    {
+      "id": "mail-reader.refusal.source_unreadable",
+      "en": "This message could not be read from storage. Try again in a moment.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 45
+    },
+    {
+      "id": "mail-reader.refusal.too_large",
+      "en": "This message is {size} bytes, more than the {bound} bytes a message may be. Save its attachments separately and bring them in one by one.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 35
+    },
+    {
+      "id": "mail-reader.refusal.too_nested",
+      "en": "This message is nested more than {max} levels deep (it reached {depth}); nothing deeper is opened. Open the inner message and bring it in on its own.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 36
+    },
+    {
       "id": "member-roster.declared.adminendorse",
       "en": "section 4.7 governance — the subject is a proposed administrator, not a bundle",
       "module": "member-roster",
@@ -52030,6 +52128,160 @@
       "module": "strength",
       "file": "bio-plane/src/strength/origins.mjs",
       "line": 158
+    },
+    {
+      "id": "structured-text.cursor_mismatch",
+      "en": "This place in the reading does not belong to this file, so the reading has to start again.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 125
+    },
+    {
+      "id": "structured-text.encoding_unsupported",
+      "en": "This {kind} file is written in a text encoding that cannot be read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 119
+    },
+    {
+      "id": "structured-text.events_over_limit",
+      "en": "This calendar holds more than {bound} events, the limit, so the whole file was refused.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 61
+    },
+    {
+      "id": "structured-text.kmz_member_corrupt",
+      "en": "The KML document inside this KMZ archive is damaged ({why}), so it was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 226
+    },
+    {
+      "id": "structured-text.kmz_no_kml",
+      "en": "This KMZ archive holds no KML document, so there is no map data in it to read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 190
+    },
+    {
+      "id": "structured-text.kmz_unreadable",
+      "en": "This KMZ archive could not be opened ({why}), so its map data was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 185
+    },
+    {
+      "id": "structured-text.nesting_over_limit",
+      "en": "This {kind} file nests values more than {bound} levels deep, the limit, so the whole file was refused (found at line {line}).",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 56
+    },
+    {
+      "id": "structured-text.signal.declared",
+      "en": "likely, not certain: a declared type is a claim, and no bytes were given to check it",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 166
+    },
+    {
+      "id": "structured-text.signal.geojson",
+      "en": "a GeoJSON object (its type, and features or a geometry)",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 76
+    },
+    {
+      "id": "structured-text.signal.ics",
+      "en": "a calendar file: its first line is BEGIN:VCALENDAR",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 138
+    },
+    {
+      "id": "structured-text.signal.json",
+      "en": "a JSON value",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 73
+    },
+    {
+      "id": "structured-text.signal.json_stops",
+      "en": "a JSON value that stops parsing at line {line}",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 74
+    },
+    {
+      "id": "structured-text.signal.kml",
+      "en": "an XML document whose root element is kml",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 114
+    },
+    {
+      "id": "structured-text.signal.kmz",
+      "en": "a ZIP archive holding the KML document {name}",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 178
+    },
+    {
+      "id": "structured-text.signal.ndjson",
+      "en": "one JSON value on each line",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 69
+    },
+    {
+      "id": "structured-text.signal.srt",
+      "en": "a caption file: a numbered cue and its times",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 141
+    },
+    {
+      "id": "structured-text.signal.svg",
+      "en": "an XML document whose root element is svg",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 113
+    },
+    {
+      "id": "structured-text.signal.vcf",
+      "en": "a contact file: its first line is BEGIN:VCARD",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 139
+    },
+    {
+      "id": "structured-text.signal.vtt",
+      "en": "a caption file: its first line is WEBVTT",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 140
+    },
+    {
+      "id": "structured-text.signal.xml",
+      "en": "an XML document whose root element is {name}",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 117
+    },
+    {
+      "id": "structured-text.stopped_at_line",
+      "en": "Read as far as line {line}: the {kind} file stops being valid there, and the rest of it was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 68
+    },
+    {
+      "id": "structured-text.too_large",
+      "en": "This {kind} file is {size} bytes, over the limit of {bound} bytes for this kind of file, so it was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 48
     },
     {
       "id": "subresources.subresources.a_scheme_reference_is_not",
