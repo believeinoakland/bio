@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7597 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7615 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -26172,6 +26172,24 @@ export const WORD_ROWS = Object.freeze([
   ["ratification.retire.retirement_moves_an_information_state","retirement moves an Information state, and this selection carries something else. The set is refused whole rather than narrowed.",null,null,false,"code"],
   ["ratification.retire.this_selection_resolves_to_retire","this selection resolves to no members, so there is nothing to retire",null,null,false,"code"],
   ["ratification.schedule.publishing_case_caseid_edition_edition","publishing case {caseId} edition {edition} at a set time means checking again at that time what is checked now, and {map} cannot be read now. Nothing was signed for later: publish it now (op=caseratify), or try again later.",null,null,false,"code"],
+  ["reader-container.note.encrypted","This file is locked with a password, so it was kept but not opened.",null,null,false,"code"],
+  ["reader-container.note.macros","This document holds macros. They were not run.",null,null,false,"code"],
+  ["reader-container.refusal.archive_over_bound","This archive is {size}, over the limit of {limit} for an archive as uploaded, so it was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.document_over_bound","This document is {size}, over the limit of {limit} for a document, so it was not read.",null,null,false,"code"],
+  ["reader-container.refusal.member","A file in this archive is {size}, over the limit of {limit} for one file, so the archive was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.members","This archive holds more than {limit} files, so it was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.name","A file in this archive has a name longer than {limit} characters, so the archive was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.nested","This archive is nested more than {limit} levels deep (level {depth}), so it was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.not_read_here","This kind of file ({kind}) is not read by the container reader.",null,null,false,"code"],
+  ["reader-container.refusal.pages","This picture has {pages} pages, over the limit of {limit} pages, so it was not read.",null,null,false,"code"],
+  ["reader-container.refusal.picture_over_bound","This picture is {size}, over the limit of {limit} for a picture, so it was not read.",null,null,false,"code"],
+  ["reader-container.refusal.pixels","This picture is {pixels} pixels, over the limit of {limit} pixels, so it was not read.",null,null,false,"code"],
+  ["reader-container.refusal.rar","RAR archives are not opened. Unpack it and add the files, or add it as a ZIP.",null,null,false,"code"],
+  ["reader-container.refusal.ratio","A file in this archive unpacks to more than {limit} times its packed size, which no ordinary archive does, so the archive was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.spreadsheet_over_bound","This spreadsheet is {size}, over the limit of {limit} for a spreadsheet, so it was not read.",null,null,false,"code"],
+  ["reader-container.refusal.unpacked","This archive unpacks to more than {limit}, so it was not opened.",null,null,false,"code"],
+  ["reader-container.refusal.unreachable","The reader could not be reached. The file is kept; it will be read when the reader is back.",null,null,false,"code"],
+  ["reader-container.refusal.unreadable","This file could not be read: it is damaged or not what its type says.",null,null,false,"code"],
   ["reading-guides.check.a_guide_holds_from_1","a guide holds from 1 to {ITEMS_MAX} items; {v1}. Nothing was written.",null,null,false,"code"],
   ["reading-guides.check.a_guide_holds_from_1_2","a guide holds from 1 to {ITEMS_MAX} items; {count} were given. Nothing was written.",null,null,false,"code"],
   ["reading-guides.check.a_guide_holds_from_1_3","a guide holds from 1 to {ITEMS_MAX} items; no list was given. Nothing was written.",null,null,false,"code"],
