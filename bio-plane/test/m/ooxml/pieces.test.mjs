@@ -1,4 +1,4 @@
-/* ooxml R35 (fix round 4b, F7; K4487): text over the 20 MiB guard is read in bounded pieces. `textPlan` says how a
+/* ooxml R35 (fix round 4b, F7; K4487): text over the whole-read guard is read in bounded pieces. `textPlan` says how a
  * declared size is read; `readPartPieces` inflates a member in windows and hands it over as text in pieces, with
  * readPart's refusals and its verification, made as the member ends. */
 import { test } from "node:test";
@@ -9,6 +9,7 @@ import {
   MEASURED_OOXML_TEXT_BOUND_BYTES, STREAMED_TEXT_BOUND_BYTES, MEMBER_MAX, ARCHIVE_TOTAL_MAX,
 } from "../../../src/ooxml.mjs";
 import { buildZip } from "./zip.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 const MIB = 1024 * 1024;
 const BOUND = MEASURED_OOXML_TEXT_BOUND_BYTES;
@@ -31,12 +32,14 @@ function markup(n) {
   return s.slice(0, n);
 }
 
-test("R35 textPlan: whole at or under the 20 MiB bound, pieces over it up to the ceiling, none over that with the final marker", () => {
-  assert.equal(BOUND, 20 * MIB);
-  assert.equal(CEIL, 32 * MIB);
+test("R35 textPlan: whole at or under the whole-read bound, pieces over it up to the ceiling, none over that with the final marker", () => {
+  assert.equal(BOUND, boundOf("office", "text_bytes"));
+  assert.equal(CEIL, boundOf("office", "streamed_text_bytes"));
   assert.deepEqual(textPlan(0), { read: "whole" });
   assert.deepEqual(textPlan(BOUND), { read: "whole" });
-  for (const size of [BOUND + 1, 30 * MIB, CEIL]) {
+  // the pieces band is empty when the two rows are one figure
+  const band = [BOUND + 1, Math.floor((BOUND + CEIL) / 2), CEIL].filter((size) => size > BOUND && size <= CEIL);
+  for (const size of band) {
     assert.deepEqual(textPlan(size), { read: "pieces", piecewise: {
       declared: size, bound: BOUND, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "declared_uncompressed_text_part_bytes",
     } });

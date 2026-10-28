@@ -45,3 +45,18 @@ Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 2, module lines 1271
 
 Tests: 76/77. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 3, module lines 1271
+
+## Completion (2026-10-28)
+
+# doc-clean T53 report (CHANGES: T53-503, with detection already done)
+
+- Detection through `format-registry`'s `detectFormat` and R13's tests: done at a200fc4d (the earlier COMPLETE); R13 met.
+- T53-503 (R37, K5624): the tests read every figure the module bounds by from runtime-limits (`boundOf(kind, row)`; `TAG_MAX`, `CLEAN_MAX_*`): `document.clean_bytes`, `office.entries`, `archive.ratio`, `xml.tag` no longer pinned. The suite is green with `document.clean_bytes` and `document.part_bytes` flipped to their standard (tried on a throwaway edit of `BETA_STANDARD_ROWS`, reverted). The module's ceilings are already tied to the rows (R12).
+- **A figure the module cannot hold: `document.clean_bytes` (standard 100 MB) and `document.part_bytes` (standard 100 MB).** Measured in workerd (peak resident growth during one request, R4's method; the isolate is 128 MB; PDF / PDF of small objects / .docx): 16 MiB 19 / 113 / 65 MB; 20 MiB 40 / 106 / 105; 24 MiB 24 / 117 / 138; 32 MiB 32 / 130 / 74; 48 MiB 48 / 135 / 128; 64 MiB 128 / refused / 135; 100 MiB 182 / refused / 113. The worst case (a PDF of ~135,000 small objects) is already 113 MB at today's 16 MiB; the whole-file copy (body in, copy out) cannot fit 100 MB in 128 MB. Beyond 64 MiB the small-object PDF is refused `DOCUMENT_UNREADABLE` by pdf-reader (an object array it cannot read; pdf-reader's, not measured further). So: the module holds 16 MiB in every case (20 MiB is the most I would call safe); I recommend `document.clean_bytes` stays at 16 MiB (its alpha) and `document.part_bytes` at its alpha until a streaming copy exists; flipping them to 100 MB would make the module accept files it cannot copy inside its isolate. That is BOB's call (R4 and the rows are requirements); no code of mine keeps it silently.
+- Tests: `measure.test.mjs` measures at min(active figure, 16 MiB) and asserts the 128 MB; a second test measures at the rows' standard figures and prints (opt-in: `DOC_CLEAN_MEASURE_STANDARD=1`, or `DOC_CLEAN_MEASURE_MB=20,32`), its fixtures' padding in images of at most 16 MiB (image-cover bounds one image).
+- Found in other modules: pdf-reader refuses a catalog-reachable array of about 270,000 object references ("object 4 0 is referred to and cannot be read") at 64 MiB of small objects.
+
+**Met** · R13
+
+Tests: 76/78. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 4, module lines 1271

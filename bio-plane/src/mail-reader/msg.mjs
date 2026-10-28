@@ -1,7 +1,7 @@
 /* mail-reader: an Outlook message (MSG, MS-OXMSG) read from its compound file: the same fields an EML answers
  * (R2), its transport headers where the message kept them (R7, R8), its attachments listed in their stored order
  * (R9) and embedded messages followed for the nesting count (R10). Pure; never throws (R11, R15). */
-import { readCfb, hasCfbMagic } from "./cfb.mjs";
+import { readCfb, hasCfbMagic } from "../ooxml.mjs";
 import { parseHeaders, charsetText, htmlText } from "./mime.mjs";
 
 const u16 = (b, o) => b[o] | (b[o + 1] << 8);

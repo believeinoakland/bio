@@ -304,3 +304,4 @@ interface is the members below and nothing else; every other field is private.
   downstream (K1888). PDFiD (Didier Stevens) over the same fixtures is a fair oracle for the
   counts of `/OpenAction`, `/AA`, `/JS`, `/JavaScript`, `/XFA`, `/RichMedia`, `/Launch` and
   `/EmbeddedFile`, obfuscated names included.
+- **R51** (T53; K5641; amends R47; DOC-CLEAN's finding) **An object the direct-object bound stops is named with the bound.** A reference that cannot be read because `pdf.direct_object` (R47) stopped its object is listed in `unresolved` with `over: "direct_object"` and the figure, never as only "cannot be read". Test: a page tree whose /Kids array exceeds the bound lists its object with `over: "direct_object"` and the bound's figure.

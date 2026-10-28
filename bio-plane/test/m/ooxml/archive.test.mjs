@@ -19,6 +19,7 @@ import {
   OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX,
 } from "../../../src/ooxml.mjs";
 import { makeZip, zipBomb, nestedZip } from "../../make-zip.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { buildZip } from "./zip.mjs";
 
 const enc = (s) => new TextEncoder().encode(s);
@@ -564,9 +565,11 @@ test("R29 the streamed SHA-256 is the host's own where it has DigestStream, and 
 
 test("R30 the limits, each exported by its name, and together as the frozen ARCHIVE_LIMITS", async () => {
   const want = {
-    ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_TOTAL_MAX: 268435456, MEMBER_MAX: 268435456, OFFICE_ENTRIES_MAX: 100000,
-    ARCHIVE_DIRECTORY_MAX: 16777216, ARCHIVE_NAME_MAX: 4096, ARCHIVE_RATIO_MAX: 1100,
-    ARCHIVE_DEPTH_MAX: 3, ARCHIVE_TREE_TOTAL_MAX: 268435456, ARCHIVE_TREE_ENTRIES_MAX: 10000,
+    ARCHIVE_ENTRIES_MAX: boundOf("archive", "members"), ARCHIVE_TOTAL_MAX: boundOf("archive", "unpacked_bytes"),
+    MEMBER_MAX: boundOf("archive", "member_bytes"), OFFICE_ENTRIES_MAX: boundOf("office", "entries"),
+    ARCHIVE_DIRECTORY_MAX: boundOf("archive", "directory"), ARCHIVE_NAME_MAX: boundOf("archive", "name"),
+    ARCHIVE_RATIO_MAX: boundOf("archive", "ratio"), ARCHIVE_DEPTH_MAX: boundOf("archive", "depth"),
+    ARCHIVE_TREE_TOTAL_MAX: boundOf("archive", "unpacked_bytes"), ARCHIVE_TREE_ENTRIES_MAX: boundOf("archive", "members"),
   };
   assert.deepEqual({ ...ARCHIVE_LIMITS }, want);
   assert.deepEqual(Object.keys(ARCHIVE_LIMITS), Object.keys(want));
@@ -575,9 +578,9 @@ test("R30 the limits, each exported by its name, and together as the frozen ARCH
     { ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX, OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX, ARCHIVE_RATIO_MAX, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX },
     want,
   );
-  assert.equal(256 * 1024 * 1024, ARCHIVE_TOTAL_MAX);
+  assert.equal(ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TOTAL_MAX);
   // a refusal on a limit names it exactly and carries its figure (the listing, its rows, the cut)
-  const entriesMax = await listArchive(makeZip([], { eocd: { entries: 10001, diskEntries: 10001 } }));
+  const entriesMax = await listArchive(makeZip([], { eocd: { entries: ARCHIVE_ENTRIES_MAX + 1, diskEntries: ARCHIVE_ENTRIES_MAX + 1 } }));
   assert.deepEqual([entriesMax.why, entriesMax.limit, entriesMax.final], ["ARCHIVE_ENTRIES_MAX", ARCHIVE_ENTRIES_MAX, true]);
   const half = ARCHIVE_TOTAL_MAX / 2;
   const total = await listArchive(makeZip([0, 1, 2].map((i) => ({ name: `${i}`, data: "x", method: 0, local: { uncompressedSize: half }, central: { uncompressedSize: half } }))));

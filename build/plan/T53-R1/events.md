@@ -26,3 +26,7 @@
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 5 | events | 0 / 0 | 1 / 0 / 7 (4) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-530 · court-doctypes' finding (N1259-c R38, R29) · `followedRegister` takes only three keys and keys an event by content type. Detail: `follow.mjs:283` takes `{captureSha, proceeding, by}`; a court register row (R38) becomes a `filing` or `order` event of the followed proceeding keyed by the entry id the source assigns (R18-R20 of court-doctypes: the `courtlistener_api` type and the docket entries), and the same entry read twice is one event. Test: two readings of one docket entry file one event; a second entry of another content type files its own. `[owed: BOB confirms what the keys of N1259-c R38 are; this worker did not find the line (see C)]`
