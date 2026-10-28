@@ -18,7 +18,7 @@
  *
  * R37 (T43; N849, N851; K2609): C-85.1–C-85.5 and C-118.2, .3, .4 and .7 moved with their raisers to `doorbell` (its
  * R21), numbers and translations kept, and are defined in doorbell's table alone; this table holds none of them.
- * C-118's next free number stays this module's to mint: C-118.12.
+ * C-118's next free number stays this module's to mint: C-118.14 (C-118.12 and C-118.13 are T53's, below).
  *
  * T50 (N1116; K3366, K3368): each row's `translation` is words.json's `refusal.<CODE>`, read by key through
  * `words.mjs`; this module holds no member-facing English. */
@@ -54,6 +54,18 @@ export const CAPTURE_CHECKS = Object.freeze({
   UPLOAD_NO_STATEMENT: Object.freeze({
     check: 'C-118.10', where: inIndex("uploadCapture", "is-upload-stated"),
     translation: rowWord("UPLOAD_NO_STATEMENT"),
+  }),
+  /* R116 (T53; N824; mail-door R13): the next free row of C-118 after C-118.11, awaiting promotion's stamp. The words are the design's
+     `refusal.MAIL_NO_STATEMENT`, read through `localize` as a stand-in until the design adds the key to capture's `reads`: the list wins. */
+  MAIL_NO_STATEMENT: Object.freeze({
+    check: 'C-118.12', where: inIndex("emailCapture", "is-mail-stated"),
+    translation: localize("refusal.MAIL_NO_STATEMENT", "A message brought in records where it came from, in your own words, and none was given, or it is longer than 2,000 characters. Write it. Nothing was written."),
+  }),
+  /* R119 (T53; N1266; `acquisition` R139): a file of a kind Civicsmith does not keep (RF7: a RAR, a program, an installer, a script, a disk image) is
+     refused at the door, naming its kind and why. The next free row of C-118, awaiting promotion's stamp; the words are read through `localize` as a stand-in. */
+  FILE_KIND_REFUSED: Object.freeze({
+    check: 'C-118.13', where: inIndex("uploadCapture", "is-file-kind-kept"),
+    translation: localize("refusal.FILE_KIND_REFUSED", "Civicsmith does not keep this kind of file, and the reason is stated beside this. Nothing was written."),
   }),
   /* R101 (T51 fix round 3; C9; K4370): the next free row of C-118, awaiting promotion's stamp. The words are the design's
      `refusal.CAPTURE_NOT_HELD`, read through `localize` as a stand-in until the design adds the key to capture's `reads`

@@ -6,12 +6,13 @@
    Counts and ledgers only, never a time (R-CLOCK): the test owns the instance's clock. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bucket, sha } from "./fixture.mjs";
+import { fresh, bucket, sha, storedZip, ZIP_OVERHEAD } from "./fixture.mjs";
 // fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { Capture, PARTED_PART_BYTES, PARTED_UPLOAD_TTL_MS } from "../../../src/capture/index.mjs";
 import { createResumableSha256 } from "../../../src/record-grammar/index.mjs";
 
@@ -547,7 +548,8 @@ test("R113 (L: R2's own rules at the real part size): a 105 MiB file, past the r
   const total = bodyMax + 5 * MiB;
   assert.equal(PARTED_PART_BYTES, 16 * MiB);
   assert.ok(PARTED_PART_BYTES >= R2_MIN_PART && PARTED_PART_BYTES < bodyMax);
-  const file = varied(total, 17);
+  const file = storedZip(varied(total - ZIP_OVERHEAD, 17)), zipTotal = file.length;
+  assert.equal(zipTotal, total, "a package of the size the test sends");
   /* the control: a one-request upload of it is refused at the platform's figure */
   const one = await w.c.uploadCapture({ bytes: streamOf(file, MiB).stream, statement: STATEMENT, by: "m1", declared: total });
   assert.deepEqual([one.ok, one.reason, one.status, one.size, one.bound, one.in_parts], [false, "TOO_LARGE", 413, total, bodyMax, true]);
@@ -653,4 +655,23 @@ test("R113 (fix round 10, cause 29): the four parted operations admit the classe
   /* control: a machine's stamp is still refused at the member-session fence */
   const machine = await begin(w.c, varied(2000, 31), { by: "class:admin" });
   assert.deepEqual([machine.ok, machine.reason], [false, "MEMBER_SESSION_REQUIRED"]);
+});
+
+/* R119 (T53; N1266, N1267): the kind's judgment holds for a file sent in parts as for one sent whole */
+test("R119 (the parts): a file begun in parts is judged against its kind's bound by its declared name, before any part is accepted; a refused kind found at the completion is not filed and its session is gone", async () => {
+  const w = setup(), j = registrar(w);
+  const bound = boundOf("spreadsheet", "bytes");
+  const over = await w.c.beginPartedUpload({ sha256: sha("x"), bytes: bound + 1, statement: STATEMENT, name: "t.csv", by: "m1" });
+  assert.deepEqual([over.ok, over.reason, over.size, over.bound, over.key], [false, "TOO_LARGE", bound + 1, bound, "limit.spreadsheet.bytes"]);
+  assert.equal(w.b.mp.created.length, 0, "no upload was begun with the bucket");
+  /* the completion: a RAR is refused by its bytes and files nothing, whatever it was named */
+  const rar = varied(2500, 5); rar.set([0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00], 0);
+  const before = tables(w);
+  const { b, done } = await send(w, rar, { beginExtra: { name: "minutes.txt" } });
+  assert.equal(b.ok, true);
+  assert.deepEqual([done.ok, done.reason, done.check, done.kind], [false, "FILE_KIND_REFUSED", "C-118.13", "rar"]);
+  assert.deepEqual(w.c.provenance.receipts, [], "no receipt");
+  assert.deepEqual(j.rows(), [], "no job row");
+  assert.deepEqual(tables(w), before, "nothing written");
+  assert.equal(w.s.db.prepare(`SELECT count(*) n FROM parted_uploads`).get().n, 0, "the session is removed");
 });

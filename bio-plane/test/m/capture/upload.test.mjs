@@ -9,6 +9,7 @@ import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { provenanceOf, UPLOAD_VIA } from "../../../src/provenance/index.mjs";
 import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX, textTypeOf } from "../../../src/acquisition/index.mjs";
 import { PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { holdsWorld } from "../provenance/fixtures.mjs";
 
 const te = new TextEncoder();
@@ -96,9 +97,10 @@ test("R86 (acquisition R10): zero bytes is EMPTY and no bytes at all NO_BODY, ea
   assert.deepEqual([one.ok, one.capture], [true, { sha256: sha(Uint8Array.of(7)), bytes: 1 }]);
 });
 
-test("R86 R111 (acquisition R10, R114): more than the lower of the capture ceiling (256 MiB) and the platform's request ceiling (100 MiB) is TOO_LARGE (413) naming its size and that figure, with the stream cancelled, and no receipt, actor or document; exactly the figure is admitted, held in parts of 8 MiB", async () => {
-  assert.equal(CAPTURE_MAX, 256 * MiB);
+test("R86 R111 (acquisition R10, R114): more than the lower of the capture ceiling (the archive row, 500 MB) and the platform's request ceiling (100 MiB) is TOO_LARGE (413) naming its size and that figure, with the stream cancelled, and no receipt, actor or document; exactly the figure is admitted, held in parts of 8 MiB", async () => {
+  assert.equal(CAPTURE_MAX, boundOf("archive", "uploaded_bytes"));
   const ceiling = PLATFORM_FIGURES.request_body_max.value;
+  assert.ok(ceiling < CAPTURE_MAX);
   assert.equal(ceiling, 100 * MiB, "today the platform's ceiling is the lower, so it is the one a member meets");
   const chunk = new Uint8Array(8 * MiB).fill(0x61);
   const big = setup();
@@ -307,8 +309,8 @@ test("R92: a two-line plain-text file uploaded with text/plain is profiled from 
   assert.equal(r.ok, true);
   const p = r.document.profile;
   assert.equal(p.profiled_from_text, true);
-  /* the format registry has no plain-text entry (formats.mjs), so format is what it answers for text/plain: the same as a fetched .txt's */
-  assert.deepEqual(p.format.signals.at(-1), 'content type "text/plain" matched no registered format', "format judged from the declared type");
+  /* the format is what the registry answers for these bytes with text/plain declared: the same as a fetched .txt's */
+  assert.equal(p.format.format, "text", "format judged from the bytes and the declared type");
   assert.deepEqual([p.source_content_type, p.declared_by], ["text/plain", "uploader"]);
   assert.ok(!/"transport"|"headers"/.test(JSON.stringify(r.document.capture)), "no header or transport recorded");
 });
@@ -328,7 +330,7 @@ test("R92 (controls): the same bytes with no type profile as before; text/plain 
   const viaBom = (await setup().c.uploadCapture({ ...ok, bytes: bom, type: "text/plain" })).document.profile;
   assert.equal(textTypeOf({ bytes: bom, type: "text/plain" }), "text/plain", "acquisition decodes a byte order mark as text");
   assert.equal(viaBom.profiled_from_text, true, "an upload reads it as text too");
-  const binary = new Uint8Array([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1, 0]);
+  const binary = new Uint8Array([0x01, 0x02, 0x80, 0x81, 0xfe, 0xff, 3, 0]);
   const notText = (await setup().c.uploadCapture({ ...ok, bytes: binary, type: "text/plain" })).document.profile;
   assert.equal(textTypeOf({ bytes: binary, type: "text/plain" }), null);
   assert.equal(notText.profiled_from_text, false, "bytes acquisition does not decode as text are not profiled from text");

@@ -225,7 +225,7 @@ test("R68 (R63): reattest refuses BAD_SHA, and R63's absence when no bytes are h
   assert.equal(captureOps(rw.c, new URL(`http://x/lateattestations?capture=${rw.d}`), null, rw.c.env).lateattestations().late_attestations[0].by, "m9");
 });
 
-test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .6, .8, .9, .10 and .11, each at the site in capture that raises it, with the translations the requirements state; the rows that moved to doorbell (C-85.1–C-85.5, C-118.2, .3, .4, .7) are defined in doorbell's table alone, none of them here", () => {
+test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .6, .8, .9, .10, .11, .12 and .13, each at the site in capture that raises it, with the translations the requirements state; the rows that moved to doorbell (C-85.1–C-85.5, C-118.2, .3, .4, .7) are defined in doorbell's table alone, none of them here", () => {
   const want = {
     EVIDENCE_NOT_HELD: ["C-118.1", true, /^src\/capture\/ops\.mjs evidenceAbsent > is-evidence-held$/],
     NOT_THE_CAPTURING_ACTOR: ["C-118.5", true,
@@ -239,6 +239,9 @@ test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .
     UPLOAD_NO_STATEMENT: ["C-118.10", true, /^src\/capture\/index\.mjs uploadCapture > is-upload-stated$/],
     /* R101 (T51 fix round 3): C-118.11, the design's `refusal.CAPTURE_NOT_HELD` words */
     CAPTURE_NOT_HELD: ["C-118.11", true, /^src\/capture\/index\.mjs fileSeenIn > is-capture-held$/],
+    /* T53 (R116, R119): C-118.12 and C-118.13, the design's keys read through `localize` as stand-ins */
+    MAIL_NO_STATEMENT: ["C-118.12", true, /^src\/capture\/index\.mjs emailCapture > is-mail-stated$/],
+    FILE_KIND_REFUSED: ["C-118.13", true, /^src\/capture\/index\.mjs uploadCapture > is-file-kind-kept$/],
   };
   /* control: capture's own six rows are present, each whole */
   assert.deepEqual(Object.keys(CAPTURE_CHECKS).sort(), Object.keys(want).sort(), "capture's own rows, and only those");
@@ -246,7 +249,8 @@ test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .
     const row = CAPTURE_CHECKS[code];
     assert.equal(row.check, check, code);
     /* T50 (N1116): every row's translation is the words of its key, refusal.<CODE>, read through setup-words */
-    assert.equal(row.translation, word(`refusal.${code}`), code);
+    /* T53: the two new rows read the design's key through `localize` as a stand-in until the word table holds it (the build step extracts it) */
+    if (!["MAIL_NO_STATEMENT", "FILE_KIND_REFUSED"].includes(code)) assert.equal(row.translation, word(`refusal.${code}`), code);
     assert.ok(translation && row.translation.length > 0, code);
     assert.match(row.where, where, code);
     assert.ok(Object.isFrozen(row));
@@ -265,9 +269,9 @@ test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .
     assert.match(r.where, /^src\/capture\//, `${code}: raised at a site in capture`);
     assert.ok(!/^C-85\./.test(r.check), `${code}: the knock's family is not defined here`);
   }
-  /* C-118's numbers here: capture's own, so the next free number capture mints is C-118.12 (R101 minted .11) */
+  /* C-118's numbers here: capture's own, so the next free number capture mints is C-118.14 (R101 minted .11, T53's R116 .12 and R119 .13) */
   const nums = Object.values(CAPTURE_CHECKS).map((r) => Number(/^C-118\.(\d+)$/.exec(r.check)[1])).sort((a, b) => a - b);
-  assert.deepEqual(nums, [1, 5, 6, 8, 9, 10, 11]);
+  assert.deepEqual(nums, [1, 5, 6, 8, 9, 10, 11, 12, 13]);
 });
 
 /* N388 (REC-30): the two capture reads that took no viewer. A project bundle hides its captures from a member who does
