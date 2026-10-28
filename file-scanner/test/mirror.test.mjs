@@ -143,7 +143,7 @@ test('R8 GET /version: name, version, ClamAV\'s and the renderer\'s versions, th
   assert.deepEqual(Object.keys(v), ['ok', 'name', 'version', 'clamav_version', 'signatures', 'providers', 'reputation_lists', 'renderer_version', 'bounds']);
   assert.deepEqual([v.ok, v.name, v.version], [true, 'file-scanner', '0.79.0']);
   assert.match(v.clamav_version, /^\d+\.\d+\.\d+/);
-  assert.match(v.renderer_version, /^libreoffice \S+; poppler-utils \S+$/);
+  assert.match(v.renderer_version, /^libreoffice \S+; poppler-utils \S+; sha256:[0-9a-f]{64}$/);
   assert.deepEqual(v.signatures.versions, { main: 62, daily: 27788, bytecode: 336, published: '2026-10-06T08:21:00.000Z' });
   assert.equal(v.signatures.mirrored_at, new Date(NOW).toISOString());
   assert.equal(v.signatures.last_error, null);

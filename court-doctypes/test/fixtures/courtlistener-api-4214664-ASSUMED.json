@@ -1,0 +1,584 @@
+{
+ "_fixture": "ASSUMED, not captured: the shape of CourtListener's docket-entries answer assumed from its published description, carrying the entries of docket 4214664 page 4 as the HTML fixture states them; to be replaced by a member's authenticated call (M-R9)",
+ "count": 27,
+ "next": null,
+ "previous": null,
+ "results": [
+  {
+   "id": 8000000,
+   "entry_number": null,
+   "date_filed": "2023-09-21",
+   "description": "",
+   "recap_documents": [
+    {
+     "id": 9000000,
+     "document_number": null,
+     "attachment_number": null,
+     "description": ".Order",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000001,
+   "entry_number": null,
+   "date_filed": "2023-09-21",
+   "description": "MINUTE ORDER: In light of the 153 Order granting plaintiffs' 148 Revised Motion for Preliminary Approval of Class Settlement, plaintiffs' original 140 Motion for Preliminary Approval of Class Settlement is hereby DENIED AS MOOT. Signed by Judge Paul L. Friedman on September 21, 2023. (lceh)",
+   "recap_documents": [
+    {
+     "id": 9000010,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "Order",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000002,
+   "entry_number": 160,
+   "date_filed": "2023-10-03",
+   "description": "REPLY to opposition to motion re 158 MOTION for Settlement Final Approval MOTION for Attorney Fees, Costs, and Expenses filed by ALLIANCE FOR JUSTICE, NATIONAL CONSUMER LAW CENTER, NATIONAL VETERANS LEGAL SERVICES PROGRAM. (Attachments: # 1 Declaration of Brian Fitzpatrick, # 2 Declaration of William Rubenstein, # 3 Declaration of Deepak Gupta, # 4 Declaration of Meghan Oliver, # 5 Declaration of Gio Santiago)(Gupta, Deepak)",
+   "recap_documents": [
+    {
+     "id": 9000020,
+     "document_number": "160",
+     "attachment_number": null,
+     "description": "Reply to opposition to Motion",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000021,
+     "document_number": "160",
+     "attachment_number": 1,
+     "description": "Declaration of Brian Fitzpatrick",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000022,
+     "document_number": "160",
+     "attachment_number": 2,
+     "description": "Declaration of William Rubenstein",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000023,
+     "document_number": "160",
+     "attachment_number": 3,
+     "description": "Declaration of Deepak Gupta",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000024,
+     "document_number": "160",
+     "attachment_number": 4,
+     "description": "Declaration of Meghan Oliver",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000025,
+     "document_number": "160",
+     "attachment_number": 5,
+     "description": "Declaration of Gio Santiago",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000003,
+   "entry_number": 161,
+   "date_filed": "2023-10-04",
+   "description": "ORDER changing Settlement Hearing location. The Settlement Hearing will be held on October 12, 2023, at 10:00 a.m. (Eastern Daylight Time) in Courtroom 29 in the William B. Bryant Annex to the United States District Court for the District of Columbia, 333 Constitution Avenue N.W., Washington, D.C. 20001. See Order for details. Signed by Judge Paul L. Friedman on October 4, 2023. (lcak)",
+   "recap_documents": [
+    {
+     "id": 9000030,
+     "document_number": "161",
+     "attachment_number": null,
+     "description": "Order",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000004,
+   "entry_number": 162,
+   "date_filed": "2023-10-04",
+   "description": "ORDER setting Settlement Hearing procedures. See Order for details. Signed by Judge Paul L. Friedman on October 4, 2023. (lcak)",
+   "recap_documents": [
+    {
+     "id": 9000040,
+     "document_number": "162",
+     "attachment_number": null,
+     "description": "Order",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000005,
+   "entry_number": 163,
+   "date_filed": "2023-10-06",
+   "description": "OBJECTION re 162 Order, Memorandum & Opinion filed by DON KOZICH. (Attachments: # 1 Exhibits, # 2 Certificate of Service)(zjm)",
+   "recap_documents": [
+    {
+     "id": 9000050,
+     "document_number": "163",
+     "attachment_number": null,
+     "description": "Response to Document",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000051,
+     "document_number": "163",
+     "attachment_number": 1,
+     "description": "Exhibits",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000052,
+     "document_number": "163",
+     "attachment_number": 2,
+     "description": "Certificate of Service",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000006,
+   "entry_number": 164,
+   "date_filed": "2023-10-06",
+   "description": "MOTION for Leave to Appear by Telephone or Zoom by DON KOZICH. (See Docket Entry 163 to view document) (zjm)",
+   "recap_documents": [
+    {
+     "id": 9000060,
+     "document_number": "164",
+     "attachment_number": null,
+     "description": "Main Document",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000007,
+   "entry_number": 165,
+   "date_filed": "2023-10-11",
+   "description": "RESPONSE re 163 OBJECTION Final Approval MOTION for Attorney Fees, Costs, and Expenses filed by ALLIANCE FOR JUSTICE, NATIONAL CONSUMER LAW CENTER, NATIONAL VETERANS LEGAL SERVICES PROGRAM. (Gupta, Deepak) Modified on 10/12/2023 to correct event/ docket link (zjm).",
+   "recap_documents": [
+    {
+     "id": 9000070,
+     "document_number": "165",
+     "attachment_number": null,
+     "description": "Reply to opposition to Motion",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000008,
+   "entry_number": null,
+   "date_filed": "2023-10-11",
+   "description": "",
+   "recap_documents": [
+    {
+     "id": 9000080,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "Appear by Telephone",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000009,
+   "entry_number": null,
+   "date_filed": "2023-10-11",
+   "description": "Set/Reset Hearings: Settlement Hearing set for 10/12/2023 at 10:00 AM in Courtroom 29A- In Person (Audio Line Available) before Judge Paul L. Friedman. (tj)",
+   "recap_documents": [
+    {
+     "id": 9000090,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "Set/Reset Hearings",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000010,
+   "entry_number": null,
+   "date_filed": "2023-10-11",
+   "description": "MINUTE ORDER granting Don Kozich's 164 Motion to Appear Telephonically or by Zoom. Zoom details will be sent in advance of the Settlement Hearing. Signed by Judge Paul L. Friedman on October 11, 2023. (lcak)",
+   "recap_documents": [
+    {
+     "id": 9000100,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "Order on Motion for Leave to Appear by Telephone",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000011,
+   "entry_number": 166,
+   "date_filed": "2023-10-11",
+   "description": "NOTICE of Filing of Objections by ALLIANCE FOR JUSTICE, NATIONAL CONSUMER LAW CENTER, NATIONAL VETERANS LEGAL SERVICES PROGRAM (Attachments: # 1 Exhibit Greenspan Objection, # 2 Exhibit Jiggetts Objection, # 3 Exhibit Miller Objection, # 4 Exhibit Kozich Objection, # 5 Exhibit Isaacson Objection, # 6 Exhibit Isaacson Written Statement)(Gupta, Deepak)",
+   "recap_documents": [
+    {
+     "id": 9000110,
+     "document_number": "166",
+     "attachment_number": null,
+     "description": "Notice (Other)",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000111,
+     "document_number": "166",
+     "attachment_number": 1,
+     "description": "Exhibit Greenspan Objection",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000112,
+     "document_number": "166",
+     "attachment_number": 2,
+     "description": "Exhibit Jiggetts Objection",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000113,
+     "document_number": "166",
+     "attachment_number": 3,
+     "description": "Exhibit Miller Objection",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000114,
+     "document_number": "166",
+     "attachment_number": 4,
+     "description": "Exhibit Kozich Objection",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000115,
+     "document_number": "166",
+     "attachment_number": 5,
+     "description": "Exhibit Isaacson Objection",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000116,
+     "document_number": "166",
+     "attachment_number": 6,
+     "description": "Exhibit Isaacson Written Statement",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000012,
+   "entry_number": null,
+   "date_filed": "2023-10-12",
+   "description": "",
+   "recap_documents": [
+    {
+     "id": 9000120,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "Settlement Conference AND ~Util - Set/Reset Hearings",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000013,
+   "entry_number": null,
+   "date_filed": "2023-10-12",
+   "description": "Minute Entry for proceedings held before Judge Paul L. Friedman: Settlement Hearing held on 10/12/2023. The court takes all filings and oral argument under consideration. (Court Reporter: Elizabeth Saint Loth.) (tj)",
+   "recap_documents": [
+    {
+     "id": 9000130,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "Settlement Conference",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000014,
+   "entry_number": 167,
+   "date_filed": "2023-10-13",
+   "description": "NOTICE of Appearance by Meghan S.B. Oliver on behalf of ALLIANCE FOR JUSTICE, NATIONAL CONSUMER LAW CENTER, NATIONAL VETERANS LEGAL SERVICES PROGRAM (Oliver, Meghan)",
+   "recap_documents": [
+    {
+     "id": 9000140,
+     "document_number": "167",
+     "attachment_number": null,
+     "description": "Notice of Appearance",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000015,
+   "entry_number": 168,
+   "date_filed": "2023-10-13",
+   "description": "NOTICE Notice of Submission of Payment Notification Forms by ALLIANCE FOR JUSTICE, NATIONAL CONSUMER LAW CENTER, NATIONAL VETERANS LEGAL SERVICES PROGRAM (Attachments: # 1 Exhibit 1 - Account Holder Notification Form, # 2 Exhibit 2 -Payer Notification Form, # 3 Exhibit 3 - USO Payment Notification - Email Template, # 4 Exhibit 4 - Dispute Form)(Narwold, William)",
+   "recap_documents": [
+    {
+     "id": 9000150,
+     "document_number": "168",
+     "attachment_number": null,
+     "description": "Notice (Other)",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000151,
+     "document_number": "168",
+     "attachment_number": 1,
+     "description": "Exhibit 1 - Account Holder Notification Form",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000152,
+     "document_number": "168",
+     "attachment_number": 2,
+     "description": "Exhibit 2 -Payer Notification Form",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000153,
+     "document_number": "168",
+     "attachment_number": 3,
+     "description": "Exhibit 3 - USO Payment Notification - Email Template",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000154,
+     "document_number": "168",
+     "attachment_number": 4,
+     "description": "Exhibit 4 - Dispute Form",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000016,
+   "entry_number": 169,
+   "date_filed": "2024-03-20",
+   "description": "OPINION granting Plaintiffs' 158 Motion for Final Approval of Class Settlement and for Attorneys' Fees, Costs, and Service Awards. See Opinion for details. Signed by Judge Paul L. Friedman on March 20, 2024. (ATM)",
+   "recap_documents": [
+    {
+     "id": 9000160,
+     "document_number": "169",
+     "attachment_number": null,
+     "description": "Memorandum & Opinion",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000017,
+   "entry_number": 170,
+   "date_filed": "2024-03-20",
+   "description": "FINAL JUDGMENT AND ORDER granting 158 Plaintiffs' Motion for Final Approval of Class Settlement and for Attorneys' Fees, Costs, and Service Awards. See Final Judgment and Order for details. Signed by Judge Paul L. Friedman on March 20, 2024. (ATM)",
+   "recap_documents": [
+    {
+     "id": 9000170,
+     "document_number": "170",
+     "attachment_number": null,
+     "description": "Memorandum & Opinion",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000018,
+   "entry_number": 171,
+   "date_filed": "2024-04-18",
+   "description": "ENTERED IN ERROR.....NOTICE OF APPEAL TO DC CIRCUIT COURT as to 170 Memorandum & Opinion,, Order, 169 Memorandum & Opinion by ERIC ALAN ISAACSON. Filing fee $ 605, receipt number 207171. Fee Status: Fee Paid. Parties have been notified. (zjm) Modified on 4/24/2024 (zjm).",
+   "recap_documents": [
+    {
+     "id": 9000180,
+     "document_number": "171",
+     "attachment_number": null,
+     "description": "Notice of Appeal to DC Circuit Court",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000019,
+   "entry_number": 172,
+   "date_filed": "2024-04-24",
+   "description": "ENTERED IN ERROR.....Transmission of the Notice of Appeal, Order Appealed ( Opinion), and Docket Sheet to US Court of Appeals. The Court of Appeals fee was paid re 171 Notice of Appeal to DC Circuit Court. (zjm) Modified on 4/24/2024 (zjm).",
+   "recap_documents": [
+    {
+     "id": 9000190,
+     "document_number": "172",
+     "attachment_number": null,
+     "description": "Transmission of Notice of Appeal and Docket Sheet to USCA",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000020,
+   "entry_number": 173,
+   "date_filed": "2024-04-24",
+   "description": "NOTICE OF APPEAL to the Federal Circuit as to 170 Order, 169 Opinion by ERIC ALAN ISAACSON. Filing fee $ 605, receipt number 207171. Fee Status: Fee Paid. Parties have been notified. (zjm)",
+   "recap_documents": [
+    {
+     "id": 9000200,
+     "document_number": "173",
+     "attachment_number": null,
+     "description": "Notice of Appeal to the Federal Circuit",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000021,
+   "entry_number": 174,
+   "date_filed": "2024-04-24",
+   "description": "Transmission of the Notice of Appeal, Order Appealed ( Opinion), and Docket Sheet to Federal Circuit. The appeal fee was paid re 173 Notice of Appeal to the Federal Circuit. (zjm)",
+   "recap_documents": [
+    {
+     "id": 9000210,
+     "document_number": "174",
+     "attachment_number": null,
+     "description": "Transmission of Notice of Appeal and Docket Sheet to Federal Circuit",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000022,
+   "entry_number": null,
+   "date_filed": "2024-04-30",
+   "description": "USCA Case Number 24-1757 for 173 Notice of Appeal to the Federal Circuit filed by ERIC ALAN ISAACSON. (znmw)",
+   "recap_documents": [
+    {
+     "id": 9000220,
+     "document_number": null,
+     "attachment_number": null,
+     "description": "USCA Case Number",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000023,
+   "entry_number": 175,
+   "date_filed": "2024-05-15",
+   "description": "TRANSCRIPT OF PROCEEDINGS, before Judge Paul L. Friedman, held on 10-12-2023; Page Numbers: 1 - 112. Date of Issuance: 5-15-2024. Court Reporter: Elizabeth SaintLoth, Telephone number: 202-354-3242. Transcripts may be ordered by submitting the Transcript Order FormFor the first 90 days after this filing date, the transcript may be viewed at the courthouse at a public terminal or purchased from the court reporter referenced above. After 90 days, the transcript may be accessed via PACER. Other transcript formats, (multi-page, condensed, CD or ASCII) may be purchased from the court reporter.NOTICE RE REDACTION OF TRANSCRIPTS: The parties have twenty-one days to file with the court and the court reporter any request to redact personal identifiers from this transcript. If no such requests are filed, the transcript will be made available to the public via PACER without redaction after 90 days. The policy, which includes the five personal identifiers specifically covered, is located on our website at www.dcd.uscourts.gov. Redaction Request due 6/5/2024. Redacted Transcript Deadline set for 6/15/2024. Release of Transcript Restriction set for 8/13/2024.(Saint-Loth, Elizabeth)",
+   "recap_documents": [
+    {
+     "id": 9000230,
+     "document_number": "175",
+     "attachment_number": null,
+     "description": "Transcript",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000024,
+   "entry_number": 176,
+   "date_filed": "2024-05-24",
+   "description": "TRANSCRIPT OF STATUS CONFERENCE before Judge Paul L. Friedman held on 02/22/2023. Page Numbers: 1-13. Date of Issuance: 05/24/2024. Court Reporter: Sara Wick, telephone number 202-354-3284. Transcripts may be ordered by submitting the Transcript Order FormFor the first 90 days after this filing date, the transcript may be viewed at the courthouse at a public terminal or purchased from the court reporter referenced above. After 90 days, the transcript may be accessed via PACER. Other transcript formats, (multi-page, condensed, CD or ASCII) may be purchased from the court reporter.NOTICE RE REDACTION OF TRANSCRIPTS: The parties have twenty-one days to file with the court and the court reporter any request to redact personal identifiers from this transcript. If no such requests are filed, the transcript will be made available to the public via PACER without redaction after 90 days. The policy, which includes the five personal identifiers specifically covered, is located on our website at www.dcd.uscourts.gov. Redaction Request due 6/14/2024. Redacted Transcript Deadline set for 6/24/2024. Release of Transcript Restriction set for 8/22/2024.(Wick, Sara)",
+   "recap_documents": [
+    {
+     "id": 9000240,
+     "document_number": "176",
+     "attachment_number": null,
+     "description": "Transcript",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000025,
+   "entry_number": 177,
+   "date_filed": "2024-10-30",
+   "description": "LEAVE TO FILE DENIED- Letter. This document is unavailable as the Court denied its filing. Pro Se party has been notified by first class mail. \"Leave to file DENIED.\" Signed by Judge Paul L. Friedman on 10/30/2024. (mg)",
+   "recap_documents": [
+    {
+     "id": 9000250,
+     "document_number": "177",
+     "attachment_number": null,
+     "description": "Main Document",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  },
+  {
+   "id": 8000026,
+   "entry_number": 178,
+   "date_filed": "2026-06-12",
+   "description": "MANDATE of USCA as to 173 Notice of Appeal to the Federal Circuit filed by ERIC ALAN ISAACSON ; USCA Case Number 24-1757. (Attachments: # 1 USCA Judgment March 20, 2026)(zjm)",
+   "recap_documents": [
+    {
+     "id": 9000260,
+     "document_number": "178",
+     "attachment_number": null,
+     "description": "USCA Mandate",
+     "is_available": true,
+     "is_sealed": false
+    },
+    {
+     "id": 9000261,
+     "document_number": "178",
+     "attachment_number": 1,
+     "description": "USCA Judgment March 20, 2026",
+     "is_available": true,
+     "is_sealed": false
+    }
+   ]
+  }
+ ]
+}
