@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7574 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7591 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -24097,11 +24097,28 @@ export const WORD_ROWS = Object.freeze([
   ["image-cover.jpeg.multi_scan_sequential_length_of","multi-scan sequential: {length} of {nc} components in the first scan",null,null,false,"code"],
   ["image-cover.jpeg.the_jpeg_data_cannot_be","the JPEG data cannot be read{v1}",null,null,false,"code"],
   ["image-cover.jpeg.the_jpeg_data_ends_before","the JPEG data ends before the image does{v1}",null,null,false,"code"],
+  ["image-cover.jpeg.the_jpeg_is_past_a_bound","the JPEG declares more than this module reads{v1}",null,null,false,"code"],
   ["image-cover.jpeg.this_jpegs_coding_is_not","this JPEG's coding is not covered ({code}{v1}); only baseline or extended-sequential Huffman, 8-bit, one scan, grey or three components",null,null,false,"code"],
+  ["image-cover.photo.the_photo_is_length_bytes","the photo is {length} bytes, over the {COVER_MAX_BYTES} this module reads",null,null,false,"code"],
+  ["image-cover.photo.the_photo_is_neither_a_jpeg_nor_a_png","the photo is neither a JPEG nor a PNG",null,null,false,"code"],
+  ["image-cover.photo.the_photos_bytes_are_not_a_byte_array","the photo's bytes are not a byte array",null,null,false,"code"],
   ["image-cover.png.png_bit_depth_depth_only","PNG bit depth {depth}; only 8-bit PNGs are covered",null,null,false,"code"],
   ["image-cover.png.png_colour_type_ct_is","PNG colour type {ct} is not defined",null,null,false,"code"],
   ["image-cover.png.the_png_data_cannot_be","the PNG data cannot be read: {why}",null,null,false,"code"],
   ["image-cover.png.the_png_data_ends_before","the PNG data ends before the image does: {why}",null,null,false,"code"],
+  ["image-cover.redraw.an_interlaced_adam7_png_is","an interlaced (Adam7) PNG is not redrawn",null,null,false,"code"],
+  ["image-cover.redraw.decoded_frame","decoded frame",null,null,false,"code"],
+  ["image-cover.redraw.not_a_png","not a PNG{note}",null,null,false,"code"],
+  ["image-cover.redraw.redrawn_picture","redrawn picture",null,null,false,"code"],
+  ["image-cover.redraw.the_images_structure_cannot_be","the image's data cannot be read ({v1})",null,null,false,"code"],
+  ["image-cover.redraw.the_photo_is_length_bytes","the photo is {length} bytes, over the {COVER_MAX_BYTES} this module redraws",null,null,false,"code"],
+  ["image-cover.redraw.the_photo_is_neither_a_jpeg_nor_a_png","the photo is neither a JPEG nor a PNG",null,null,false,"code"],
+  ["image-cover.redraw.the_photos_bytes_are_not_a_byte_array","the photo's bytes are not a byte array",null,null,false,"code"],
+  ["image-cover.redraw.the_png_declares_more_than","the PNG declares more than this module redraws{v1}",null,null,false,"code"],
+  ["image-cover.redraw.the_png_has_no_header","the PNG has no readable header",null,null,false,"code"],
+  ["image-cover.redraw.the_png_uses_a_feature","the PNG uses a feature that is not redrawn{note}",null,null,false,"code"],
+  ["image-cover.redraw.the_what_is_size_over","the {what} is {size} bytes, over the {bound} this module redraws",null,null,false,"code"],
+  ["image-cover.redraw.this_jpegs_coding_is_not","this JPEG has {n} components; only grey or three are redrawn",null,null,false,"code"],
   ["image-cover.strip.a_box_header_runs_past_its_container","a box header runs past its container",null,null,false,"code"],
   ["image-cover.strip.a_chunk_runs_past_the_end_of_the_file","a chunk runs past the end of the file",null,null,false,"code"],
   ["image-cover.strip.a_chunk_type_that_is","a chunk type that is not four letters at byte {p}",null,null,false,"code"],

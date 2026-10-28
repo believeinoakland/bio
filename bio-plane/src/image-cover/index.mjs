@@ -15,6 +15,9 @@ import { CoverRefusal, checkAreas, COVER_MAX_BYTES, COVER_MAX_PIXELS } from "./g
 import { coverJpeg } from "./jpeg.mjs";
 import { coverPng } from "./png.mjs";
 import { stripImage } from "./strip.mjs";
+export { redrawPicture, REDRAW_MAX_BYTES } from "./redraw.mjs";
+export { photoFactsOf, LEFT_OUT_KINDS } from "./photo.mjs";
+export { PHOTO_PROFILE_MAX, checkProfile } from "./photo-icc.mjs";
 import { localize, word } from "../setup-words/index.mjs";
 
 /* The ceilings this module keeps are read from `READ_BOUNDS` (R3, R10, R11): `geometry.mjs` holds them. */

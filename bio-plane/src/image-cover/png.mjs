@@ -113,7 +113,7 @@ function unfilter(type, row, prev, bpp) {
     default: throw corrupt(`a row has filter type ${type}`);
   }
 }
-function filter(type, row, prev, bpp, out) {
+export function filter(type, row, prev, bpp, out) {
   const n = row.length;
   out[0] = type;
   for (let i = 0; i < n; i++) {
