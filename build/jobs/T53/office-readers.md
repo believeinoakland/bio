@@ -1,6 +1,6 @@
 # office-readers (T53)
 
-**Status** · session_018BhcegdvdcHawV5kVZ1wKW · depth 2 · NEEDS BOB: R46 sizing: the child imports plane's shape harness and probe (later module, architecture check refuses); choose how the probe takes a row count
+**Status** · session_018BhcegdvdcHawV5kVZ1wKW · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -101,3 +101,30 @@ Size (session_018BhcegdvdcHawV5kVZ1wKW): test runs 2, module lines 4735
 
 Tests: 164/164. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcegdvdcHawV5kVZ1wKW): test runs 3, module lines 4735
+
+## Completion (2026-10-28)
+
+# office-readers (T53) · CHANGE T53-541 (K5655, reworded) · report
+
+**Entries applied**
+- T53-541, reworded by K5655: R46's platform-shape case no longer runs plane's probe and imports nothing from a later module.
+  - `r46-memory.test.mjs`: the largest workbook under `boundOf('xlsx','declared_text')` is built with the shared `sheetgen` (two sample sheets give the bytes a row; the estimate is corrected against the generated sheet's own declared bytes, read from the zip64 records).
+  - Five runs of `r46-read-child.mjs`, each pinned to core 0 beside three CPU burners on that core; each child reads the sheet with `xlsxEntry.text()`. Old space is the child's idle heap plus `capFor(128)` (from `src/byte-ledger.mjs`).
+  - Removed `r46-shape-child.mjs` (it imported plane's harness).
+
+**R46 measurement (the bar is 85 % of capFor(128))**
+- 140,780 rows, declared 24,602,450 B (under 25,000,000 B).
+- Old space 96 MB = idle 17.4 + capFor(128) 78; the margin is 66.3 MB.
+- Peaks above start over five runs: 16.9, 17.6, 17.2, 17.1, 16.7 MB. Largest: 17.6 MB = 22.5 % of capFor(128). PASS.
+- This measures the read's own memory above its start. Plane's ledger (the probe's whole-path figure) is plane's job (T53-546).
+
+**Tests**
+- Suite at the active figures: 164/164, no new red.
+
+**Found in other modules**
+- None.
+
+**Met** · none
+
+Tests: 164/164. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcegdvdcHawV5kVZ1wKW): test runs 4, module lines 4735
