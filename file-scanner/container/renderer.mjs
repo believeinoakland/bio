@@ -12,7 +12,7 @@
 //                                                       or {ok:false, code, message?, reason?}. The Worker sends every figure (it
 //                                                       quotes them from the table, which the image cannot import); a
 //                                                       render without them is refused 400 LIMITS_MISSING (R7, R16).
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
 import { readdir, readFile, open, rename, stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
 import { createHash } from 'node:crypto';
@@ -211,10 +211,27 @@ function figuresOf(url) {
   return f;
 }
 
+/** The private profile's settings (R7, R12; as reader-container's): macros and active content off, links never updated, and
+ *  every link from a document outside the trusted locations blocked (BlockUntrustedRefererLinks: without it LibreOffice
+ *  fetches a linked picture on load, so a rendered file could reach out). */
+export const PROFILE_SETTINGS = `<?xml version="1.0" encoding="UTF-8"?>
+<oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="DisableMacrosExecution" oor:op="fuse"><value>true</value></prop></item>
+<item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="MacroSecurityLevel" oor:op="fuse"><value>3</value></prop></item>
+<item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="DisableActiveContent" oor:op="fuse"><value>true</value></prop></item>
+<item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="BlockUntrustedRefererLinks" oor:op="fuse"><value>true</value></prop></item>
+<item oor:path="/org.openoffice.Office.Writer/Content/Update"><prop oor:name="Link" oor:op="fuse"><value>2</value></prop></item>
+<item oor:path="/org.openoffice.Office.Calc/Content/Update"><prop oor:name="Link" oor:op="fuse"><value>1</value></prop></item>
+<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="FirstRun" oor:op="fuse"><value>false</value></prop></item>
+</oor:items>
+`;
+
 /** One office conversion of the pages `range` (LibreOffice's `PageRange`, so a page outside it is never converted); the
  *  PDF's path, or a refusal. */
 async function convert(app, named, dir, outName, range, ms) {
   const filter = `pdf:${app}_pdf_Export:${JSON.stringify({ PageRange: { type: 'string', value: range } })}`;
+  mkdirSync(join(dir, 'profile', 'user'), { recursive: true });
+  writeFileSync(join(dir, 'profile', 'user', 'registrymodifications.xcu'), PROFILE_SETTINGS);
   const r = await run(SOFFICE, ['--headless', '--norestore', '--nolockcheck', '--nodefault',
     `-env:UserInstallation=file://${join(dir, 'profile')}`, '--convert-to', filter, '--outdir', join(dir, outName), named],
   { ms, env: { PATH: process.env.PATH, HOME: dir } });
