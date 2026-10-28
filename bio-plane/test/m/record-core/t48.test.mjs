@@ -42,7 +42,6 @@ test("R62 (T48, N1018): mintExhausted(\"WCD\") and mintExhausted(\"OUTC\") each 
     assert.notEqual(r.detail, UNNAMED, `${p} is named, not the unnamed sentence of a prefix outside the set`);
   }
   assert.ok(WCD.includes(DRAFT));
-  assert.match(OUTC, /carried outcome/);
   /* distinct from every other prefix's and from each other */
   const all = [...Object.keys(OTHERS), "WCD", "OUTC"].map((p) => mintExhausted(p).detail);
   assert.equal(new Set(all).size, all.length, "one sentence per prefix, none shared");

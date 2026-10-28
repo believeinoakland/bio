@@ -38239,28 +38239,28 @@
       "en": "roster act on a project, position-enforced by the store",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1423
+      "line": 1450
     },
     {
       "id": "membership.declared.projectjoin",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1425
+      "line": 1452
     },
     {
       "id": "membership.declared.projectleave",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1427
+      "line": 1454
     },
     {
       "id": "membership.declared.projectremove",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1429
+      "line": 1456
     },
     {
       "id": "membership.index.a_door_makes_at_most",
@@ -38274,7 +38274,7 @@
       "en": "a member joins a project they were invited to. Being uninvited is not a refusal you can see.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1099
+      "line": 1096
     },
     {
       "id": "membership.index.a_member_row_already_holds",
@@ -38302,7 +38302,7 @@
       "en": "{act} on {String} is work inside that project, and {who} has not joined it (§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 650
+      "line": 647
     },
     {
       "id": "membership.index.adding_an_administrator_beyond_the",
@@ -38316,7 +38316,7 @@
       "en": "adding an owner to a project whose owners are all inactive (7.13)",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1188
+      "line": 1215
     },
     {
       "id": "membership.index.administrator_status_is_granted_and",
@@ -38330,7 +38330,7 @@
       "en": "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1201
+      "line": 1228
     },
     {
       "id": "membership.index.an_invitation_lasts_a_whole",
@@ -38344,7 +38344,7 @@
       "en": "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1168
+      "line": 1194
     },
     {
       "id": "membership.index.choose_a_handle_it_is",
@@ -38393,7 +38393,21 @@
       "en": "no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1131
+      "line": 1128
+    },
+    {
+      "id": "membership.index.not_a_participant_detail",
+      "en": "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 §7). Nothing was changed.",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 180
+    },
+    {
+      "id": "membership.index.not_the_owner_detail",
+      "en": "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 204
     },
     {
       "id": "membership.index.only_a_member_whose_status",
@@ -38414,14 +38428,14 @@
       "en": "only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1062
+      "line": 1059
     },
     {
       "id": "membership.index.only_an_owner_of_this_2",
       "en": "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1153
+      "line": 1179
     },
     {
       "id": "membership.index.other_was_chosen_and_the",
@@ -38442,7 +38456,7 @@
       "en": "recorded as a request to leave. An owner of this project removes participants; this does not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1138
+      "line": 1135
     },
     {
       "id": "membership.index.removal_takes_votesneeded_of_administrators",
@@ -38470,35 +38484,35 @@
       "en": "{stringify} is not a setting: a project is \"discoverable\" or \"hidden\", and nothing else. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 954
+      "line": 951
     },
     {
       "id": "membership.index.subject_is_v1_production_and",
       "en": "{subject} is {v1} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is {v2}'s, who is not an owner of it. Being a registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 693
+      "line": 690
     },
     {
       "id": "membership.index.that_handle_is_yours",
       "en": "that handle is yours; you cannot invite yourself to a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1072
+      "line": 1069
     },
     {
       "id": "membership.index.that_member_is_already_in",
       "en": "that member is already a participant of this project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1080
+      "line": 1077
     },
     {
       "id": "membership.index.that_member_is_already_invited",
       "en": "that member is already invited to this project and has not joined yet",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1077
+      "line": 1074
     },
     {
       "id": "membership.index.the_choice_is_tell_or",
@@ -38561,7 +38575,7 @@
       "en": "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1164
+      "line": 1190
     },
     {
       "id": "membership.index.the_password_could_not_be",
@@ -38631,21 +38645,21 @@
       "en": "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1193
+      "line": 1220
     },
     {
       "id": "membership.index.this_project_is_discoverable_and",
       "en": "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 891
+      "line": 888
     },
     {
       "id": "membership.index.this_project_is_hidden_and",
       "en": "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 890
+      "line": 887
     },
     {
       "id": "membership.index.too_many_handles_were_checked",
@@ -38673,14 +38687,14 @@
       "en": "whether {String} can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and {String_2} is not one of them. Seeing a project is not directing it. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 916
+      "line": 913
     },
     {
       "id": "membership.index.whether_this_projects_own_rules",
       "en": "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made on a guess. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 567
+      "line": 564
     },
     {
       "id": "money-checks.index.money_could_not_answer_message",
@@ -46418,6 +46432,13 @@
       "line": 221
     },
     {
+      "id": "record-core.checks.setting_at_invalid",
+      "en": "A part of your team's Civicsmith asked what a setting was at a moment it could not read, so nothing was read. {BUILD_FAULT}",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/checks.mjs",
+      "line": 227
+    },
+    {
       "id": "record-core.checks.the_setting_was_not_changed",
       "en": "The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.",
       "module": "record-core",
@@ -46429,385 +46450,392 @@
       "en": "substrate: id allocation",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 2058
+      "line": 2106
     },
     {
       "id": "record-core.index.a_counts_registration_names_its",
       "en": "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1093
+      "line": 1115
     },
     {
       "id": "record-core.index.a_draft_of_a_new",
       "en": "a draft of a new edition's statement of what changed",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 122
+      "line": 123
     },
     {
       "id": "record-core.index.a_grammar_names_its_module",
       "en": "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1311
+      "line": 1333
     },
     {
       "id": "record-core.index.a_lease_is_taken_under",
       "en": "a lease is taken under a named actor — a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 722
+      "line": 744
     },
     {
       "id": "record-core.index.a_mint_seed_names_its",
       "en": "a mint seed names its module and a list of [prefix, table, column] sources, each three non-empty strings; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 705
+      "line": 727
     },
     {
       "id": "record-core.index.a_part_of_the_document",
       "en": "Part {n} of {parts} of the document was not held. Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1993
+      "line": 2041
     },
     {
       "id": "record-core.index.a_setting_is_recorded_under",
       "en": "a setting is recorded under a name, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1913
+      "line": 1935
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with",
       "en": "a setting is recorded with who set it, and no one was named; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1915
+      "line": 1937
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with_2",
       "en": "a setting is recorded with a value, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1917
+      "line": 1939
     },
     {
       "id": "record-core.index.a_settings_value_is_stored",
       "en": "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1920
+      "line": 1942
     },
     {
       "id": "record-core.index.a_statistics_source_names_its",
       "en": "a statistics source names its module and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1175
+      "line": 1197
     },
     {
       "id": "record-core.index.a_store_gate_names_its",
       "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1764
+      "line": 1786
     },
     {
       "id": "record-core.index.a_store_gate_names_its_2",
       "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1763
+      "line": 1785
     },
     {
       "id": "record-core.index.a_whole_document_is_named",
       "en": "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1982
+      "line": 2030
     },
     {
       "id": "record-core.index.allocid_needs_a_prefix",
       "en": "op=allocid needs a prefix, the kind of object the id is for. Nothing was allocated.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 597
+      "line": 619
     },
     {
       "id": "record-core.index.allocid_needs_a_year",
       "en": "op=allocid needs a year, the year the id is for. Nothing was allocated.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 603
+      "line": 625
     },
     {
       "id": "record-core.index.an_expunge_is_a_members",
       "en": "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1840
+      "line": 1862
     },
     {
       "id": "record-core.index.an_expunge_names_one_of",
       "en": "an expunge names one of the grounds unlawful, confidential, court_order (with the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1836
+      "line": 1858
     },
     {
       "id": "record-core.index.an_opaque_id_to_record",
       "en": "an opaque id to record is a non-empty string; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 653
+      "line": 675
     },
     {
       "id": "record-core.index.an_what_names_its_module",
       "en": "an {what} names its module{v1} and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1257
+      "line": 1279
     },
     {
       "id": "record-core.index.applied_of_count_item_s",
       "en": "{applied} of {count} item(s) applied and {retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand — this is not a rollback.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 258
+      "line": 259
     },
     {
       "id": "record-core.index.every_one_of_the_count",
       "en": "every one of the {count} item(s) was applied, each by op={act}'s own rules.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 253
+      "line": 254
     },
     {
       "id": "record-core.index.gated_ids_are_minted_by",
       "en": "{gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid allocates only a prefix whose objects every caller may see. Nothing was allocated.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 613
+      "line": 635
     },
     {
       "id": "record-core.index.id_is_already_in_the",
       "en": "{id} is already in the opaque-id ledger, or the ledger could not confirm it free; an id is recorded once and never handed out again. Nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 656
+      "line": 678
     },
     {
       "id": "record-core.index.id_was_not_recorded_an",
       "en": "{id} was not recorded: an opaque id is recorded inside the transaction of the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 655
+      "line": 677
     },
     {
       "id": "record-core.index.item_i_is_not_an",
       "en": "item {i} is not an object naming one {act} subject; it was left as it was and the other items were still tried.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 232
+      "line": 233
     },
     {
       "id": "record-core.index.jurisdiction_profiles_is_an_ordered",
       "en": "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1924
+      "line": 1946
     },
     {
       "id": "record-core.index.module_has_already_registered_its",
       "en": "{module} has already registered its mint seed; the first still stands.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 707
+      "line": 729
     },
     {
       "id": "record-core.index.module_has_already_registered_its_2",
       "en": "{module} has already registered its figures; nothing more was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1103
+      "line": 1125
     },
     {
       "id": "record-core.index.module_has_already_registered_its_3",
       "en": "{module} has already registered its {what}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1261
+      "line": 1283
     },
     {
       "id": "record-core.index.module_has_already_registered_its_4",
       "en": "{module} has already registered its grammar; the first still stands.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1315
+      "line": 1337
     },
     {
       "id": "record-core.index.module_s_check_on_table",
       "en": "{module}'s check on {table} did not answer a pass or a refusal{v1}. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1806
+      "line": 1828
     },
     {
       "id": "record-core.index.no_row_of_name_matches",
       "en": "no row of {name} matches the key; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1843
+      "line": 1865
     },
     {
       "id": "record-core.index.op_act_acts_on_at",
       "en": "op={act} acts on at most {PER_ITEM_MAX} items at once and this set holds {length}. Refused WHOLE, before any item was tried, so no item moved.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 200
+      "line": 201
     },
     {
       "id": "record-core.index.op_act_threw_on_item",
       "en": "op={act} threw on item {i} rather than refusing it: {String}. Nothing about the item is claimed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 243
+      "line": 244
     },
     {
       "id": "record-core.index.op_act_was_sent_as",
       "en": "op={act} was sent as a set and the set holds no items. Send `items` as a non-empty array, or send one item's fields without `items` for the single act. Nothing was done.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 196
+      "line": 197
     },
     {
       "id": "record-core.index.read_only_a_record_whose",
       "en": "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1020
+      "line": 1042
     },
     {
       "id": "record-core.index.string_is_not_a_table",
       "en": "{String} is not a table {String_2} declared expunge: tombstone; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1838
+      "line": 1860
     },
     {
       "id": "record-core.index.table_is_already_declared_by",
       "en": "{table} is already declared by {declaredBy}, and a table is declared once; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1528
+      "line": 1550
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and",
       "en": "{table} is derived-rebuildable and names no rebuild; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1521
+      "line": 1543
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and_2",
       "en": "{table} is derived-rebuildable and names no key columns; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1524
+      "line": 1546
     },
     {
       "id": "record-core.index.table_is_module_s_table",
       "en": "{table} is {module}'s table; {String} does not write it. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1783
+      "line": 1805
     },
     {
       "id": "record-core.index.table_names_no_cls_class",
       "en": "{table} names no {cls} class; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1515
+      "line": 1537
     },
     {
       "id": "record-core.index.table_s_checks_are_already",
       "en": "{table}'s checks are already registered by {module}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1767
+      "line": 1789
     },
     {
       "id": "record-core.index.table_s_cls_class_is",
       "en": "{table}'s {cls} class is one of {allowed}; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1517
+      "line": 1539
     },
     {
       "id": "record-core.index.table_was_not_declared_a",
       "en": "{table} was not declared: a table's name, and every column or table its declaration names, is a plain identifier; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1512
+      "line": 1534
     },
     {
       "id": "record-core.index.the_audits_answer_key_key",
       "en": "the audit's answer key {key} is already held by {keyHeldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1260
+      "line": 1282
     },
     {
       "id": "record-core.index.the_check_id_is_already",
       "en": "the check {id} is already claimed by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1316
+      "line": 1338
     },
     {
       "id": "record-core.index.the_figure_key_is_already",
       "en": "the figure {key} is already reported by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1104
+      "line": 1126
     },
     {
       "id": "record-core.index.the_grammar_claims_part_of",
       "en": "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1310
+      "line": 1332
     },
     {
       "id": "record-core.index.the_instances_figures_are_already",
       "en": "the instance's figures are already supplied by {module}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1178
+      "line": 1200
+    },
+    {
+      "id": "record-core.index.the_instant_given_is_not",
+      "en": "the instant given is not one the setting can be read at; nothing was read.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 1967
     },
     {
       "id": "record-core.index.the_parts_do_not_hash",
       "en": "The parts, read in order, do not hash to the document's fingerprint. Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 2002
+      "line": 2050
     },
     {
       "id": "record-core.index.the_store_would_not_take",
       "en": "The store would not take the document whole ({why}). Nothing was kept.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 2008
+      "line": 2056
     },
     {
       "id": "record-core.index.your_teams_civicsmith_could_not",
       "en": "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 147
+      "line": 148
     },
     {
       "id": "record-grammar.acts.no_basis.entities",
