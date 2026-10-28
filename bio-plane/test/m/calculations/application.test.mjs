@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, R, usesProvider, standardsProvider, sha } from "./fixture.mjs";
-import { USES_HEADER, APPLICATION_KINDS, APPLICATION_RECIPES, NONE_HELD, FILE_ENGINE, calculationsOps, foldReason }
+import { ENGINE_STEP, USES_HEADER, APPLICATION_KINDS, APPLICATION_RECIPES, NONE_HELD, FILE_ENGINE, calculationsOps, foldReason }
   from "../../../src/calculations/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -48,8 +48,8 @@ test("R9 an input a third-party engine computed (a table from a workbook range h
   assert.equal(FILE_ENGINE, word("calculations.file_spreadsheet_program"), "no engine is recorded by the reader, so the file's program is named");
   assert.equal(ia.engine_measured, false);
   assert.equal(ia.grade, null, "undetermined while the engine's agreement is not measured");
-  assert.equal(ia.derivation_step, "third-party engine");
-  assert.match(ia.why, /third-party engine/);
+  assert.equal(ia.derivation_step, ENGINE_STEP);
+  assert.ok(ia.why.includes(ENGINE_STEP), "the why names the step it took");
   assert.equal(ga.capture.grade, null, "the capture axis is undetermined, so strength stops on it (its R36)");
   assert.match(ga.capture.why, /undetermined/);
   const read = await w.c.read({ calcId: a.calc_id, viewer: V("carol") });
@@ -99,7 +99,7 @@ test("R32 freezeUses freezes the held uses a member may see as a table input: ca
   assert.deepEqual(f.source.filter, { kinds: ["discretion", "waiver"] });
   assert.equal(f.source.frozen_by, V("bob"));
   assert.equal(f.source.frozen_at, "2026-10-06T01:00:00.000Z");
-  assert.match(f.says, /a population, not a census/);
+  assert.equal(f.says, word("calculations.says.held_uses_powers", { ids: "3" }));
   const [r1, r2, r3] = await rows(w, f.sha);
   assert.deepEqual([r1.event_id, r2.event_id, r3.event_id], [e1, e2, e3]);
   assert.deepEqual({ ...r1 }, { event_id: e1, kind: "discretion", provision_standard: "STD-2026-x", provision_portion: "s1", decider: p, decider_kind: "person",
@@ -220,7 +220,7 @@ test("R34 consistency answers, for each group of two or more like cases, the sha
   /* before and after a date */
   const ba = (await app(w, "before_after", f.sha, { change: { date: "2025-07-01" } })).results.application;
   assert.equal(ba.change.date, "2025-07-01");
-  assert.match(ba.change.rests_on.says, /the member named/);
+  assert.equal(ba.change.rests_on.says, word("calculations.says.date_member_named", { date: "2025-07-01" }));
   assert.equal(num(ba.before.rows), "2");
   assert.equal(num(ba.after.rows), "2");
   assert.equal(num(ba.counted_apart.find((x) => x.step === "across_change").rows), "1", "the band across the change counted apart");
@@ -290,7 +290,7 @@ test("R36 policy_against_practice answers the divergence (the measured rate of a
   assert.deepEqual([A.practice.divergence.numerator, A.practice.divergence.denominator].map(num), ["3", "4"]);
   assert.equal(num(A.denominator.rows), "4");
   assert.deepEqual([A.provision.standard, A.provision.portion, A.provision.standing.state, A.provision.force.force], [policy, "s2", "in_force", "mandatory"]);
-  assert.match(A.practice.says, /never the rule/);
+  assert.equal(A.practice.says, word("calculations.says.measured_practice_beside"));
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM sqlite_master WHERE name LIKE 'standard%'`)[0].n, standardsBefore);
   assert.equal(w.std.held.size, 2, "nothing stored as a standard");
   assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "policy_against_practice", terms: { provision: { standard: policy } },

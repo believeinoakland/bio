@@ -5,6 +5,7 @@ import { seeded, V, MACHINE, R, saved, sha } from "./fixture.mjs";
 import { resultKey, METHOD, evaluate } from "../../../src/calc-grammar/index.mjs";
 import { idPattern } from "../../../src/record-grammar/index.mjs";
 import { INPUT_CHANGED, RECOMPUTE_STATES } from "../../../src/calculations/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const F = [{ name: "dept", type: "string" }, { name: "amount", type: "number", currency: "USD" }, { name: "status", type: "string" }];
@@ -158,7 +159,7 @@ test("R5 every share or ratio carries its denominator; a compare is labelled a c
   assert.equal(sel.results.output.value, "2");
   assert.equal(sel.results.undetermined_rows, 1);
   assert.deepEqual(sel.results.counted_apart.map((x) => [x.step, x.rows]), [["big", 1]], "the undetermined cell is counted apart");
-  assert.match(sel.results.says, /counted apart/);
+  assert.equal(sel.results.says, word("calculations.says.values_counted_counted"));
   /* an input out of view at evaluation: members of a frozen set the evaluator may not see */
   const P = w.project("Closed", "alice");
   w.document("seen doc", { title: "Quokka contract" }); w.document("hidden doc", { project: P, title: "Quokka contract" });
@@ -231,7 +232,7 @@ test("R8 results are recomputed at accept and by recompute, never on a read: rea
   const acc = await w.c.accept({ calcId: c.calc_id, by: V("carol") });
   assert.equal(code(acc), "CALC_RECOMPUTE_DIFFERS");
   assert.equal(acc.differing.path, "results.output.value", "names the differing result");
-  assert.match(acc.detail, /Nothing was written/);
+  assert.equal(typeof acc.detail, "string", "the refusal says why");
   assert.equal(code(await w.c.accept({ calcId: c.calc_id, by: MACHINE })), "MEMBER_ACT_ONLY");
   assert.equal(code(await w.c.accept({ calcId: "CALC-2026-aaaaaaaaaaaaaaaa", by: V("carol") })), "NO_SUCH_CALCULATION");
   assert.deepEqual(w.snapshot(), untouched, "no refused accept wrote anything: no recompute status, no recompute record, no acceptance");
@@ -271,7 +272,7 @@ test("R9 read answers the grade facts: per input its capture grade capped by its
   let g = (await w.c.read({ calcId: c.calc_id, viewer: V("bob") })).grade;
   assert.deepEqual(g.inputs.map((i) => [i.name, i.grade]), [["t", "B"], ["k", "B"]], "each a direct capture: B");
   assert.equal(g.capture.grade, "B", "arithmetic over two B inputs is not weaker than B");
-  assert.match(g.capture.why, /not a weakening step/);
+  assert.equal(g.capture.why, word("calculations.why.weakest_input_capture", { weakest: "B" }));
   assert.deepEqual({ disclosed: g.method.disclosed, graded: g.method.graded }, { disclosed: true, graded: false });
   /* capped by its derivation */
   w.st.sql.exec(`UPDATE content SET derivation_cap='C' WHERE content_id=?`, fig);

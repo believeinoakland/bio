@@ -77,7 +77,7 @@ test("R48 (G182; S-28) one act reads each bound table's bytes once, and the sigh
   const a = await mk("a"), b = await mk("b");
   let chunkReads = 0, storeReads = 0;
   const exec = w.st.sql.exec.bind(w.st.sql);
-  w.st.sql.exec = (q, ...args) => { if (/FROM calc_table_bytes/.test(q)) chunkReads++; return exec(q, ...args); };
+  w.st.sql.exec = (q, ...args) => { if (q.includes("FROM calc_table_bytes")) chunkReads++; return exec(q, ...args); };
   const get = w.ev.get.bind(w.ev);
   w.ev.get = async (k) => { storeReads++; return get(k); };
   const recipe = R([{ op: "count", from: "ta", as: "na" }, { op: "count", from: "tb", as: "nb" }, { op: "difference", a: "na", b: "nb", as: "d" }], "d",
