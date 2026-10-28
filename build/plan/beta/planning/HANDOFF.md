@@ -4,14 +4,14 @@
 
 ## 0. State now and next steps
 
-**State.** T53's plan is READY for BOB (L57, K5569, K5570: N1271 a dependent T53 entry, not left out). `plan-T53-draft.md` (49 KB, at its cap: anything new goes in a detail file beside it with one pointer line) and its detail files `plan-T53-capabilities.md`, `plan-T53-journeys.md`, `plan-T53-ai.md`, `plan-T53-design-rows.md`, `plan-T53-tests-english.md`, `plan-T53-platform-rows.md` (now with PLATFORM's service levels PL20-PL29 and whole-record move PL50-PL57), `plan-T53-reds.md` are all marked READY; STRUCTURE.md READY; PLANNING's `lines-*` all decided. No mark waits on a lane draft or a question to Bob: each `[owed: …]` left is BOB's at writing (a line BOB writes, a count BOB settles) or a technical point settled at START; each `[waits: …]` an act or a measurement. N1271 (Institution built, PL24) is a dependent entry under record-core; N1267a is in Left out (a row above 250,000 is Bob's decision not yet made); Enterprise stays out (K5454). Reading sets: the fold adds `service-levels-draft.md` (12 KB) to runtime-limits (about 50 KB req and code) and plane (about 74 KB); screens-settings, installer and corpus-export named both drafts already at L40's measure; no job nears 600 KB. Every pointer checked on disk (L55).
+**State.** T53's plan is in use: BOB #327 (`session_018Bhcee9DRsThq3toTorHkE`) opened round R1 from it (K5567, K5569, K5570); the review is done and nothing is owed by PLANNING. PLANNING #5 stopped at L58 on BOB's word; a successor is started only if Bob's Levels 2-3 decision (K5570) needs N1271's lines drafted (next step 2). `plan-T53-draft.md` (49 KB, at its cap: anything new goes in a detail file beside it with one pointer line) and its detail files `plan-T53-capabilities.md`, `plan-T53-journeys.md`, `plan-T53-ai.md`, `plan-T53-design-rows.md`, `plan-T53-tests-english.md`, `plan-T53-platform-rows.md` (now with PLATFORM's service levels PL20-PL29 and whole-record move PL50-PL57), `plan-T53-reds.md` are all marked READY; STRUCTURE.md READY; PLANNING's `lines-*` all decided. No mark waits on a lane draft or a question to Bob: each `[owed: …]` left is BOB's at writing (a line BOB writes, a count BOB settles) or a technical point settled at START; each `[waits: …]` an act or a measurement. N1271 (Institution built, PL24) is a dependent entry under record-core; N1267a is in Left out (a row above 250,000 is Bob's decision not yet made); Enterprise stays out (K5454). Reading sets: the fold adds `service-levels-draft.md` (12 KB) to runtime-limits (about 50 KB req and code) and plane (about 74 KB); screens-settings, installer and corpus-export named both drafts already at L40's measure; no job nears 600 KB. Every pointer checked on disk (L55).
 
 **Next steps, in order.**
-1. Answer BOB's review of the plan; fold any ruling BOB relays into a detail file (check every pointer on disk first).
+1. (Done: R1 runs from the plan.) Fold any ruling BOB relays into a detail file (check every pointer on disk first).
 2. N1271 (Institution, PL24) is a T53 entry waiting on the Levels 2-3 study and Bob's decision on its report (K5570): when BOB relays that decision, draft its lines from the decided option into a detail file and point the record-core entry at them.
 3. Hand over at 40 % context.
 
-**Waiting on.** BOB's review only.
+**Waiting on.** Nothing; stopped. Only Bob's decision on the Levels 2-3 report would restart this lane.
 
 Entries L1-L35 are in `build/plan/archive/planning/` (`HANDOFF-L1-L15.md`, `HANDOFF-L16-L35.md`).
 
@@ -102,3 +102,7 @@ BOB #325 relayed K5569 (checked in `build/rulings.md` on tranche/T53 04b4f11f): 
 ## L57 · 2026-10-27 · K5570: N1271 a dependent entry; installer uses corpus-export
 
 BOB #325's K5570 (checked on tranche/T53 2a57fdbf) corrects K5569: Institution (N1271, with PL24) is built in the beta (K5444, K5454), a T53 entry waiting on the Levels 2-3 study and Bob's decision on its report, then its modules' still-open jobs, else the completion round; nothing goes to Bob as information. Moved from Left out to a dependent entry: the plan's record-core line, `plan-T53-platform-rows.md`'s N1271 block, the installer's PL29 wording ("not yet available" until built), and Measurements (the study at once; Institution's figures and the upgrade step after N1271 is built). Installer `uses` corpus-export recorded (K5570 (2)). N1267a stays in Left out; its reason sent to BOB.
+
+## L58 · 2026-10-28 · stopped: the plan in use
+
+BOB #327 (checked on `build/plan/current.md`'s Status line) reports round R1 open and running from the plan; the review is done, nothing owed. PLANNING #5 stops; a successor starts from `NEXT-SESSION-PROMPT.md` only for N1271's lines once Bob decides on the Levels 2-3 report.
