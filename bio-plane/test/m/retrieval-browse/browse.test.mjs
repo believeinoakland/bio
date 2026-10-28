@@ -4,6 +4,7 @@
  * are in table.test.mjs. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { BROWSE_KINDS, BROWSE_ONLY, BROWSE_LIMIT_DEFAULT, BROWSE_LIMIT_MAX } from "../../../src/retrieval-browse/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
@@ -177,8 +178,8 @@ test("R11, R10 (T50; N1092): with no module registered only: watched and only: f
   /* Another shape. */
   const w2 = corpus();
   w2.rb.registerBrowseMarks("following", (a) => (a.ids ? { watched: "no", flagged: [] } : { items: "no", truncated: false }));
-  assert.match(browse(w2, { only: "flagged" }).undetermined.why, /another shape/);
-  assert.match(browse(w2, {}).undetermined.why, /another shape/);
+  assert.equal(browse(w2, { only: "flagged" }).undetermined.why, WORD("retrieval-browse.browse.marks_another_shape"));
+  assert.equal(browse(w2, {}).undetermined.why, WORD("retrieval-browse.browse.marks_another_shape"));
   /* Control: a flagged item the viewer may not see is not listed, and counted nowhere. */
   const w3 = corpus();
   const proj = w3.project("Ann's secret", "ann");
