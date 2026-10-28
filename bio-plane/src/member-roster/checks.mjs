@@ -13,7 +13,6 @@
  * C-96.47 `noSuchMember`, T19's moves and N453's departures) are `membership`'s and stand as they were written. */
 
 import { rowWord } from "./words.mjs";
-import { localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/member-roster/index.mjs ${fn} > ${region}`;
 
@@ -166,15 +165,14 @@ const MEMBERSHIP_CHECKS = frozenRows({
     translation: rowWord("FOUNDER_HANDLE_NOT_FOUNDER"),
   }),
   /* ===== T53 (K5563; R89): cancelling a waiting administrator proposal. The next free numbers of C-96 (C-96.55 is
-     credentials'). The sentences are written once here, `localize`'s, until UX-DESIGN's rows (DEC-485) reach the word
-     table, which then wins. ===== */
+     credentials'). The sentences are the word table's (DEC-485), read by key. ===== */
   NO_WAITING_PROPOSAL: Object.freeze({
     check: 'C-96.56', where: at("adminProposalCancel", "is-proposal-waiting"),
-    translation: localize("refusal.NO_WAITING_PROPOSAL", "There is no proposal waiting for this member: it was already cancelled, an invitation was issued, or none was made. Nothing was written."),
+    translation: rowWord("NO_WAITING_PROPOSAL"),
   }),
   NOT_YOUR_PROPOSAL: Object.freeze({
     check: 'C-96.57', where: at("adminProposalCancel", "is-proposal-yours"),
-    translation: localize("refusal.NOT_YOUR_PROPOSAL", "Only the founder, or the administrator who made this proposal, can cancel it. Nothing was written."),
+    translation: rowWord("NOT_YOUR_PROPOSAL"),
   }),
 });
 
