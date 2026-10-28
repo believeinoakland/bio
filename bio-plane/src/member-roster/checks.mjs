@@ -164,6 +164,16 @@ const MEMBERSHIP_CHECKS = frozenRows({
     check: 'C-96.54', where: at("founderHandleSet", "is-founder-handle-founder"),
     translation: rowWord("FOUNDER_HANDLE_NOT_FOUNDER"),
   }),
+  /* ===== T53 (K5563; R89): cancelling a waiting administrator proposal. The next free numbers of C-96 (C-96.55 is
+     credentials'). The sentences are the word table's (DEC-485), read by key. ===== */
+  NO_WAITING_PROPOSAL: Object.freeze({
+    check: 'C-96.56', where: at("adminProposalCancel", "is-proposal-waiting"),
+    translation: rowWord("NO_WAITING_PROPOSAL"),
+  }),
+  NOT_YOUR_PROPOSAL: Object.freeze({
+    check: 'C-96.57', where: at("adminProposalCancel", "is-proposal-yours"),
+    translation: rowWord("NOT_YOUR_PROPOSAL"),
+  }),
 });
 
 /* ===== T19 layer 2: membership's families, COPIED from the check catalogue with their names, ids, `where`s and

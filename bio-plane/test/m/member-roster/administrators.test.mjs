@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
+import { world, fiveAdmins } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { Members } from "../../../src/member-roster/index.mjs";
 import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
 const { CUSTODIAL_CHECKS, MEMBERSHIP_CHECKS } = MEMBER_ROSTER_ROWS;
@@ -8,9 +9,9 @@ const { CUSTODIAL_CHECKS, MEMBERSHIP_CHECKS } = MEMBER_ROSTER_ROWS;
 /* founder + second + third (a proposed third needs both to endorse) */
 async function threeAdmins() {
   const w = await world().group();
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
+  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "second" });
   assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
+  const e = await w.m.adminEndorse({ memberId: "third", by: "admin" });
   await w.m.enroll({ invite: e.invite, handle: "third", password: "third-passphrase-x" });
   return w;
 }
@@ -23,28 +24,33 @@ test("R3 adminEndorse: refusals in order; consensus; the last endorsement invite
       assert.equal((await w.m.adminEndorse({ memberId: target, by })).reason, "NOT_AN_ADMIN", `${by} → ${target}`);
   assert.equal((await w.m.adminEndorse({ memberId: "nobody", by: "admin" })).reason, "NO_SUCH_MEMBER");
   assert.equal((await w.m.adminEndorse({ memberId: "ann", by: "admin" })).reason, "NOT_PROPOSED");
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
-  assert.deepEqual([p.reason, p.have, p.awaiting], ["CONSENSUS_REQUIRED", ["admin"], ["second"]]);
+  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "second" });
+  assert.deepEqual([p.reason, p.have, p.awaiting], ["CONSENSUS_REQUIRED", ["second"], ["admin"]]);
   assert.equal((await w.m.adminEndorse({ memberId: "third", by: "ann" })).reason, "NOT_AN_ADMIN");
   assert.equal((await w.m.adminEndorse({ memberId: "third", by: null })).reason, "NOT_AN_ADMIN");
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
+  /* K5563 (R87): the founder's endorsement completes it, and returns the invitation once. */
+  const e = await w.m.adminEndorse({ memberId: "third", by: "admin" });
   assert.equal(e.ok, true);
   assert.match(e.invite, /^[0-9a-f]{32}$/);
   assert.deepEqual(e.endorsedBy, ["admin", "second"]);
   const row = w.row(`SELECT status, status_by FROM members WHERE member_id='third'`);
-  assert.deepEqual(row, { status: "invited", status_by: "second" });
+  assert.deepEqual(row, { status: "invited", status_by: "admin" });
   assert.equal((await w.m.adminEndorse({ memberId: "third", by: "admin" })).reason, "NOT_PROPOSED", "returned once");
-  // the refusal while awaiting
+  assert.equal((await w.m.adminEndorse({ memberId: "third", by: "second" })).reason, "NOT_PROPOSED");
+  /* beyond the second the others still need every administrator (R88): with three, the second's own proposal waits */
+  await w.m.enroll({ invite: e.invite, handle: "third", password: "third-passphrase-x" });
   const q = await w.m.memberAdd({ memberId: "fourth", cover: "c4", role: "admin", by: "second" });
   const r = await w.m.adminEndorse({ memberId: "fourth", by: "second" });
-  assert.deepEqual([q.have, r.reason, r.have, r.awaiting], [["second"], "CONSENSUS_REQUIRED", ["second"], ["admin"]]);
+  assert.deepEqual([q.have, r.reason, r.have, r.awaiting], [["second"], "CONSENSUS_REQUIRED", ["second"], ["admin", "third"]]);
+  const t = await w.m.adminEndorse({ memberId: "fourth", by: "third" });
+  assert.deepEqual([t.reason, t.have, t.awaiting], ["CONSENSUS_REQUIRED", ["second", "third"], ["admin"]], "the last administrator is the founder");
 });
 
 test("R4 adminRemove: every refusal, in order, and VOTES_SHORT until a majority of all", async () => {
   const w0 = await world().group("ann");
   const root = w0.m.adminRemove({ memberId: "admin", by: "second", reason: "r" });
   assert.equal(root.reason, "ROOT_OF_TRUST");
-  assert.match(root.detail, /hosting account/);
+  assert.equal(root.detail, word("membership.index.the_founding_administrator_holds_admin_2"));
   assert.equal(w0.m.adminRemove({ memberId: "nobody", by: "second", reason: "r" }).reason, "NO_SUCH_MEMBER");
   assert.equal(w0.m.adminRemove({ memberId: "ann", by: "second", reason: "r" }).reason, "TARGET_NOT_AN_ADMIN");
   assert.equal(w0.m.adminRemove({ memberId: "second", by: "second", reason: "r" }).reason, "TARGET_CANNOT_VOTE");
@@ -54,37 +60,42 @@ test("R4 adminRemove: every refusal, in order, and VOTES_SHORT until a majority 
     for (const target of ["admin", "nobody", "ann", "second", by])
       assert.equal(w0.m.adminRemove({ memberId: target, by, reason: "r" }).reason, "NOT_AN_ADMIN", `${by} → ${target}`);
   assert.equal(w0.m.adminRemove({ memberId: "second", by: "admin", reason: " " }).reason, "NO_REASON");
-  const two = w0.m.adminRemove({ memberId: "second", by: "admin", reason: "r" });
-  assert.equal(two.reason, "IMPOSSIBLE_AT_TWO");
-  assert.equal(two.possible, false);
-  const w = await threeAdmins();
-  const v1 = w.m.adminRemove({ memberId: "third", by: "admin", reason: "one" });
-  assert.deepEqual([v1.reason, v1.have, v1.need, v1.deciders], ["VOTES_SHORT", 1, 2, ["admin"]]);
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "again" }).reason, "ALREADY_VOTED");
-  const v2 = w.m.adminRemove({ memberId: "third", by: "second", reason: "two" });
+  /* K5562 (R84): at two the founder removes alone, where a vote could not; R86: the one cannot remove her */
+  const two = await world().group();
+  const second = two.m.adminRemove({ memberId: "admin", by: "second", reason: "r" });
+  assert.equal(second.reason, "ROOT_OF_TRUST");
+  assert.equal(two.m.adminRemove({ memberId: "second", by: "second", reason: "r" }).reason, "TARGET_CANNOT_VOTE");
+  /* K5566: an administrator removed already is none */
+  const w = await fiveAdmins();
+  const v1 = w.m.adminRemove({ memberId: "fifth", by: "second", reason: "one" });
+  assert.deepEqual([v1.reason, v1.have, v1.need, v1.deciders], ["VOTES_SHORT", 1, 3, ["second"]]);
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "second", reason: "again" }).reason, "ALREADY_VOTED");
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "third", reason: "two" }).reason, "VOTES_SHORT");
+  const v2 = w.m.adminRemove({ memberId: "fifth", by: "fourth", reason: "three" });
   assert.equal(v2.ok, true);
-  assert.deepEqual(v2.deciders, ["admin", "second"]);
+  assert.deepEqual(v2.deciders, ["fourth", "second", "third"]);
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "second", reason: "r" }).reason, "TARGET_NOT_AN_ADMIN", "a repeat writes nothing");
 });
 
 test("R5 a carried removal revokes, tells R25's listeners in the act (credentials ends sessions and keys), and keeps votes and reasons", async () => {
-  const w = await threeAdmins();
-  w.m.adminRemove({ memberId: "third", by: "admin", reason: "one" });
+  const w = await fiveAdmins();
+  w.m.adminRemove({ memberId: "fifth", by: "second", reason: "one" });
+  w.m.adminRemove({ memberId: "fifth", by: "third", reason: "two" });
   assert.deepEqual(w.creds.revoked, [], "a vote that does not carry tells nobody");
   /* the listener reads the member's status inside the act: it is already revoked when it is told */
   let seen = null;
   w.m.onRevoked("capture-sources", ({ memberId }) => { seen = w.m.memberFacts(memberId).status; });
-  const r = w.m.adminRemove({ memberId: "third", by: "second", reason: "two" });
-  assert.deepEqual([r.ok, r.removed, r.reasons], [true, true, ["one", "two"]]);
+  const r = w.m.adminRemove({ memberId: "fifth", by: "fourth", reason: "three" });
+  assert.deepEqual([r.ok, r.removed, r.reasons], [true, true, ["three", "one", "two"]]);
   /* R8 (T47-82, P8): both halves named, rotating the root of trust and reviewing hosting access */
-  assert.match(r.alsoDo, /rotating ADMIN_TOKEN/);
-  assert.match(r.alsoDo, /reviewing hosting-account membership/);
-  assert.deepEqual(w.row(`SELECT status, status_by FROM members WHERE member_id='third'`),
-    { status: "revoked", status_by: "second" });
-  assert.deepEqual(w.creds.revoked.map(({ memberId, by }) => [memberId, by]), [["third", "second"]],
+  assert.equal(r.alsoDo, word("membership.also_do"));
+  assert.deepEqual(w.row(`SELECT status, status_by FROM members WHERE member_id='fifth'`),
+    { status: "revoked", status_by: "fourth" });
+  assert.deepEqual(w.creds.revoked.map(({ memberId, by }) => [memberId, by]), [["fifth", "fourth"]],
     "credentials' listener is told once, naming the completing voter");
   assert.match(w.creds.revoked[0].at, /^\d{4}-\d\d-\d\dT/);
   assert.equal(seen, "revoked", "told after the act's writes");
-  assert.equal(w.rows(`SELECT * FROM admin_votes WHERE kind='remove' AND target='third'`).length, 2);
+  assert.equal(w.rows(`SELECT * FROM admin_votes WHERE kind='remove' AND target='fifth'`).length, 3);
 });
 
 test("R6 memberCaps: refusals in order and exact replacement", async () => {
@@ -105,7 +116,7 @@ test("R7 an administrator (not the founder) resigns unless they are the last one
   const w = await threeAdmins();
   await w.enrol("ann");
   assert.equal(w.m.adminResign({ by: "admin" }).reason, "ROOT_OF_TRUST");
-  assert.match(w.m.adminResign({ by: "admin" }).detail, /hosting account/);
+  assert.equal(w.m.adminResign({ by: "admin" }).detail, word("membership.index.the_founding_administrator_holds_admin"));
   assert.equal(w.m.adminResign({ by: "ann" }).reason, "NOT_AN_ADMIN");
   const r = w.m.adminResign({ by: "third" });
   assert.deepEqual([r.ok, r.role, r.administrators], [true, "member", 2]);
@@ -176,7 +187,6 @@ test("R16 memberSet: refusals in order; revocation tells R25's listeners (creden
   assert.equal(w.row(`SELECT status_by FROM members WHERE member_id='ann'`).status_by, "second");
   // a revoked administrator (by vote) reactivated returns as an ordinary member
   w.m.adminRemove({ memberId: "third", by: "admin", reason: "a" });
-  w.m.adminRemove({ memberId: "third", by: "second", reason: "b" });
   const back = w.m.memberSet({ memberId: "third", status: "active", by: "admin" });
   assert.deepEqual([back.ok, back.demoted], [true, true]);
   assert.deepEqual(w.row(`SELECT role, status FROM members WHERE member_id='third'`), { role: "member", status: "active" });
@@ -196,8 +206,8 @@ test("R21 a member row is never deleted: revocation keeps the handle and history
   await v.enrol("cal");
   const ids = () => v.rows(`SELECT member_id, handle FROM members ORDER BY member_id`);
   const before = ids();
-  assert.equal(v.m.adminRemove({ memberId: "third", by: "admin", reason: "a" }).reason, "VOTES_SHORT");
-  assert.equal(v.m.adminRemove({ memberId: "third", by: "second", reason: "b" }).ok, true);
+  assert.equal(v.m.adminRemove({ memberId: "third", by: "second", reason: "a" }).reason, "VOTES_SHORT");
+  assert.equal(v.m.adminRemove({ memberId: "third", by: "admin", reason: "b" }).ok, true);
   assert.equal(v.m.memberSet({ memberId: "third", status: "active", by: "admin" }).ok, true);
   assert.equal(v.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" }).ok, true);
   assert.equal((await v.m.adminEndorse({ memberId: "cal", by: "admin" })).reason, "NOT_PROPOSED");

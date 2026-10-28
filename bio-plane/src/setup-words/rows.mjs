@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19817 design words, 1181 protected; SHA-256
-   ff4177b9f6736ae41f9c062d3f11c51fc620ddb7e601f85a16d3da914d972886) followed by 7785 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   ff4177b9f6736ae41f9c062d3f11c51fc620ddb7e601f85a16d3da914d972886) followed by 7790 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25287,6 +25287,8 @@ export const WORD_ROWS = Object.freeze([
   ["mail-reader.refusal.too_large","This message is {size} bytes, more than the {bound} bytes a message may be. Save its attachments separately and bring them in one by one.",null,null,false,"code"],
   ["mail-reader.refusal.too_nested","This message is nested more than {max} levels deep (it reached {depth}); nothing deeper is opened. Open the inner message and bring it in on its own.",null,null,false,"code"],
   ["member-roster.declared.adminendorse","section 4.7 governance — the subject is a proposed administrator, not a bundle",null,null,false,"code"],
+  ["member-roster.declared.adminproposalcancel","section 4.7 governance — the subject is a waiting administrator proposal, not a bundle",null,null,false,"code"],
+  ["member-roster.declared.adminremovals","read: the administrators removed, by the founder or by vote, with who decided and why",null,null,false,"code"],
   ["member-roster.declared.adminremove","section 4.7 governance — the subject is an administrator's standing, not a bundle",null,null,false,"code"],
   ["member-roster.declared.courtnoticeset","the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",null,null,false,"code"],
   ["member-roster.declared.enroll","an invitee becoming a member",null,null,false,"code"],
@@ -25311,6 +25313,7 @@ export const WORD_ROWS = Object.freeze([
   ["member-roster.index.a_withdrawal_is_recorded_with_a","a withdrawal is recorded with a reason",null,null,false,"code"],
   ["member-roster.index.adding_a_member","adding a member",null,null,false,"code"],
   ["member-roster.index.an_administrator_is_removed_by","an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally.",null,null,false,"code"],
+  ["member-roster.index.cancelling_a_waiting_proposal","cancelling a waiting proposal",null,null,false,"code"],
   ["member-roster.index.capabilities_is_an_array","capabilities is an array",null,null,false,"code"],
   ["member-roster.index.changing_the_join_link","changing the join link",null,null,false,"code"],
   ["member-roster.index.changing_the_teams_join_link","changing the team's join link",null,null,false,"code"],
@@ -25326,6 +25329,8 @@ export const WORD_ROWS = Object.freeze([
   ["member-roster.index.every_existing_administrator_must_endorse","every existing administrator must endorse an addition beyond the second",null,null,false,"code"],
   ["member-roster.index.lowercase_letters_digits_and_dashes","lowercase letters, digits and dashes, 2 to 41 characters",null,null,false,"code"],
   ["member-roster.index.module_has_already_registered_its_listener","{module} has already registered its listener",null,null,false,"code"],
+  ["member-roster.index.only_a_proposal_still_waiting","only an administrator proposal still waiting for its endorsements is cancelled, and this member has none: it was cancelled, an invitation was issued, or none was made. Nothing was written.",null,null,false,"code"],
+  ["member-roster.index.only_the_founder_or_the_proposer","only the founder, or the administrator who made the proposal, cancels it. Nothing was written.",null,null,false,"code"],
   ["member-roster.index.reading_the_administrator_removals_under_way","reading the administrator removals under way",null,null,false,"code"],
   ["member-roster.index.reading_the_teams_website_key_and","reading the team's website key and join link",null,null,false,"code"],
   ["member-roster.index.recording_who_holds_hosting_access","recording who holds hosting access (4.8)",null,null,false,"code"],
