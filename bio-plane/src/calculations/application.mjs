@@ -11,6 +11,7 @@
 import { evaluate, METHOD } from "../calc-grammar/index.mjs";
 import { normAlias } from "../extraction/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { kindsOfFamily } from "../money/index.mjs";
 
 /** R32: the columns of a frozen uses table, in order, with their Table Schema types. */
 export const USES_FIELDS = Object.freeze([
@@ -37,7 +38,10 @@ export function tieOf(kind, cls, item) {
   if (kind === "line:holds:employee") return "employment";
   if (kind === "line:holds:contractor" || kind === "line:contracts_with") return "contract";
   if (kind === "line:seat_on" || kind === "line:post_in" || (typeof kind === "string" && kind.startsWith("line:holds:"))) return "post";
-  if (kind === "money_flow") return item && item.money && DONATION_KINDS.includes(item.money.kind) ? "donation" : null;
+  /* money R36: a money fact is a connection of its family's kind (`money_contribution`, `money_payment`, …); it is a donation when its
+     fact kind is a donation kind and is one of that family's (read by `kindsOfFamily`, never by a family name typed here). */
+  const factKinds = typeof kind === "string" ? kindsOfFamily(kind) : [];
+  if (factKinds.length) return item && item.money && DONATION_KINDS.includes(item.money.kind) && factKinds.includes(item.money.kind) ? "donation" : null;
   return null;
 }
 

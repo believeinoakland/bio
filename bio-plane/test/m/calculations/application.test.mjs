@@ -7,6 +7,8 @@ import { seeded, V, MACHINE, R, usesProvider, standardsProvider, sha } from "./f
 import { ENGINE_STEP, USES_HEADER, APPLICATION_KINDS, APPLICATION_RECIPES, NONE_HELD, FILE_ENGINE, calculationsOps, foldReason }
   from "../../../src/calculations/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { tieOf } from "../../../src/calculations/application.mjs";
+import { CONNECTION_FAMILIES } from "../../../src/money/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const PERIOD = { from: "2025-01-01", to: "2026-12-31" };
@@ -381,3 +383,16 @@ test("R32, R36 over events' and standards' real services: a discretion events re
   assert.equal(code(refused), "PROVISION_NOT_A_MEASURE");
   assert.equal(refused.held, "cited", "naming its held state");
 });
+
+test("R32 a donation is classified: a money contribution, gift or behested fact is a donation tie, read from money's connection families by `kindsOfFamily`; a payment, a revenue or any other kind is not", () => {
+  for (const [family, kinds] of Object.entries(CONNECTION_FAMILIES))
+    for (const k of kinds) assert.equal(tieOf(family, "evidentiary", { money: { kind: k } }), ["contribution", "gift", "behested"].includes(k) ? "donation" : null, `${family}/${k}`);
+  assert.equal(tieOf("money_contribution", "evidentiary", { money: { kind: "payment" } }), null, "a fact kind outside the family is no donation");
+  assert.equal(tieOf("money_contribution", "evidentiary", {}), null, "an item with no money part is no donation");
+  assert.equal(tieOf("money_flow", "evidentiary", { money: { kind: "contribution" } }), null, "the retired single kind names nothing");
+});
+
+/* money's `neighbours` asked with no date (`at: null`, as freezeUses asks) marks each fact undetermined with the thrown
+   message as its reason, and the registry refuses the answer OWNER_NONCONFORMING, so no donation reaches the uses table.
+   That is money's (reported to BOB); this test is written when it answers a fact with no date asked as in. */
+test.todo("R32 freezeUses names a donation in relationships, over a real money contribution fact between the decider and the subject");
