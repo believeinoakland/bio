@@ -38743,28 +38743,28 @@
       "en": "roster act on a project, position-enforced by the store",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1450
+      "line": 1452
     },
     {
       "id": "membership.declared.projectjoin",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1452
+      "line": 1454
     },
     {
       "id": "membership.declared.projectleave",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1454
+      "line": 1456
     },
     {
       "id": "membership.declared.projectremove",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1456
+      "line": 1458
     },
     {
       "id": "membership.index.a_door_makes_at_most",

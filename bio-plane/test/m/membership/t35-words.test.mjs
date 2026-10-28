@@ -103,11 +103,11 @@ test("R112 every row this module holds translates without calling the group's Ci
       assert.equal(typeof row.translation, "string", `${table}.${code}`);
       assert.doesNotMatch(row.translation, FORBIDDEN, `${table}.${code} (${row.check})`);
     }
-  /* T47-82 (P8): exactly the rows held: 46 since T46 (T38's 43, then C-96.48, C-56.6 and C-96.52), 47 since T49-1 (C-96.54);
+  /* T47-82 (P8): exactly the rows held: 46 since T46 (T38's 43, then C-96.48, C-56.6 and C-96.52), 47 since T49-1 (C-96.54), 49 since T53 (member-roster R84–R91: C-96.56, C-96.57);
      a row added or dropped is a change this test is re-pinned for, never passed by a lower bound. */
   assert.deepEqual(Object.keys(TABLES).sort(), ["CASE_AUTHORITY_CHECKS", "CUSTODIAL_CHECKS", "MEMBERSHIP_CHECKS",
     "MEMBER_ID_CHECKS", "PROJECT_AUTHORITY_CHECKS", "PROJECT_VISIBILITY_CHECKS"]);
-  assert.equal(n, 47, `every row read (${n})`);
+  assert.equal(n, 49, `every row read (${n})`);
   /* the rows the sweep moved read their keys (R151) */
   for (const [code, row] of [["LISTENER_MALFORMED", MEMBERSHIP_CHECKS.LISTENER_MALFORMED],
                              ["LISTENER_DECLARED", MEMBERSHIP_CHECKS.LISTENER_DECLARED],
@@ -137,7 +137,6 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     ["adminRemove founder", w.m.adminRemove({ memberId: "admin", by: "second", reason: "r" })],
     ["adminRemove target", w.m.adminRemove({ memberId: "ann", by: "second", reason: "r" })],
     ["adminRemove self", w.m.adminRemove({ memberId: "second", by: "second", reason: "r" })],
-    ["adminRemove at two", w.m.adminRemove({ memberId: "second", by: "admin", reason: "r" })],
     ["adminRemove no reason", w.m.adminRemove({ memberId: "second", by: "admin", reason: "" })],
     ["memberAdd bad id", await w.m.memberAdd({ memberId: "A", cover: "c", by: "admin" })],
     ["memberAdd reserved", await w.m.memberAdd({ memberId: "admin", cover: "c", by: "admin" })],
@@ -146,7 +145,7 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     ["memberAdd expertise", await w.m.memberAdd({ memberId: "zed", cover: "c", expertise: ["CPA"], by: "admin" })],
     ["memberAdd expiry", await w.m.memberAdd({ memberId: "zed", cover: "c", expiresInDays: 99, by: "admin" })],
     ["memberAdd not admin", await w.m.memberAdd({ memberId: "zed", cover: "c", by: "ann" })],
-    ["memberAdd consensus", await w.m.memberAdd({ memberId: "adm3", cover: "c", role: "admin", by: "admin" })],
+    ["memberAdd consensus", await w.m.memberAdd({ memberId: "adm3", cover: "c", role: "admin", by: "second" })],
     ["memberSet vote", w.m.memberSet({ memberId: "second", status: "revoked", by: "admin" })],
     ["memberCaps grant", w.m.memberCaps({ memberId: "second", capabilities: ["publish"], by: "admin" })],
     ["adminEndorse not proposed", await w.m.adminEndorse({ memberId: "ann", by: "admin" })],
@@ -208,6 +207,9 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
   const lone = await bare.m.memberAdd({ memberId: "eve", cover: "c", by: "admin" });
   answers.push(["enroll not recorded", await bare.m.enroll({ invite: lone.invite, handle: "eve",
                                                              password: "eve-passphrase-x" })]);
+  /* K5562: the founder's removal of the second administrator at two now succeeds alone, so it is the last act of the battery
+     (an answer, not a refusal) and the group keeps its second administrator until then. */
+  answers.push(["adminRemove by the founder at two", w.m.adminRemove({ memberId: "second", by: "admin", reason: "r" })]);
   let refusals = 0, texts = 0;
   for (const [label, r] of answers) {
     assert.ok(r && typeof r === "object", label);
@@ -215,7 +217,7 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     texts += facing(r).length;
     clean(r, label);
   }
-  /* T38 (N783): the moved acts' refusals are project-roster's battery now. T47-82 (P8): exact, not lower bounds. */
-  assert.deepEqual([answers.length, refusals, texts], [70, 66, 122],
+  /* T38 (N783): the moved acts' refusals are project-roster's battery now. T47-82 (P8): exact, not lower bounds. T53: the founder's removal at two is an answer, not a refusal (65 refusals). */
+  assert.deepEqual([answers.length, refusals, texts], [70, 65, 122],
     `the battery reached ${answers.length} answers, ${refusals} refusals and ${texts} texts`);
 });

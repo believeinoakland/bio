@@ -15,3 +15,17 @@
 
 Tests: 195/195. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcefgcLdaAA53reT314Q): test runs 1, module lines 1712
+
+## Completion (2026-10-28)
+
+# membership T53 report (CHANGE for member-roster K5562, K5563, K5675)
+
+- Membership delegates `adminRemovals` and `adminProposalCancel` (R154); t51 green.
+- t35/t50: row count 49 (C-96.56, C-96.57); t35 battery re-pinned (65 refusals: the founder's removal at two succeeds and is the last act; the admin proposal is made by the second administrator); t50 removal test uses five administrators.
+- Earlier entries (R158 `onProjectLeft`, English in tests) stand. Baseline entries for the 7 converted test files are BOB's to remove (outside my paths).
+- Found in other modules: none.
+
+**Met** · R158
+
+Tests: 195/195. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcefgcLdaAA53reT314Q): test runs 2, module lines 1714
