@@ -57,6 +57,8 @@ export class Registers {
     this.entities = entities;
     this.viewOpt = view;
     this.bounds = { ...L, stream_max: L.STREAM_MAX, segment_max: L.SEGMENT_MAX, ...bounds };
+    /* R23: a slice holds one segment's bytes and little else, so a segment is at most half of SLICE_MEMORY_MB */
+    this.bounds.segment_max = Math.min(this.bounds.segment_max, Math.floor((this.bounds.SLICE_MEMORY_MB * 1048576) / 2));
     this.phase = phase || L.PRODUCT_PHASE;
     this.clock = typeof now === "function" ? now : () => Date.now();
     this.evidenceOpt = evidence;
@@ -292,11 +294,19 @@ export class Registers {
 
   /* ---- R8: the filter, prefilled from the project ---- */
 
-  /** The project's named subjects and identifiers the viewer may see (through `entities.subjectsOfProject`, `entities` R74). */
+  /** The project's named subjects and identifiers the viewer may see, through `entities.subjectsOfProject` (`entities` R74): `{subjects, identifiers, period?}`
+   *  as `prefillFrom` reads them. R74 answers each subject with its identifiers; they are lifted out here. */
   factsOfProject(project, viewer) {
     const via = this.subjectsOpt || (this.entities && typeof this.entities.subjectsOfProject === "function" ? (p, v) => this.entities.subjectsOfProject({ project: p, viewer: v }) : null);
-    if (!via) return { subjects: [], identifiers: [], period: null, source: "unavailable" };
-    try { const f = via(project, viewer); return isObj(f) ? f : { subjects: [], identifiers: [], period: null }; } catch { return { subjects: [], identifiers: [], period: null }; }
+    const none = { subjects: [], identifiers: [], period: null };
+    if (!via) return none;
+    try {
+      const f = via(project, viewer);
+      if (!isObj(f) || f.ok === false) return none;
+      const subjects = Array.isArray(f.subjects) ? f.subjects.filter(isObj) : [];
+      const ids = Array.isArray(f.identifiers) ? f.identifiers : subjects.flatMap((s) => (Array.isArray(s.identifiers) ? s.identifiers : []));
+      return { subjects, identifiers: ids, period: isObj(f.period) ? f.period : null };
+    } catch { return none; }
   }
 
   registerFilter({ register, project, viewer } = {}) {

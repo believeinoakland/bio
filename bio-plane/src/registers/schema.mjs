@@ -213,7 +213,7 @@ export function registersTables(rebuildOf) {
     { ...base, ...projectKeyed, name: "register_segments" },
     { ...base, ...projectKeyed, name: "register_import_rows", export: "never" },
     { ...base, ...projectKeyed, name: "register_cells", export: "never", expunge: "tombstone" },
-    { ...base, ...projectKeyed, name: "register_rows", export: "never", derive: "derived-rebuildable",
+    { ...base, ...projectKeyed, name: "register_rows", export: "never", expunge: "tombstone", derive: "derived-rebuildable",
       key: ["scope_key", "register", "row_key", "content_hash"], from: ["register_cells"], rebuild: (scope) => rebuildOf(scope) },
     { ...base, ...projectKeyed, name: "register_interests", version_chain: true },
     { ...base, ...projectKeyed, name: "register_changes" },

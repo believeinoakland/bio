@@ -292,7 +292,9 @@ export const runnerMethods = {
     }
     const oneDoc = (r.documents ?? [])[0];
     p.state = "reading";
-    p.address = oneDoc ? String(oneDoc.locator).replace(/#segment:\d+$/, "") : null;
+    const pieceDef = (def.pieces || []).find((x) => x.key === p.piece);
+    const holes = parse(row.holes) || {};
+    p.address = oneDoc ? String(oneDoc.locator).replace(/(!.*)?#segment:\d+$/, "") : (pieceDef ? String(pieceDef.locator).replace(/\{([a-z_]+)\}/g, (m, k) => holes[k] ?? m) : null);
     p.retrieved_at = oneDoc?.retrieved ?? at;
     p.source_date = p.probe?.source_date ?? "not_stated";
     p.original = { sha256: r.original.sha256, bytes: r.original.bytes, covers: r.original.covers };
@@ -302,7 +304,8 @@ export const runnerMethods = {
     p.resume = null;
     this.tx(() => {
       for (const s of r.segments) {
-        const b = landed.find((l) => l.doc.origin.segment === s.n);
+        const b = landed.find((l) => l.doc.origin.segment === s.n)
+          ?? (this.one(`SELECT bundle_id FROM register_segments WHERE sha256=? AND bundle_id IS NOT NULL LIMIT 1`, s.sha256) ? { bundle: this.one(`SELECT bundle_id FROM register_segments WHERE sha256=? AND bundle_id IS NOT NULL LIMIT 1`, s.sha256).bundle_id } : null);
         this.sql.exec(`INSERT OR REPLACE INTO register_segments (import_id, piece, n, sha256, bytes, rows, final, project, address, retrieved_at, source_date, original_sha256, original_bytes, covers, bundle_id)
                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, row.import_id, p.piece, s.n, s.sha256, s.bytes, s.rows, s.final ? 1 : 0, row.project, `${p.address}#segment:${s.n}`,
                       p.retrieved_at, p.source_date, r.original.sha256, r.original.bytes, r.original.covers, b ? b.bundle : null);
@@ -333,17 +336,20 @@ export const runnerMethods = {
     const kept = this.kept(def);
     const columns = kept;
     const scope_key = row.scope_key;
+    const multi = this.dataPieces(def).length > 1;
     const removed = (key) => !!this.one(`SELECT 1 AS x FROM register_removed WHERE register=? AND row_key=?`, row.register, key);
-    let more = true;
-    while (more && this.nowMs() < deadline) {
+    let more = true, batches = 0;
+    while (more && batches++ < this.bounds.INGEST_SLICE_BATCHES && this.nowMs() < deadline) {
       const seg = p.segments[ing.seg];
       if (!seg) { more = false; break; }
       const bytes = await this.bytesOf(seg.sha256);
       if (!bytes) { save(pieces, { ...cursor, ing }); return this.failSlice(row, "SEGMENT_NOT_HELD", seg.sha256.slice(0, 12), now); }
-      const text = utf8.decode(bytes);
+      const decoder = new TextDecoder("utf-8", { fatal: false });
       /* a batch: parse from the segment's start, skip what was read, collect until the transaction bound */
       const batchStart = this.nowMs();
+      const rowCap = Math.max(20, Math.min(this.bounds.INGEST_BATCH_ROWS, Math.floor((this.bounds.SLICE_TX_MS * 0.6) / Math.max(0.001, this.rowMs ?? 0.5))));
       const delta = [], member = [];
+      const placed = (idx) => this.one(`SELECT 1 AS x FROM register_import_rows WHERE import_id=? AND piece=? AND seg_n=? AND row_no=?`, row.import_id, p.piece, seg.n, idx);
       let header = null, k = 0, taken = 0, newN = 0, sameN = 0, tomb = 0, stop = false;
       const occ = new Map();
       const occurrence = (digest) => {
@@ -356,7 +362,8 @@ export const runnerMethods = {
         if (header === null) { header = fields; return; }
         const idx = k++;
         if (idx < ing.rows) return;
-        if (taken >= this.bounds.INGEST_BATCH_ROWS || this.nowMs() - batchStart >= this.bounds.SLICE_TX_MS) { stop = true; return; }
+        if (taken >= rowCap || this.nowMs() - batchStart >= this.bounds.SLICE_TX_MS) { stop = true; return; }
+        if (placed(idx)) { taken++; return; }   /* a replayed position: already read (R17) */
         const cells = {};
         for (let i = 1; i < header.length; i++) cells[header[i]] = fields[i] ?? "";
         const src_row = Number(fields[0]);
@@ -364,6 +371,7 @@ export const runnerMethods = {
         let key;
         if (def.row_key_basis === "content") key = `${hash}${SEP}${occurrence(hash)}`;
         else key = (def.row_key || []).map((c) => cells[c] ?? "").join(SEP);
+        if (multi) key = `${p.piece}${SEP}${key}`;
         taken++;
         if (removed(key)) { tomb++; return; }
         const version = { scope_key, register: row.register, row_key: key, content_hash: hash, project: row.project };
@@ -371,9 +379,10 @@ export const runnerMethods = {
         member.push({ idx, key, hash, src_row });
       });
       const CH = 1 << 16;
-      for (let i = 0; i < text.length && !stop; i += CH) walker.feed(text.slice(i, i + CH));
-      if (!stop) walker.end();
+      for (let i = 0; i < bytes.length && !stop; i += CH) walker.feed(decoder.decode(bytes.subarray(i, i + CH), { stream: true }));
+      if (!stop) { walker.feed(decoder.decode()); walker.end(); }
       const finishedSeg = !stop;
+      const wrote = performance.now();
       this.tx(() => {
         const w = this.port.put(delta);
         for (const m of member) this.sql.exec(`INSERT OR IGNORE INTO register_import_rows (import_id, piece, seg_n, row_no, row_key, content_hash, src_row, project) VALUES (?,?,?,?,?,?,?,?)`,
@@ -386,6 +395,7 @@ export const runnerMethods = {
         if (done) p.state = "done";
         save(pieces, cursor);
       });
+      if (taken > 0) this.rowMs = (this.rowMs ?? 0.5) * 0.5 + ((performance.now() - wrote) / taken) * 0.5;
       if (ing.seg >= p.segments.length) { more = false; break; }
       await tick();
     }
@@ -415,7 +425,7 @@ export const runnerMethods = {
     const row = this.importSeen(id, viewer);
     if (!row) return refusal("NO_SUCH_REGISTER_IMPORT", WORDS("NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
     const pieces = (parse(row.pieces) || []).map((p) => ({ piece: p.piece, state: p.state === "pending" ? "pending" : p.state === "fetching" || p.state === "reading" ? "reading" : p.state === "failed" ? "failed" : "done",
-      ...(p.address ? { address: p.address, retrieved_at: p.retrieved_at, source_date: p.source_date, original: p.original } : {}) }));
+      ...(p.address ? { address: p.address, retrieved_at: p.retrieved_at, source_date: p.source_date, original: p.original, segments: (p.segments || []).map((s) => ({ n: s.n, sha256: s.sha256, bytes: s.bytes, rows: s.rows, final: s.final, existed: !!s.existed })) } : {}) }));
     return { ok: true, import: row.import_id, register: row.register, scope: row.scope, ...(row.project ? { project: row.project } : {}), state: row.state, pieces, progress: this.progressOf(row),
              started_at: row.started_at, finished_at: row.finished_at, took_ms: row.took_ms, source_date: row.source_date ?? "not_stated", imported_at: row.imported_at,
              reduction: parse(row.reduction) ? { ...parse(row.reduction), label_key: "register.reduced" } : null,

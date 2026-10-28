@@ -9,7 +9,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { monitoringOf } from "../../../src/monitoring/index.mjs";
 import { streamRegister, probeRegister, sourceChanged, keyedFetch } from "../../../src/acquisition/index.mjs";
-import { registersOf, registersOps } from "../../../src/registers/index.mjs";
+import { registersOf, Registers, registersOps } from "../../../src/registers/index.mjs";
 import { get } from "../../../../jurisdictions/index.mjs";
 
 export { network, governor };
@@ -25,7 +25,7 @@ export const enc = (s) => new TextEncoder().encode(s);
 /* a comma file for `town_filings`: a header row, then rows with the contact columns the definition drops */
 export const SENT = { street: "9000 SENTINEL-STREET", tel: "555-0199-SENTINEL" };
 export const HEADER = "filer,donor_name,donor_org,paid,received,form_no,donor_city,donor_state,donor_zip,donor_street,donor_tel,note";
-export const rowOf = (i, extra = {}) => ({ filer: `F${1000 + (i % 7)}`, donor_name: `Donor ${i}`, donor_org: i % 3 === 0 ? `Firm ${i}` : "", paid: `${100 + i}.00`,
+export const rowOf = (i, extra = {}) => ({ filer: `F${10000 + (i % 7)}`, donor_name: `Donor ${i}`, donor_org: i % 3 === 0 ? `Firm ${i}` : "", paid: `${100 + i}.00`,
   received: `0${1 + (i % 9)}/15/2025`, form_no: `460-${i}`, donor_city: "Port Ellery", donor_state: "ME", donor_zip: "04101", donor_street: SENT.street, donor_tel: SENT.tel, note: `note ${i}`, ...extra });
 const COLS = HEADER.split(",");
 export const csv = (n, { cell = (i) => rowOf(i), header = HEADER } = {}) => `${header}\n${Array.from({ length: n }, (_, i) => { const r = cell(i); return COLS.map((c) => r[c] ?? "").join(","); }).join("\n")}\n`;
@@ -47,8 +47,8 @@ export function served(bytes, { etag = '"v1"', modified = "Wed, 01 Oct 2025 00:0
   };
 }
 
-export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admins = ["alice"], port = null, freeBytes = null, view = null } = {}) {
-  const w0 = acquisitionWorld({ admins });
+export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admins = ["alice"], refuse = [], port = null, freeBytes = null, view = null, subjects = null } = {}) {
+  const w0 = acquisitionWorld({ admins, gov: { refuse } });
   const { host, core: record } = w0;
   const clock = { ms: now };
   const membership = membershipOf(host, { record });
@@ -66,11 +66,12 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
   const monitoring = monitoringOf(host, { record, membership, promotion, intent: null });
   const sweep = monitoring.sweepHost();
   const acq = { streamRegister, probeRegister, sourceChanged, keyedFetch };
-  const registers = registersOf(host, { record, membership, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: { stream_max: 5 * 1024 ** 3, segment_max: 64 * 1024 * 1024, ...bounds },
-    ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}) });
+  const depsBounds = { stream_max: 5 * 1024 ** 3, segment_max: 64 * 1024 * 1024, ...bounds };
+  const registers = registersOf(host, { record, membership, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
+    ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}), ...(subjects ? { subjects } : {}) });
   let n = 0;
   const w = {
-    ...w0, host, record, membership, promotion, content, store, registers, sweep, monitoring, clock, acq,
+    ...w0, refuse, host, record, membership, promotion, content, store, registers, sweep, monitoring, clock, acq,
     sql: (q, ...a) => [...w0.s.sql.exec(q, ...a)],
     count: (t) => [...w0.s.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
     member(id, { role = "member" } = {}) {
@@ -85,18 +86,25 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
       membership.reindexProjectSight(r.bundleId);
       return r.bundleId;
     },
+    /** the object restarted: a fresh instance over the same storage, as a Durable Object's is after eviction */
+    restart() {
+      w.registers = new Registers({ storage: host.storage, record, membership, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
+        ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}), ...(subjects ? { subjects } : {}) });
+      return w.registers;
+    },
     /** run `fn` with the scripted network up */
     async withNet(routes, fn) {
       const net = network(routes);
       try { return { out: await fn(), net }; } finally { net.restore(); }
     },
     /** tick the alarm until nothing is due (the clock moves a second a tick), at most `max` ticks; the ticks' answers */
-    async drain(routes, { max = 400, budget = 5000, hostArg = sweep, advance = 1000 } = {}) {
+    async drain(routes, { max = 400, budget = 5000, hostArg = sweep, advance = 1000, restartEach = false } = {}) {
       const net = network(routes);
       const out = [];
       try {
-        for (let i = 0; i < max && registers.importDue(clock.ms, hostArg); i++) {
-          out.push(await registers.importTick(clock.ms, budget, hostArg));
+        for (let i = 0; i < max && w.registers.importDue(clock.ms, hostArg); i++) {
+          if (restartEach) w.restart();
+          out.push(await w.registers.importTick(clock.ms, budget, hostArg));
           clock.ms += advance;
         }
       } finally { net.restore(); }

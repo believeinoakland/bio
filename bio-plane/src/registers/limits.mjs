@@ -47,3 +47,5 @@ export const CHANGES_PAGE_MAX = 200;
 export const PROPOSAL_TEXT_MAX = 300;
 /** R2/R20: rows one ingest batch writes, a ceiling beside SLICE_TX_MS. */
 export const INGEST_BATCH_ROWS = 500;
+/** R12: batches one reading slice runs (each a transaction within SLICE_TX_MS) before it yields the alarm. */
+export const INGEST_SLICE_BATCHES = figure("ingest_slice_batches", 20);
