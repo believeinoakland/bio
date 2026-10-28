@@ -874,7 +874,7 @@ export class Connections {
     return !!entry && entry.status === "severed";
   }
 
-  /** T53-587 (N1200, K5747; membership R150): the records a project's document cites, for `registerProjectReach`: the
+  /** R77 (T53-587; N1200, K5747; membership R150): the records a project's document cites, for `registerProjectReach`: the
    *  targets of the `references[]` entries of rel `cites` of the bundle `project` whose edge is not severed (R22),
    *  each once, a list of bundle ids and nothing else, bounded by `Membership.PROJECT_REACH_LIMIT`. A project that is
    *  no id, or whose document cannot be read, reaches nothing. Writes nothing; never throws. */
@@ -1470,7 +1470,7 @@ export function connectionsOf(host, deps) {
     promotion.onCommitted("connections", ({ bundleId, replay }) => (replay ? null : k.relinkTargetsOf(bundleId)));
     if (typeof extraction.onReading === "function")
       extraction.onReading("connections", (e) => ({ membership_rederived: k.rederiveMembership(e.captureSha) }));
-    /* T53-587 (membership R150): the reader of a project's reach, once at start; a refusal is a build fault. */
+    /* R77 (membership R150): the reader of a project's reach, once at start; a refusal is a build fault. */
     if (typeof membership.registerProjectReach === "function") {
       const reach = membership.registerProjectReach("connections", (a) => k.projectReach(a));
       if (reach && reach.ok === false) throw new Error(`connections: membership refused its project reach: ${reach.reason}`);
