@@ -1,6 +1,6 @@
 # office-readers (T53)
 
-**Status** · session_018BhcegdvdcHawV5kVZ1wKW · depth 2 · WORKING
+**Status** · session_018BhcegdvdcHawV5kVZ1wKW · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -67,3 +67,37 @@ BOB's CHANGE message names T53-503; the plan's office-readers block names this e
 Tests: 164/164. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Heavy tests: bio-plane/test/m/office-readers/large-text.test.mjs 2663 MB
 Size (session_018BhcegdvdcHawV5kVZ1wKW): test runs 2, module lines 4735
+
+## Completion (2026-10-28)
+
+# office-readers (T53) · CHANGE T53-537 (K5637) · report
+
+**Entries applied**
+- T53-537: the over-bound fixtures reach the over-bound path at the active figure.
+  - `fixtures.mjs`: `OVER` = `boundOf("office","streamed_text_bytes")+1`, `OVER_WHOLE` = `boundOf("office","text_bytes")+1`.
+  - `active.test.mjs` (R12 archive total): members at `MEMBER_MAX`, together over `ARCHIVE_TOTAL_MAX` (was pinned 200 MiB each).
+  - `scan-bounds.test.mjs` (R43 member refusal): the huge member is `boundOf("archive","member_bytes")+1` (was pinned 300 MiB).
+- Merged `origin/tranche/T53` (RUNTIME-LIMITS flip, K5643): `office.text_bytes` 20 MiB, `office.streamed_text_bytes` 100 MB, `archive.unpacked_bytes` and `archive.member_bytes` 2 GiB, `xlsx.declared_text` 50 MB.
+
+**Tests**
+- At the active figures (after the merge): 164/164, no new red.
+
+**R46 shape probe (`plane/shape/g41.probe.mjs`, 150,000-row xlsx), BOB's 85 % bar**
+- Not brought under 85 % by this job's code. The peak is the sheet text held whole by the plane ledger, which is plane's code and outside this module. The probe and the bar are unchanged.
+- Measured peaks (each one run, `r46-sweep.mjs` in the scratchpad; the cap is the probe's `capFor`):
+  - 150,000 rows, declared 33.38 MB: 166.1 MB of cap 202 MB = 82.2 % (this run); 175.3 MB = 86.8 % in the suite run. The margin is about the bar and varies between runs.
+  - 120,000 rows, declared 26.57 MB: 157.9 MB of 203 = 77.8 %.
+  - 100,000 rows, declared 22.03 MB: 151.8 MB of 203 = 74.8 %.
+  - 80,000 rows, declared 17.61 MB: 143.6 MB of 204 = 70.4 %.
+- Largest declared xlsx text I can state holds under 85 % with margin: about 26.6 MB (120,000 rows). The 150,000-row case (33.4 MB) is at the bar and fails in some runs. This is the figure for `xlsx.declared_text` if BOB sets it from this measurement. The standard figure in the table is 50 MB, so it is NOT held at the standard figure.
+
+**Not done and why**
+- Bringing the 150,000-row peak under 85 % in this module's code: the held sheet text is in plane's ledger, not in the module's reader. Not changed here.
+
+**Found in other modules**
+- The R46 peak is plane's ledger holding the sheet text whole (declared 33 MB, peak 166–175 MB at cap 202 MB). Plane's design owns it.
+
+**Met** · none
+
+Tests: 164/164. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcegdvdcHawV5kVZ1wKW): test runs 3, module lines 4735
