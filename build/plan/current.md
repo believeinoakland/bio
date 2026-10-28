@@ -485,6 +485,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-561 · K5693, doorbell R30 · R35 calls `clearDiscarded`, `discardClearDue` and `discardClearWake`; while a hold is in place the wake instant stays past (the due read ignores holds)
 - T53-318 · K4403, N824 · CAPABILITIES rows
 - T53-319 · K5565 · English in tests: its entry
+- T53-564 · mail-door R6 · the `mail-clear` consumer calls `clearWaitingMail`, `mailClearDue` and `mailClearWake`, as R35 does doorbell's
 - rows: `build/plan/T53-R1/scheduler.md`
 ## Layer 11
 
@@ -504,6 +505,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-325 · K4168, N824, N858 · CAPABILITIES rows
 - T53-326 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-327 · K5565 · English in tests: its entry
+- T53-565 · mail-door R12 · the member acts `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` graded from mail-door's `DECLARED_OPS`
 - rows: `build/plan/T53-R1/op-grades.md`
 **affordances**
 - T53-328 · N1260 (DEC-447) · "Follow from here" in this module
@@ -536,6 +538,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-343 · K5571 · ai-accounts' and ai-use's notices to owners are reads it calls; owed lines (R45, R72, R75-R77, termsNoticesDue)
 - T53-344 · K5565 · English in tests: its entry
 - T53-549 · K5670, record-core R92 · read settings through `getSetting`, not its own SQL (index.mjs ~1595, 1600)
+- T53-566 · mail-door R6 · the member told when unconfirmed mail is removed after 14 days: a notice per removed row's owner, read from `clearWaitingMail`'s answer (`owners`)
 - rows: `build/plan/T53-R1/notice-producers.md`
 **queue**
 - T53-345 · K5480, K5478 · `retesting-off`, `ai-credits-stop`
@@ -569,6 +572,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-360 · K4354, P24 · `heldcaptures` out of each screen's first wave
 - T53-361 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-362 · K5565 · English in tests: its entry
+- T53-567 · mail-door R12 · mail-door's five member acts declared from its `DECLARED_OPS` (member session only)
 - rows: `build/plan/T53-R1/op-declarations.md`
 **admission**
 - T53-363 · N1264 · `admit` in the room, parity
@@ -578,6 +582,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 **answer-envelope**
 - T53-365 · K4168, N824, N858 · CAPABILITIES rows
 - T53-366 · K5565 · English in tests: its entry
+- T53-563 · K5692, mail-door (C-157) · `families.mjs` registers family C-157 (mail-door's codes C-157.1-.9) so its refusals carry their envelope
 - rows: `build/plan/T53-R1/answer-envelope.md`
 **store-door**
 - T53-553 · K5677, credentials R72 retired · `routes.test.mjs` calls `aiAccountsOf(ctx)` and reads `ai-accounts`' `AI_ACCOUNT_CHECKS`, never credentials' delegates or its `ACCOUNT_CHECKS` view
@@ -773,6 +778,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-465 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-466 · K5565 · English in tests: its entry
 - T53-536 · reader-container's report · the routing of `reader-container` as a fleet member
+- T53-568 · mail-door R12 · routes the five member acts to mail-door (`mailDoorOps`)
 - rows: `build/plan/T53-R1/control-plane.md`
 **plane**
 - T53-467 · N1264, K4599 · routes `screenread`, folded admission
@@ -783,6 +789,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-469 · K5438 · per-week counts kept per copy: record bytes, members at once, share of screens over class (PL26)
 - T53-470 · K5565 · English in tests: its entry
 - T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
+- T53-569 · mail-door R12 and its composition note · composes `mailDoorOf(ctx, {capture, settings})`, `settings()` from instance-setup R114 (the mail domain and switch); the `email()` export waits on M1 (K5692 (3))
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
