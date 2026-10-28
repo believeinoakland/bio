@@ -18233,126 +18233,126 @@
       "en": "connection derivation, keyed by entity",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1522
+      "line": 1545
     },
     {
       "id": "connections.declared.connectionassert",
       "en": "connection-directed: a member asserts a connection between two held documents with a stated basis, keyed by the document pair; writes an asserted-connection row, grade D, apart from derived ones",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1524
+      "line": 1547
     },
     {
       "id": "connections.declared.connectionchoose",
       "en": "connection-directed: records which mention is on point on ONE end of ONE connection, keyed by (capture, other capture, entity); writes a choice row beside the machine's pair and moves nothing existing",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1526
+      "line": 1549
     },
     {
       "id": "connections.declared.stepsource",
       "en": "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a declared step, withdrawn only by a reasoned act and never erased; moves no bundle",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1528
+      "line": 1551
     },
     {
       "id": "connections.declared.stepsourcewithdraw",
       "en": "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a declared step, withdrawn only by a reasoned act and never erased; moves no bundle",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1530
+      "line": 1553
     },
     {
       "id": "connections.declared.themedeclare",
       "en": "member-directed: a member declares a theme (an idea and its test) keyed by nothing the record holds; writes a `themes` row, no edge and no entity, and is never evidence",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1532
+      "line": 1555
     },
     {
       "id": "connections.declared.themeplace",
       "en": "theme-directed: a member places a document or a passage in a theme, keyed by (theme id, target); writes a `theme_placements` row as membership and no edge",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1534
+      "line": 1557
     },
     {
       "id": "connections.declared.themepropose",
       "en": "theme-directed: a member or a machine proposes a placement, keyed by (theme id, target); writes a `theme_placements` row as a hunch that is never membership",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1536
+      "line": 1559
     },
     {
       "id": "connections.declared.themeread",
       "en": "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1538
+      "line": 1561
     },
     {
       "id": "connections.declared.themewithdraw",
       "en": "theme-directed: a member withdraws a placement or rejects a hunch in a theme with a reason, keyed by (theme id, target); the placement is kept, shown as withdrawn",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1540
+      "line": 1563
     },
     {
       "id": "connections.index.act_names_no_member",
       "en": "this act names no member; the plane stamps the member from the credential that asked",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1086
+      "line": 1104
     },
     {
       "id": "connections.index.assert_carries_basis",
       "en": "a member's connection carries its basis: why these two documents are connected",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1089
+      "line": 1107
     },
     {
       "id": "connections.index.assert_joins_two_held",
       "en": "a member's connection joins two documents this record holds and you can see",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1097
+      "line": 1115
     },
     {
       "id": "connections.index.assert_machine_credential",
       "en": "'{who}' is a machine credential; asserting a connection is a member's act, in their name",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1085
+      "line": 1103
     },
     {
       "id": "connections.index.assert_names_one_twice",
       "en": "a connection joins two documents; this names one twice",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1099
+      "line": 1117
     },
     {
       "id": "connections.index.asserted_says",
       "en": "connections asserted by a member, by a source's own link and by the system's positional inference, each labelled with who asserts it and kept apart from the connections derived from resolutions",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1150
+      "line": 1168
     },
     {
       "id": "connections.index.backlinks_need_target",
       "en": "backlinks are asked of an object: pass target=<record id>",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 894
+      "line": 912
     },
     {
       "id": "connections.index.basis_over_limit",
       "en": "{count} characters of basis, over {limit}; refused rather than cut",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1092
+      "line": 1110
     },
     {
       "id": "connections.index.cannot_be_placed",
@@ -18429,56 +18429,56 @@
       "en": "connection — this document is an end of no connection through this subject",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1344
+      "line": 1362
     },
     {
       "id": "connections.index.empty_level_outside",
       "en": "connection — every connection of this document was established outside this portion",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1345
+      "line": 1363
     },
     {
       "id": "connections.index.empty_level_where_read",
       "en": "where in the document the determining reference was read, or which mention is on point",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1343
+      "line": 1361
     },
     {
       "id": "connections.index.judge_is_member_act",
       "en": "confirming or rejecting an inferred membership is a member's judgement, in their name",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1272
+      "line": 1290
     },
     {
       "id": "connections.index.judgement_carries_reason",
       "en": "a judgement carries its reason",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1277
+      "line": 1295
     },
     {
       "id": "connections.index.membership_read_says",
       "en": "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1263
+      "line": 1281
     },
     {
       "id": "connections.index.membership_stored_says",
       "en": "each file is assigned to the agenda item printed above it; a pair is stored as a connection the system asserts, graded C and never established, once both documents are held, and a member may confirm or reject it. A pair whose documents are not both held is served only at the read",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1217
+      "line": 1235
     },
     {
       "id": "connections.index.no_capture_by_digest",
       "en": "this record holds no capture by that digest that you can see",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1197
+      "line": 1215
     },
     {
       "id": "connections.index.no_content_row",
@@ -18506,14 +18506,14 @@
       "en": "this record holds no stored item-to-file membership by that id that you can see",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1281
+      "line": 1299
     },
     {
       "id": "connections.index.only_resolved_links_project_and",
       "en": "only resolved links project, and only to a target some record has registered. skipped_unregistered counts targets whose BYTES the record holds while no record claims them: those become edges when the target is promoted. Each edge is written into the source document's references as links_to and never cites, because the source asserted it and not the team; a member promoting it to cites is a member's act.",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 983
+      "line": 1001
     },
     {
       "id": "connections.index.pair_selection_by_rule",
@@ -18597,28 +18597,28 @@
       "en": "the source document's references block is not in a shape this act can extend in place",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1006
+      "line": 1024
     },
     {
       "id": "connections.index.rel_rel_target_target_status",
       "en": "  - rel: {rel}\n    target: {target}\n    status: {status}{v1}{v2}{v3}\n    note: \"{v4}\"",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1362
+      "line": 1380
     },
     {
       "id": "connections.index.session_when_projected_length_link",
       "en": "### Session {when} | Projected {length} link{v1} | {by}\nTrigger: op=linkproject\nChanges: links_to edges added to {map}, each the source's own link, resolved to a held document; asserted by the source, never by the team.\n",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1009
+      "line": 1027
     },
     {
       "id": "connections.index.source_document_not_held",
       "en": "the source record's document is not held as text, so its links cannot be written into it",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 992
+      "line": 1010
     },
     {
       "id": "connections.index.this_document_does_not_read",
@@ -18639,14 +18639,14 @@
       "en": "verdict is confirm or reject",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1275
+      "line": 1293
     },
     {
       "id": "connections.index.who_word_that_the_file",
       "en": "{who} {word} that the file belongs to the agenda item; the inference and every judgement are kept",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1287
+      "line": 1305
     },
     {
       "id": "connections.index.whole_document_citation",
