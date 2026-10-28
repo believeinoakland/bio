@@ -1,6 +1,6 @@
 # doc-clean (T53)
 
-**Status** · session_018BhcedJp6SW8wmUGjgoTVP · depth 2 · WORKING
+**Status** · session_018BhcedJp6SW8wmUGjgoTVP · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -31,3 +31,17 @@ Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 1, module lines 1168
 
 Tests: 74/76. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 2, module lines 1271
+
+## Completion (2026-10-28)
+
+# doc-clean T53 report (CHANGE: detection through format-registry)
+
+- T53-59 (R13) finished: `cleanDocument` judges an email by `format-registry`'s `detectFormat` (eml, msg; an mbox is refused `NOT_A_CLEANABLE_FORMAT`), then builds the published copy through mail-reader's reading (`mail.mjs`). R13's test.todo is now tests: an EML judged by its bytes, a PNG is not a message, an MSG is judged `msg` and answered as an EML copy; the earlier R13 tests (addresses and Received absent, marked name shown, unmarked "withheld", attached PDF cleaned as R6, idempotence, control) stand.
+- BOB's confirmed choices: the copy is always an EML; a bare network address in body text is left; inline images become ordinary attachments.
+- T53-60 done earlier; the baseline line is BOB's to prune at the layer close.
+- Found in other modules: none.
+
+**Met** · R13
+
+Tests: 76/77. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedJp6SW8wmUGjgoTVP): test runs 3, module lines 1271
