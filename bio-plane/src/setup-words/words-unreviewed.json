@@ -21446,175 +21446,217 @@
       "en": "a compound file (a legacy office document), not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 87
+      "line": 98
     },
     {
       "id": "doc-clean.index.a_data_image_uri_at",
       "en": "a data:image URI at character {index}",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 100
+      "line": 111
+    },
+    {
+      "id": "doc-clean.index.a_mailbox_of_messages_not_a",
+      "en": "a mailbox of messages, not a format this module cleans",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 58
     },
     {
       "id": "doc-clean.index.a_mime_message_not_a",
       "en": "a MIME message, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 94
+      "line": 105
     },
     {
       "id": "doc-clean.index.a_postscript_document_not",
       "en": "a PostScript document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 93
+      "line": 104
     },
     {
       "id": "doc-clean.index.a_zip_archive_that_is_neither",
       "en": "a ZIP archive that is neither an OOXML nor an ODF package",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 74
+      "line": 85
     },
     {
       "id": "doc-clean.index.a_zip_package_of_no",
       "en": "a ZIP package of no office format this module cleans ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 77
+      "line": 88
     },
     {
       "id": "doc-clean.index.an_embedded_image_is_of_a_kind",
       "en": "an embedded image is of a kind whose metadata cannot be stripped",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 28
+      "line": 30
     },
     {
       "id": "doc-clean.index.an_encrypted_office_document_an",
       "en": "an encrypted office document (an EncryptedPackage compound file)",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 86
+      "line": 97
     },
     {
       "id": "doc-clean.index.an_rtf_document_not_a_format",
       "en": "an RTF document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 92
+      "line": 103
     },
     {
       "id": "doc-clean.index.an_xml_or_svg_document",
       "en": "an XML or SVG document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 96
+      "line": 107
     },
     {
       "id": "doc-clean.index.the_document_carries_a_video_audio",
       "en": "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 30
+      "line": 32
     },
     {
       "id": "doc-clean.index.the_document_carries_an_embedded",
       "en": "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 27
+      "line": 29
     },
     {
       "id": "doc-clean.index.the_document_could_not_be",
       "en": "the document could not be read whole ({String})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 64
+      "line": 75
     },
     {
       "id": "doc-clean.index.the_document_is_encrypted",
       "en": "the document is encrypted",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 26
+      "line": 28
     },
     {
       "id": "doc-clean.index.the_document_is_length_bytes",
       "en": "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 49
+      "line": 55
     },
     {
       "id": "doc-clean.index.the_document_or_one_of",
       "en": "the document, or one of its parts, is larger than this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 33
+      "line": 35
     },
     {
       "id": "doc-clean.index.the_document_s_bytes_are_not",
       "en": "the document's bytes are not a byte array",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 47
+      "line": 53
     },
     {
       "id": "doc-clean.index.the_document_s_structure_cannot",
       "en": "the document's structure cannot be read whole",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 34
+      "line": 36
     },
     {
       "id": "doc-clean.index.the_file_is_a_zip_archive",
       "en": "the file is a ZIP archive, not an office package; a member-supplied archive is never carried",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 31
+      "line": 33
     },
     {
       "id": "doc-clean.index.the_file_is_neither_a_pdf",
       "en": "the file is neither a PDF, an office package nor text",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 90
+      "line": 101
     },
     {
       "id": "doc-clean.index.the_file_is_of_no_format",
       "en": "the file is of no format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 32
+      "line": 34
     },
     {
       "id": "doc-clean.index.the_html_document_embeds_an",
       "en": "the HTML document embeds an image as a data: URI",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 29
+      "line": 31
+    },
+    {
+      "id": "doc-clean.index.the_material_names_are_not",
+      "en": "the material names are not a list of names",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 51
     },
     {
       "id": "doc-clean.index.the_package_cannot_be_read",
       "en": "the package cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 76
+      "line": 87
     },
     {
       "id": "doc-clean.index.the_package_holds_more_entries",
       "en": "the package holds more entries than this module copies",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 35
+      "line": 37
     },
     {
       "id": "doc-clean.index.the_zip_directory_cannot_be",
       "en": "the ZIP directory cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 73
+      "line": 84
+    },
+    {
+      "id": "doc-clean.mail.address_withheld",
+      "en": "[address withheld]",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 14
+    },
+    {
+      "id": "doc-clean.mail.attachment_index_cannot_be_cut",
+      "en": "attachment {index} of the message cannot be cut: {detail}",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 65
+    },
+    {
+      "id": "doc-clean.mail.attachment_index_detail",
+      "en": "attachment {index}: {detail}",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 67
+    },
+    {
+      "id": "doc-clean.mail.withheld",
+      "en": "withheld",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 13
     },
     {
       "id": "doc-clean.package.part_cannot_be_read_why",

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7591 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7597 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22826,6 +22826,7 @@ export const WORD_ROWS = Object.freeze([
   ["doc-clean.images.where_v1_image_whose_metadata","{where}: {v1} image, whose metadata this module cannot strip",null,null,false,"code"],
   ["doc-clean.index.a_compound_file_a_legacy","a compound file (a legacy office document), not a format this module cleans",null,null,false,"code"],
   ["doc-clean.index.a_data_image_uri_at","a data:image URI at character {index}",null,null,false,"code"],
+  ["doc-clean.index.a_mailbox_of_messages_not_a","a mailbox of messages, not a format this module cleans",null,null,false,"code"],
   ["doc-clean.index.a_mime_message_not_a","a MIME message, not a format this module cleans",null,null,false,"code"],
   ["doc-clean.index.a_postscript_document_not","a PostScript document, not a format this module cleans",null,null,false,"code"],
   ["doc-clean.index.a_zip_archive_that_is_neither","a ZIP archive that is neither an OOXML nor an ODF package",null,null,false,"code"],
@@ -22846,9 +22847,14 @@ export const WORD_ROWS = Object.freeze([
   ["doc-clean.index.the_file_is_neither_a_pdf","the file is neither a PDF, an office package nor text",null,null,false,"code"],
   ["doc-clean.index.the_file_is_of_no_format","the file is of no format this module cleans",null,null,false,"code"],
   ["doc-clean.index.the_html_document_embeds_an","the HTML document embeds an image as a data: URI",null,null,false,"code"],
+  ["doc-clean.index.the_material_names_are_not","the material names are not a list of names",null,null,false,"code"],
   ["doc-clean.index.the_package_cannot_be_read","the package cannot be read ({why})",null,null,false,"code"],
   ["doc-clean.index.the_package_holds_more_entries","the package holds more entries than this module copies",null,null,false,"code"],
   ["doc-clean.index.the_zip_directory_cannot_be","the ZIP directory cannot be read ({why})",null,null,false,"code"],
+  ["doc-clean.mail.address_withheld","[address withheld]",null,null,false,"code"],
+  ["doc-clean.mail.attachment_index_cannot_be_cut","attachment {index} of the message cannot be cut: {detail}",null,null,false,"code"],
+  ["doc-clean.mail.attachment_index_detail","attachment {index}: {detail}",null,null,false,"code"],
+  ["doc-clean.mail.withheld","withheld",null,null,false,"code"],
   ["doc-clean.package.part_cannot_be_read_why","part {name} cannot be read ({why})",null,null,false,"code"],
   ["doc-clean.package.part_n_appears_twice","part {n} appears twice",null,null,false,"code"],
   ["doc-clean.package.part_n_declares_uncompressedsize_bytes","part {n} declares {uncompressedSize} bytes, over the {CLEAN_MAX_PART_BYTES} this module reads",null,null,false,"code"],
