@@ -15,6 +15,11 @@ import {
   KEY, BASIS, PUBLISHED_LABEL, CONTACT_FIELDS, isContactField, ENDPOINTS,
 } from "../index.mjs";
 import { CONTRACT, CONFIDENCE, makeRegistry, EVENTS } from "../../docprofile/registry.mjs";
+import { wordRx } from "../../bio-plane/test/word-rx.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
+
+/* A regex for a word key with its placeholders filled as `vars` fill them (K5313). */
+const wordWith = (key, vars) => new RegExp(word(key, vars).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
 const FIX = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const load = (name) => JSON.parse(readFileSync(join(FIX, name + ".json"), "utf8"));
@@ -65,10 +70,10 @@ test("R1 detect matches every captured endpoint at CERTAIN, and a single record 
 
 test("R1 anything else does not match, and malformed JSON says why", () => {
   const no = (ctx, re) => { const d = detect(ctx); assert.equal(d.match, false); assert.equal(d.confidence, CONFIDENCE.NONE); assert.match(d.why, re); };
-  no(ctxOf("https://example.org/v1/portellery/events", [{ EventId: 1 }]), /not a Legistar Web API address/);
-  no(ctxOf("https://portellery.legistar.com/Calendar.aspx", [{ EventId: 1 }]), /not a Legistar Web API address/);
-  no(ctxOf(`${PE}/actions`, [{ ActionId: 1 }]), /does not read/);
-  no(ctxOf(`${PE}/`, []), /no endpoint|not a Legistar/);
+  no(ctxOf("https://example.org/v1/portellery/events", [{ EventId: 1 }]), wordRx("legistar-reader.index.the_address_is_not_a_legistar"));
+  no(ctxOf("https://portellery.legistar.com/Calendar.aspx", [{ EventId: 1 }]), wordRx("legistar-reader.index.the_address_is_not_a_legistar"));
+  no(ctxOf(`${PE}/actions`, [{ ActionId: 1 }]), wordWith("legistar-reader.index.the_address_names_the_legistar", { name: "actions" }));
+  no(ctxOf(`${PE}/`, []), wordRx("legistar-reader.index.the_address_names_a_client"));
   no({ locator: `${PE}/events`, text: "[{\"EventId\": 1,", view: PORT }, /not JSON/);
   no({ locator: `${PE}/events`, text: "<html></html>", view: PORT }, /not JSON/);
   no({ locator: `${PE}/events`, view: PORT }, /no text/);
@@ -79,7 +84,7 @@ test("R1 anything else does not match, and malformed JSON says why", () => {
   no(ctxOf(`${PE}/events`, [1, 2]), /not an object/);
   no(ctxOf(`${PE}/persons`, [{ EventId: 1 }]), /carries no PersonId/);
   no(ctxOf(`${PE}/events/12`, { EventId: 13 }), /not the 12/);
-  no(ctxOf(`${PE}/events/12`, "x"), /not an object/);
+  no(ctxOf(`${PE}/events/12`, "x"), wordRx("legistar-reader.index.the_bytes_are_json_but_not"));
 });
 
 test("R1 the type is registered through the registry seam, once, under its key, as MEMBERSHIP", () => {
@@ -240,7 +245,7 @@ test("R6 officerecords: seats only, {OfficeRecordId, PersonId, BodyId, role, sta
   assert.equal(JSON.stringify(r).includes("Vice Mayor") || JSON.stringify(r).includes("District 4"), false);
   const u = parse(ctxOf(`${PE}/officerecords`, [seat])).rows[0];
   assert.equal(u.end_planned, null);
-  assert.match(u.end_planned_why, /date was not given/);
+  assert.match(u.end_planned_why, wordRx("legistar-reader.index.the_captures_own_date_was"));
   const open = parse(ctxOf(`${PE}/officerecords`, [{ ...seat, OfficeRecordEndDate: undefined }], { at: "2026-10-05" })).rows[0];
   assert.equal(open.facts.end, null);
   assert.equal(open.end_planned, false);
@@ -365,7 +370,7 @@ test("R11 a full page may continue and names the next; a short page does not; pa
   assert.deepEqual([all.pages, all.complete, all.conflicts.length], [2, true, 0]);
   const partial = readPages([p0]);
   assert.equal(partial.complete, false);
-  assert.match(partial.why, /further page/);
+  assert.match(partial.why, wordRx("legistar-reader.index.every_page_given_was_full"));
   const a = parse(ctxOf(`${PE}/persons`, [{ PersonId: 1, PersonFullName: "Ada Quill" }, { PersonId: 2, PersonFullName: "B" }]));
   const b = parse(ctxOf(`${PE}/persons?$skip=1000`, [{ PersonId: 1, PersonFullName: "Ada Quill-Okafor" }, { PersonId: 2, PersonFullName: "B" }]));
   const j = readPages([a, b]);
