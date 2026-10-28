@@ -50727,35 +50727,35 @@
       "en": "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1896
+      "line": 1895
     },
     {
       "id": "retrieval.declared.list",
       "en": "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1906
+      "line": 1905
     },
     {
       "id": "retrieval.declared.select",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1898
+      "line": 1897
     },
     {
       "id": "retrieval.declared.selectionrelease",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1900
+      "line": 1899
     },
     {
       "id": "retrieval.frontier.acquire_not_here",
       "en": "an acquisition attempt at an address nothing is held for is written at the DOCUMENT level on this build (op=frontier&level=document), not here",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/frontier.mjs",
-      "line": 457
+      "line": 419
     },
     {
       "id": "retrieval.frontier.internet_note",
@@ -50765,11 +50765,32 @@
       "line": 22
     },
     {
+      "id": "retrieval.frontier.note_content_extraction",
+      "en": "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row — and a missing row is read through section 5.1's causes in order, so a capture extracted before this log carried the content level is NOT in that set and is named in `missing_unexplained` with its cause instead. An entry is the capture's latest EXTRACTION, and the re-extraction candidate list is every capture whose latest extraction is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. `indexed` is read from the capture's latest index observation, and reads UNDETERMINED where the record holds none (a capture indexed before the index was observed), never where it holds one. The withholding fence applies ROW-WHOLE: a capture this viewer may not see is absent from every collection here, and `truncated` describes THE LISTS YOU WERE GIVEN and never the supply they were cut from — for a viewer entitled to every row those are the same list, and no count of what was withheld is reported, because that count is the leak",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/frontier.mjs",
+      "line": 294
+    },
+    {
+      "id": "retrieval.frontier.note_document_never_looked",
+      "en": "NEVER_LOOKED is the absence of a row and is reported apart from the tally: these are addresses a document we hold points at that nothing has ever looked for. A missing row is read through section 5.1's causes in order, so an address this record holds a capture of, or one it cannot place after the log's first row, is named in `missing_unexplained` with its cause and never counted as nobody-looked; every such row names the causes it could not rule out. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is published only when every record it names — through `result_ref`, through a ratify or link authority, through a run's context or a sweep's capture request — is one this viewer may see, and a referent that cannot be attributed to any record at all withholds the row rather than being waved through. No count of what was withheld is reported, because that count is the leak. The `tally` counts every row at this level rather than this page, names nothing, and is not gated",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/frontier.mjs",
+      "line": 162
+    },
+    {
+      "id": "retrieval.frontier.note_meaning_level",
+      "en": "the three acts of section 4.3 have three subjects and are three partitions of one table: a CAPTURE (did anything read this document for entities), a REFERENCE (did anything try to match this name against the registry), an ENTITY (did anything derive the connections among the documents concerning this subject). A LOOKED_ABSENT row in `looked` is a look that RAN and produced nothing; a subject in `never_looked` is one nobody has looked at. NEVER_LOOKED is the absence of a row and is reported apart from the tally, read through section 5.1's causes in order — and at a reference or an entity the pre-log evidence is ONE-SIDED (`evidence_one_sided`), because a look that found nothing left no artifact, so a pre-log empty look reads UNDETERMINED and is named in `missing_unexplained` rather than counted as nobody-looked. The withholding fence applies to capture and reference subjects, which name a document this team holds; an ENTITY subject is not withheld from a recognised viewer, because the subject registry is instance-wide and op=concerns already serves it; a viewer the plane does not recognise sees nothing",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/frontier.mjs",
+      "line": 399
+    },
+    {
       "id": "retrieval.frontier.run_searches_not_read",
       "en": "an investigative run's open-internet searches are folded run-log rows whose subject kind was never recorded; they are read per run through op=airunlog, which gates each on the run's context. This read does not include them, and says nothing about whether any exist",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/frontier.mjs",
-      "line": 455
+      "line": 417
     },
     {
       "id": "retrieval.frontier.there_is_no_level_level",
@@ -50805,6 +50826,13 @@
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
       "line": 1163
+    },
+    {
+      "id": "retrieval.index.drift_criterion_moved",
+      "en": "the criterion now answers differently; which rows moved is not recoverable because a query selection stores the criterion rather than the rows",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1540
     },
     {
       "id": "retrieval.index.enumerated_needs_one_id",
@@ -50853,7 +50881,7 @@
       "en": "no saved query of yours answers to that",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1596
+      "line": 1595
     },
     {
       "id": "retrieval.index.no_scope_called_stringify_the",

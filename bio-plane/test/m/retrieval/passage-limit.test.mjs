@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 
 const para = (n) => ({ kind: "doc-para", para: n });
 
@@ -76,7 +77,7 @@ test("R13, R14: the meaning level's undetermined sentence on a passage and on a 
     assert.equal(a.ok, true);
     const m = a.levels.meaning;
     assert.equal(m.state, "UNDETERMINED");
-    assert.match(m.why, /^nobody has yet said whether a finding rests on what was found here; the Cited column beside each result says it for that result$/);
+    assert.equal(m.why, WORD("retrieval.levels.finding_rests_plain"));
     assert.doesNotMatch(m.why, /`/);
     assert.doesNotMatch(m.why, /\b[a-z_]+:[a-z_*"]/i);
     assert.doesNotMatch(m.why, /\b(level|rows?)\b/i);

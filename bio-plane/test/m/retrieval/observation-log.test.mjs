@@ -58,8 +58,7 @@ test("R43 (D-516): the content frontier states the band and does not pick — a 
   const band = by[cap.band.sha];
   assert.deepEqual([band.missing_cause, band.why, band.not_ruled_out, band.evidence_one_sided],
     [BAND, VOCAB.MISSING_ROW_CAUSES[BAND], causesNotRuledOut("purged", { evidenceOneSided: false }), false]);
-  assert.match(band.why, /whole\s+seconds/);
-  assert.match(band.why, /DOES NOT PICK/);
+  assert.equal(band.why, WORD("observation-log.vocabulary.content_watermark_band"));
   assert.deepEqual(band.not_ruled_out, ["purged", "never_looked"], "the band widens nothing and narrows nothing");
   assert.deepEqual([by[cap.before.sha].missing_cause, by[cap.before.sha].not_ruled_out], ["purged", ["purged", "never_looked"]]);
   assert.ok(Object.prototype.hasOwnProperty.call(f.missing_causes, BAND));
@@ -132,12 +131,10 @@ test("R14 (D-516): the passage tally counts a capture in the band as not read an
   assert.deepEqual(s.not_read, { never_looked: 1, undetermined: 2 }, "the band and the purged capture apart from the unread one");
   assert.deepEqual([s.not_extracted, s.undetermined, s.indexed_full, s.indexed_partial, s.indexed_none], [1, 2, 0, 0, 0]);
   assert.equal(miss.says, `${leadOf(s)} ${WORD("retrieval.text.matched_scope_searchable")}`);
-  assert.doesNotMatch(miss.says, /[23] never extracted/, "the band capture is not said to be unread");
   /* The same capture alone in scope: undetermined, not read, not never_looked. */
   const one = w.retrieval.meaningRows({ q: "passage:zzqx id:INFO-band", rows: "passage", viewer: V("vera") });
   assert.deepEqual([one.scope.captures_counted, one.scope.not_read, one.scope.undetermined, one.scope.not_extracted],
     [1, { never_looked: 0, undetermined: 1 }, 1, 0]);
-  assert.match(one.says, /0 never extracted — nobody has read them/);
   assert.equal(one.says, `${leadOf(one.scope)} ${WORD("retrieval.text.matched_scope_searchable")}`);
 });
 
@@ -156,7 +153,7 @@ test("R35, R36: each level the frontier reads — document, content, meaning, in
   }
   const x = w.retrieval.frontier({ level: "cosmos", viewer: V("vera") });
   assert.deepEqual([x.found, x.built, x.looked.length], [false, false, 0]);
-  assert.match(x.note, /NOT an empty frontier/);
+  assert.equal(x.note, WORD("retrieval.frontier.there_is_no_level_level", { level: "cosmos", level_2: "cosmos" }));
 });
 
 test("R32: no read retrieval answers writes an observation row — search in every mode, meaningRows, the frontier at every level, contentAxis, the projection and the selections leave observation_log as it was; a frontier read writes nothing at all", async () => {

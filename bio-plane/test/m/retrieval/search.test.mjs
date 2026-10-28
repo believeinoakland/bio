@@ -144,8 +144,8 @@ test("R16: searchFields publishes the fields {type, freeText, column}, ftsColumn
   assert.deepEqual([f.ftsColumns, f.defaultFacets, f.idsMax], [FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX]);
   assert.deepEqual(f.meaning, meaningVocabulary());
   assert.ok(f.syntax.every((s) => typeof s === "string" && s.length));
-  assert.ok(f.syntax.includes(localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says")));
-  assert.ok(f.syntax.some((s) => /cited or marked citable/.test(s)));
+  assert.ok(f.syntax.includes(WORD("retrieval.index.content_searches_citations")));
+  assert.ok(f.syntax.includes(WORD("retrieval.index.content_reaches_layer")));
 });
 
 test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visible bundles, lists orphans (bounded), counts through the gate, pages by cursor, ok only with neither", () => {

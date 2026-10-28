@@ -26,3 +26,25 @@
 
 Tests: 222/222. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcecFW8tvVxtjMi8XpWv): test runs 1, module lines 3187
+
+## Completion (2026-10-28)
+
+# retrieval · T53 · report (CHANGE from BOB #332: T53-169 finished)
+
+**Entries applied**
+- T53-169 (K5565, English in tests), finished per BOB's CHANGE: every one of the module's 10 B sites is now wrapped in `localize(id, en)` at its use, keeping today's English, and the tests read the sentence by its key (`WORD(id)`). Commit 925971ea.
+  - Wrapped in source (were unwrapped): the three frontier note texts `retrieval.frontier.note_document_never_looked`, `retrieval.frontier.note_content_extraction`, `retrieval.frontier.note_meaning_level` (frontier.mjs); the selection drift sentence `retrieval.index.drift_criterion_moved` (index.mjs). Each was a concatenation of literals; it is now one literal, joined exactly, so the words check reads a plain literal.
+  - Already localized in source, now read by key in the tests: `retrieval.levels.finding_rests_plain` (content-arm, passage-limit), `retrieval.frontier.there_is_no_level_level` (frontier, observation-log), `retrieval.index.content_searches_citations` and `retrieval.index.content_reaches_layer` (search, words), `observation-log.vocabulary.content_watermark_band` (observation-log), `observation-log.indexed_none` with `observation-log.index.a_container_has_no_arm` (contentaxis).
+  - Negative regex checks that repeated a sentence's fragment and that the exact comparison already covers were removed (observation-log, meaning).
+- Tests: 222/222 in `test/m/retrieval/`. Checks: words 0 failures, testenglish 0; `--baseline` now reports no files for this module; coverage 88 of 88 live ids named; architecture 0 failures.
+
+**Left for BOB**
+- `build/tests-english-baseline.json`: the module's lines are now all zero (the baseline check reports no retrieval files). Deleting the module's lines is BOB's act (ownership refuses the job editing the shared file).
+- Observed, not fixed: the content-axis sentence for a workbook captured before D-672 is stored with a reason that lacks the parenthetical that `observation-log.index.a_container_has_no_arm` carries. The contentaxis test therefore asserts the key's main clause (its text before " (") and the indexed-none prefix, not the whole key value. Whether the stored reason should carry the whole key is a question for BOB and observation-log's owner.
+- The word rows (`bio-plane/src/setup-words/rows.mjs`, `words-unreviewed.json`) were not committed; `proc job complete` regenerates them.
+- The model: the plan's row says sonnet for this module; this job ran on haiku-5-5.
+
+**Met** · none
+
+Tests: 222/222. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcecFW8tvVxtjMi8XpWv): test runs 2, module lines 3148

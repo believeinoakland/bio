@@ -23,7 +23,7 @@ test("R35: level is document by default; any other level answers found: false, b
   assert.deepEqual([d.level, d.found, d.built, d.limit], ["document", true, true, FRONTIER_LIMIT_DEFAULT]);
   const x = w.retrieval.frontier({ level: "cosmic", viewer: V("vera"), limit: 7 });
   assert.deepEqual([x.found, x.built, x.looked, x.never_looked, x.tally, x.truncated, x.limit], [false, false, [], [], {}, false, 7]);
-  assert.match(x.note, /NOT an empty frontier/);
+  assert.equal(x.note, word("retrieval.frontier.there_is_no_level_level", { level: "cosmic", level_2: "cosmic" }));
   for (const level of ["document", "content", "meaning", "internet", "cosmic"]) {
     assert.equal(w.retrieval.frontier({ level, viewer: V("vera"), limit: 0 }).limit, FRONTIER_LIMIT_DEFAULT, level);
     assert.equal(w.retrieval.frontier({ level, viewer: V("vera"), limit: 99999 }).limit, FRONTIER_LIMIT_MAX, level);
@@ -58,7 +58,7 @@ test("R36, R40: a built level answers found, built, level, limit, truncated, loo
   assert.deepEqual(f.looked.map((r) => r.result_purged), [null, true, null], "held, not held, no capture referent");
   assert.deepEqual(f.tally, { PRESENT: 2, LOOKED_INDETERMINATE: 1, LOOKED_ABSENT: 1 });
   assert.equal("NEVER_LOOKED" in f.tally, false);
-  assert.match(f.note, /every record it names/);
+  assert.equal(f.note, word("retrieval.frontier.note_document_never_looked"));
   assert.doesNotMatch(f.note, /\bbundle\b/, "the note says record, not bundle (N458)");
   /* R40's held arm: a referent the record holds reads result_purged false. */
   docRow(w, "https://example.org/w", "PRESENT", { authority: "INFO-1", result_kind: "capture", result_ref: c.sha });
@@ -121,7 +121,7 @@ test("R42, R44: content entries are each capture's latest extract row (read by a
   for (const k of ["last_verified", "unreachable_since", "governed", "actor_class", "detail", "at"]) assert.ok(k in by[a.sha], k);
   /* R44: the note does not say the per-unit index is absent, and says where `indexed` reads undetermined. */
   assert.doesNotMatch(f.note, /does not exist in this build/);
-  assert.match(f.note, /reads UNDETERMINED where the record holds none/);
+  assert.equal(f.note, word("retrieval.frontier.note_content_extraction"));
 });
 
 test("R43: captures held with no content row are split by the missing-row cause — never_looked only for its own cause, every other in missing_unexplained with missing_cause and why — each cut at limit with its count, every row carrying not_ruled_out and evidence_one_sided; the answer carries missing_causes, evidence_one_sided, the vocabulary and undetermined_value", () => {
