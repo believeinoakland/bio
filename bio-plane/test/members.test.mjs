@@ -36,6 +36,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { word } from "../src/setup-words/index.mjs";
 const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 
 const mf = new Miniflare({
@@ -421,8 +422,7 @@ t("REC-41: every login refusal in this suite is ONE distinct answer, counted rat
    one happened. That is the shape that leaks nothing — an answer that named one
    possibility would be picking, and picking is the disclosure. */
 t("REC-39: the shared sentence names both possibilities and states that it does not say which",
-  [/never (been )?registered/i.test(det(revoked)), /no longer active/i.test(det(revoked)),
-   /(does not say|deliberate)/i.test(det(revoked))], [true, true, true]);
+  det(revoked) === word("credentials.index.sign_in_refused"), true);
 /* No refusal echoes the role that was tried. A detail that repeated it back
    would be the one place a per-caller string could get into the record's own
    words, which is D-57's failure mode exactly. */
@@ -703,8 +703,7 @@ console.log("\n--- the roster records a cover, not a name ---");
   t("a member with no cover is refused",
     (await POST("op=memberadd&token=t-admin-1", { memberId: "nobody" })).result.reason, "NO_COVER");
   t("and the refusal says it need not be a real name",
-    /does not have to be|need not be|not be a legal name/.test(
-      (await POST("op=memberadd&token=t-admin-1", { memberId: "nobody" })).result.detail || ""), true);
+    (await POST("op=memberadd&token=t-admin-1", { memberId: "nobody" })).result.detail === word("member-roster.index.a_cover_is_the_label_you"), true);
 }
 
 await mf.dispose();

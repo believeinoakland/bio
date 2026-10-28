@@ -23,7 +23,8 @@
    strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). T47 (T47-6; N939):
    `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). T48
    (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). Fix round 7
-   (G80; K4736): the record's write counter (R89, R90). Fix round 8 (G115; K4811): bookkeeping tables left out of it (R91). */
+   (G80; K4736): the record's write counter (R89, R90). Fix round 8 (G115; K4811): bookkeeping tables left out of it (R91). T53 (N1257; K5458, K5462): `getSettingAt`, a setting as of
+   an instant, from the rows `settings` already keeps (R92). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -263,6 +264,27 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
 /** R83 (T46; N904): what the strict `getSetting` answers for a setting whose value last set cannot be read, told from
  *  `null` (never set). One frozen object, compared by identity; no stored value parses to it. */
 export const SETTING_UNREADABLE = Object.freeze({ unreadable: true });
+
+/** R92 (T53; N1257): what `getSettingAt` answers for a name with no row at or before the instant asked: not yet set, told
+ *  from a setting set to `null`. `civil-time`'s undetermined shape; one frozen object, compared by identity. */
+export const SETTING_UNDETERMINED = Object.freeze({ undetermined: true, why: "NOT_YET_SET" });
+/** R92: what `getSettingAt` answers when the row in force at the instant cannot be read (R83's closed answer, as an
+ *  undetermined): never `null`, never a throw. */
+export const SETTING_UNDETERMINED_UNREADABLE = Object.freeze({ undetermined: true, why: "VALUE_UNREADABLE" });
+
+/* R92: an instant in either spelling `set_at` and `ISO_TS_RE` hold (whole seconds `…:SSZ`, or milliseconds `…:SS.sssZ`),
+   read as the millisecond spelling `set_at` is written in, a whole-second instant as the last millisecond of its second;
+   null when it is neither form or names no real instant (month 13, 30 February, hour 24). Never throws. */
+const SETTING_AT_RE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d{3})?Z$/;
+function settingAtMillis(at) {
+  if (typeof at !== "string") return null;
+  const m = SETTING_AT_RE.exec(at);
+  if (!m) return null;
+  const spelled = `${m[1]}${m[2] ?? ".999"}Z`;
+  const ms = Date.parse(spelled);
+  if (!Number.isFinite(ms)) return null;
+  try { return new Date(ms).toISOString() === spelled ? spelled : null; } catch { return null; }
+}
 
 /* R84 (T47; N939): whether `value` reads back through JSON as it was set: at every depth `null`, a boolean, a string, a
    finite number, an array of such values or a plain object (its prototype `Object.prototype`) whose values are all such.
@@ -1927,6 +1949,32 @@ export class RecordCore {
     this.#sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`,
                    n, text, by, new Date().toISOString());
     return { ok: true };
+  }
+
+  /** R92 (T53; N1257; amends R25, R26): the value the setting `name` held at the instant `at`, from the rows `settings`
+   *  keeps and nothing else. The row in force is the one with the greatest `rowid` among the rows of `name` whose `set_at`
+   *  is at or before `at` (a whole-second `at` read as the last millisecond of its second). Before the first set, and for a
+   *  name never set, it answers `SETTING_UNDETERMINED`, never `null` (a setting set to `null` answers `null`); a row that
+   *  cannot be read answers `SETTING_UNDETERMINED_UNREADABLE`, as do a name that cannot be spelled and a read that fails.
+   *  An `at` that is not an instant is refused `SETTING_AT_INVALID` (C-102.40). Writes nothing, steps no seq, takes no
+   *  lease, never throws; a service for modules, not an op. */
+  getSettingAt(name, at) {
+    /* DEC-49 REGION is-setting-at-refused */
+    const spelled = settingAtMillis(at);
+    if (spelled === null) {
+      let shown;
+      try { shown = String(name ?? ""); } catch { shown = ""; }
+      return rowRefusal("SETTING_AT_INVALID", localize("record-core.index.the_instant_given_is_not", "the instant given is not one the setting can be read at; nothing was read."), { name: shown });
+    }
+    /* END DEC-49 REGION is-setting-at-refused */
+    try {
+      const r = this.#one(`SELECT value FROM settings WHERE name=? AND set_at<=? ORDER BY rowid DESC LIMIT 1`, String(name ?? ""), spelled);
+      if (!r) return SETTING_UNDETERMINED;
+      if (typeof r.value !== "string") return SETTING_UNDETERMINED_UNREADABLE;
+      return JSON.parse(r.value);
+    } catch {
+      return SETTING_UNDETERMINED_UNREADABLE;
+    }
   }
 
   /* ---- the evidence store (R38) ---- */

@@ -177,8 +177,7 @@ export function noSuchProject(projectId, extra = null) {
    one not joined, is a different condition with its own code (R36, R39). `project` is the id as asked (null when none);
    the detail is one fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never
    replaces one of them. Writes nothing and never throws. */
-const NOT_A_PARTICIPANT_DETAIL = "the caller holds no participation in this project, and this act is taken by one of its "
-  + "participants (Membership Architecture v2 §7). Nothing was changed.";
+const NOT_A_PARTICIPANT_DETAIL = localize("membership.index.not_a_participant_detail", "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 §7). Nothing was changed.");
 const NOT_A_PARTICIPANT_FIXED = new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
 export function notAParticipant(projectId, by, extra = null) {
   let own = [];
@@ -202,9 +201,7 @@ export function notAParticipant(projectId, by, extra = null) {
    a caller with a next step passes `remedy`, one sentence, kept as `remedy` with `message` the row's translation, a
    space, then the remedy (DEC-83). Who is an owner stays each act's own rule (R54); this only answers the refusal.
    Writes nothing and never throws. */
-const NOT_THE_OWNER_DETAIL = "this is an act an owner of the project performs, and the caller is not one of its owners. "
-  + "Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership "
-  + "Architecture v2 §4.9, §7). Nothing was changed.";
+const NOT_THE_OWNER_DETAIL = localize("membership.index.not_the_owner_detail", "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.");
 const NOT_THE_OWNER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "by", "project", "detail", "message"]);
 export function notTheOwner(by, projectId, extra = null) {
   let own = [];
@@ -1138,6 +1135,35 @@ export class Membership {
              detail: localize("membership.index.recorded_as_a_request_to", "recorded as a request to leave. An owner of this project removes participants; this does not.") };
   }
 
+  /* ===== R158 (K5501; R79's form in `member-roster`) — THE NOTICE THAT A PARTICIPANT HAS STOPPED BEING ONE =====
+   *
+   * A later module that holds something a participation grants (`ai-accounts`' shared accounts placed on a project's
+   * list, its R77) registers once at start, and is called each time a participant stops being one, inside the act and
+   * after its writes, in the caller's transaction, once per listener in the modules' total order (`MODULE_ORDER`), with
+   * `{memberId, projectId, by, why, at}`. `why` is a word key; today only `removed` (R36 `projectRemove`, whether or not
+   * she had asked to leave). Acts that leave her a participant (`projectLeave`, `projectOwnerRemove`, a re-join) and a
+   * refused act call nobody. A listener's answer is not read, and one that throws changes neither the act, its answer,
+   * nor another listener's call. Registration's refusals are `member-roster`'s `listenerRefusal`. */
+  #leftListeners = [];   // {module, fn, seq}
+
+  onProjectLeft(module, fn) {
+    const refused = listenerRefusal(this.#leftListeners, module, fn);
+    if (refused) return refused;
+    this.#leftListeners.push({ module, fn, seq: this.#leftListeners.length });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.#leftListeners.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  #announceLeft(memberId, projectId, by, why, at) {
+    for (const l of this.#leftListeners) {
+      try {
+        const r = l.fn({ memberId, projectId, by: by ?? null, why, at });
+        if (r && typeof r.then === "function") r.then(null, () => {});
+      } catch { /* a listener's failure never changes the removal or another listener's call */ }
+    }
+  }
+
   /** 7.7, REVERSED in Membership Architecture v2: only an OWNER of the project
    *  removes a participant, request outstanding or not, and an administrator does
    *  not. CORRECTED 2026-09-23 by D-311 — this comment still stated v1.4's rule
@@ -1173,6 +1199,7 @@ export class Membership {
        and every participant reads it (`project-roster`'s roster read, its `removals`). */
     this.sql.exec(`INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
       projectId, target.member_id, by, why, at);
+    this.#announceLeft(target.member_id, projectId, by, "removed", at);   /* R158 */
     return { ok: true, projectId, handle, removed: true, comment: why, by, at };
   }
 

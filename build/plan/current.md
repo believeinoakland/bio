@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 OPEN · layer 3 OPEN · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
-**Status** · OPEN · BOB #328 · session_018BhcefyAzc8476i2q7nQ5q · depth 1
-**Jobs** · setup-words: SETUP-WORDS #1 session_018BhcedGkL4WZVApjwDazfX; record-grammar: RECORD-GRAMMAR #1 session_018Bhceem2iUdAZcA7dscA4j; civil-time: CIVIL-TIME #1 session_018BhcefMpVQvXKBiGcUYBvE; calc-grammar: CALC-GRAMMAR #1 session_018BhcefSWG1wRZtFGbsrFuA; connection-grammar: CONNECTION-GRAMMAR #1 session_018BhcegRDtn8p6dt8ssxJKJ; test-support: TEST-SUPPORT #1 session_018BhcecgY3PBTrL4y2Ck7MT; runtime-limits: RUNTIME-LIMITS #1 session_018BhcegsnZTq6ndhV2RKA4f; signatures: SIGNATURES #1 session_018BhceeVjx2uYzrUetpWc1A; bundler: BUNDLER #1 session_018BhcecEeYk8AL3QJSwTuwv; court-citations: COURT-CITATIONS #1 session_018Bhced5Zt4Dzas5JyDcobU; id-spaces: ID-SPACES #1 session_018BhcefQuX8MaDHHFsk3hQ2; subresources: SUBRESOURCES #1 session_018Bhceg41wru6Q7DdChuvfB; structured-text-reader: STRUCTURED-TEXT-READER #1 session_018BhcedH8QG1p1M2ABfYXVF; mail-reader: MAIL-READER #1 session_018Bhcefa3SdZX44kR48Ukpf; csv-reader: CSV-READER #1 session_018BhcedVAhBAdjjiLzwetSC; office-readers: OFFICE-READERS #1 session_018BhcegdvdcHawV5kVZ1wKW; odf-reader: ODF-READER #1 session_018BhcefXKEEqrV3LsP4yTXY; pdf-reader: PDF-READER #1 session_018Bhcefr6qakyreu8WK9cuR; format-registry: FORMAT-REGISTRY #1 session_018BhcegEQXWdwyKyz85ehDj; text-chain: TEXT-CHAIN #1 session_018BhcefLjzJMZjCWK4WMZtR; docprofile: DOCPROFILE #1 session_018BhcedMxNPcZhctb9emQwK; doctypes: DOCTYPES #1 session_018Bhcecc4twXKUaZ83a4k6m; legistar-reader: LEGISTAR-READER #1 session_018Bhcedw3wLYumisgwbSDYf; roster-reader: ROSTER-READER #1 session_018BhcegL9Z2aotsAHfwYdpm; court-doctypes: COURT-DOCTYPES #1 session_018BhceeKJPr2wV1i3F1M6U6; register-readers: REGISTER-READERS #1 session_018BhceejwjKtfM2xJWBwiY8; budget-doctypes: BUDGET-DOCTYPES #1 session_018BhcefzxPPbS2J62Txnk3L; image-codecs: IMAGE-CODECS #1 session_018BhcegW9K1yhVCSYsMB8Ve; pdf-pixels: PDF-PIXELS #1 session_018BhcedB5GgMUpTVDfuXRuA; image-cover: IMAGE-COVER #1 session_018BhcecpR3Z1ErVEX6eAheX; doc-clean: DOC-CLEAN #1 session_018BhcedJp6SW8wmUGjgoTVP; pdf-worker: PDF-WORKER #1 session_018BhcegpWcawG1J18QR2ZJE; ocr-worker: OCR-WORKER #1 session_018BhceeL6Gsvfy3WXU2DyNM; sheet-worker: SHEET-WORKER #1 session_018BhceeMaKWRBqJpfWkzYJg; file-scanner: FILE-SCANNER #1 session_018BhcecnyytTT3cMe1k3Zku; reader-container: READER-CONTAINER #1 session_018BhcedfcFpkDwfqT6uTLcn; jurisdictions: JURISDICTIONS #2 session_018BhcefMFW1bhVhh3w9sjUp; ooxml: OOXML #1 session_018BhcedTff8SmCMqu2EScxc; member-roster: MEMBER-ROSTER #1 session_018BhcefiiLZYzriCJJmrdXE; record-core: RECORD-CORE #1 session_018Bhcefjn5o22km4fr7kbme; membership: MEMBERSHIP #1 session_018BhcefgcLdaAA53reT314Q; project-roster: PROJECT-ROSTER #1 session_018BhcegZCNZehxmo4dsDnTt; ai-catalogue: AI-CATALOGUE #1 session_018BhceegGiraj92rsxu2cuC; ai-accounts: AI-ACCOUNTS #1 session_018Bhceei38Q79BHcdtVPMFz; credentials: CREDENTIALS #1 session_018Bhceesg4XYzpL7ZX32uiC; promotion: PROMOTION #1 session_018BhcegYHK2EwFjRJE5A3Md
-**Owed** · archive setup-words; archive record-grammar; archive civil-time; archive calc-grammar; archive connection-grammar; archive test-support; archive runtime-limits; archive signatures; archive bundler; archive court-citations; archive id-spaces; archive subresources; archive structured-text-reader; archive mail-reader; archive csv-reader; archive office-readers; archive odf-reader; archive pdf-reader; archive format-registry; archive text-chain; archive docprofile; archive doctypes; archive legistar-reader; archive roster-reader; archive court-doctypes; archive register-readers; archive budget-doctypes; archive image-codecs; archive pdf-pixels; archive image-cover; archive doc-clean; archive pdf-worker; archive ocr-worker; archive sheet-worker; archive file-scanner; archive reader-container; archive jurisdictions; archive ooxml
+**Status** · OPEN · BOB #329 · session_018BhcefYrW3vwL3mYqzy8xd · depth 1
+**Jobs** · member-roster: MEMBER-ROSTER #1 session_018BhcefiiLZYzriCJJmrdXE; record-core: RECORD-CORE #1 session_018Bhcefjn5o22km4fr7kbme; membership: MEMBERSHIP #1 session_018BhcefgcLdaAA53reT314Q; project-roster: PROJECT-ROSTER #1 session_018BhcegZCNZehxmo4dsDnTt; ai-catalogue: AI-CATALOGUE #1 session_018BhceegGiraj92rsxu2cuC; ai-accounts: AI-ACCOUNTS #1 session_018Bhceei38Q79BHcdtVPMFz; credentials: CREDENTIALS #1 session_018Bhceesg4XYzpL7ZX32uiC; promotion: PROMOTION #1 session_018BhcegYHK2EwFjRJE5A3Md
+**Owed** · none
 
 # Plan T53 · round R1, the beta's build
 
@@ -84,6 +84,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-101 · K5565 · English in tests: its entry
 - T53-526 · format-registry's finding (T53-42, R38, R39) · "known" is not `format !== "undetermined"`
 - T53-527 · runtime-limits, `archive.uploaded_bytes` · CAPTURE_MAX is 500 MB
+- T53-547 · K5666 · the officers lookup's `keyedFetch` service id is `ca-officers` (credentials R84)
 - rows: `build/plan/T53-R1/acquisition.md`
 **capture**
 - T53-102 · K5513 (C22) · daemon fetch only for a followed case
@@ -312,6 +313,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - rows: `build/plan/T53-R1/question-explorer.md`
 **answers**
 - T53-217 · K5565 · English in tests: its entry
+- T53-548 · K5666 · `ASK_SCOPE` gains `aicredential`, as credentials' `AI_GRANT_OPS` (scope.test.mjs R1)
 - rows: `build/plan/T53-R1/answers.md`
 **agent-steps**
 - T53-218 · K5457 · entry by need, Gate 1 per part, `idem`
@@ -571,6 +573,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-342 · K4403 · CAPABILITIES rows
 - T53-343 · K5571 · ai-accounts' and ai-use's notices to owners are reads it calls; owed lines (R45, R72, R75-R77, termsNoticesDue)
 - T53-344 · K5565 · English in tests: its entry
+- T53-549 · K5670, record-core R92 · read settings through `getSetting`, not its own SQL (index.mjs ~1595, 1600)
 - rows: `build/plan/T53-R1/notice-producers.md`
 **queue**
 - T53-345 · K5480, K5478 · `retesting-off`, `ai-credits-stop`
@@ -762,6 +765,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-448 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-449 · K5571 · R-40's `person` half (6)
 - T53-450 · K5565 · English in tests: its entry
+- T53-550 · K5671, promotion R53, R62 · `explore.mjs` (~218-239) sends a raw-id title and no project to promotion; send both as R53 asks
 - rows: `build/plan/T53-R1/screens-investigate.md`
 **screens-publish**
 - T53-451 · A7 · document pickers
@@ -848,6 +852,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 **ai-issuer**
 - T53-493 · K5457 · serves catalogue, advisories, seal key `[waits: BOB's deploy to 20b5…7f72, tools; R18 retention]`
 - T53-494 · K5482, K5487 · `airesultown`, `POST /ai/health`
+- T53-551 · K5674 · the index at ai-catalogue's `CATALOGUE_ADDRESS`, payloads beneath it, in the shape its `receive` reads; reads `ADVISORY_REASONS` and `validatePayload` from ai-catalogue
 - rows: `build/plan/T53-R1/ai-issuer.md`
 **journey-check**
 - T53-495 · N1260 (K4354) · act counter, 2 s assertion, Sewer Service Fund `[first: BOB's K lines for target files]`
