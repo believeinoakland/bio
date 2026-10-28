@@ -1183,6 +1183,66 @@ export class FileSafety {
     } catch { return refusal("SAFE_VIEW_FAILED", "The safe view could not be read.", { captureSha: captureSha ?? null }); }
   }
 
+  /** R71 (T53; DEC-479 (45); doorbell R31): the safe view of bytes the record does not hold, for modules only (no op). The bytes' SHA-256 must be `sha256`, else
+   *  `BYTES_CHANGED`. The same format check and route as `safeView` run on the given bytes (never a type taken on trust: a text file is a table when its
+   *  bytes are one, as no record is asked); R11's shapes and limits answer, with the view's own bytes in `bytes` for a page view or a picture. It writes no
+   *  row, note, receipt or count and keeps no record of who looked (R10); the renderer reads a page view's source from a derived-area object that exists only
+   *  for the call and is removed after (one that was there before is left). Refusals are R11's and R54's. */
+  async safeViewOfBytes({ bytes = null, sha256 = null, viewer = undefined, sheet = null, fromRow = null } = {}) {
+    void viewer;
+    let planted = null;
+    try {
+      /* DEC-49 REGION is-bytes-unchanged */
+      const want = shaOf(sha256);
+      if (!(bytes instanceof Uint8Array) || !HEX64.test(want) || (await digestOf(bytes)) !== want)
+        return refusal("BYTES_CHANGED", localize("file-safety.index.the_bytes_are_not_the_bytes_fingerprinted", "The bytes are not the bytes whose fingerprint was stated. Nothing was shown."), { sha256: want || null });
+      /* END DEC-49 REGION is-bytes-unchanged */
+      const d = await describe({ size: bytes.length, read: async (o, n) => bytes.subarray(o, o + n) }, { head: bytes.subarray(0, Math.min(bytes.length, HEAD_MAX)), bytes });
+      const format = d.format, route = safeViewRoute(format, d.image);
+      if (d.encrypted)
+        return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_file_is_encrypted_so_no_safe_view", "The file is encrypted, so no safe view can be made of it."),
+                       { sha256: want, renderer_reason: "ENCRYPTED", final: true, format });
+      if (!route && !(format === "text" && d.encoding === "utf-8"))
+        return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets, plain text and photographs only."), { sha256: want, format });
+      if (!route) {
+        const t = textView(bytes, false);
+        return t.ok ? { ok: true, kind: "text", derived: true, of: want, text: t.text, truncated: t.truncated, original: null }
+          : refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_text_could_not_be", "The text could not be read."), { sha256: want, renderer_reason: "NOT_TEXT" });
+      }
+      if (route === "data") {
+        if (bytes.length > GRADE_READ_MAX)
+          return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { sha256: want, renderer_reason: "TOO_LARGE", size: bytes.length, bound: GRADE_READ_MAX, format });
+        const windowed = (sheet !== null && sheet !== undefined && sheet !== "") || (fromRow !== null && fromRow !== undefined);
+        const row1 = Number.isInteger(Number(fromRow)) && Number(fromRow) >= 1 ? Number(fromRow) : 1;
+        const s = windowed ? await sheetWindow(format, bytes, { sheet: sheet === "" ? null : sheet, fromRow: row1 }) : await sheetsOf(format, bytes);
+        if (!s.ok) return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { sha256: want, renderer_reason: s.why, ...(s.size !== undefined ? { size: s.size, bound: s.bound, format } : {}) });
+        return { ok: true, kind: "data", derived: true, of: want, sheets: s.sheets, sheets_total: s.sheets_total, sheets_truncated: s.sheets_truncated, original: null };
+      }
+      if (route === "picture") {
+        const m = await makePicture(bytes);
+        if (!m.ok) return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_photographs_picture_could_not_be_made", "The photograph's safe picture could not be made."), { sha256: want, renderer_reason: m.reason, renderer_detail: m.detail, final: true });
+        return { ok: true, kind: "picture", derived: true, of: want, sha256: await digestOf(m.png), content_type: m.content_type, width: m.width, height: m.height,
+                 file_says: m.file_says, file_says_held: m.file_says_held, left_out: m.left_out, original: null, bytes: m.png };
+      }
+      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no", "Your team's Civicsmith has no safe view installed. Nothing was rendered."), { sha256: want });
+      const bucket = this.#bucket();
+      if (!bucket || typeof bucket.delete !== "function") return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { sha256: want, renderer_reason: "R2_NOT_CONFIGURED" });
+      const key = derivedKey(this.store, want);
+      if (!(await bucket.head(key))) { await bucket.put(key, bytes, { sha256: want, customMetadata: { derived: "true", of: want, kind: "view-source" } }); planted = key; }
+      const r = await this.#scanner("/render", { store: this.store, target: { capture_sha: want, parts: null, area: "derived" }, route }, { stream: true });
+      if (r.unreachable || r.absent || !r.stream || r.status !== 200) {
+        if (r.stream) await FileSafety.#drop(r.stream);
+        return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { sha256: want, renderer_reason: r.unreachable || r.absent ? "SCANNER_UNREACHABLE" : (r.body && r.body.code) || "RENDER_FAILED" });
+      }
+      const got = await FileSafety.#heldStream(r.stream, SAFE_VIEW_BYTES_MAX);
+      if (!got.ok) return refusal("SAFE_VIEW_FAILED", "The renderer refused the file.", { sha256: want, renderer_reason: got.reason });
+      const pages = Number(r.headers.get("x-pages")) || 0, source = Number(r.headers.get("x-source-pages")) || 0, truncated = r.headers.get("x-truncated") === "true";
+      return { ok: true, kind: "pdf", derived: true, of: want, sha256: r.headers.get("x-derived-sha256") || null, pages, source_pages: source, truncated, original: null,
+               statement: FileSafety.#viewStatement(pages, source, truncated), bytes: got.bytes };
+    } catch { return refusal("SAFE_VIEW_FAILED", "The safe view could not be made.", { renderer_reason: "RENDER_FAILED" }); }
+    finally { if (planted) { try { await this.#bucket().delete(planted); } catch { /* the source object is left to the store's own cleaning */ } } }
+  }
+
   /* R60, R63, R64 (T53; DEC-460): the safe picture of a photograph, once it is made. Its description (R60) is the answer; with `picture` the picture's
      own bytes are served, `image/png`, under their digest, with a short description in `x-file-safety` (what the file says is the answer's, not a
      header's). While it is not yet made the view is pending, and when it cannot be made it has failed, final (R63). Counted once as a safe view. */

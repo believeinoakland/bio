@@ -37,6 +37,7 @@ export function bucket() {
       const b = r ? all.subarray(r.offset, r.offset + r.length) : all;
       return { key: k, size: all.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
     },
+    async delete(k) { calls.push(["delete", k]); held.delete(k); sums.delete(k); },
     async put(k, bytes, opts) {
       calls.push(["put", k, opts]); held.set(k, new Uint8Array(bytes));
       if (opts && /^[0-9a-f]{64}$/.test(String(opts.sha256))) sums.set(k, Uint8Array.from(String(opts.sha256).match(/../g), (h) => parseInt(h, 16)).buffer); else sums.delete(k);
