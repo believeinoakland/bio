@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, V, MACHINE, BYLAW, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS, REASON_MAX, standardsOps } from "../../../src/standards/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { STANDARDS_SCHEMA } from "../../../src/standards/schema.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -137,13 +138,10 @@ test("R1 C-112.20's row: STANDARD_NO_REASON in standards' own family after C-112
   assert.equal(ROW.check, "C-112.20");
   assert.equal(STANDARDS_CHECKS.STANDARD_ACT_INVALID.check, "C-112.19");
   assert.equal(ROW.where, "src/standards/index.mjs #declareRefusal > is-standard-reason");
-  assert.match(ROW.translation, /your own words/);
-  assert.match(ROW.translation, /why the team holds its government to it/);
-  assert.match(ROW.translation, /at most 2,000 characters/);
-  assert.match(ROW.translation, /Nothing was written\.$/);
+  assert.match(ROW.translation, wordRx("refusal.STANDARD_NO_REASON"));
   const checks = Object.values(STANDARDS_CHECKS).map((c) => c.check);
   assert.equal(new Set(checks).size, checks.length, "no check id twice");
-  assert.match(STANDARDS_CHECKS.STANDARD_FIELD_UNKNOWN.translation, /citation, kind, issuer, text, period and reason, and never a view of its merit/);
+  assert.match(STANDARDS_CHECKS.STANDARD_FIELD_UNKNOWN.translation, wordRx("refusal.STANDARD_FIELD_UNKNOWN"));
   /* before the reason joined the act's fields, a caller sending it was refused as an unknown field; now it is taken */
   const w = seeded();
   const r = w.declare();

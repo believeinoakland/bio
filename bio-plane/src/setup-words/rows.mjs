@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8085 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8086 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -27539,6 +27539,7 @@ export const WORD_ROWS = Object.freeze([
   ["standards.index.cited_by_names_where_cited","a standard held cited names where it is cited: cited_by {captureSha, extent}, a passage of a held capture you may see. Nothing was written.",null,null,false,"code"],
   ["standards.index.documents_cite_it_as_stated","documents whose readings cite it, as the readings state their references; a document you may not see is neither answered nor counted",null,null,false,"code"],
   ["standards.index.force_read_from_provision_words","a force is read from the provision's own words and confirmed by a member; a proposal moves nothing",null,null,false,"code"],
+  ["standards.index.instrument_cannot_be_given","cannot be given: {why}",null,null,false,"code"],
   ["standards.index.no_question_your_teams_record","no question your team's record holds that you may see answers to that id. Nothing was written.",null,null,false,"code"],
   ["standards.index.no_record_of_a_version","no record of a version known in force through a date answers to that id here. Nothing was written.",null,null,false,"code"],
   ["standards.index.no_source_matches_citation","the citation matches the citation form of no source the active jurisdiction profiles list; the standard is held all the same, and where it comes from is undetermined",null,null,false,"code"],

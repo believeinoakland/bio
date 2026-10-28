@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, UNKNOWN_CITE, REASON } from "./fixture.mjs";
 import { WORD } from "./words.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { STANDARDS_CHECKS, PAGE_MAX, IN_FORCE_STATES, noSuchStandard } from "../../../src/standards/index.mjs";
 
 test("R5 standardRead answers R1's fields, R3's source, the declarer and time, both ends of a supersession, and for each text passage its standing and whether a newer capture of its document holds it, moving nothing; STANDARD_NO_ID (N269: coded, R5's NO_ID); an absent id and any id for a viewer naming no member are NO_SUCH_STANDARD, one answer", () => {
@@ -74,7 +75,7 @@ test("R7 inForce answers in_force, not_in_force or undetermined with why: not_in
     assert.ok(r.why.length > 10);
   }
   assert.match(w.s.inForce(none, "2020-06-01").why, /does not state when it came into force or when it ceased/);
-  assert.match(w.s.inForce(fromOnly, "2025-01-01").why, /ceased to be in force/);
+  assert.match(w.s.inForce(fromOnly, "2025-01-01").why, wordRx("standards.ceased_force"));
   for (const date of ["2020-02-30", "20200101", null, ""])
     assert.equal(w.s.inForce(both, date).reason, "STANDARD_DATE_INVALID", String(date));
   assert.equal(w.s.inForce("STD-2026-9999-x", "2020-01-01").reason, "NO_SUCH_STANDARD");

@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS } from "../../../src/standards/index.mjs";
+import { WORD } from "./words.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -160,7 +161,7 @@ test("R52 R53 the two rows are standards' own family, after C-112.62, each where
   assert.equal(STANDARDS_CHECKS.COMMITMENT_OWN_LETTER.where, "src/standards/index.mjs #commitmentRefusal > is-commitment-not-own-letter");
   for (const code of ["COMMITMENT_AS_HEARD", "COMMITMENT_OWN_LETTER"]) {
     const t = STANDARDS_CHECKS[code].translation;
-    assert.match(t, /Nothing was written\.$/);
+    assert.equal(t, WORD(`refusal.${code}`));
     assert.ok(!/merit|desirab|practice|confidential|Oakland|Alameda/i.test(t), t);
   }
   const checks = Object.values(STANDARDS_CHECKS).map((c) => c.check);

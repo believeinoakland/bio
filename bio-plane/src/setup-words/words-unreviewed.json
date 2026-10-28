@@ -53873,6 +53873,13 @@
       "line": 1826
     },
     {
+      "id": "standards.index.instrument_cannot_be_given",
+      "en": "cannot be given: {why}",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 915
+    },
+    {
       "id": "standards.index.no_question_your_teams_record",
       "en": "no question your team's record holds that you may see answers to that id. Nothing was written.",
       "module": "standards",
