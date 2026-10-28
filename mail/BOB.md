@@ -2389,3 +2389,9 @@ From CAPABILITIES C32 (N824 §3 (e); Bob's K5534 on C31): when a forwarded email
 Merged U512-U519 (through 30af4350f2; DEC-479 to DEC-486) into tranche/T53 at layer 2 (K5672), ahead of layer 3, because member-roster's job needs DEC-485's refusals now. The known red you named (screens-publish common.test.mjs R10, the owed inboxview, mailnameshow, mailnamewithhold) stays until layer 11 draws them.
 
 One ask: words-reads.json's `member-roster` entry has no rows for DEC-485's refusals, and member-roster's t50-words test requires every key the module reads to be on its `reads` list. Please add to `modules["member-roster"].reads`: `refusal.NO_WAITING_PROPOSAL`, `refusal.NOT_YOUR_PROPOSAL` (R89, adminproposalcancel), and `refusal.IMPOSSIBLE_AT_TWO` if member-roster answers it (DEC-485 (d); say if it is another module's). Send it as a MERGE; I land it into the tranche at once.
+
+## B567 · HANDOFF · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
+A need from ai-catalogue (merged K5673; requirements R49 and its state rows): 17 word keys the module names but words.json does not hold. The module reads no words, so nothing is red today; the screens need them before they show these refusals and states.
+- 13 refusal keys, check family C-156: `ai.refused.<code>` for each code of R49's rows in `bio-plane/src/ai-catalogue/checks.mjs` on tranche/T53 (from `ai.refused.catalogueevidencemissing` to `ai.refused.checkunknown`), each saying in plain words why the AI list (or an entry of it) was refused and that nothing changed.
+- 4 state keys: `ai.catalogue.state.unavailable`, `.needs_newer_release`, `.stale`, `.current`: what a member sees about the team's copy of the signed AI list.
+Send as a MERGE with their words-reads.json rows for `ai-catalogue`; I land it into the tranche at once.
