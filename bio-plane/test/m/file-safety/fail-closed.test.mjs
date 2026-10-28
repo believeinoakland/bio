@@ -9,6 +9,8 @@ import { fileSafetyOps, GRADE_READ_MAX, WAITING_RECHECK_MS } from "../../../src/
 
 const MIB = 1024 * 1024;
 const HOUR = 3_600_000;
+/* T53-510 (R37, K5624): a capture "above GRADE_READ_MAX" is sized from the table's active figure, never from a pinned 20 MiB */
+const partsOver = (extra) => { const sizes = []; for (let n = GRADE_READ_MAX + extra; n > 0; n -= sizes[sizes.length - 1]) sizes.push(Math.min(16 * MIB, n)); return sizes; };
 
 /* A capture of 16 + 16 + 4 MiB held in three parts, as `op=acquire` leaves it: the parts in the store, and (with `whole`) the whole
    under its own digest. `pdfLike` starts the first part with a PDF header so the whole is a PDF. */
@@ -164,11 +166,11 @@ test("R51 (F3b): a safe view whose bytes are not held when its render comes (the
   assert.equal(w2.calls("/render").length, 0);
 });
 
-test("R51 (F10): the grade never loads a whole above GRADE_READ_MAX into this object: a 36 MiB PDF is graded by its start, high with its content unread, and its safe view is still made by the renderer; a 36 MiB capture held in parts with no whole is read by its first part's start; a file under the bound is read whole as before", async () => {
+test("R51 (F10): the grade never loads a whole above GRADE_READ_MAX into this object: a PDF 16 MiB over it is graded by its start, high with its content unread, and its safe view is still made by the renderer; a capture of that size held in parts with no whole is read by its first part's start; a file under the bound is read whole as before", async () => {
   const w = world();
   w.project("PROJ-1", "m1");
-  /* a whole 36 MiB PDF, counting every load of its bytes */
-  const big = new Uint8Array(36 * MIB).fill(66); big.set(enc("%PDF-1.4\n"), 0);
+  /* a whole PDF 16 MiB over GRADE_READ_MAX, counting every load of its bytes */
+  const big = new Uint8Array(GRADE_READ_MAX + 16 * MIB).fill(66); big.set(enc("%PDF-1.4\n"), 0);
   const bs = sha(big);
   await w.bucket.put(`bio/captures/${bs}`, big);
   const loads = [];
@@ -196,7 +198,7 @@ test("R51 (F10): the grade never loads a whole above GRADE_READ_MAX into this ob
   assert.equal(w.calls("/render").length, 1);
   assert.deepEqual(loads, []);
   /* in parts, no whole */
-  const mp = multipart(w, { pdfLike: true, wholeRow: true });
+  const mp = multipart(w, { sizes: partsOver(16 * MIB), pdfLike: true, wholeRow: true });
   await mp.put(); mp.receipt();
   const gp = await w.fs.threatOf({ captureSha: mp.wsha, viewer: "member:m1" });
   assert.deepEqual([gp.format, gp.threat], ["pdf", "high"]);

@@ -97,6 +97,10 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
      Words owed by the design stream as `refusal.SIGNATURES_RUN_UNDER_WAY`; a stand-in sentence until its row lands. */
   SIGNATURES_RUN_UNDER_WAY: row('C-140.45', at("scanMirror", "is-signature-run-under-way"), localize("refusal.SIGNATURES_RUN_UNDER_WAY",
     "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.")),
+  /* R71 (T53; DEC-479 (45)): the bytes handed to `safeViewOfBytes` are not the bytes whose digest the caller stated (a stored knock that no longer matches
+     its fingerprint). A stand-in sentence until the design's row `refusal.BYTES_CHANGED` lands (DEC-479 names `screen.inbox.view.changed` for the screen). */
+  BYTES_CHANGED: row('C-140.46', at("safeViewOfBytes", "is-bytes-unchanged"), localize("refusal.BYTES_CHANGED",
+    "The bytes you asked to see are not the bytes that were fingerprinted, so nothing was shown.")),
 });
 
 /* R6 (DEC-169 (1)): each reason a file is high risk, in the words "Opening a file" shows beside the mark, each the words of

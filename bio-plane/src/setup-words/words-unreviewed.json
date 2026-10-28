@@ -26717,238 +26717,329 @@
       "en": "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records no one",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2344
+      "line": 2567
     },
     {
       "id": "file-safety.declared.openoriginal",
       "en": "file-directed: keyed by a capture's digest, reached from the safe view's one click; answers the original's bytes to a member who may see it, a high-risk file only after a fresh clean deeper check (`override`); records no one",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2346
+      "line": 2569
     },
     {
       "id": "file-safety.declared.openwithwarning",
       "en": "file-directed: keyed by a capture's digest, reached from the warning before opening; answers a high-risk original after the member's two confirmations, never under a scan hold; records no one and keeps no confirmation",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2348
+      "line": 2571
     },
     {
       "id": "file-safety.declared.releasescanhold",
       "en": "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one member's reasoned act of two, never a machine's; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2350
+      "line": 2573
     },
     {
       "id": "file-safety.declared.safeview",
       "en": "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2352
+      "line": 2575
     },
     {
       "id": "file-safety.declared.scanmirror",
       "en": "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2354
+      "line": 2577
     },
     {
       "id": "file-safety.declared.securitytooladd",
       "en": "setting: the group's security tools, an administrator's act; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2356
+      "line": 2579
     },
     {
       "id": "file-safety.declared.securitytoolremove",
       "en": "setting: the group's security tools, an administrator's act; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2358
+      "line": 2581
     },
     {
       "id": "file-safety.declared.securitytooltest",
       "en": "setting: the group's security tools, an administrator's act; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2360
+      "line": 2583
     },
     {
       "id": "file-safety.index.a_run_is_under_way",
       "en": "A check for signatures is already under way. No run was started.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1432
+      "line": 1654
     },
     {
       "id": "file-safety.index.a_safe_view_is_made",
-      "en": "A safe view is made of documents, presentations, spreadsheets and plain text only.",
+      "en": "A safe view is made of documents, presentations, spreadsheets, plain text and photographs only.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1035
+      "line": 1143
     },
     {
       "id": "file-safety.index.file_scanners_r19_refuses_the",
       "en": "file-scanner's R19 refuses the tool's description.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1640
+      "line": 1862
     },
     {
       "id": "file-safety.index.no_tool_of_the_teams",
       "en": "No tool of the team's has this id.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1704
+      "line": 1926
     },
     {
       "id": "file-safety.index.reading_scanners_state",
       "en": "reading the scanner's state",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1449
+      "line": 1671
     },
     {
       "id": "file-safety.index.reading_security_tools_offered",
       "en": "reading the security tools offered",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1593
+      "line": 1815
     },
     {
       "id": "file-safety.index.reading_teams_security_tools",
       "en": "reading the team's security tools",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1609
+      "line": 1831
     },
     {
       "id": "file-safety.index.signatures_run_download",
       "en": "A check for signatures is under way: it is downloading the signatures that changed.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1519
+      "line": 1741
     },
     {
       "id": "file-safety.index.signatures_run_seed",
       "en": "A check for signatures is under way: it is preparing the signatures the file scanner already holds.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1517
+      "line": 1739
     },
     {
       "id": "file-safety.index.signatures_run_stage",
       "en": "A check for signatures is under way: it is setting the new signatures aside to check them.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1521
+      "line": 1743
     },
     {
       "id": "file-safety.index.signatures_run_stopped",
       "en": "The last check for signatures stopped before it finished. It will be resumed shortly.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1514
+      "line": 1736
     },
     {
       "id": "file-safety.index.signatures_run_under_way",
       "en": "A check for signatures is under way.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1525
+      "line": 1747
     },
     {
       "id": "file-safety.index.signatures_run_verify",
       "en": "A check for signatures is under way: it is checking that the new signatures are genuine.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1523
+      "line": 1745
+    },
+    {
+      "id": "file-safety.index.the_bytes_are_not_the_bytes_fingerprinted",
+      "en": "The bytes are not the bytes whose fingerprint was stated. Nothing was shown.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1198
     },
     {
       "id": "file-safety.index.the_file_is_above_what_a_safe_view_reads",
       "en": "The file is above what a safe view reads. Nothing was read.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1032
+      "line": 1140
+    },
+    {
+      "id": "file-safety.index.the_photographs_picture_could_not_be_made",
+      "en": "The photograph's safe picture could not be made.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1223
+    },
+    {
+      "id": "file-safety.index.the_safe_picture_is_queued",
+      "en": "The safe picture is queued.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1260
+    },
+    {
+      "id": "file-safety.index.the_safe_pictures_bytes_are_not_held",
+      "en": "The safe picture's bytes are not held; it is made again.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1269
+    },
+    {
+      "id": "file-safety.index.the_safe_view_could_not_be_made",
+      "en": "The safe view could not be made.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1242
     },
     {
       "id": "file-safety.index.the_text_could_not_be",
       "en": "The text could not be read.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1041
+      "line": 1149
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_directory",
+      "en": "The list of what the file holds is larger than the file scanner reads.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 844
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_files",
+      "en": "The file holds more files than the file scanner opens.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 838
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_filesize",
+      "en": "The file is larger than the file scanner reads in one piece.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 834
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_other",
+      "en": "The file reached one of the limits the file scanner keeps, so it was not read to its end.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 846
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_recursion",
+      "en": "The file holds files inside files inside files, deeper than the file scanner opens.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 840
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_scansize",
+      "en": "The file, with everything inside it, is larger than the file scanner reads in all.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 836
+    },
+    {
+      "id": "file-safety.index.unscannable_limit_time",
+      "en": "The scan took longer than the time the file scanner is given for one file.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 842
+    },
+    {
+      "id": "file-safety.index.unscannable_unopenable",
+      "en": "It is a {type} file, which the file scanner cannot open.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 830
     },
     {
       "id": "file-safety.index.warned_must_be_exactly",
       "en": "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 937
+      "line": 1027
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_could_not",
       "en": "Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1244
+      "line": 1466
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_could_not_2",
       "en": "Your team's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1274
+      "line": 1496
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no",
       "en": "Your team's Civicsmith has no safe view installed. Nothing was rendered.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1058
+      "line": 1166
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_2",
       "en": "Your team's Civicsmith has no safe view installed. Nothing was rendered.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1220
+      "line": 1442
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_3",
       "en": "Your team's Civicsmith has no file scanner installed. No note was written.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1334
+      "line": 1556
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_4",
       "en": "Your team's Civicsmith has no file scanner installed, so no tool can be tested.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1716
+      "line": 1938
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_5",
       "en": "Your team's Civicsmith has no file scanner installed, so no tool can be asked.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2037
+      "line": 2259
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_6",
       "en": "Your team's Civicsmith has no file scanner installed, so no list was refreshed.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 2133
+      "line": 2355
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_holds_no",
       "en": "Your team's Civicsmith holds no evidence store, so no bytes can be served.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 946
+      "line": 1036
     },
     {
       "id": "file-scanner.catalogue.any_https_endpoint_taking_a_json",
@@ -48838,6 +48929,13 @@
       "module": "strength",
       "file": "bio-plane/src/strength/checks.mjs",
       "line": 241
+    },
+    {
+      "id": "refusal.BYTES_CHANGED",
+      "en": "The bytes you asked to see are not the bytes that were fingerprinted, so nothing was shown.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/checks.mjs",
+      "line": 102
     },
     {
       "id": "refusal.EXPORT_TOO_LARGE",

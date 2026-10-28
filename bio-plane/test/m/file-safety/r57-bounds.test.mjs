@@ -7,15 +7,16 @@ import * as FS from "../../../src/file-safety/index.mjs";
 import { READ_BOUNDS, boundOf } from "../../../src/read-bounds.mjs";
 
 const SRC = new URL("../../../src/file-safety/", import.meta.url);
-const MiB = 1048576;
 
-test("R57 R21: GRADE_READ_MAX and SAFE_VIEW_ODS_DECLARED_MAX are the table's figures (20 MiB and 8 MiB in the alpha column), and the table names both rows", () => {
+test("R57 R21: GRADE_READ_MAX and SAFE_VIEW_ODS_DECLARED_MAX are the table's active figures, and the table names both rows", () => {
   assert.equal(FS.GRADE_READ_MAX, boundOf("file_safety", "grade_read"));
   assert.equal(FS.SAFE_VIEW_ODS_DECLARED_MAX, boundOf("file_safety", "ods_declared"));
-  assert.equal(READ_BOUNDS.file_safety.grade_read.alpha, 20 * MiB);
-  assert.equal(READ_BOUNDS.file_safety.ods_declared.alpha, 8 * MiB);
-  assert.equal(FS.GRADE_READ_MAX, 20 * MiB);
-  assert.equal(FS.SAFE_VIEW_ODS_DECLARED_MAX, 8 * MiB);
+  /* T53-510: each is a row of the table whose active column is read, never a figure pinned here (the alpha column keeps today's, the standard the beta's) */
+  for (const name of ["grade_read", "ods_declared"]) {
+    const row = READ_BOUNDS.file_safety[name];
+    assert.ok([row.standard, row.alpha].includes(boundOf("file_safety", name)), name);
+    assert.ok(Number.isInteger(row.alpha) && row.alpha > 0 && row.standard >= row.alpha, name);
+  }
   assert.equal(FS.SCANNER_CALL_BOUND_MS, 8_000);
 });
 

