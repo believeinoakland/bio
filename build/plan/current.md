@@ -596,6 +596,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-354 · K4168, N824, N858 · CAPABILITIES rows
 - rows: `build/plan/T53-R1/op-capabilities.md`
 **op-declarations**
+- T53-556 · K5678, ai-accounts R35 and the ops K5457 retired · the tests of retired ops (R19, R20, R24, R30, R34, R41, R47, R68) re-pointed to the nineteen new ops, red on the tranche until then
 - T53-355 · K4599 · `screenread`, budget class per op
 - T53-356 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-357 · N1220 · every machine result labelled with its AI
@@ -616,6 +617,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-366 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/answer-envelope.md`
 **store-door**
+- T53-553 · K5677, credentials R72 retired · `routes.test.mjs` calls `aiAccountsOf(ctx)` and reads `ai-accounts`' `AI_ACCOUNT_CHECKS`, never credentials' delegates or its `ACCOUNT_CHECKS` view
 - T53-367 · N1264 · one RPC admits, stamps, runs
 - C T52-44
 - C T52-45
@@ -627,6 +629,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-371 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/signin-door.md`
 **store-assembly**
+- T53-552 · K5677, credentials R72 retired · `ask.test.mjs` calls `aiAccountsOf(ctx)`, never credentials' R72 delegates
 - C T52-46
 - C T52-47
 - T53-372 · N1259, N824 · CAPABILITIES rows
@@ -640,6 +643,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-376 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/store-request.md`
 **interface-shell**
+- T53-555 · K5677, credentials R66 · the re-authentication prompt reads `ai.reauth.connect` (no provider named)
 - T53-377 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-378 · N1220 · every machine result labelled with its AI
 - T53-379 · K4599 · one `screenread` per screen
@@ -791,6 +795,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-545 · K5650, jurisdictions R105 · `help-records.mjs:33-35` reads `view.records_help` as a list
 - rows: `build/plan/T53-R1/screens-action.md`
 **control-plane**
+- T53-554 · K5677, credentials R72 retired · `r53-routes.test.mjs` as T53-553
 - T53-461 · N1264, K4599 · routes `screenread`, folded admission
 - T53-462 · K5425 (b) · fixtures-run lines 23, 29 orphans: delete or name stand-in
 - C T52-85
