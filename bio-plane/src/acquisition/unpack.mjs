@@ -23,7 +23,7 @@ import { viewerPredicate, notAnAdmin, membershipOf } from "../membership/index.m
 import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
-import { profileOf, profileView, evidenceStorageAbsent, textTypeOf, refusedFacts, REFUSE_HEAD_BYTES } from "./index.mjs";
+import { profileOf, profileView, evidenceStorageAbsent, textTypeOf, refusedFacts, REFUSE_HEAD_BYTES, MULTIPART_KEEP_MAX } from "./index.mjs";
 import { memberRow } from "./member.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -155,6 +155,17 @@ export function partsSource(ev, parts) {
         const pos = offset + at;
         let i = starts.length - 1;
         while (i > 0 && starts[i] > pos) i--;
+        /* a part past what this module holds in memory at once (an archive held WHOLE as one object; `MULTIPART_KEEP_MAX`) is read by range, the window asked for and no more: never the object, nor its copies, resident */
+        if (parts[i].bytes > MULTIPART_KEEP_MAX) {
+          const from = pos - starts[i], take = Math.min(parts[i].bytes - from, length - at);
+          const o = await ev.get(parts[i].sha256, { range: { offset: from, length: take } });
+          if (!o) throw new Error("a part is no longer held");
+          const w = new Uint8Array(await o.arrayBuffer());
+          if (w.length !== take) throw new Error("a part's size changed");
+          out.set(w, at);
+          at += take;
+          continue;
+        }
         const b = await load(i);
         const from = pos - starts[i], take = Math.min(b.length - from, length - at);
         out.set(b.subarray(from, from + take), at);
