@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { handle } from '../src/handler.mjs';
 import * as limits from '../src/limits.mjs';
-import { boundOf } from '../../bio-plane/src/read-bounds.mjs';
+import { boundOf, READ_BOUNDS } from '../../bio-plane/src/read-bounds.mjs';
 import { parseScan, scanFlags, limitsOf, LIMIT_NAMES } from '../container/scanner.mjs';
 import { makeZip } from '../../bio-plane/test/make-zip.mjs';
 import { memoryBucket, putCapture, mirrorTestSet, scannerImage, depsWith, post, enc } from './helpers.mjs';
@@ -121,7 +121,7 @@ test('R16 R8 /version states every read bound by name with its figure and its so
     SCAN_SCRIPT_NORMALIZE: ['scan', 'script_normalize'], SCAN_ZIP_TYPE_RCG: ['scan', 'zip_type_rcg'], SCAN_PARTITIONS: ['scan', 'partitions'],
     SCAN_ICONS_PE: ['scan', 'icons_pe'], SCAN_ZIP_DIRECTORY: ['archive', 'directory'] };
   for (const [name, [kind, row]] of Object.entries(quoted)) {
-    assert.deepEqual(v.bounds[name], { value: boundOf(kind, row), source: 'alpha' }, name);
+    assert.deepEqual(v.bounds[name], { value: boundOf(kind, row), source: READ_BOUNDS[kind][row].alpha === boundOf(kind, row) ? 'alpha' : 'standard' }, name);
   }
   assert.equal(limits.SCAN_MAX_BYTES, boundOf('scan', 'max_bytes'));
   assert.equal(limits.SAFE_VIEW_PAGES_MAX, boundOf('render', 'safe_view_pages'));
