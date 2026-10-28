@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { world, E, BOB, CAROL, MACHINE, ZONE, SHA } from "./fixture.mjs";
 import * as index from "../../../src/duties/index.mjs";
 import * as vocab from "../../../src/duties/vocab.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const { DUTIES_CHECKS, NEVER_SAID, NOTICED } = index;
 const VOCAB = fileURLToPath(new URL("../../../src/duties/vocab.mjs", import.meta.url));
@@ -120,7 +120,7 @@ test("R28 once adopted, a review date passed with no review matched is answered 
   assert.equal(late.why, localize("duties.why.body_review_date", "the body's own review date, a commitment it stated, has passed and no review is recorded"));
   assert.deepEqual(late.due.date, day("2026-02-15"));
   assert.deepEqual([late.due.basis_kind, late.due.law_set, late.derivation.law_set], ["commitment", false, false]);
-  assert.match(late.question, /not a deadline the law sets/);
+  assert.equal(late.question, word("duties.question.policy_reviewed_date", { date: "2026-02-15" }));
   const text = JSON.stringify(late).toLowerCase();
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
   assert.ok(!/deadline the law sets has passed|is overdue/.test(text));

@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, fictionalView, E, BOB, CAROL, MACHINE, ZONE } from "./fixture.mjs";
 import { DUTIES_CHECKS, OCCURRENCE_KEY_RE, noSuchDuty, INTERNAL, Duties } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { list as profiles, combine } from "../../../../jurisdictions/index.mjs";
 
 const AS_OF = "2026-03-02T12:00:00Z";
@@ -52,7 +53,7 @@ test("R1, R4 a reported status is checked against the active profiles' response_
   const top = world({ view: fictionalView({ vocabulary: {}, response_statuses: [{ status: "implemented" }] }) });
   const r = top.declare({ reported_status: [{ status: "implemented", extent: top.passage().contentId }] });
   assert.equal(r.reason, "UNKNOWN_REPORTED_STATUS");
-  assert.match(r.detail, /hold no response vocabulary/);
+  assert.equal(r.detail, word("duties.index.the_active_jurisdiction_profiles_hold"));
   assert.deepEqual(r.statuses, []);
 });
 

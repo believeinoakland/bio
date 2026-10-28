@@ -86,7 +86,7 @@ test("R1 refusals for a duty's fields, in order, each writing nothing, with a pa
   const bc = bare.passage().contentId;
   const none = bare.duties.declare({ ...bare.fields({ reported_status: [{ status: "implemented", extent: bc }] }), clause: "c", by: BOB });
   row(none, "UNKNOWN_REPORTED_STATUS");
-  assert.match(none.detail, /hold no response vocabulary/);
+  assert.equal(none.detail, word("duties.index.the_active_jurisdiction_profiles_hold"));
   /* nothing refused was written: count the accepted ones */
   assert.equal(w.sqlRows(`SELECT COUNT(*) AS n FROM duties`)[0].n, 17);
 });
@@ -224,7 +224,7 @@ test("R7 readDuty answers every field, its versions, proposal, adoption and in_f
                    "version", "versions", "proposal", "adoption", "withdrawn", "in_force"])
     assert.ok(k in d, k);
   assert.deepEqual([d.in_force.date, d.in_force.state], ["2026-03-01", "in_force"]);
-  assert.match(d.in_force.why, /lies within the period in force/);
+  assert.equal(d.in_force.why, word("standards.why.lies_within_period_force", { date: d.in_force.date, from: d.in_force.version.from, to: d.in_force.version.to, by: "" }));
   assert.equal(d.words, "obligation");
   for (let i = 0; i < 4; i++) w.declare({ obligee: E.council });
   assert.equal(w.duties.dutiesOf({ entity: E.clerk, viewer: BOB }).count, 4);

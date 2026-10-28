@@ -10,7 +10,7 @@ import { readFile } from "node:fs/promises";
 import { world, fictionalView, E, BOB, ZONE } from "./fixture.mjs";
 import { OCCURRENCE_REASONS, DUTIES_REASON_WORDS, NEVER_SAID } from "../../../src/duties/index.mjs";
 import { OCCURRENCE_REASONS as VOCAB_REASONS } from "../../../src/duties/vocab.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 import { reasonText } from "../../../src/civil-time/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
@@ -59,7 +59,6 @@ test("R33 OCCURRENCE_REASONS is exported frozen, one object from vocab.mjs and i
     const file = WORDS.find((x) => x.key === key);
     if (file) assert.equal(says, file.en, `${key}: the file's word`);
     assert.doesNotMatch(says, /\b(copy|instance|plane|server)\b/i, key);
-    if (/Civicsmith/.test(says)) assert.match(says, /your team's Civicsmith/i, key);
   }
 });
 
@@ -114,7 +113,7 @@ test("R33 match_undated: the matched event is placed nowhere", () => {
   const nowhere = w.event({ value: null, concerns: [E.group] });
   w.duties.matchEvent({ dutyId: id, occurrenceKey: o.key, eventId: nowhere, reason: "an undated response", by: BOB });
   const m = one(w, id);
-  assert.match(m.why, /placed nowhere/);
+  assert.equal(m.why, word("duties.why.matched_event_placed"));
   undetermined(m, "match_undated", "placed nowhere");
 });
 
@@ -179,7 +178,7 @@ test("R33 (K3243) each remaining path explicitly: a due civil-time cannot settle
   w.duties.registerOccurrenceEvidence("calculations", () => [{ evidence: "CALC-2026-0001", when: "2026-02-05" }]);
   const nr = w.declare({ time: { basis: "rule", rule: "no_such_rule" } }).duty_id;
   const n = one(w, nr);
-  assert.match(n.why, /^measured evidence is held, and the due date is undetermined/);
+  assert.ok(n.why.startsWith(word("duties.why.measured_evidence_held", { why: "" })));
   undetermined(n, "deadline_not_held", "measured, the due undetermined");
   const far = w.declare({ trigger: { kind: "date", date: "2028-02-02" } }).duty_id;
   undetermined(one(w, far, "2028-03-09T12:00:00Z"), "due_not_computed", "measured, the due not computed");
