@@ -25,3 +25,7 @@
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 6 | reading-guides | 0 / 0 | 4 / 0 / 2 (3) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-531 · jurisdictions R126 (N858) · check that the guide offer calls `attributionLacks`. Detail: the functions are exported by `jurisdictions` (R126: `attributionLacks(entry)`, `textsLack(profile)`, `countedReview(entry)`), not by `record-grammar`; the guide offer (R13, R15, `procedureGuidesFor`) answers a profile guide only when `attributionLacks` answers none, else `not_offered: [{kind, lacks}]`, and says "reviewed by" from `countedReview`'s answer. The words of `lacks` are `writer`, `sources`, `professional_review`, `second_approval`. A guide's "sources" lacks when it has no item (R126). Reading-guides has no line for this yet (N858 R19 in planning is "R19" in the handoff and "R18" in jurisdictions R126: the id is BOB's to give). `[owed: BOB writes the line]`

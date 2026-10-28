@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odsEntry, ODF_REPEAT_EXPANSION_MAX } from "../../../src/odf.mjs";
 import { ods, tableOf, rowOf, cellOf, floatOf } from "./r9.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 const errorCell = (attrs) => `<table:table-cell ${attrs}><text:p>#DIV/0!</text:p></table:table-cell>`;
 const MAX = ODF_REPEAT_EXPANSION_MAX;
@@ -51,7 +52,9 @@ test("R56 every over_repeat_bound marker carries final, from text(), structure()
   const ci = await odsEntry.cellsIn(units, { sheet: "S" });
   assert.equal(ci.ok, false);
   assert.equal(ci.final, true);
-  const chars = ods(tableOf("C", rowOf(cellOf("x".repeat(1 << 20)).replace(">", ' table:number-columns-repeated="22">'))));
+  // a MiB of text repeated past the ods.content_xml row's figure (read from runtime-limits): over, whatever the figure
+  const copies = Math.floor(boundOf("ods", "content_xml") / (1 << 20)) + 2;
+  const chars = ods(tableOf("C", rowOf(cellOf("x".repeat(1 << 20)).replace(">", ` table:number-columns-repeated="${copies}">`))));
   const tc = await odsEntry.text(chars);
   assert.equal(tc.undetermined[0].metric, "repeated_text_chars");
   assert.equal(tc.undetermined[0].final, true);

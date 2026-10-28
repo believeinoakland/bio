@@ -48,3 +48,7 @@ control-plane's second run was cut off by the session's two-hour limit; its firs
 
 ## 2. Order and `uses` (BOB's, P4)
 8. **The retired ops and service names** (ai-accounts' twelve) are still named in sixteen modules: op-declarations, op-grades, admission, store-door, store-request, store-assembly, control-plane, interface-shell, signin-door, screens-settings, screens-entry, screens-inquiry, screens-daily, wizard-scripts, affordances, journey-check. Each of those layer-11 jobs takes the re-pointing as a CHANGE in the same round (no aliases, ai-accounts For BOB 6); the plan names it in each job's START.
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-536 · reader-container's report · the routing of `reader-container` as a fleet member. Detail: after T53-523 (bundler), control-plane routes to it (K5448 (4)); `[owed: BOB schedules it]`.

@@ -46,3 +46,28 @@ Size (session_018BhcegW9K1yhVCSYsMB8Ve): test runs 1, module lines 3590
 
 Tests: 80/80. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcegW9K1yhVCSYsMB8Ve): test runs 2, module lines 3590
+
+## Completion (2026-10-28)
+
+# image-codecs · T53 · report 3 (BOB #327 CHANGE: row-streaming decode for a 48 MP JPEG)
+
+**Entries applied**
+- No change to image-codecs. Merged origin/tranche/T53 (clean).
+
+**Finding: the decoder already streams.** `decodeBaselineJpegRows` (pdf-worker/src/dctdecode.mjs) hands rows on in strips of at most 8 x vmax rows, one MCU row of samples per component at a time, and its test "R11 one MCU row at a time" already asserts the bound. Its live set does not grow with the image height.
+
+**Why a 48 MP JPEG still does not redraw: the holds are in image-cover and in its bounds, not in the decoder.**
+- `bio-plane/src/image-cover/redraw.mjs` `decodeRows` allocates the whole filtered output, `(stride + 1) * H` bytes, before deflating it. For a 48 MP photo that is the whole bitmap, and `deflateBounded` holds it again until it is compressed.
+- Its input gate, `stride * H > picture_frame`, refuses the frame first. `picture_frame` is 4096 x 3072 x 3 = 37,748,736 bytes (read-bounds.mjs:98). A 48 MP photo is 144 MB as RGB and 48 MB as grey, so both are over it.
+- The output gate is `redraw_bytes` = 32 MiB (33,554,432). A redrawn PNG of a 48 MP colour photo would need to compress to about 4.5:1 to fit (roughly 3.8:1 for grey). Photographs usually compress far less than that, so streaming the decode alone would not put the PNG within `redraw_bytes`. This is an estimate from the sizes, not a measurement; I did not build a 48 MP fixture.
+
+**What it needs (for BOB to place)**
+1. image-cover: stream the filtered rows into the deflater as they are produced, rather than holding the whole filtered bitmap (its job, bio-plane/src/image-cover).
+2. A decision on `picture_frame` (runtime-limits): either raise it for the streamed path, or keep it and accept that a 48 MP photo is refused (BOB's; P17).
+3. A decision on whether a 48 MP photo can fit `redraw_bytes` at all. If not, the target is wrong and needs a different number or a different output (BOB's; K1881).
+4. A test that decodes a large JPEG by rows and bounds the peak, if (1) lands. It belongs to image-cover's interface, with the decoder's existing row test as its base.
+
+**Met** · none
+
+Tests: 80/80. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcegW9K1yhVCSYsMB8Ve): test runs 3, module lines 3590

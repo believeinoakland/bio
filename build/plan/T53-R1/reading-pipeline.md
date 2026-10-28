@@ -28,3 +28,7 @@
 
 **reading-pipeline** (decided, BOB #324: the per-character measure lives in text-chain, layer 1; reading-pipeline produces the reading)
 - T53 · DEC-479 (51) · a count of the words below the reader's own measured clarity on a reading, with their positions; only where the reader measured it (never a model's opinion of itself, `TEXT_CONFIDENCE_PSEUDO`) · DEC-479
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-528 · format-registry's finding · the 14 tests and their five sites. Detail: `index.mjs:1664, 2153, 2833, 2975, 3018` read `detectFormat(...).format !== "undetermined"` as "a format is known" (the R49 UTF-16 tests and the R50 big text, JSON and XML tests). `text` is a text reading; `unlisted` is held (R38, RF10) and `refused` is not filed (RF11); a JSON or XML file is `json` or `xml`, read as structured text, not as an unknown. Each site and its tests are re-stated by the kind of answer; `:2153` (a UTF-8 probe not taken for HTML or UTF-16) keeps its meaning with `text`. Goes with T53-124 (held-unread re-run).

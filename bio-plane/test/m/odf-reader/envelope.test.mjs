@@ -8,6 +8,7 @@ import { odtEntry, odsEntry, odpEntry } from "../../../src/odf.mjs";
 import { linkWrapper } from "../../../src/subresources.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { buildZip, members, pkg, withCd, metaXml, manifestXml, sha256, enc, OVER_BOUND } from "./pkg.mjs";
+import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
 
 const ENTRIES = { odt: odtEntry, ods: odsEntry, odp: odpEntry };
 const FLAVOURS = ["odt", "ods", "odp"];
@@ -118,7 +119,7 @@ test("R29 the manifest's embedded members become sha256 intra links; images, fon
     // over the bound, no member is inflated and each is stated
     const big = await ENTRIES[f].structure(buildZip(withCd(members(f, { manifestEntries: ["a.bin", "b.bin"],
       extra: [{ name: "a.bin", data: "a" }, { name: "b.bin", data: "b" }] }), "a.bin", { usize: OVER_BOUND })));
-    const why = `embeddings_over_size_bound:${OVER_BOUND + 1}>${20 * 1024 * 1024}`;
+    const why = `embeddings_over_size_bound:${OVER_BOUND + 1}>${MEASURED_OOXML_TEXT_BOUND_BYTES}`;
     assert.deepEqual(big.links, [undet(why, "a.bin"), undet(why, "b.bin")]);
     // a manifest listing nothing embedded: the empty partition is explained
     const plain = await ENTRIES[f].structure(pkg(f, { manifestEntries: ["Pictures/p.png", "styles.xml"], extra: [{ name: "Pictures/p.png", data: "p" }] }));
