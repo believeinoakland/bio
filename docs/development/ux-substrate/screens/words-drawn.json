@@ -13892,7 +13892,7 @@
   },
   {
    "key": "screen.members.a.lone.administrator.can.never",
-   "en": "Apart from the founder, a lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
+   "en": "A lone administrator can never remove anyone by vote, at any size; removal by vote only gets easier as the team grows.",
    "protected": false,
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
@@ -29162,7 +29162,7 @@
   },
   {
    "key": "screen.doorbell.consent.refused.secret",
-   "en": "That secret was not recognised, so nothing was recorded.",
+   "en": "That secret was not recognized, so nothing was recorded.",
    "protected": false,
    "note": "DEC-375: B398 C17 (knockerconsent): refusal, first sentence (the plane answers every failure alike)"
   },
@@ -46334,13 +46334,13 @@
   },
   {
    "key": "screen.members.proposal.summary",
-   "en": "When the founder endorses, or the proposal is cancelled",
+   "en": "When the founder endorses, or the proposal is canceled",
    "protected": false,
    "note": "DEC-484: members: the design page's fold for a proposed administrator's two outcomes"
   },
   {
    "key": "screen.members.proposal.cancelled",
-   "en": "{handle}'s proposal is cancelled. They stay a member, without an administrator's powers; the endorsements given so far stay in the history.",
+   "en": "{handle}'s proposal is canceled. They stay a member, without an administrator's powers; the endorsements given so far stay in the history.",
    "protected": false,
    "note": "DEC-484: members: after Cancel this proposal (K5563)"
   },
@@ -46388,7 +46388,7 @@
   },
   {
    "key": "refusal.NO_WAITING_PROPOSAL",
-   "en": "There is no waiting proposal to cancel: it was already accepted or cancelled. Nothing was changed.",
+   "en": "There is no waiting proposal to cancel: it was already accepted or canceled. Nothing was changed.",
    "protected": false,
    "note": "DEC-485: adminproposalcancel (K5566)"
   },
@@ -46457,6 +46457,108 @@
    "en": "If the site asks for a person",
    "protected": false,
    "note": "DEC-486: add: the fold"
+  },
+  {
+   "key": "ai.refused.catalogueevidencemissing",
+   "en": "The list of AIs was refused because one of its claims doesn't say where it was found. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.1 CATALOGUE_EVIDENCE_MISSING"
+  },
+  {
+   "key": "ai.refused.catalogueentryinvalid",
+   "en": "The list of AIs was refused because one of its AIs is described wrongly or incompletely. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.2 CATALOGUE_ENTRY_INVALID"
+  },
+  {
+   "key": "ai.refused.catalogueplaninvalid",
+   "en": "The list of AIs was refused because one of its plans is described wrongly or incompletely. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.3 CATALOGUE_PLAN_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguepayloadinvalid",
+   "en": "The list of AIs was refused because part of it couldn't be read. One wrong part refuses the whole list. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.4 CATALOGUE_PAYLOAD_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguepathinvalid",
+   "en": "The list of AIs wasn't fetched: it pointed somewhere other than where the list is published. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.5 CATALOGUE_PATH_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguerollbackunknown",
+   "en": "Your team's Civicsmith doesn't hold that earlier list of AIs, so it can't go back to it. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.6 CATALOGUE_ROLLBACK_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.catalogueunavailable",
+   "en": "Your team's Civicsmith holds no checked list of AIs yet, so it can offer none. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.7 CATALOGUE_UNAVAILABLE"
+  },
+  {
+   "key": "ai.refused.digestmismatch",
+   "en": "The list of AIs that arrived isn't the one that was announced, so it was refused. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.8 DIGEST_MISMATCH"
+  },
+  {
+   "key": "ai.refused.notnewer",
+   "en": "The list of AIs that arrived is no newer than the one your team holds, so it wasn't applied. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.9 NOT_NEWER: a replayed old list changes nothing"
+  },
+  {
+   "key": "ai.refused.advisorybadmove",
+   "en": "A notice about an AI asked for a change the list doesn't allow, such as bringing back a retired AI, so it was refused. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.10 ADVISORY_BAD_MOVE"
+  },
+  {
+   "key": "ai.refused.advisoryreasonunknown",
+   "en": "A notice about an AI gave a reason Civicsmith doesn't recognize, so it was refused. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.11 ADVISORY_REASON_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.partunknown",
+   "en": "The list of AIs doesn't cover that kind of work, so no AIs were listed for it. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.12 PART_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.checkunknown",
+   "en": "That isn't one of the checks an AI must pass, so it can't be required. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.13 CHECK_UNKNOWN: also a shown-only value (terms, breach notice) asked as a requirement"
+  },
+  {
+   "key": "ai.catalogue.state.unavailable",
+   "en": "Your team's Civicsmith has no checked list of AIs yet, so it can't offer any AI.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: nothing verified held"
+  },
+  {
+   "key": "ai.catalogue.state.needs_newer_release",
+   "en": "A newer list of AIs exists, but this version of your team's Civicsmith can't read it. It offers the list it has until Civicsmith is updated.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: a signed list of a schema this copy cannot read"
+  },
+  {
+   "key": "ai.catalogue.state.stale",
+   "en": "The list of AIs may be out of date.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: no successful check within the policy's days; the date is screen.aiproviders.list.old's"
+  },
+  {
+   "key": "ai.catalogue.state.current",
+   "en": "The list of AIs is up to date.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: current"
   }
  ],
  "rewrite": {
@@ -46615,7 +46717,7 @@
   "find.query.placeholder": "Words to find",
   "screen.held.ineligible.alone": "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
   "screen.inbox.ladder.basis": "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
-  "screen.doorbell.received": "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  "screen.doorbell.received": "Received on {at}. A member of the team will read it. Keep what this receipt shows: this page does not know who you are, so that is all you have to ask about it.",
   "screen.capture.address.existed": "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
   "screen.document.cite.question": "Cite in which question",
   "screen.finder.widen": "Documents holding at least one of the words: {n}.",
@@ -46689,7 +46791,10 @@
   "standard.source.capture.whole": "could be captured: {capture}",
   "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}",
   "screen.doorbell.happens.court": "A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them.",
-  "refusal.CONSENSUS_REQUIRED": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}.",
-  "screen.members.remove.reason": "Why remove their administrator's powers? (everyone on the team will see this)"
+  "refusal.CONSENSUS_REQUIRED": "Your endorsement is recorded. Still to endorse: {awaiting}.",
+  "screen.members.founder": "the team's founder",
+  "screen.members.remove.reason": "Why remove their administrator's powers? (everyone on the team will see this)",
+  "session.reauth": "For this, enter your password again: signing or publishing a case, changing administrators and connecting an AI account always ask.",
+  "refusal.REAUTH_DUE": "Type your password again to do this. Signing or publishing a case, changing administrators and connecting an AI account always ask for it. Nothing was changed."
  }
 }
