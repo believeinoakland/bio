@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "../../../src/record-core/index.mjs";
-import { coreOver, evidencePartsRefusal, perItemRetained, tableDeclarationRefusals } from "./fixtures.mjs";
+import { coreOver, evidencePartsRefusal, perItemRetained, tableDeclarationRefusals, BEGIN_FAILURE } from "./fixtures.mjs";
 
 test("R21 R34: coreOver answers bundleInfo, declarePurge and declareTable as record-core does, over the test's own database", () => {
   const db = new DatabaseSync(":memory:");
@@ -31,7 +31,7 @@ test("R38 R87: evidencePartsRefusal answers EVIDENCE_STORE_REFUSED (C-102.39) wh
     assert.equal(typeof r.detail, "string");
   }
   assert.match(refused.detail, /R2 is down/);
-  assert.match(threw.detail, /would not begin/);
+  assert.ok(threw.detail.includes(BEGIN_FAILURE), "the detail carries what the store threw");
 });
 
 test("R49 R50 R55: perItemRetained answers SET_ITEMS_RETAINED (C-75.5) with one applied item and one retained", () => {
