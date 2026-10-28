@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MEMBER, portionUnknown } from "./fixture.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const STD = "STD-2026-0001";
 const stages = [{ key: "need", cardinality: "1", required: "always" }, { key: "award", after: "need", cardinality: "1", required: "always" }];
@@ -67,5 +68,5 @@ test("R39 R5: the read answers the standard with standards.inForceAt on the read
   w.tz.zone = null;
   const nz = w.p.readProgression({ progressionKey: "proc", viewer: MEMBER }).basis.standard.in_force;
   assert.deepEqual([nz.date, nz.state], [null, "undetermined"]);
-  assert.match(nz.why, /no time zone governs/);
+  assert.match(nz.why, wordRx("progressions.why.time_zone_governs"));
 });

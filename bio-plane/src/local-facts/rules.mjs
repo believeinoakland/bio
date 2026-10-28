@@ -17,7 +17,13 @@
  * `GroupRules` is reached through `LocalFacts` (its `ruleDraft`, `ruleConfirm`, `groupRules`, `governingView`,
  * `ruleWithdraw`, `ruleOffer`), which passes the host's readers: `combine` and `validate` (`jurisdictions`), the active
  * profile ids (record-core's setting), `sourceRefusal` (the primary source's check over `content`), `instant` and
- * `dayOf` (the local day of an instant in the view's zone). */
+ * `dayOf` (the local day of an instant in the view's zone).
+ *
+ * (T53, R24, R28) These rules are entries of THE one team layer (`layer.mjs`; `jurisdictions` R115): a rule is stored with
+ * its `layer` (`team`) and, when it is about one government, that `government`, and the view tags each applied rule
+ * `origin: "team"` with its `layer` and `government`. A rule's key is judged within its layer and government first, then
+ * across the active layers (R28). `combined` is the view the host builds over the active layers and the team layer's own
+ * confirmed entries; `layers` is the host's reading of which layers a rule may name (`writable`, `closure`). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
@@ -26,6 +32,7 @@ import { viewerPredicate } from "../membership/index.mjs";
 import { refusal } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { COUNTS, DIRECTIONS, LEGAL_FACT_TRIGGERS, OWED_BY, STARTS, UNITS } from "../../../jurisdictions/index.mjs";
+import { TEAM_LAYER } from "./paths.mjs";
 
 /** R10: the sections a group's rule may be drafted in (`jurisdictions` R26, R79). */
 export const RULE_SECTIONS = Object.freeze(["deadlines", "legal_facts"]);
@@ -72,10 +79,19 @@ export const RULE_FIELDS = Object.freeze({
 /** R12: the `profile` a group rule is tagged with in `governingView`. */
 export const GROUP_PROFILE = "group";
 
-const str = (v) => (typeof v === "string" ? v.trim() : "");
-const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
-const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
+export const str = (v) => (typeof v === "string" ? v.trim() : "");
+export const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+export const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
+export const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
+/** R23, R28: the government an entry or rule is about: `{level, place}` of a county or a city (`jurisdictions` R115); the
+ *  errors of a malformed one, in `jurisdictions`' shape. */
+export const governmentErrors = (g, at = "government", levels = ["county", "city"]) => {
+  if (!isObj(g) || Object.keys(g).sort().join() !== "level,place" || !levels.includes(g.level)
+      || typeof g.place !== "string" || !g.place.trim() || g.place.length > 200 || /[\r\n]/.test(g.place))
+    return [{ path: at, code: "LAYER_INVALID", detail: localize("local-facts.rules.government_is_level_place", "government is {level, place}: level {levels}, place a name of 1 to 200 characters on one line", { levels: String(levels.join(" or ")) }) }];
+  return [];
+};
+export const sameGovernment = (a, b) => (!isObj(a) && !isObj(b)) || (isObj(a) && isObj(b) && a.level === b.level && (a.place ?? null) === (b.place ?? null));
 const RULE_ID_RE = /^GR-([1-9][0-9]{0,15})$/;
 const ruleId = (seq) => `GR-${seq}`;
 
@@ -86,13 +102,13 @@ const keyOf = (section, e) => (!isObj(e) ? null : section === "deadlines"
 const keyWords = (section, e) => (section === "deadlines" ? { rule: e.rule, applies_to: e.applies_to } : { key: e.key });
 
 /* A member's identity, folded so the founder's two spellings (`admin`, `member:admin`) are one (membership R43). */
-function who(by) {
+export function who(by) {
   const s = str(by);
   const g = viewerPredicate(s);
   return g.member ?? s;
 }
 /* A viewer naming a member (R12): a `member:<id>` viewer or the founder's. */
-const namesMember = (viewer) => { const g = viewerPredicate(viewer); return g.scope === "participant"; };
+export const namesMember = (viewer) => { const g = viewerPredicate(viewer); return g.scope === "participant"; };
 
 /* The view's profile tags (`profile`, `bases`, jurisdictions R13, R14) taken off, so a section copied from it validates
    as a profile's own. */
@@ -111,12 +127,12 @@ const CONTEXT_SECTIONS = ["action_kinds", "counterparties", "records_laws", "sta
   "computation", "weekend", "time_zone"];
 
 export class GroupRules {
-  constructor({ sql, record, combine, validate, profileIds, sourceRefusal, instant, dayOf }) {
+  constructor({ sql, record, combined, validate, layers, sourceRefusal, instant, dayOf }) {
     this.sql = sql;
     this.record = record;
-    this.combine = combine;
+    this.combined = combined;
     this.validate = validate;
-    this.profileIds = profileIds;
+    this.layers = layers;
     this.sourceRefusal = sourceRefusal;
     this.instant = instant;
     this.dayOf = dayOf;
@@ -124,10 +140,10 @@ export class GroupRules {
 
   #rows(qs, ...a) { return [...this.sql.exec(qs, ...a)]; }
 
-  /* `jurisdictions.combine` over the active profiles, as record-core's setting names them (its R26). */
+  /* `jurisdictions.combine` over the active layers, as record-core's setting names them (its R26), with the team layer's
+     own confirmed entries (R23) beside them. */
   #combined() {
-    const ids = this.profileIds();
-    try { return this.combine(Array.isArray(ids) ? ids : []); }
+    try { return this.combined(); }
     catch (e) { return { ok: false, errors: [{ code: "COMBINE_FAILED", detail: String(e && e.message || e).slice(0, 200) }] }; }
   }
 
@@ -137,7 +153,8 @@ export class GroupRules {
     const byDraft = new Map();
     for (const r of this.#rows(`SELECT * FROM local_rule_acts ORDER BY seq`)) {
       if (r.act === "draft") {
-        byDraft.set(r.seq, { rule: ruleId(r.seq), seq: r.seq, section: r.section, entry: safeJson(r.entry_json),
+        byDraft.set(r.seq, { rule: ruleId(r.seq), seq: r.seq, section: r.section, layer: r.layer ?? TEAM_LAYER,
+                             government: safeJson(r.government_json), entry: safeJson(r.entry_json),
                              source: safeJson(r.source_json), reason: r.reason, drafter: r.by_member, drafted_at: r.at,
                              state: "drafted", confirmation: null, withdrawal: null });
         continue;
@@ -182,7 +199,7 @@ export class GroupRules {
       for (const r of rules) {
         const list = Array.isArray(view[r.section]) ? view[r.section] : (view[r.section] = []);
         const k = keyOf(r.section, r.entry);
-        const held = list.find((e) => keyOf(r.section, e) === k);
+        const held = list.find((e) => keyOf(r.section, e) === k && (e.profile !== GROUP_PROFILE || sameGovernment(e.government, r.government)));
         if (k === null || held) {
           conflicts.push({ at: `${r.section}[${JSON.stringify(keyWords(r.section, r.entry || {}))}]`,
                            values: [{ profile: held ? held.profile : null, rule: r.rule }],
@@ -192,7 +209,8 @@ export class GroupRules {
         const basis = `${this.#day(c.view, r.confirmation.at)} ${r.rule}`;
         const applied = clone(r.entry);
         delete applied[EFFECTIVE_FROM];
-        list.push({ ...applied, status: "researched", basis, profile: GROUP_PROFILE,
+        list.push({ ...applied, status: "researched", basis, profile: GROUP_PROFILE, layer: r.layer, origin: "team",
+                    ...(r.government ? { government: clone(r.government) } : {}),
                     bases: [{ profile: GROUP_PROFILE, basis }] });
       }
       return { ...c, view, conflicts };
@@ -212,43 +230,53 @@ export class GroupRules {
     const b = isObj(a) ? a : {};
     const machine = machineRuleRefusal(b.by);
     if (machine) return machine;
+    /* R28: the layer a rule belongs to is the team's one layer (absent reads as it); a Civicsmith layer is read-only (R23) */
+    const layer = b.layer === undefined || b.layer === null ? TEAM_LAYER : b.layer;
+    const notWritable = this.layers.writable(layer);
+    if (notWritable) return notWritable;
     const section = b.section;
     if (!RULE_SECTIONS.includes(section)) return sectionRefusal(section);
     const at = this.instant();
     const c = this.#combined();
-    const errors = this.#entryErrors(section, b.entry, c && c.ok ? c.view : null, at);
-    /* DEC-49 REGION is-rule-entry */
-    if (errors.length)
-      return refusal("RULE_ENTRY_INVALID", `the entry is not valid as a ${section} entry of a jurisdiction profile.`,
-                     { errors: errors.slice(0, 20) });
-    /* END DEC-49 REGION is-rule-entry */
+    const government = b.government === undefined || b.government === null ? null : b.government;
+    const errors = [...(government === null ? [] : governmentErrors(government)),
+                    ...this.#entryErrors(section, b.entry, c && c.ok ? c.view : null, at)];
+    if (errors.length) return entryInvalidRefusal(`the entry is not valid as a ${section} entry of a jurisdiction profile.`, errors);
     const bad = this.sourceRefusal(b.source, b.viewer);
-    /* DEC-49 REGION is-rule-source */
-    if (bad)
-      return refusal("RULE_NO_SOURCE", "a rule is drafted from a held capture extent of its primary source "
-                     + `({captureSha, extent}): ${bad.why}`, bad.code ? { source_code: bad.code } : undefined);
-    /* END DEC-49 REGION is-rule-source */
+    if (bad) return noSourceRefusal("a rule", bad);
     const entry = { ...clone(b.entry) };
     delete entry.basis; delete entry.status;
     const k = keyOf(section, entry);
     const gv = this.governingView();
-    const held = gv && gv.ok && Array.isArray(gv.view[section]) ? gv.view[section].find((e) => keyOf(section, e) === k) : null;
+    /* R28: the key is judged within the team's layer and the rule's government first, then across the active layers */
+    const inView = gv && gv.ok && Array.isArray(gv.view[section]) ? gv.view[section].filter((e) => keyOf(section, e) === k) : [];
+    const held = inView.find((e) => e.profile === GROUP_PROFILE && sameGovernment(e.government, government))
+      ?? inView.find((e) => e.profile !== GROUP_PROFILE) ?? null;
     /* DEC-49 REGION is-rule-new */
     if (held)
       return refusal("RULE_IN_PROFILE", `the governing view already holds ${section} ${JSON.stringify(keyWords(section, entry))}`
                      + ` (from ${held.profile === GROUP_PROFILE ? `the team's rule, ${held.basis}` : `the profile ${held.profile}`}); `
                      + "dispute it or offer a correction instead.",
-                     { held: { section, ...keyWords(section, entry), profile: held.profile ?? null } });
+                     { held: { section, ...keyWords(section, entry), profile: held.profile ?? null,
+                               layer: held.profile === GROUP_PROFILE ? TEAM_LAYER : held.layer ?? held.profile ?? null } });
     /* END DEC-49 REGION is-rule-new */
     const reason = str(b.reason);
     const noReason = reasonRefusal(reason);
     if (noReason) return noReason;
+    /* R28: a closure list a rule names is stored as `<layer id>:<name>` when it resolves to a list of some layer, so a name
+       another layer later gives cannot take its place; two layers giving a bare name is NAME_AMBIGUOUS */
+    for (const holder of [entry, entry.observed]) {
+      if (!isObj(holder) || typeof holder.closures !== "string") continue;
+      const named = this.layers.closure(holder.closures);
+      if (named.refusal) return named.refusal;
+      if (named.name) holder.closures = named.name;
+    }
     const source = { captureSha: b.source.captureSha.trim().toLowerCase(), extent: clone(b.source.extent) };
     const by = str(b.by);
     return this.record.transact(() => {
-      this.sql.exec(`INSERT INTO local_rule_acts (draft_seq, act, section, entry_json, source_json, reason, statement, by_member, at)
-                     VALUES (NULL, 'draft', ?, ?, ?, ?, NULL, ?, ?)`,
-                    section, canonicalJson(entry), canonicalJson(source), reason, by, at);
+      this.sql.exec(`INSERT INTO local_rule_acts (draft_seq, act, section, layer, government_json, entry_json, source_json, reason, statement, by_member, at)
+                     VALUES (NULL, 'draft', ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+                    section, layer, government === null ? null : canonicalJson(government), canonicalJson(entry), canonicalJson(source), reason, by, at);
       const seq = this.#rows(`SELECT MAX(seq) AS s FROM local_rule_acts`)[0].s;
       return { ok: true, rule: ruleId(seq), state: "drafted", at };
     });
@@ -302,23 +330,12 @@ export class GroupRules {
     if (machine) return machine;
     const r = namesMember(b.viewer) || b.viewer === undefined || b.viewer === null ? this.#rule(b.rule) : null;
     if (!r) return noSuchRule(b.rule);
-    /* DEC-49 REGION is-rule-other */
-    if (who(r.drafter) === who(b.by))
-      return refusal("RULE_SELF_CONFIRM", "a rule is confirmed by a member other than its drafter.", { rule: r.rule });
-    /* END DEC-49 REGION is-rule-other */
-    /* DEC-49 REGION is-rule-drafted */
-    if (r.state !== "drafted")
-      return refusal("RULE_NOT_DRAFTED", `the rule is ${r.state}; only a drafted rule is confirmed.`, { rule: r.rule, state: r.state });
-    /* END DEC-49 REGION is-rule-drafted */
+    if (who(r.drafter) === who(b.by)) return selfConfirmRefusal("rule", r.rule);
+    if (r.state !== "drafted") return notDraftedRefusal("rule", r.rule, r.state);
     const tier = this.#tier(r);
     const statement = str(b.statement);
     const needs = tier !== 1;
-    /* DEC-49 REGION is-rule-qualified */
-    if (needs && (!statement || statement.length > RULE_STATEMENT_MAX))
-      return refusal("RULE_NEEDS_QUALIFICATION", `a rule of tier ${tier ?? "undetermined"} is confirmed by a professional, `
-                     + `who states her qualification in 1 to ${RULE_STATEMENT_MAX} characters.`,
-                     { rule: r.rule, tier, max: RULE_STATEMENT_MAX });
-    /* END DEC-49 REGION is-rule-qualified */
+    if (needs && (!statement || statement.length > RULE_STATEMENT_MAX)) return needsQualificationRefusal("rule", r.rule, tier);
     const at = this.instant();
     const by = str(b.by);
     return this.record.transact(() => {
@@ -344,7 +361,8 @@ export class GroupRules {
       if (!namesMember(b.viewer)) return { ok: true, rules: [], count: 0 };
       const view = this.#combined();
       const rules = this.#rules().filter((r) => !b.section || r.section === b.section).map((r) => ({
-        rule: r.rule, section: r.section, state: r.state, entry: r.entry, source: r.source, reason: r.reason,
+        rule: r.rule, section: r.section, layer: r.layer, ...(r.government ? { government: clone(r.government) } : {}),
+        state: r.state, entry: r.entry, source: r.source, reason: r.reason,
         applies_to: isObj(r.entry) && r.entry.applies_to !== undefined ? clone(r.entry.applies_to) : null,
         tier: isObj(r.entry) ? this.#tier(r, view) : null,
         drafter: r.drafter, drafted_at: r.drafted_at,
@@ -356,6 +374,31 @@ export class GroupRules {
     } catch (e) {
       return { ok: true, rules: [], count: 0, why: word("local-facts.why.undetermined_rules_read", { entry: String(String(e && e.message || e).slice(0, 200)) }) };
     }
+  }
+
+  /** R28: the team's confirmed rule a bare name stands for: `section` `deadlines` (the `rule` name, with `applies_to`) or
+   *  `legal_facts` (the `key`), over the rules it applies now; with `government` that government's, else the one the name is
+   *  given for, or NAME_AMBIGUOUS naming each government when two governments each give it (never a guess). Answers
+   *  `{ok, rule, layer, government, entry}`, or `{ok: false, reason: "NAME_UNKNOWN"}`; to a viewer naming a member alone. */
+  ruleResolve(a = {}) {
+    const unknown = { ok: false, reason: "NAME_UNKNOWN" };
+    try {
+      const b = isObj(a) ? a : {};
+      if (!RULE_SECTIONS.includes(b.section)) return sectionRefusal(b.section);
+      if (!namesMember(b.viewer) || typeof b.name !== "string") return unknown;
+      const c = this.#combined();
+      const today = this.#day(c && c.ok ? c.view : null, this.instant());
+      const hits = this.#rules().filter((r) => r.state === "confirmed" && r.section === b.section && isObj(r.entry)
+        && !(r.entry[EFFECTIVE_FROM] > today) && (b.section === "deadlines" ? r.entry.rule === b.name
+          && (b.applies_to === undefined || r.entry.applies_to === b.applies_to) : r.entry.key === b.name)
+        && (b.government === undefined || sameGovernment(r.government, b.government)));
+      if (!hits.length) return unknown;
+      const govs = [...new Map(hits.map((r) => [JSON.stringify(r.government ?? null), r.government])).values()];
+      if (govs.length > 1)
+        return ambiguousRefusal(b.name, govs.map((g) => ({ layer: TEAM_LAYER, ...(g ? { government: clone(g) } : {}) })));
+      const r = hits[hits.length - 1];
+      return { ok: true, rule: r.rule, layer: r.layer, ...(r.government ? { government: clone(r.government) } : {}), entry: clone(r.entry) };
+    } catch { return unknown; }
   }
 
   /* ===================================================================== *
@@ -433,7 +476,7 @@ export class GroupRules {
 /* DEC-49: a code several acts answer is minted at one site, its own function here. */
 
 /* R10, R13, R14: drafting and withdrawing a rule are a named member's acts. */
-function machineRuleRefusal(by) {
+export function machineRuleRefusal(by) {
   /* DEC-49 REGION is-rule-member */
   if (str(by) && !isMachineIdentity(str(by))) return null;
   return refusal("MACHINE_CANNOT_DRAFT_RULE", word("refusal.MACHINE_CANNOT_DRAFT_RULE"));
@@ -441,16 +484,65 @@ function machineRuleRefusal(by) {
 }
 
 /* R10, R12, R17: a section that is neither `deadlines` nor `legal_facts`, given to a draft or to the read of the group's
-   rules; the one builder of RULE_SECTION_UNKNOWN, so both answer the same refusal. */
-function sectionRefusal(section) {
+   rules; the one builder of RULE_SECTION_UNKNOWN, so both answer the same refusal. `sections` is the module's own two
+   unless a caller names the sections of the team layer it drafts in (R23: `layerEntryDraft`). */
+export function sectionRefusal(section, sections = RULE_SECTIONS) {
   /* DEC-49 REGION is-rule-section */
-  return refusal("RULE_SECTION_UNKNOWN", localize("local-facts.rules.a_teams_rule_is_drafted", "a team's rule is drafted in {RULE_SECTIONS}.", { RULE_SECTIONS: String(RULE_SECTIONS.join(" or ")) }),
-                 { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] });
+  return refusal("RULE_SECTION_UNKNOWN", localize("local-facts.rules.a_teams_rule_is_drafted", "a team's rule is drafted in {RULE_SECTIONS}.", { RULE_SECTIONS: String(sections.join(" or ")) }),
+                 { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...sections] });
   /* END DEC-49 REGION is-rule-section */
 }
 
+/* R28, R29: a bare name that two layers, or two governments of the team layer, give; `layers` names each `{layer, level?,
+   place?}`; the one builder of NAME_AMBIGUOUS. */
+export function ambiguousRefusal(name, layers) {
+  /* DEC-49 REGION is-name-unambiguous */
+  return refusal("NAME_AMBIGUOUS", localize("local-facts.rules.the_name_is_given_by", "the name is given by more than one place; say which."),
+                 { name: typeof name === "string" ? name.slice(0, 200) : null, layers });
+  /* END DEC-49 REGION is-name-unambiguous */
+}
+
+/* R10, R23: an entry `jurisdictions.validate` refuses, as a rule or as an entry of the team layer; the one builder of
+   RULE_ENTRY_INVALID. */
+export function entryInvalidRefusal(detail, errors) {
+  /* DEC-49 REGION is-rule-entry */
+  return refusal("RULE_ENTRY_INVALID", detail, { errors: errors.slice(0, 20) });
+  /* END DEC-49 REGION is-rule-entry */
+}
+
+/* R10, R23: a primary source that is not a held capture extent the viewer may see; the one builder of RULE_NO_SOURCE. `what`
+   is "a rule" or "an entry"; `bad` is `sourceRefusal`'s answer. */
+export function noSourceRefusal(what, bad) {
+  /* DEC-49 REGION is-rule-source */
+  return refusal("RULE_NO_SOURCE", localize("local-facts.rules.is_drafted_from_a_held_capture", "{what} is drafted from a held capture extent of its primary source ({captureSha, extent}): {why}", { what: String(what), why: String(bad.why) }),
+                 bad.code ? { source_code: bad.code } : undefined);
+  /* END DEC-49 REGION is-rule-source */
+}
+
+/* R11, R23: the drafter confirming their own rule or entry; `noun` is "rule" or "entry", the answer's field. */
+export function selfConfirmRefusal(noun, id) {
+  /* DEC-49 REGION is-rule-other */
+  return refusal("RULE_SELF_CONFIRM", localize("local-facts.rules.is_confirmed_by_another_member", "a {noun} is confirmed by a member other than its drafter.", { noun: String(noun) }), { [noun]: id });
+  /* END DEC-49 REGION is-rule-other */
+}
+
+/* R11, R23: a rule or entry no longer in the drafted state. */
+export function notDraftedRefusal(noun, id, state) {
+  /* DEC-49 REGION is-rule-drafted */
+  return refusal("RULE_NOT_DRAFTED", localize("local-facts.rules.the_noun_is_state_only_drafted", "the {noun} is {state}; only a drafted {noun} is confirmed.", { noun: String(noun), state: String(state) }), { [noun]: id, state });
+  /* END DEC-49 REGION is-rule-drafted */
+}
+
+/* R11, R23: a rule or entry of tier 2, 3 or undetermined confirmed with no professional's statement. */
+export function needsQualificationRefusal(noun, id, tier) {
+  /* DEC-49 REGION is-rule-qualified */
+  return refusal("RULE_NEEDS_QUALIFICATION", localize("local-facts.rules.noun_of_tier_confirmed_by_professional", "a {noun} of tier {tier} is confirmed by a professional, who states her qualification in 1 to {max} characters.", { noun: String(noun), tier: String(tier ?? "undetermined"), max: String(RULE_STATEMENT_MAX) }),
+                 { [noun]: id, tier, max: RULE_STATEMENT_MAX });
+  /* END DEC-49 REGION is-rule-qualified */
+}
+
 /* R10, R13: a reason of 1 to 500 characters. */
-function reasonRefusal(reason) {
+export function reasonRefusal(reason) {
   /* DEC-49 REGION is-rule-reason */
   if (reason && reason.length <= RULE_REASON_MAX) return null;
   return refusal("RULE_NO_REASON", `say why, in 1 to ${RULE_REASON_MAX} characters.`, { max: RULE_REASON_MAX });

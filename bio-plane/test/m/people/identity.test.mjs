@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { world, doc, ANN, OUT, MACHINE } from "./fixture.mjs";
 import { CLAIM_KINDS, CLAIM_BASES, IDENTITY_KIND_WORDS, peopleOf } from "../../../src/people/index.mjs";
 import { ownerConformance, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
-import { hasWord } from "../../../src/setup-words/index.mjs";
+import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
 const day = (from, to) => ({ from, to, precision: "day", zone: "UTC" });
 
@@ -64,18 +64,18 @@ test("R2 the grade is earned from the basis, never stated: identifier A only wit
   const one = pair(w, { ids: ["P001", null] });
   const r1 = w.p.claimIdentity({ a: one.a, b: one.b, kind: "same_as", basis: "identifier", evidence: one.ev, note: "n", by: ANN, grade: "A" });
   assert.equal(r1.reason, "IDENTITY_GRADE_UNEARNED");
-  assert.match(r1.condition, /b holds the scheme identifier/);
+  assert.equal(r1.condition, word("people.holds_scheme_identifier", { end: "b", scheme: "ellery_person", id: "P001" }));
   /* identifier valid on b only before b's record date is refused */
   const late = pair(w, { ids: ["P002", null] });
   w.identify(late.b, "ellery_person", "P002", day("2019-01-01", "2019-12-31"));
   const r2 = w.p.claimIdentity({ a: late.a, b: late.b, kind: "same_as", basis: "identifier", evidence: late.ev, note: "n", by: ANN });
   assert.equal(r2.reason, "IDENTITY_GRADE_UNEARNED");
-  assert.match(r2.condition, /valid on b at its record's date 2021-06-01/);
+  assert.equal(r2.condition, word("people.identifier_valid_record", { scheme: "ellery_person", id: "P002", end: "b", day: "2021-06-01" }));
   /* identifier with a date missing is refused */
   const nod = pair(w, { ids: ["P003", "P003"] });
   const r3 = w.p.claimIdentity({ a: nod.a, b: nod.b, kind: "same_as", basis: "identifier", evidence: { ...nod.ev, b: doc(w.capture("z")) }, note: "n", by: ANN });
   assert.equal(r3.reason, "IDENTITY_GRADE_UNEARNED");
-  assert.match(r3.condition, /date of b's cited record/);
+  assert.equal(r3.condition, word("people.evidence_states_date_cited"));
   /* identifier earned A */
   const good = pair(w, { ids: ["P004", "P004"] });
   const A = w.p.claimIdentity({ a: good.a, b: good.b, kind: "same_as", basis: "identifier", evidence: good.ev, note: "n", by: ANN, grade: "D" });
@@ -89,26 +89,31 @@ test("R2 the grade is earned from the basis, never stated: identifier A only wit
   const lbad = w.line("holds", c.b, post, { from: "2023-01-01", to: "2023-12-31" });
   const other = w.line("holds", c.b, w.entity("office", "Other Post"), { from: "2021-01-01", to: "2022-12-31" });
   const cn = (lines) => w.p.claimIdentity({ a: c.a, b: c.b, kind: "same_as", basis: "corroborated_name", evidence: { a: c.ev.a, b: c.ev.b, lines }, note: "n", by: ANN });
-  assert.match(cn(null).condition, /lines: \{a, b\}/);
-  assert.match(cn({ a: la, b: lbad }).condition, /valid at b's record date/);
+  assert.equal(cn(null).condition, word("people.index.evidence_names_cited_line"));
+  assert.equal(cn({ a: la, b: lbad }).condition, word("people.line_valid_record_date", { second: String(lbad), d_b: "2021-06-01" }));
   const lopen = w.line("holds", c.b, post, { from: "2020-01-01", to: null });
-  assert.match(cn({ a: la, b: lopen }).condition, /valid at b's record date/, "a line the record does not settle at the date earns nothing");
-  assert.match(cn({ a: la, b: other }).condition, /the same fact/);
-  assert.match(cn({ a: la, b: "LIN-2026-none" }).condition, /is held/);
+  assert.equal(cn({ a: la, b: lopen }).condition, word("people.line_valid_record_date", { second: String(lopen), d_b: "2021-06-01" }), "a line the record does not settle at the date earns nothing");
+  assert.equal(cn({ a: la, b: other }).condition, word("people.two_lines_fact"));
+  assert.equal(cn({ a: la, b: "LIN-2026-none" }).condition, word("people.line_held_withdrawn", { first: "LIN-2026-none" }));
   const B = cn({ a: la, b: lb });
   assert.equal(B.grade, "B");
-  assert.match(B.why, /^claimed the same person, grade B, because both records carry the name 'Michael Houston' and each holds a holds line/);
+  assert.equal(B.why, word("people.index.said_grade_grade_because_because", {
+    said: word("label.identityclaimkinds.same_as"), grade: "B",
+    because: word("people.records_carry_name_holds", { shared: "Michael Houston", kind: "holds", oa: post, d_a: "2020-03-01", d_b: "2021-06-01" }),
+  }));
   /* corroborated_name and name need a shared name */
   const d = { a: w.person("Ann Lee"), b: w.person("Bo Chan") };
   const dn = w.p.claimIdentity({ ...d, kind: "same_as", basis: "name", evidence: { a: c.ev.a, b: c.ev.b }, note: "n", by: ANN });
   assert.equal(dn.reason, "IDENTITY_GRADE_UNEARNED");
-  assert.match(dn.condition, /share a name/);
+  assert.equal(dn.condition, word("people.two_records_share"));
   const C = w.p.claimIdentity({ a: c.a, b: c.b, kind: "unsure", basis: "name", evidence: { a: c.ev.a, b: c.ev.b }, note: "n", by: ANN });
   assert.equal(C.grade, "C");
   assert.equal(C.why, "claimed unsure whether the same person, grade C, because both records carry the name 'Michael Houston'");
   const D = w.p.claimIdentity({ ...d, kind: "not_same_as", basis: "testimony", note: "different people", by: ANN });
   assert.equal(D.grade, "D");
-  assert.match(D.why, /^claimed not the same person, grade D, because/);
+  assert.equal(D.why, word("people.index.said_grade_grade_because_because", {
+    said: word("label.identityclaimkinds.not_same_as"), grade: "D", because: word("people.member_testified_words"),
+  }));
   for (const r of [A, B, C, D]) assert.doesNotMatch(r.why, /\bis the same person\b/);
   assert.deepEqual([...CLAIM_BASES], ["identifier", "corroborated_name", "name", "testimony"]);
 });

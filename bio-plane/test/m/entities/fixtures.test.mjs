@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { entitiesWorld, namingInRefused, unreadable, entitieskind } from "./fixtures.mjs";
+import { wordLike } from "./wordlike.mjs";
 import { NAMING_IN_CAPTURES_MAX, ENTITY_KINDS } from "../../../src/entities/index.mjs";
 
 test("R1 R43 entitiesWorld: the real createEntity refusals UNKNOWN_KIND, ENTITY_NO_LABEL, ENTITY_NO_NOTE, and the real addIdentifier refusals in their order", () => {
@@ -33,7 +34,7 @@ test("R52 namingInRefused: namingIn's own NO_KIND, UNKNOWN_KIND, NO_SHA and TOO_
 test("R51 unreadable: entitiesOfKind over a registry whose read throws answers UNREADABLE with a detail, never a list", () => {
   const r = unreadable();
   assert.deepEqual([r.ok, r.reason], [false, "UNREADABLE"]);
-  assert.match(r.detail, /the registry could not be read/);
+  assert.match(r.detail, wordLike("entities.index.the_registry_could_not_be"));
   assert.equal(r.entities, undefined);
 });
 

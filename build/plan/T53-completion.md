@@ -17,6 +17,12 @@
 - T53-581 · K5715, acquisition R126 · the two `register` rows of `READ_BOUNDS` (runtime-limits R47) once M-R7 records them; acquisition R126 then met
 - T53-586 · K5736, extraction R122 · the alarm reading's units-and-index-rows budget becomes a runtime-limits row, extraction reading it from there
 
+**ocr-worker**
+- T53-594 · K5762, reading-pipeline R68 · the member returns each unclear word's place (its page, the word box's line and offset in the page's text), from the recognition it already runs (`frame.mjs` R25's word boxes), so reading-pipeline can state each unclear word's unit and offset; reading-pipeline's T53-595 after it
+
+**jurisdictions**
+- T53-609 · local-facts' report (R29, K5786) · `validate` judges a team layer's holidays per government (R99, R115: names are unique within a government), so the same holiday list for two cities is accepted; local-facts R29's two-cities case then written
+
 ## Layer 2
 **promotion**
 - T53-582 · K5715, capture's new rows · the census re-stamped for C-118.12 (`MAIL_NO_STATEMENT`), C-118.13 (`FILE_KIND_REFUSED`), C-139.22-.24 and every other check row minted in T53, last in its layer
@@ -34,6 +40,21 @@
 **file-safety**
 - T53-589 · N1261 (K5747) · `checks.mjs` reads `refusal.SIGNATURES_RUN_RECENT` by `rowWord` (R24) instead of its stand-in
 - T53-571 · K5705, R66 · the container's other picture kinds: uses reader-container (the edge entered at START) and image-cover's redraw (T53-570)
+
+## Layer 4
+**extraction**
+- T53-610 · progressions' report (K5786) · `nosha.test.mjs` passes its own input string, not progressions' sentence; then progressions T53-611
+**reading-pipeline**
+- T53-595 · K5762, R68 · `reading.unclear_words.positions` states each word's unit and offset from ocr-worker's places (T53-594); R68 then met
+- T53-596 · K5762, R45 · the structured readers' registry entries (json, xml, ics, vcf, srt and the rest) are read through the entry's `plan`/`read`, so a wired JSON gives structured units by path, not "no text was supplied"; until then `READ_AS_TEXT` stands
+- T53-597 · K5762, R29-R31 · its 13 R29-R31 tests call ai-accounts' `accountSet` (its R1, renamed from `accountReferenceSet` in T53), not the retired name
+- T53-598 · K5762, R54 · the email clause re-worded: `eml` and `msg` have mail-reader's registry reader, so email is no longer `UNSUPPORTED_FORMAT`; its test re-stated
+- T53-599 · K5762, R12 R21 · the `PPTX_OVERBOUND` fixture rebuilt against the office bound of today
+- T53-600 · K5762 · a run of its tests writes no stored answer fixture of case-checker, plane or public-read (they are read, never rewritten, by another module's tests)
+
+## Layer 5
+**progressions**
+- T53-611 · K5786 · feeds:179's noSha sentence keyed by `localize` at its use and read by key in the test (after extraction T53-610)
 
 ## Carried from the handoff
 - mail-door R12's `email()` wiring waits on M1 (K5692 (3)): a P19 deferral unless M1 is made.

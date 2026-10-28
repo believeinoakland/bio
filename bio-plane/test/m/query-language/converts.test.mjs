@@ -9,6 +9,7 @@ import { world, everyStatement, WORKERD_COMPOUND_SELECT } from "./fixture.mjs";
 import { compile, meaningVocabulary, MEANING, CHAIN_DOES_NOT_APPLY, CAP_DOES_NOT_APPLY } from "../../../src/query.mjs";
 import { normalizeType } from "../../../src/record-grammar/types.mjs";
 import { CONTENT_MINTED_BY_PLANE } from "../../../src/content/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const V = "class:member";
@@ -257,7 +258,7 @@ test("R15 R12 (meaningread) the meaning grain: inert unless named, case-folded, 
   assert.deepEqual([seen.length, new Set(seen).size], [all, all]);
   assert.deepEqual(w.run({ q: "has:leg", viewer: V, rows: "leg", rowLimit: 2 }, "meaning", { mode: "count" }).rows, [{ n: all }]);
   /* A parser warning reaches the plan the grain is answered from. */
-  assert.ok(compile({ q: "leg:sorce=hunch", viewer: V, rows: "leg" }).warnings.some((x) => /leg: unknown sub-field "sorce"/.test(x)));
+  assert.ok(compile({ q: "leg:sorce=hunch", viewer: V, rows: "leg" }).warnings.includes(word("query-language.query.arm_unknown_sub_field_stringify", { arm: "leg", stringify: '"sorce"', keys: Object.keys(MEANING.leg.sub).join(", ") })));
 });
 
 test("R15 R16 R8 (meaningread) a meaning row whose bundle the viewer may not see is withheld whole, and every count moves with the rows", () => {

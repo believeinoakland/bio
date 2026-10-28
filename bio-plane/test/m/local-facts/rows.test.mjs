@@ -9,7 +9,10 @@ import { word } from "../../../src/setup-words/index.mjs";
 const CODES = ["MACHINE_CANNOT_CONFIRM", "NO_SUCH_FACT", "FACT_ACT_REFUSED", "FACT_HOW_REFUSED", "FACT_VALUE_REFUSED",
   /* R14 (T45): R10–R13's codes join the family */
   "MACHINE_CANNOT_DRAFT_RULE", "RULE_SECTION_UNKNOWN", "RULE_ENTRY_INVALID", "RULE_NO_SOURCE", "RULE_IN_PROFILE", "RULE_NO_REASON",
-  "NO_SUCH_GROUP_RULE", "RULE_SELF_CONFIRM", "RULE_NOT_DRAFTED", "RULE_NEEDS_QUALIFICATION", "RULE_NOT_CONFIRMED"];
+  "NO_SUCH_GROUP_RULE", "RULE_SELF_CONFIRM", "RULE_NOT_DRAFTED", "RULE_NEEDS_QUALIFICATION", "RULE_NOT_CONFIRMED",
+  /* T53 (R23-R29, R31): the team layer, its reports and a stated fiscal year */
+  "LAYER_READ_ONLY", "LAYER_UNKNOWN", "LAYER_NOT_SHIPPED", "LAYER_ENTRY_IN_SHIPPED", "FISCAL_YEAR_IN_RECORDS", "REPORT_NO_SOURCE",
+  "REPORT_NO_BELIEF", "NAME_AMBIGUOUS", "NO_SUCH_LAYER_ENTRY", "NO_SUCH_LAYER_REPORT"];
 
 test("R8 R14 each refusal carries its row in the module's own table, family C-126, each {check, where, translation}", () => {
   assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS), CODES);
@@ -18,8 +21,10 @@ test("R8 R14 each refusal carries its row in the module's own table, family C-12
     const r = LOCAL_FACTS_CHECKS[code];
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"]);
     assert.equal(r.check, `C-126.${i + 1}`);
-    assert.match(r.where, /^src\/local-facts\/(index|rules)\.mjs \S+ > is-[a-z-]+$/);
-    assert.equal(r.translation, word(`refusal.${code}`, code === "RULE_ENTRY_INVALID" ? { errors: "{errors}" } : {}));
+    assert.match(r.where, /^src\/local-facts\/(index|rules|layer)\.mjs \S+ > is-[a-z-]+$/);
+    /* the first sixteen are the list's keys; the ten of T53 are written once at their use, the word table taking them from the build */
+    if (i < 16) assert.equal(r.translation, word(`refusal.${code}`, code === "RULE_ENTRY_INVALID" ? { errors: "{errors}" } : {}));
+    else assert.equal(typeof r.translation, "string");
   });
   /* every code is reached at the interface and answers its row */
   const w = world();
@@ -36,7 +41,8 @@ test("R8 R14 each refusal carries its row in the module's own table, family C-12
                    w.lf.ruleConfirm({ rule: "GR-99", by: V("carol") }), w.lf.ruleConfirm({ rule, by: V("bob") }),
                    (w.lf.ruleConfirm({ rule, by: V("carol"), statement: "q" }), w.lf.ruleConfirm({ rule, by: V("dan"), statement: "q" })),
                    w.lf.ruleConfirm({ rule: drafted, by: V("carol") }), w.lf.ruleOffer({ rule: drafted, viewer: V("bob") })]) got.set(r.code, r);
-  assert.deepEqual([...got.keys()], CODES);
+  /* the ten of T53 are reached at the interface by `t53.test.mjs`, each answering its row */
+  assert.deepEqual([...got.keys()], CODES.slice(0, 16));
   for (const [code, r] of got) assert.deepEqual([r.check, r.translation], [LOCAL_FACTS_CHECKS[code].check, LOCAL_FACTS_CHECKS[code].translation]);
 });
 

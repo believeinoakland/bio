@@ -94,7 +94,10 @@ test("R9 the table is declared explicitly through record-core's declareTable, wi
   const mine = w.record.declaredTables().filter((d) => d.module === "local-facts");
   const classes = { keys: [], purge: "clear", expunge: "none", export: "admin-only", sight: "group", derive: "stored", version_chain: true };
   assert.deepEqual(mine, [{ module: "local-facts", name: "local_fact_acts", ...classes },
-                          { module: "local-facts", name: "local_rule_acts", ...classes }], "R14: the rules' table beside it");
+                          { module: "local-facts", name: "local_rule_acts", ...classes },
+                          /* R30 (T53): the team layer's table is exempt from purge; R26: the reports' table is cleared with the store */
+                          { module: "local-facts", name: "team_layers", ...classes, purge: "exempt" },
+                          { module: "local-facts", name: "layer_reports", ...classes }], "R14: the rules' table beside it, R30 and R26's after");
   /* the purge classes keep R5: only the whole-store form clears it (shown in R5's test); declared once */
   assert.equal(w.record.declareTable("local-facts", [{ ...mine[0] }]).reason, "TABLE_DECLARED");
 });

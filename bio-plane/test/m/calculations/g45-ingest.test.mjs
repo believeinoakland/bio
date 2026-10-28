@@ -177,7 +177,7 @@ test("R14 (G45 h): a throw while the second piece is written leaves no calc_inge
   const exec = w.st.sql.exec.bind(w.st.sql);
   let pieces = 0;
   w.st.sql.exec = (q, ...args) => {
-    if (/INSERT OR IGNORE INTO calc_ingest_parts/.test(q) && ++pieces === 2) throw new Error("injected: the second piece could not be written");
+    if (q.includes("INSERT OR IGNORE INTO calc_ingest_parts") && ++pieces === 2) throw new Error("injected: the second piece could not be written");
     return exec(q, ...args);
   };
   const before = w.snapshot();

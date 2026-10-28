@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 test("R17 namingDocuments: NO_ENTITY, NO_SUCH_ENTITY; every term of an alias in ref, key or label; one candidate per (capture, reference) at its strongest correspondence; grade_if_resolved is R9's; writes nothing", () => {
   const { e, read, rows } = world();
@@ -31,13 +32,13 @@ test("R17 namingDocuments: NO_ENTITY, NO_SUCH_ENTITY; every term of an alias in 
   assert.deepEqual([by["q:1"].correspondence, by["q:1"].grade_if_resolved], ["name", "C"]);
   assert.deepEqual([by["l:2"].correspondence, by["l:2"].grade_if_resolved], ["name_in_label", null]);
   assert.deepEqual([by["x:1"].correspondence, by["x:1"].grade_if_resolved], ["name", null], "another entity's A resolves first");
-  assert.match(by["x:1"].detail, /stronger identifier/);
+  assert.match(by["x:1"].detail, wordRx("entities.index.resolving_this_document_would_record"));
   assert.equal(by["hm:7"].selectivity, null, "a whole match carries no selectivity");
   assert.deepEqual(r.documents.slice(0, 4).map((d) => d.correspondence), ["reference", "reference_key", "name", "name"]);
   assert.equal(r.documents.at(-1).correspondence, "name_in_label");
   for (const k of ["capture_sha", "bundle_id", "kind", "key", "label", "content_type", "matched_alias", "canonical_name", "matched_on"])
     assert.ok(k in by["q:1"], k);
-  assert.match(r.detail, /CANDIDATES, not resolutions/);
+  assert.equal(r.detail, word("entities.index.these_are_candidates_not_resolutions", { v1: "" }));
 });
 
 test("R17 partial candidates are ordered by selectivity over the references the viewer can see; a partial alias reaching every one is not offered and is reported with its arithmetic; limit clamped 1–500 (default 100), truncated", () => {
@@ -104,7 +105,7 @@ test("R19 namingPlan answers the query plan of R17's lookup through the term ind
   assert.equal(none.why, word("entities.why.terms_given_group"));
   const given = w.e.namingPlan(["alpha", "beta"]);
   assert.deepEqual([given.determined, given.from, given.terms], [true, "caller", ["alpha", "beta"]]);
-  assert.match(given.sql, /reading_ref_terms t/);
+  assert.ok(given.sql.includes("reading_ref_terms t"));
   assert.ok(given.plan.some((p) => /reading_ref_terms/.test(p) && /INDEX|PRIMARY KEY/i.test(p)), given.plan.join(" | "));
   assert.equal(w.e.namingPlan(Array.from({ length: 30 }, (_, i) => `t${i}`)).terms.length, 24);
   const p = world({ profiles: ["test-port-ellery"] });

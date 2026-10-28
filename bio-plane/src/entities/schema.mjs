@@ -22,7 +22,12 @@ CREATE TABLE IF NOT EXISTS entities (
   confirmed_at    TEXT,
   contact_kind    TEXT,
   contact_value   TEXT,
-  law             TEXT
+  law             TEXT,
+  law_layer       TEXT,
+  layer           TEXT,
+  office_body     TEXT,
+  built_in_layer  TEXT,
+  built_in_as_of  TEXT
 );
 CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind);
 -- ALIASES are FIRST-CLASS and per entity (safeguard 4). The canonical label is also an alias (canonical=1).
@@ -199,6 +204,11 @@ export const OFFICE_MARK_COLUMNS = Object.freeze([
   ["entities", "named_by_member", "INTEGER"], ["entities", "confirmed_by", "TEXT"], ["entities", "confirmed_at", "TEXT"],
   /* R63 (K4364; DEC-402): where requests to an office go and the law they go under, NULL when not stated. */
   ["entities", "contact_kind", "TEXT"], ["entities", "contact_value", "TEXT"], ["entities", "law", "TEXT"],
+  /* R69, R70, R71, R68 (T53; N1257, N1256): the layer that gave an office's law, the layer an office stands for, the body it is
+     in, and the built-in list entry it was chosen from (the layer and the date that layer's list was read); NULL when not stated
+     or for an office registered before them. */
+  ["entities", "law_layer", "TEXT"], ["entities", "layer", "TEXT"], ["entities", "office_body", "TEXT"],
+  ["entities", "built_in_layer", "TEXT"], ["entities", "built_in_as_of", "TEXT"],
 ]);
 /* R63 (K4364): the three ways an office's contact is stated. */
 export const CONTACT_KINDS = Object.freeze(["address", "email", "portal"]);

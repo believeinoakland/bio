@@ -5,7 +5,7 @@ import { world, V, MACHINE } from "./fixture.mjs";
 import { PROJECTION_RELATION, FIELD_VIEWS } from "../../../src/retrieval/index.mjs";
 import { FIELDS, FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX, PROVENANCE_COLS, cachedNotes, compile, meaningVocabulary }
   from "../../../src/query.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word as WORD } from "../../../src/setup-words/index.mjs";
 
 /* A small corpus: four documents, two states, two schemas, one hidden project. */
 function corpus() {
@@ -126,7 +126,7 @@ test("R54: passage search honours NEAR — a unit matches only where its terms l
   assert.equal(w.retrieval.search({ q: "passage:NEAR(council budget, 3)", viewer: V("vera") }).total, 1);
   /* The tally is over the same scope either way; the statement states the operator. */
   assert.equal(near("passage:NEAR(council budget, 3)").scope.captures_counted, 1);
-  assert.ok(w.retrieval.searchFields().syntax.some((s) => /\bNEAR\(/.test(s) && /never across two/.test(s)));
+  assert.ok(w.retrieval.searchFields().syntax.includes(WORD("retrieval.syntax.near_finds_words")));
 });
 
 test("R16: searchFields publishes the fields {type, freeText, column}, ftsColumns, defaultFacets, idsMax, meaning (meaningVocabulary) and the syntax, which says content: searches what has been cited and never a document's text", () => {
@@ -144,8 +144,8 @@ test("R16: searchFields publishes the fields {type, freeText, column}, ftsColumn
   assert.deepEqual([f.ftsColumns, f.defaultFacets, f.idsMax], [FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX]);
   assert.deepEqual(f.meaning, meaningVocabulary());
   assert.ok(f.syntax.every((s) => typeof s === "string" && s.length));
-  assert.ok(f.syntax.includes(localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says")));
-  assert.ok(f.syntax.some((s) => /cited or marked citable/.test(s)));
+  assert.ok(f.syntax.includes(WORD("retrieval.index.content_searches_citations")));
+  assert.ok(f.syntax.includes(WORD("retrieval.index.content_reaches_layer")));
 });
 
 test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visible bundles, lists orphans (bounded), counts through the gate, pages by cursor, ok only with neither", () => {

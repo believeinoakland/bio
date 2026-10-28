@@ -11,11 +11,19 @@
  *   <profile>/hours/role=<role>,body=<body>       a counterparty's hours (jurisdictions R24, R42)
  *   <profile>/hours/venue=<kind>                  the hours of a kind's venue (jurisdictions R25, R42)
  *
+ *   team/<government>/<fact...>                  (T53, R29) a fact of the team layer about one government: `<government>`
+ *                                                 is `federal`, or `<level>:<place>` (level state, county or city), and
+ *                                                 `<fact...>` the profile forms above (`holidays/...`, `hours/...`,
+ *                                                 `time_zone/<office>`) or `fiscal_year` (R32)
+ *
  * Every name is percent-encoded, so no name can forge a separator. A path carries its profile's id: facts and their
  * horizons are per jurisdiction profile, never per template (K921 Q7). `parseFactPath` accepts only the spelling
  * `factPath` gives, so the same fact always has one path. */
 
-export const LOCAL_FACT_KINDS = Object.freeze(["holidays", "hours", "time_zone"]);
+export const LOCAL_FACT_KINDS = Object.freeze(["holidays", "hours", "time_zone", "fiscal_year"]);
+/** R29: the id of the one team layer, and the levels of the government a team fact is about (`jurisdictions` R115, R134). */
+export const TEAM_LAYER = "team";
+export const GOVERNMENT_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 
 const PROFILE_RE = /^[a-z0-9][a-z0-9-]*$/;
 const YEAR_RE = /^\d{4}$/;
@@ -73,16 +81,46 @@ function parseOfficeSegment(seg) {
   return v === null || !m ? null : { venue: v };
 }
 
+/* R29: the segment naming the government a team fact is about, or null: `federal`, or `<level>:<place>` for a state, county
+   or city, the place percent-encoded. */
+export function governmentSegment(g) {
+  if (!isObj(g) || !GOVERNMENT_LEVELS.includes(g.level)) return null;
+  if (g.level === "federal") return Object.keys(g).join() === "level" ? "federal" : null;
+  if (Object.keys(g).sort().join() !== "level,place" || !name(g.place) || g.place.length > 200 || /[\r\n]/.test(g.place)) return null;
+  return `${g.level}:${enc(g.place)}`;
+}
+
+/* The government a segment names, as `governmentSegment` spells it, or null. */
+function parseGovernmentSegment(seg) {
+  if (seg === "federal") return { level: "federal" };
+  const m = /^(state|county|city):([^:/]+)$/.exec(seg);
+  const place = m && dec(m[2]);
+  return !m || place === null ? null : { level: m[1], place };
+}
+
 /** R6: the path of one fact, or null when the parts name none. */
 export function factPath(parts) {
   try {
     if (isObj(parts) && parts.team === true)
       return parts.fact === "time_zone" && parts.profile === undefined && parts.office === undefined ? TEAM_ZONE_PATH : null;
     if (!isObj(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
-    const { profile, fact } = parts;
+    const { fact } = parts;
+    /* R29, R32: a fact of the team layer is about one government, in the path's second segment; the team layer has no fact of its own */
+    let profile = parts.profile;
+    if (profile === TEAM_LAYER) {
+      const g = governmentSegment(parts.government);
+      if (!g) return null;
+      profile = `${TEAM_LAYER}/${g}`;
+    } else if (parts.government !== undefined) return null;
     let p = null;
-    if (fact === "time_zone") {
-      if (parts.office === undefined || parts.office === null) p = `${profile}/time_zone`;
+    if (fact === "fiscal_year") {
+      if (profile === parts.profile) return null;
+      p = `${profile}/fiscal_year`;
+    } else if (fact === "time_zone") {
+      if (parts.office === undefined || parts.office === null) {
+        if (profile !== parts.profile) return null;   // the team's own zone is `TEAM_ZONE_PATH`, not a government's
+        p = `${profile}/time_zone`;
+      }
       else {
         const o = officeSegment(parts.office);
         if (!o) return null;
@@ -112,10 +150,18 @@ export function parseFactPath(path) {
   try {
     if (typeof path !== "string" || !path || path.length > PATH_MAX) return null;
     if (path === TEAM_ZONE_PATH) return { team: true, fact: "time_zone" };
-    const seg = path.split("/");
+    let seg = path.split("/");
+    let government;
+    /* R29, R32: `team/<government>/...` reads as the profile forms over the rest, the government kept beside */
+    if (seg[0] === TEAM_LAYER) {
+      government = seg.length > 2 ? parseGovernmentSegment(seg[1]) : null;
+      if (!government) return null;
+      seg = [TEAM_LAYER, ...seg.slice(2)];
+    }
     const [profile, fact] = seg;
     let parts = null;
-    if (fact === "time_zone" && seg.length === 2) parts = { profile, fact };
+    if (fact === "fiscal_year" && seg.length === 2 && government) parts = { profile, fact };
+    else if (fact === "time_zone" && seg.length === 2) parts = { profile, fact };
     else if (fact === "time_zone" && seg.length === 3) {
       const office = parseOfficeSegment(seg[2]);
       if (!office) return null;
@@ -141,6 +187,7 @@ export function parseFactPath(path) {
       if (!office) return null;
       parts = { profile, fact, office };
     } else return null;
+    if (government) parts = { ...parts, government };
     return factPath(parts) === path ? parts : null;
   } catch { return null; }
 }

@@ -17,7 +17,7 @@
  * `idPattern("LEAD")` (`ID_TABLE`, its R46–R47), so no copy of the id's shape is held here. */
 
 import { idPattern } from "../record-grammar/ids.mjs";
-import { word } from '../setup-words/index.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /* C-22 — THE INVESTIGATIVE RUN'S FAMILY, AND SINCE REC-93 THE OBSERVATION LOG'S (IS-6, INVESTIGATIVE-SESSION.md §11 and
  * §14b.6). REC-93 (2026-09-14) folded `ai_run_log` into `observation_log` (`OBSERVATION-LOG-DESIGN.md` §4.4), so
@@ -186,9 +186,26 @@ export const AI_RUN_CHECKS = {
     where: 'src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored',
     translation: word('refusal.AI_LOG_NEVER_LOOKED_STORED'),
   },
+  /* T53, N1219 (R40): a run's or step's entry may carry its reads and disagreements as data. Two conditions, two rows
+     (DEC-49: one code, one condition): a field that is not the shape R40 states (`read` `{record, n, total, outcome}`,
+     `disagree` `{record, levels}`), and a field that is well-formed but is not this entry's to carry (both on one
+     entry, or either on an authority kind other than `run` or `step`). Asked after C-22.4, and the shape before the
+     allowance. Each refusal names the field. The sentences are read by key (`refusal.<CODE>`). */
+  OBSERVATION_FIELD_MALFORMED: {
+    check: 'C-22.32',
+    where: 'src/observation-log/vocabulary.mjs checkObservationFields, called from src/observation-log/vocabulary.mjs checkObservation',
+    translation: localize('refusal.OBSERVATION_FIELD_MALFORMED',
+      'That entry carries a read or a disagreement that is not in the form the record keeps. A read names the record, which one it was of how many, and whether it was answered or refused; a disagreement names the record and at least two different levels, in the order they were named. Nothing was written.'),
+  },
+  OBSERVATION_FIELD_NOT_ALLOWED: {
+    check: 'C-22.33',
+    where: 'src/observation-log/vocabulary.mjs checkObservationFields, called from src/observation-log/vocabulary.mjs checkObservation',
+    translation: localize('refusal.OBSERVATION_FIELD_NOT_ALLOWED',
+      'Only an entry of a run or of one of its steps can carry a read or a disagreement, and only one of the two. Nothing was written.'),
+  },
 };
 
-/** The eight C-22 rows the observation log's append refuses under (R2, R3, R26); C-22.17 is R3's own (N118). */
+/** The ten C-22 rows the observation log's append refuses under (R2, R3, R26, R40); C-22.17 is R3's own (N118), C-22.32 and C-22.33 R40's. */
 export const OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS));
 
 /** The same rows, under the name the append's refusals read them by: one object, not a copy. */

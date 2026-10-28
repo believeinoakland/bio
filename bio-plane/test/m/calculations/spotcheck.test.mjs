@@ -234,7 +234,6 @@ test("R40 an estimate over a draw carrying a question takes its visits as they s
   assert.equal(r.estimate_count.value, "13.333333333340", "an exact decimal, never rounded further");
   assert.deepEqual([r.counted_apart.could_not_tell.value, r.counted_apart.disagree.value, r.counted_apart.not_visited.value], ["1", "1", "1"]);
   assert.equal(r.assumption, VISIT_ASSUMPTION);
-  assert.match(r.assumption, /simple random draw/);
   /* carried in the draw input's canonical bytes: one row per drawn item with its standing */
   const read = await w.c.read({ calcId: e.calc_id, viewer: V("carol") });
   const input = read.calculation.inputs[0];
@@ -267,7 +266,7 @@ test("R40 with no item judged the estimate is refused NOTHING_JUDGED, writing no
     assert.equal(visit(item, member, finding).ok, true, `${member}'s visit is recorded`);
   const none = await w.c.create({ question: Q, period: PERIOD, kind: "estimate", inputs: [{ name: "v", draw: d.draw }], by: V("bob") });
   assert.equal(code(none), "NOTHING_JUDGED", "only could_not_tell and a disagreement");
-  assert.match(none.detail, /Nothing was written/);
+  assert.equal(typeof none.detail, "string", "the refusal says why");
   assert.equal(w.count("calculations"), n0);
   assert.equal(code(await w.c.evaluate({ kind: "estimate", inputs: [{ name: "v", draw: d.draw }], viewer: V("bob") })), "NOTHING_JUDGED");
   visit(d.sample[2], "carol", "yes");

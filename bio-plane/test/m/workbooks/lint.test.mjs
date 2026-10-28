@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, xlsx, V } from "./fixture.mjs";
 import { LINT_KINDS } from "../../../src/workbooks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const tag = () => ({ Z99: { s: `${Math.random()}` } });
 async function lintOf(sheets, opts) {
@@ -22,8 +23,8 @@ test("R9 short_range: an aggregate's range that stops short of, or starts after,
     A8: { n: "4" }, B8: { n: "5" }, C8: { f: "MAX(A8:B8)", v: "5" },                                            /* a row: control */
     ...tag() } }]);
   assert.deepEqual(of("short_range"), ["S!A5", "S!B5", "S!D7"]);
-  assert.match(findings.find((f) => f.cell === "S!A5").detail, /SUM over A2:A3, while the numbers run A2:A4, past its end/);
-  assert.match(findings.find((f) => f.cell === "S!B5").detail, /starting before it/);
+  assert.equal(findings.find((f) => f.cell === "S!A5").detail, word("workbooks.lint.short_range", { fn: "SUM", over: "A2:A3", run: "A2:A4", before: "", past: word("workbooks.lint.past_its_end") }));
+  assert.equal(findings.find((f) => f.cell === "S!B5").detail, word("workbooks.lint.short_range", { fn: "SUM", over: "B3:B4", run: "B2:B4", before: word("workbooks.lint.starting_before"), past: "" }));
 });
 
 test("R9 constant_in_formula: a number written inside a formula, never one inside a string, a reference or a function's name", async () => {
@@ -64,7 +65,7 @@ test("R9 cross_foot: a block whose row totals and column totals do not sum to th
     A3: { f: "SUM(A1:A2)", v: colTotals[0] }, B3: { f: "SUM(B1:B2)", v: colTotals[1] }, ...tag() } });
   const bad = await lintOf([block("S", ["3", "7"], ["4", "7"])]);
   assert.deepEqual(bad.of("cross_foot"), ["S!C3"]);
-  assert.match(bad.findings.find((f) => f.kind === "cross_foot").detail, /add to 10, the column totals in row 3 to 11, over A1:B2/);
+  assert.equal(bad.findings.find((f) => f.kind === "cross_foot").detail, word("workbooks.lint.cross_foot", { column: "C", rows: "10", row: "3", columns: "11", range: "A1:B2" }));
   const good = await lintOf([block("S", ["3", "7"], ["4", "6"])]);
   assert.deepEqual(good.of("cross_foot"), []);
 });

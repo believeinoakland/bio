@@ -20,13 +20,14 @@
    and `schema.mjs` (the four tables, now `schema.mjs` here), with the rows this job applied named at their sites.
    It derives no connection: that is `connections`'. */
 import { recordOf, perItem } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER, notAnAdmin } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
 import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
-import { combine, governingZone, SECTORS, FORUM_KINDS } from "../../../jurisdictions/index.mjs";
+import { combine, get as heldProfile, governingZone, nameResolve, SECTORS, FORUM_KINDS } from "../../../jurisdictions/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { SHARED_ACT_CHECKS } from "../record-grammar/acts.mjs";
+import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { registerOwner, BOUNDS, DECLARED_LABEL, LOWEST_GRADE } from "../connection-grammar/index.mjs";
@@ -94,6 +95,10 @@ export const KIND_LIMIT_MAX = 500;
 /* R54 (T50; N1190): the entity kinds that may carry a forum kind, a court, commission, grand jury or auditor being a body
    or an institution. */
 export const FORUM_ENTITY_KINDS = Object.freeze(["body", "institution"]);
+/* R68 (T53; N1256): the most offices one `federalOfficesFind` answers. */
+export const FEDERAL_OFFICES_LIMIT = 20;
+/* R74 (T53; N1259): the most subjects one `subjectsOfProject` answers. */
+export const PROJECT_SUBJECTS_MAX = 200;
 /* R55 (T50; N1193): the page of standing aliases `aliasesOf` answers. */
 export const ALIASES_LIMIT_DEFAULT = 1000;
 export const ALIASES_LIMIT_MAX = 5000;
@@ -545,13 +550,14 @@ export class Entities {
    *  in the SAME transaction, so an entity is never nameless-but-for-its-id even for an instant. It carries the
    *  declarer's note (DEC-88): who or what it is and why it is registered. R4: `declaredBy` is the control plane's
    *  stamp. */
-  createEntity({ kind, label, note = null, aliases = [], declaredBy = null, sector, proceeding, forum_kind, contact, law } = {}) {
-    return this.#create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind: forum_kind, contact, law, basis: null });
+  createEntity({ kind, label, note = null, aliases = [], declaredBy = null, sector, proceeding, forum_kind, contact, law, law_layer, layer, body, built_in } = {}) {
+    return this.#create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind: forum_kind, contact, law,
+                          lawLayer: law_layer, layer, body, builtIn: built_in, basis: null });
   }
 
   /* R1, R42, R45, R46: the one creation path; `basis` is R46's `{captureSha, extent}` for a registration read from a
      capture, else null. Every refusal is answered before an id is allocated. */
-  #create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind, contact, law, basis }) {
+  #create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind, contact, law, lawLayer, layer, body, builtIn, basis }) {
     const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
     if (!k) return { ok: false, reason: "NO_KIND", detail: localize("entities.index.an_entity_needs_a_kind", "an entity needs a kind: one of {ENTITY_KINDS}", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
     if (!ENTITY_KINDS.includes(k))
@@ -560,7 +566,17 @@ export class Entities {
     /* R45: a proceeding's label is composed from its facet, never a caller's (so never a caption); a label the caller
        gives is kept as one more alias. */
     const isProceeding = k === "proceeding";
-    const lab = isProceeding ? "proceeding" : cleanLabel(label);
+    /* R68 (T53; N1256): an office chosen from the built-in list is read from the list before anything else, so its role is the
+       label a member did not have to type. */
+    const has = (v) => v !== undefined && v !== null;
+    let built = null;
+    if (has(builtIn)) {
+      if (k !== "office") return officeFieldNotForKind(k);
+      const b = this.#builtInOffice(builtIn);
+      if (!b.ok) return b;
+      built = b.office;
+    }
+    const lab = isProceeding ? "proceeding" : cleanLabel(label) || (built ? cleanLabel(built.role) : "");
     /* DEC-49 REGION is-entity-labelled — R1 (N285): the registry's own code and row (C-91.6). */
     if (!lab) {
       const row = ENTITY_CHECKS.ENTITY_NO_LABEL;
@@ -589,19 +605,29 @@ export class Entities {
     const fk = hasForumKind ? forumKind : null;
     /* R63 (K4364; DEC-402): where requests to an office go, and the law they go under (one of the active profiles' records
        laws, held as its citation); only an office holds them, and absent, none is held. */
-    const hasContact = contact !== undefined && contact !== null, hasLaw = law !== undefined && law !== null;
-    if ((hasContact || hasLaw) && k !== "office") return officeFieldNotForKind(k);
-    const ct = hasContact ? contactOf(contact) : null;
+    const hasContact = has(contact), hasLaw = has(law);
+    if ((hasContact || hasLaw || has(lawLayer) || has(layer) || has(body)) && k !== "office") return officeFieldNotForKind(k);
+    const ct = hasContact ? contactOf(contact) : built ? built.contact : null;
     if (hasContact && !ct) return badContact(contact);
-    let lawKey = null;
-    if (hasLaw) {
-      const t = typeof law === "string" ? law.trim() : "";
-      const laws = (Array.isArray(this.view().records_laws) ? this.view().records_laws : []).filter((l) => l && typeof l.citation === "string");
-      const hit = t ? laws.find((l) => l.citation === t) || laws.find((l) => l.name === t) : null;
-      if (!hit) return { ok: false, reason: "UNKNOWN_LAW", law: typeof law === "string" ? law.slice(0, 120) : null, laws: laws.map((l) => l.citation),
-        detail: localize("entities.index.the_law_requests_go_under", "the law requests go under is one your team's active jurisdiction profiles name{v1}. Nothing was written.", { v1: String(laws.length ? `: ${laws.map((l) => `${l.name} (${l.citation})`).join("; ")}` : "; they name none") }) };
-      lawKey = hit.citation;
+    /* R69 (T53; N1257, K5458): the law is held with the layer that gave it; a name or citation two layers give is refused
+       `NAME_AMBIGUOUS` unless the layer is stated. A law of the built-in list is the list's own. */
+    let lawKey = null, lawLayerKey = null;
+    if (hasLaw || has(lawLayer)) {
+      if (!hasLaw) return this.#unknownLaw(null);
+      const found = this.#lawFor(law, lawLayer);
+      if (!found.ok) return found;
+      lawKey = found.citation; lawLayerKey = found.layer;
+    } else if (built) { lawKey = built.law; lawLayerKey = built.law_layer; }
+    /* R70 (T53): the layer an office stands for: a built-in office's, or one a seeding caller states (an in-process act; the
+       op does not accept it); empty for an office a member names herself. */
+    let layerKey = built ? built.layer : null;
+    if (!built && has(layer)) {
+      const ids = (Array.isArray(this.view().layers) ? this.view().layers : []).map((l) => l.id);
+      if (typeof layer !== "string" || !ids.includes(layer.trim())) return this.#unknownLayer(layer, ids);
+      layerKey = layer.trim();
     }
+    /* R71: the body an office is in (the built-in list's parent agency for a chosen one). */
+    const bodyKey = has(body) ? cleanLabel(body) || null : built ? cleanLabel(built.body) || null : null;
     /* R45: the facet, judged whole before anything is allocated. */
     let facet = null;
     if (isProceeding) {
@@ -616,15 +642,24 @@ export class Entities {
     const by = declaredBy == null ? null : String(declaredBy);
     /* R63: an office a member who is not an administrator registers is marked until an administrator confirms it; one an
        administrator or a machine registers is not. Which screen may send the act is the door's (`op-grades`), not asked here. */
-    const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
+    const marked = k === "office" ? (!built && by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
     /* R65, R66: an office a member or an administrator names again is the held one (`existed: true`), found by its folded name among the
        live aliases of an office that does not state another law; nothing is written, so a repeat neither makes another entry nor clears
        a mark. A machine's office is registered as before. */
     if (k === "office" && by !== null && !isMachine(by)) {
-      const held = this.#rows(`SELECT DISTINCT e.entity_id, e.label, e.law FROM entities e JOIN entity_aliases a ON a.entity_id=e.entity_id
+      let held = this.#rows(`SELECT DISTINCT e.entity_id, e.label, e.law, e.law_layer, e.layer, e.office_body FROM entities e JOIN entity_aliases a ON a.entity_id=e.entity_id
                                    WHERE e.kind='office' AND a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, normAlias(name))
-        .filter((r) => !lawKey || !r.law || r.law === lawKey);
-      const hit = held.find((r) => lawKey && r.law === lawKey) || held[0];
+        .filter((r) => !lawKey || !r.law || (r.law === lawKey && (!lawLayerKey || !r.law_layer || r.law_layer === lawLayerKey)));
+      /* R70: never matched by guess. An office of a stated layer is only the held office of that layer; a name held by offices of two
+         or more layers is refused `NAME_AMBIGUOUS` naming them, and the member picks the office by its id. */
+      if (layerKey) held = held.filter((r) => r.layer === layerKey);
+      else {
+        const layersHeld = [...new Set(held.map((r) => r.layer).filter(Boolean))];
+        if (layersHeld.length > 1) return this.#officeAmbiguous(name, layersHeld);
+      }
+      /* R71: the same folded name in a different body is a different office. */
+      const sameBody = held.filter((r) => normAlias(r.office_body) === normAlias(bodyKey));
+      const hit = sameBody.find((r) => lawKey && r.law === lawKey) || sameBody[0];
       if (hit) {
         const n = this.#one(`SELECT count(*) AS c FROM entity_aliases WHERE entity_id=?`, hit.entity_id).c;
         return { ok: true, existed: true, entity_id: hit.entity_id, kind: k, label: hit.label, alias_count: Number(n), at,
@@ -633,8 +668,10 @@ export class Entities {
     }
     return this.#record.transact(() => {
       const { id } = this.#record.allocId("ENT", at.slice(0, 4));
-      this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind,named_by_member,contact_kind,contact_value,law) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-                     id, k, name, note.slice(0, 2000), by, at, sec, fk, marked, ct ? ct.kind : null, ct ? ct.value : null, lawKey);
+      this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind,named_by_member,contact_kind,contact_value,law,law_layer,layer,office_body,built_in_layer,built_in_as_of)
+                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                     id, k, name, note.slice(0, 2000), by, at, sec, fk, marked, ct ? ct.kind : null, ct ? ct.value : null, lawKey,
+                     lawLayerKey, layerKey, bodyKey, built ? built.layer : null, built ? built.as_of ?? null : null);
       const seen = new Set();
       const put = (alias, canonical) => {
         const norm = normAlias(alias);
@@ -660,8 +697,154 @@ export class Entities {
       return { ok: true, entity_id: id, kind: k, label: name, alias_count: Number(count), at,
                ...(isOrg ? { sector: sec } : {}),
                ...(FORUM_ENTITY_KINDS.includes(k) ? { forum_kind: fk } : {}),
+               ...(k === "office" && (lawLayerKey || layerKey || bodyKey || built)
+                 ? { law_layer: lawLayerKey, layer: layerKey, body: bodyKey, built_in: built ? { layer: built.layer, as_of: built.as_of ?? null } : null } : {}),
                ...(facet ? { proceeding: { forum: facet.forum, forum_kind: facet.forum_kind, number: facet.number, kind: facet.kind } } : {}) };
     });
+  }
+
+  /* R69, R121: the active layers as `nameResolve` takes them: each layer of the view by its id, or the profile itself where the
+     setting holds one that `jurisdictions` does not (a layer id `nameResolve` cannot read is passed over by it). */
+  #activeLayers() {
+    const raw = this.#record && typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
+    const given = Array.isArray(raw) ? raw.filter((p) => p && typeof p === "object") : [];
+    return (Array.isArray(this.view().layers) ? this.view().layers : []).map((l) => given.find((p) => p.id === l.id) || l.id);
+  }
+  /* R69 (T53; N1257, K5458): `UNKNOWN_LAW`, its list naming each law with the layer that gives it. */
+  #unknownLaw(law) {
+    const laws = this.#layerLaws();
+    const layerOf = (l) => l.layer;
+    return { ok: false, reason: "UNKNOWN_LAW", law: typeof law === "string" ? law.slice(0, 120) : null, laws: [...new Set(laws.map((l) => l.citation))],
+      law_layers: laws.map((l) => ({ name: l.name, citation: l.citation, layer: layerOf(l) })),
+      detail: localize("entities.index.the_law_requests_go_under", "the law requests go under is one your team's active jurisdiction profiles name{v1}. Nothing was written.", { v1: String(laws.length ? `: ${laws.map((l) => `${l.name} (${l.citation})${layerOf(l) ? `, ${layerOf(l)}` : ""}`).join("; ")}` : "; they name none") }) };
+  }
+  /* R69: the records laws each active layer gives, `[{name, citation, layer}]`, read from the layers themselves: the combined view
+     keeps an entry two layers give alike once, and a law two layers give is exactly what must be told apart. */
+  #layerLaws() {
+    const out = [];
+    for (const l of this.#activeLayers()) {
+      const p = typeof l === "string" ? heldProfile(l) : l;
+      if (p && Array.isArray(p.records_laws))
+        for (const law of p.records_laws) if (law && typeof law.citation === "string") out.push({ name: law.name, citation: law.citation, layer: p.id });
+    }
+    /* a profile that is no layer (a team's chosen place before the layers) gives its laws with no layer */
+    for (const law of Array.isArray(this.view().records_laws) ? this.view().records_laws : [])
+      if (law && typeof law.citation === "string" && typeof law.layer !== "string" && !out.some((o) => o.citation === law.citation))
+        out.push({ name: law.name, citation: law.citation, layer: null });
+    return out;
+  }
+  /* R69, R70: the layers a refusal names, each with its level and place where the view holds them. */
+  #layersNamed(ids) {
+    const held = Array.isArray(this.view().layers) ? this.view().layers : [];
+    return ids.map((id) => { const l = held.find((x) => x.id === id); return { layer: id, level: l ? l.level ?? null : null, place: l ? l.place ?? null : null }; });
+  }
+  /* R69: a law named (by citation or name) that two layers give, answered `NAME_AMBIGUOUS` naming the layers. */
+  #lawAmbiguous(law, layerIds) {
+    const layers = this.#layersNamed(layerIds);
+    return { ok: false, reason: "NAME_AMBIGUOUS", name: String(law).slice(0, 120), layers,
+      detail: localize("entities.index.that_law_is_given_by", "that law is given by more than one of your team's layers ({v1}); name the layer it goes under as well. Nothing was written.", { v1: String(layers.map((l) => l.layer).join(", ")) }) };
+  }
+  /* R70: an office name held by offices of two or more layers, answered `NAME_AMBIGUOUS` naming them. */
+  #officeAmbiguous(name, layerIds) {
+    const layers = this.#layersNamed(layerIds);
+    return { ok: false, reason: "NAME_AMBIGUOUS", name: String(name).slice(0, 200), layers,
+      detail: localize("entities.index.offices_of_that_name_are", "offices of that name are held for more than one layer ({v1}), so which is meant is not guessed; choose the office by its id. Nothing was written.", { v1: String(layers.map((l) => l.layer).join(", ")) }) };
+  }
+  #unknownLayer(layer, ids) {
+    return { ok: false, reason: "UNKNOWN_LAYER", layer: typeof layer === "string" ? layer.slice(0, 80) : null, layers: ids,
+      detail: localize("entities.index.an_office_stands_for_one", "an office stands for one of your team's layers{v1}. Nothing was written.", { v1: String(ids.length ? `: ${ids.join(", ")}` : "; it has none") }) };
+  }
+  /* R69 (T53): the law an office goes under and the layer that gives it. `jurisdictions.nameResolve` resolves a name over the
+     layers (R121), the one resolver; a citation, and a law of a layer `nameResolve` cannot read (a team's), is found in the view,
+     whose entries carry their layer. Two layers giving it are `NAME_AMBIGUOUS` unless `lawLayer` states one. */
+  #lawFor(law, lawLayer) {
+    const view = this.view();
+    const t = typeof law === "string" ? law.trim() : "";
+    if (!t) return this.#unknownLaw(law);
+    const wanted = typeof lawLayer === "string" && lawLayer.trim() ? lawLayer.trim() : null;
+    const ids = this.#activeLayers();
+    const laws = this.#layerLaws();
+    const resolved = nameResolve({ section: "records_laws", name: t, ...(wanted ? { layer: wanted } : {}), layers: ids });
+    if (resolved.ok && resolved.entry && typeof resolved.entry.citation === "string")
+      return { ok: true, citation: resolved.entry.citation, layer: resolved.layer };
+    if (!wanted && resolved.reason === "NAME_AMBIGUOUS") return this.#lawAmbiguous(t, resolved.layers.map((l) => l.layer));
+    const byCite = laws.filter((l) => l.citation === t);
+    const hits = (byCite.length ? byCite : laws.filter((l) => l.name === t)).filter((l) => !wanted || l.layer === wanted);
+    const given = [...new Set(hits.map((l) => (typeof l.layer === "string" ? l.layer : null)))];
+    if (given.length > 1) return this.#lawAmbiguous(t, given.filter(Boolean));
+    if (!hits.length) return this.#unknownLaw(law);
+    return { ok: true, citation: hits[0].citation, layer: given[0] };
+  }
+
+  /* R68 (T53; N1256, DEC-401): the offices of the federal layer, as the active layers hold them (`jurisdictions` R119): the
+     view's `counterparties` of level `federal`, each with the layer that holds it and the date that layer's list was read. The
+     law is the federal layer's own (FOIA). Empty while no active layer holds any. */
+  #federalOffices() {
+    const view = this.view();
+    const layers = Array.isArray(view.layers) ? view.layers : [];
+    const federal = layers.find((l) => l.level === "federal") || null;
+    const law = (Array.isArray(view.records_laws) ? view.records_laws : []).find((l) => l && l.level === "federal" && typeof l.citation === "string") || null;
+    const asOf = (id) => { const l = layers.find((x) => x.id === id); return l && l.as_of ? l.as_of : null; };
+    return (Array.isArray(view.counterparties) ? view.counterparties : [])
+      .filter((c) => c && c.level === "federal" && typeof c.role === "string" && c.role.trim())
+      .map((c) => {
+        const layer = typeof c.layer === "string" ? c.layer : federal ? federal.id : null;
+        return { role: c.role, body: typeof c.body === "string" ? c.body : null,
+                 abbreviation: typeof c.abbreviation === "string" ? c.abbreviation : null,
+                 contacts: Array.isArray(c.contacts) ? c.contacts.map((k) => ({ how: k.how, value: k.value })) : [],
+                 layer, as_of: layer ? asOf(layer) : null,
+                 law: law ? law.citation : null, law_layer: law && typeof law.layer === "string" ? law.layer : layer };
+      });
+  }
+  /* R68: where a chosen office takes requests, from the contacts its list states: the portal, else the e-mail, else the mail
+     address; a telephone number is not a place to send a request. */
+  static #contactOfOffice(contacts) {
+    for (const [how, kind] of [["web", "portal"], ["email", "email"], ["mail", "address"]]) {
+      const c = contacts.find((k) => k && k.how === how && typeof k.value === "string" && k.value.trim());
+      if (c) return { kind, value: c.value.trim().slice(0, 500) };
+    }
+    return null;
+  }
+  /* R68: the built-in office a `createEntity` names (`{role, body?}`, as `federalOfficesFind` answers them). */
+  #builtInOffice(builtIn) {
+    const role = builtIn && typeof builtIn === "object" ? normAlias(builtIn.role) : "";
+    const bodyAsked = builtIn && typeof builtIn === "object" ? normAlias(builtIn.body) : "";
+    const hits = role ? this.#federalOffices().filter((o) => normAlias(o.role) === role && (!bodyAsked || normAlias(o.body) === bodyAsked)) : [];
+    if (hits.length !== 1)
+      return { ok: false, reason: "NOT_IN_BUILT_IN_LIST",
+        detail: localize("entities.index.that_office_is_not_one", "that office is not one of the built-in federal offices{v1}. Nothing was written.", { v1: String(hits.length > 1 ? "; more than one has that name, so name its agency as well" : "") }) };
+    const o = hits[0];
+    return { ok: true, office: { ...o, contact: Entities.#contactOfOffice(o.contacts) } };
+  }
+
+  /** R68 (T53; N1256, DEC-401; `op=federaloffices`): the offices of the federal layer's built-in list whose component name,
+   *  agency or abbreviation carries every word of `query` (extraction's term fold; an agency's initials count), at most 20
+   *  with `truncated`, each `{role, body, contacts, as_of, layer}`. A read for a member's session: `VIEWER_MISSING` without a
+   *  stamped viewer, `NO_QUERY` for a query that folds to nothing, none for a viewer `membership` does not recognise. An
+   *  office becomes an entity only when chosen (`createEntity` with `built_in`). Writes nothing and never throws. */
+  federalOfficesFind({ query, viewer } = {}) {
+    try {
+      if (viewer === undefined || viewer === null || viewer === "")
+        return { ok: false, reason: "VIEWER_MISSING", detail: word("duties.why.read_names_member") };
+      const terms = typeof query === "string" ? labelTerms(query) : [];
+      if (!terms.length) return { ok: false, reason: "NO_QUERY",
+        detail: localize("entities.index.a_federal_office_is_looked", "a federal office is looked for by words of its name, its agency or its initials, and the query given folds to none. Nothing was read.") };
+      const empty = { ok: true, query, offices: [], count: 0, limit: FEDERAL_OFFICES_LIMIT, truncated: false };
+      if (viewerPredicate(viewer).scope === "DENY") return empty;
+      const initials = (name) => (typeof name === "string" ? name.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2).map((w) => w[0]).join("").toLowerCase() : "");
+      const carried = (o) => {
+        const have = new Set([...labelTerms(o.role), ...labelTerms(o.body ?? ""), ...labelTerms(o.abbreviation ?? ""), initials(o.body), initials(o.role)]);
+        return terms.every((t) => have.has(t));
+      };
+      const hits = this.#federalOffices().filter(carried)
+        .sort((x, y) => { const a = normAlias(x.role), b = normAlias(y.role); return a < b ? -1 : a > b ? 1 : normAlias(x.body) < normAlias(y.body) ? -1 : 1; });
+      const truncated = hits.length > FEDERAL_OFFICES_LIMIT;
+      const offices = (truncated ? hits.slice(0, FEDERAL_OFFICES_LIMIT) : hits)
+        .map((o) => ({ role: o.role, body: o.body, contacts: o.contacts, as_of: o.as_of, layer: o.layer }));
+      return { ...empty, offices, count: offices.length, truncated };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_6", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
+    }
   }
 
   /** R2: an alias attached after the fact, exactly as it can be given at creation. The same fold may be held by
@@ -717,7 +900,7 @@ export class Entities {
   readEntity({ entityId, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an entity is read by its id (op=entity&id=ENT-...)");
-    const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, confirmed_at, contact_kind, contact_value, law FROM entities WHERE entity_id=?`, entityId);
+    const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, confirmed_at, contact_kind, contact_value, law, law_layer, layer, office_body, built_in_layer, built_in_as_of FROM entities WHERE entity_id=?`, entityId);
     if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
     return { ok: true, found: true, entity: this.#entityView(e, this.#redactor(viewer)) };
   }
@@ -728,7 +911,7 @@ export class Entities {
     const norm = normAlias(alias);
     if (!norm) return { ok: true, alias: typeof alias === "string" ? alias : null, count: 0, entities: [] };
     const hits = this.#rows(
-      `SELECT DISTINCT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at, e.sector, e.forum_kind, e.named_by_member, e.confirmed_by, e.confirmed_at, e.contact_kind, e.contact_value, e.law
+      `SELECT DISTINCT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at, e.sector, e.forum_kind, e.named_by_member, e.confirmed_by, e.confirmed_at, e.contact_kind, e.contact_value, e.law, e.law_layer, e.layer, e.office_body, e.built_in_layer, e.built_in_as_of
          FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
         WHERE a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, norm);
     const keep = this.#redactor(viewer);
@@ -781,15 +964,25 @@ export class Entities {
       const empty = { ok: true, kind: k, entities: [], count: 0, limit: cap, truncated: false, next: null };
       if (viewerPredicate(viewer).scope === "DENY") return empty;
       const isOrg = ORGANISATION_KINDS.includes(k);
-      const rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, contact_kind, contact_value, law FROM entities
-                                WHERE kind=? AND entity_id > ?${forums.length ? ` AND forum_kind IN (${forums.map(() => "?").join(",")})` : ""}
-                                ORDER BY entity_id LIMIT ?`, k, from, ...forums, cap + 1);
+      let rows;
+      if (k === "office") {
+        /* R71 (T53): offices of one folded name, body and layer are drawn once, the earliest registered, however many are stored;
+           the fold is JS, so the offices are read in id order and the page is cut after the pairs are dropped. */
+        const seen = new Set();
+        rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, contact_kind, contact_value, law, law_layer, layer, office_body, built_in_layer, built_in_as_of FROM entities
+                            WHERE kind=?${forums.length ? ` AND forum_kind IN (${forums.map(() => "?").join(",")})` : ""} ORDER BY entity_id`, k, ...forums)
+          .filter((e) => { const key = JSON.stringify([normAlias(e.label), normAlias(e.office_body), e.layer ?? null]); if (seen.has(key)) return false; seen.add(key); return true; })
+          .filter((e) => e.entity_id > from).slice(0, cap + 1);
+      } else
+        rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, contact_kind, contact_value, law, law_layer, layer, office_body, built_in_layer, built_in_as_of FROM entities
+                            WHERE kind=? AND entity_id > ?${forums.length ? ` AND forum_kind IN (${forums.map(() => "?").join(",")})` : ""}
+                            ORDER BY entity_id LIMIT ?`, k, from, ...forums, cap + 1);
       const truncated = rows.length > cap;
       const page = truncated ? rows.slice(0, cap) : rows;
       const entities = page.map((e) => ({ entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note,
         ...(isOrg ? { sector: e.sector || SECTOR_UNDETERMINED, forum_kind: e.forum_kind ?? null } : {}),
         ...(k === "office" ? { named_by_member: !!e.named_by_member, confirmed_by: e.confirmed_by ?? null,
-                               contact: Entities.#contactView(e), law: e.law ?? null } : {}),
+                               contact: Entities.#contactView(e), law: e.law ?? null, ...Entities.#officeFacts(e) } : {}),
         declared_by: e.declared_by, at: e.at }));
       return { ...empty, entities, count: entities.length, truncated,
                next: truncated ? entities[entities.length - 1].entity_id : null };
@@ -997,6 +1190,46 @@ export class Entities {
       return { ...empty, similar, count: similar.length, truncated };
     } catch (err) {
       return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_5", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
+    }
+  }
+
+  /** R74 (T53; N1259 `registers` R8, K4403 (2)): the entities a project names as its subjects, `{ok: true, subjects:
+   *  [{entity_id, kind, label, identifiers: [{scheme, value}]}], truncated}`, at most 200: each entity named as `subject_entity` in
+   *  the front matter of the project's inquiry documents, in the order the documents are held, once, with the identifiers it
+   *  holds (withdrawn ones left out). An absent project, one that is no project, and one the viewer may not see are the same
+   *  `NO_SUCH_PROJECT`. It reads no prose, resolves and links nothing; an entity merely mentioned in a document is not a subject.
+   *  An in-process read, not an op. Writes nothing and never throws. */
+  subjectsOfProject({ project, viewer } = {}) {
+    try {
+      const info = typeof project === "string" && project ? this.#record.bundleInfo(project) : null;
+      const seen = info && info.type === "project" && this.#membership && typeof this.#membership.inSight === "function"
+        && viewerPredicate(viewer).scope !== "DENY" && this.#membership.inSight(project, viewer) === true;
+      if (!seen) return noSuchProject(project);
+      const subjects = [], named = new Set();
+      let truncated = false, after = "";
+      for (;;) {
+        const page = this.#record.listBundles({ project, after, limit: 200 });
+        for (const id of page.ids) {
+          const doc = this.#record.bundleInfo(id);
+          if (!doc || doc.type !== "inquiry") continue;
+          const file = this.#record.readFile(id, "bundle.md");
+          const fm = file && typeof file.text === "string" ? parseFrontmatter(file.text).data : null;
+          const entityId = fm && typeof fm.subject_entity === "string" ? fm.subject_entity.trim() : "";
+          if (!entityId || named.has(entityId)) continue;
+          const e = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
+          if (!e) continue;
+          named.add(entityId);
+          if (subjects.length >= PROJECT_SUBJECTS_MAX) { truncated = true; continue; }
+          subjects.push({ entity_id: e.entity_id, kind: e.kind, label: e.label,
+            identifiers: this.#rows(`SELECT scheme, id FROM entity_identifiers WHERE entity_id=? AND withdrawn_at IS NULL ORDER BY at, scheme, normal`, entityId)
+              .map((r) => ({ scheme: r.scheme, value: r.id })) });
+        }
+        if (page.ids.length < 200) break;
+        after = page.cursor;
+      }
+      return { ok: true, project, subjects, count: subjects.length, limit: PROJECT_SUBJECTS_MAX, truncated };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_7", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -1419,12 +1652,22 @@ export class Entities {
              confirmed_at: e.kind === "office" ? e.confirmed_at ?? null : null,
              contact: e.kind === "office" ? Entities.#contactView(e) : null,
              law: e.kind === "office" ? e.law ?? null : null,
+             ...Entities.#officeFacts(e),
              sector_history: sec.rows.map((h) => ({ sector: h.sector, prior: h.prior, note: h.note, by: h.set_by, at: h.at })),
              identifiers: ids.rows.map(identifierView),
              proceeding: e.kind === "proceeding" ? this.proceedingOf(e.entity_id) : null,
              aliases, relations, defects, defect_count: defects.length,
              limit: ENTITY_COLLECTION_LIMIT, relations_limit: ENTITY_RELATIONS_LIMIT, aliases_truncated: al.truncated, relations_truncated: rel.truncated,
              defects_truncated: def.truncated, sector_history_truncated: sec.truncated, identifiers_truncated: ids.truncated };
+  }
+
+  /* R69, R70, R71, R68 (T53): the facts of an office beyond R63's: the layer that gave its law, the layer it stands for, its body
+     and the built-in list entry it was chosen from; null for another kind and for an office registered before them. */
+  static #officeFacts(e) {
+    const office = e.kind === "office";
+    return { law_layer: office ? e.law_layer ?? null : null, layer: office ? e.layer ?? null : null,
+             body: office ? e.office_body ?? null : null,
+             built_in: office && e.built_in_layer ? { layer: e.built_in_layer, as_of: e.built_in_as_of ?? null } : null };
   }
 
   /* R63: where requests to an office go, `{kind, value}`, or null when not stated. */
@@ -1491,7 +1734,7 @@ export class Entities {
         const v = valid && when ? this.#validOn(valid, when, ctx.view) : valid ? { why: word("entities.why.capture_retrieval_instant") } : "in";
         if (v === "out") continue;
         out.set(row.entity_id, { basis: `${row.scheme} ${rec.normal}`,
-          method: localize("entities.index.scheme_identifier_the_reference_v1", "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}", { v1: String(value === rr.ref ? "" : "key "), value: String(value), normal: String(rec.normal), space: String(space), form: String(rec.form), scheme: String(row.scheme), v2: String(v === "in" ? (valid ? ", valid when the document was retrieved" : "") : localize("entities.index.its_validity_then_is_undetermined", "; its validity then is undetermined ({why})", { why: String(reasonText(v.why)) })) }) });
+          method: localize("entities.index.scheme_identifier_the_reference_v1", "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}", { v1: String(value === rr.ref ? "" : "key "), value: String(value), normal: String(rec.normal), space: String(space), form: String(rec.form), scheme: String(row.scheme), v2: String(v === "in" ? (valid ? localize("entities.index.valid_when_the_document_was_retrieved", ", valid when the document was retrieved") : "") : localize("entities.index.its_validity_then_is_undetermined", "; its validity then is undetermined ({why})", { why: String(reasonText(v.why)) })) }) });
       }
     }
     return out;
@@ -2174,7 +2417,7 @@ export class Entities {
     /* DEC-49 REGION is-idspace-value-shape */
     if (!ra || (pair && !rb))
       return idspaceRefusal("IDSPACE_VALUE_NOT_IN_SPACE", { space: sp, forms: S.forms.map((f) => f.form), profiles,
-        detail: localize("entities.index.v1_has_the_shape_of", "{v1} has the shape of no form of the {label}{v2}", { v1: String(!ra ? "a" : "b"), label: String(S.label), v2: String(S.forms.length ? "" : "; your team's active jurisdiction profiles give this space no form") }) });
+        detail: localize("entities.index.v1_has_the_shape_of", "{v1} has the shape of no form of the {label}{v2}", { v1: String(!ra ? "a" : "b"), label: String(S.label), v2: String(S.forms.length ? "" : localize("entities.index.your_team_s_active_jurisdiction_profiles_give", "; your team's active jurisdiction profiles give this space no form")) }) });
     /* END DEC-49 REGION is-idspace-value-shape */
     /* R21: no assessor vintage is held in the record, so a parcel's standing is judged over none and reads
        UNDETERMINED saying so — never "no such parcel". */
@@ -2240,6 +2483,8 @@ export function entitiesOps(e, url, body) {
                                            limit: q("limit"), after: q("after"), viewer: q("viewer") }),
     /* R60 (T51): the near-match check made before `entitycreate`. */
     entitysimilar: () => e.similarSubjects({ name: q("name"), kind: q("kind"), limit: q("limit"), viewer: q("viewer") }),
+    /* R68 (T53): the built-in federal offices a member looks through; a read for a member's session. */
+    federaloffices: () => e.federalOfficesFind({ query: q("q"), viewer: q("viewer") }),
     relation: () => e.readRelation({ relationId: q("id") }),
     resolutions: () => e.resolutionsFor({ captureSha: q("sha256"), limit: q("limit"), viewer: q("viewer") }),
     concerns: () => e.concerns({ entityId: q("id"), limit: q("limit"), viewer: q("viewer") }),
@@ -2252,7 +2497,7 @@ export function entitiesOps(e, url, body) {
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
   entitycreate: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.entitycreate", "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)"),
-    fields: { accepts: ["kind","label","note","aliases","sector","proceeding","forum_kind","contact","law"], requires: ["kind","label","note"] } },
+    fields: { accepts: ["kind","label","note","aliases","sector","proceeding","forum_kind","contact","law","law_layer","body","built_in"], requires: ["kind","label","note"] } },
   entityalias: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("entities.declared.entityalias", "registry write, keyed by entity"),
     fields: { accepts: ["entityId","alias"], requires: ["entityId","alias"] } },
   aliaswithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.aliaswithdraw", "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn"),

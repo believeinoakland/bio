@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { seeded, MEMBER, ZONE } from "./fixture.mjs";
 import { sha as digest } from "../provenance/fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { readInterval } from "../../../src/progressions/index.mjs";
 
 const T = (w, placements, entityId = "ENT-1") =>
@@ -105,7 +106,7 @@ test("R16 R37: an event's own date anchors the clock in the event's zone; no own
   u.tz.zone = null;
   const nz = overdueOf(u, at("2040-01-01T00:00:00Z"), SA);
   assert.equal(nz[0].overdue, "undetermined");
-  assert.match(nz[0].why, /no time zone governs/);
+  assert.match(nz[0].why, wordRx("progressions.why.time_zone_governs"));
 });
 
 test("R16: no placed predecessor, or no parsable within: never overdue, no deadline invented; now is the caller's, the clock's, then the wall's", async () => {
