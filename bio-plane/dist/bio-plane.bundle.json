@@ -1429,8 +1429,8 @@
     },
     {
       "path": "src/connections/index.mjs",
-      "bytes": 116794,
-      "sha256": "21bc1944851e2abd8ca3445376c3a2635748ad26a8d07baccec811e085517b4b"
+      "bytes": 116795,
+      "sha256": "9c0883aae8f2dd1fff53da232c0a821cbc32008ec0e4157836d29306281d80a8"
     },
     {
       "path": "src/connections/mentioned.mjs",
