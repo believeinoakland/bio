@@ -1183,15 +1183,20 @@ import { localize } from "./setup-words/index.mjs";
    CHANGED (12), code and number unmoved: C-113.32, C-140.4, C-140.7, C-146.25, C-146.6, C-146.7, C-33.54, C-87.1,
    C-94.5, C-94.6, C-96.17, C-96.39. THE FAMILIES THAT ARRIVED: none. This module adds no row.
    ROW_CENSUS (R50) re-pinned to this tree: 1971 rows. Rows a T52 job adds or changes are T53's stamp. */
-/* 1.81.0 (PROMOTION #1, T53, 2026-10-28; K5006): MINOR. The stamp of every row the jobs after 1.80.0's tree added or
-   changed (modules after layer 2, merged after PROMOTION #1's 1.80.0 stamp; no job record named them `awaiting stamp`),
+/* 1.81.0 (PROMOTION #1, T53, 2026-10-28; K5006): MINOR. The stamp of every row the jobs after 1.80.0's tree added, changed
+   or retired (modules after layer 2, merged after PROMOTION #1's 1.80.0 stamp; no job record named them `awaiting stamp`),
    read by diffing R50's census lines of this tree against 1.80.0's own (`test/fixtures/row-census-1.80.0.jsonl`: 1971
-   rows, 17406b47...): sixteen new rows, seven changed, none retired. THE CAUSE of T53's red `row-census`: the pin was stamped
+   rows, 17406b47...): 53 new rows, 21 changed, 8 retired. THE CAUSE of T53's red `row-census`: the pin was stamped
    once and rows moved after it with no stamp, which the suite refuses by name; this is the layer-2 stamp it waits for.
-   ARRIVED (16): C-102.40 SETTING_AT_INVALID; C-156.1-.13, the new family `CATALOGUE_CHECKS` (ai-catalogue, rows {check, where, word}, the census reads them as it reads any table); C-2.8 CUTTING_LEG_IN_GROUND, C-33.65 WHICH_PASSAGE.
-   CHANGED (7), code and number unmoved, each its translation or `where`: C-96.6, C-115.40, C-120.4, C-124.8, C-137.5, C-140.45, C-53.13.
-   THE FAMILIES THAT ARRIVED: `CATALOGUE_CHECKS` C-156 (ai-catalogue; it enters the census by being an exported table of rows, no listing here). This module adds no row.
-   ROW_CENSUS (R50) re-pinned to this tree: 1987 rows. Rows a T53 job adds or changes are T54's stamp. */
+   ARRIVED (53): C-102.40 SETTING_AT_INVALID; C-156.1-.13, the new family `CATALOGUE_CHECKS` (ai-catalogue, rows {check,
+   where, word}; the census reads them as it reads any table); C-2.8 CUTTING_LEG_IN_GROUND; C-29.48-.82 (ai-accounts);
+   C-33.65 WHICH_PASSAGE; C-96.56 NO_WAITING_PROPOSAL, C-96.57 NOT_YOUR_PROPOSAL (member-roster, membership).
+   CHANGED (21), code and number unmoved, each its translation or `where`: C-96.6; C-115.40; C-120.4; C-124.8; C-137.5;
+   C-140.45; C-53.13; C-29.13-.15, .19-.22, .31, .32, .36-.38, .40, .42 (ai-accounts).
+   RETIRED (8), ids not reused: C-29.17, .27, .29, .34, .35, .39, .44, .45 (ai-accounts).
+   THE FAMILIES THAT ARRIVED: `CATALOGUE_CHECKS` C-156 (ai-catalogue; it enters the census by being an exported table of
+   rows, no listing here). This module adds no row.
+   ROW_CENSUS (R50) re-pinned to this tree: 2016 rows. Rows a T53 job adds or changes are T54's stamp. */
 export const CATALOG_VERSION = "1.81.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
@@ -1284,8 +1289,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1987,
-  digest: "90258148cc0899c067db6399dda4f23c3750ebe42304d9a1a17ae48c590084dc" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 2016,
+  digest: "acead85bd73dab51183a21f15baa1cb73bb4e778b0135f79cb54f74ed90cb42b" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
