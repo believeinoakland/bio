@@ -2,7 +2,7 @@
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #330 · session_018BhcedfM8dV8rPodwgBjD3 · depth 1
 **Jobs** · none
-**Owed** · none
+**Owed** · start calibration; start reading-pipeline; start extraction; start content
 
 # Plan T53 · round R1, the beta's build
 
