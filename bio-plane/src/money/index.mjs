@@ -7,6 +7,9 @@
    the facts table as a read contract (R19) and answers who recorded a fact from a passage (R24). One home per fact is
    checked at the store's gate (R20); a fact follows its source's sight (R21). No field marks a fact as the group's own
    (R6, K1463).
+   T53: the connection kinds are five families (R36); a party's hub is judged on the facts at the date and kinds asked
+   (R37); `moneyByParty` answers what an entity paid or received (R38); a fiscal key is mapped over the governing view with
+   the team's stated years (R39, R41) and `fiscalYears` says which governments' years are known (R40).
 
    Reached through `moneyOf(ctx, opts)` (K61). `events` and `lines` are their modules' instances for `ctx` unless given
    (`eventsOf`, `linesOf`); `calculations`, which comes after money in the order, is the injected port
@@ -18,18 +21,20 @@ import { entitiesOf, noEntity, noSuchEntity, gradeRank } from "../entities/index
 import { checkContentExtent, canonicalExtent, describeExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { eventsOf, noSuchEvent } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { combine, governingZone } from "../../../jurisdictions/index.mjs";
 import { isHypothesisId, canonicalJson, sha256HexSync, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { bounds, compare, fiscalPeriod, validAt, reasonText } from "../civil-time/index.mjs";
 import { parseFigure, add, subtract, relate, SUM_RULE } from "../calc-grammar/index.mjs";
-import { BOUNDS, LOWEST_GRADE, exhausted, defaultRegistry } from "../connection-grammar/index.mjs";
+import { BOUNDS, LOWEST_GRADE, exhausted, defaultRegistry, hubBoundOf } from "../connection-grammar/index.mjs";
 import { MONEY_SCHEMA, MONEY_TABLES, MONEY_ADDED_COLUMNS } from "./schema.mjs";
 import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, FUND_TYPES, BALANCE_FAMILIES, METHODS,
-  MACHINE_METHODS, SET_PURPOSES, CONCERNS_KINDS, CHANGES, CONNECTION_KIND, CONNECTION_WORD } from "./vocab.mjs";
+  MACHINE_METHODS, SET_PURPOSES, CONCERNS_KINDS, CHANGES, CONNECTION_FAMILIES, CONNECTION_KIND_NAMES, MONEY_KIND_FAMILY,
+  DOCUMENT_EDGE_KIND, kindsOfFamily } from "./vocab.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 export { MONEY_SCHEMA, MONEY_TABLES, MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, FUND_TYPES,
-  BALANCE_FAMILIES, METHODS, SET_PURPOSES, CHANGES, CONNECTION_KIND, CONNECTION_WORD };
+  BALANCE_FAMILIES, METHODS, SET_PURPOSES, CHANGES, CONNECTION_FAMILIES, CONNECTION_KIND_NAMES, MONEY_KIND_FAMILY, kindsOfFamily };
 
 /* R9: the bound of a list read. */
 export const LIST_LIMIT_DEFAULT = 100;
@@ -46,6 +51,15 @@ const MOVING_EVENTS = Object.freeze(["payment", "transfer"]);
 const SOURCE_DEPTH_MAX = 32;
 /* R31: an ingest key, at most. */
 const INGEST_KEY_MAX = 200;
+/* R36: the five connection kinds and their words, by the design's key where it has one, else money's own provisional row. */
+const KIND_WORDS = Object.freeze({
+  money_transfer: localize("label.connectionkinds.money_transfer", "money moved"),
+  money_payment: localize("label.connectionkinds.money_payment", "money paid"),
+  money_contribution: localize("label.connectionkinds.money_contribution", "money given"),
+  money_revenue: localize("label.connectionkinds.money_revenue", "money received"),
+  money_other: localize("label.connectionkinds.money_other", "other money"),
+});
+const CONNECTION_KINDS = Object.freeze(CONNECTION_KIND_NAMES.map((kind) => Object.freeze({ kind, word: KIND_WORDS[kind], class: "evidentiary" })));
 /* R7: the roles `checkConstant` reads. */
 const CONSTANT_ROLES = Object.freeze(["period", "kind", "phase", "stage", "basis", "currency"]);
 
@@ -130,19 +144,20 @@ export function moneyOf(ctx, opts = {}) {
       entities: opts.entities ?? (() => entitiesOf(ctx, { record, membership })),
       provenance: opts.provenance ?? (() => provenanceOf(ctx)),
       events: opts.events ?? (() => eventsOf(ctx, { record, membership })),
-      lines: opts.lines ?? (() => linesOf(ctx, { record })) });
+      lines: opts.lines ?? (() => linesOf(ctx, { record })),
+      localFacts: opts.localFacts ?? (() => localFactsOf(ctx, { record, membership })) });
     instances.set(storage, m);
   }
   return m;
 }
 
 export class Money {
-  #sql; #record; #membership; #entities; #provenance; #events; #lines; #calculations; #now;
+  #sql; #record; #membership; #entities; #provenance; #events; #lines; #localFacts; #calculations; #now;
   #listeners = []; #declared = false; #registered = false; #stepped = false;
   #held = null; #heldKey = null; #builds = 0;
 
   constructor(storage, { record, membership = null, entities = null, provenance = null, events = null, lines = null,
-                         calculations = null, now = null } = {}) {
+                         localFacts = null, calculations = null, now = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
@@ -150,6 +165,7 @@ export class Money {
     this.#provenance = provenance;
     this.#events = events;
     this.#lines = lines;
+    this.#localFacts = localFacts;
     this.#calculations = calculations;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   }
@@ -159,6 +175,9 @@ export class Money {
   #ent() { return typeof this.#entities === "function" ? (this.#entities = this.#entities()) : this.#entities; }
   #prov() { return typeof this.#provenance === "function" ? (this.#provenance = this.#provenance()) : this.#provenance; }
   #ev() { return typeof this.#events === "function" ? (this.#events = this.#events()) : this.#events; }
+  #lf() {
+    try { return typeof this.#localFacts === "function" ? (this.#localFacts = this.#localFacts()) : this.#localFacts; } catch { return null; }
+  }
   #ln() { return typeof this.#lines === "function" ? (this.#lines = this.#lines()) : this.#lines; }
 
   /* ---- boot ---- */
@@ -223,12 +242,23 @@ export class Money {
      on every call, so a change is seen at once) and shared by every reader, so it is deep-frozen. One entry, about
      145 KB, replaced when the key changes; dropped with the instance. */
 
+  /* R39 (T53; DEC-458): the governing view is the active profiles combined with the team's one layer, which `local-facts`
+     provides (`teamLayer`, its R30) and the caller appends after the recorded ids; where it is absent or does not combine,
+     the profiles alone. The layer is read for the fiscal years it states, as an internal reader: what a caller is told is
+     the period a key maps to, never the layer. */
+  #team() {
+    const lf = this.#lf();
+    if (!lf || typeof lf.teamLayer !== "function") return null;
+    try { const t = lf.teamLayer({ viewer: "admin" }); return isObj(t) && t.ok !== false && !t.refused ? t : null; } catch { return null; }
+  }
   #view() {
     const ids = typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
     const list = Array.isArray(ids) ? ids : [];
-    const key = JSON.stringify(list);
+    const team = this.#team();
+    const key = JSON.stringify(list) + (team ? canonicalJson(team) : "");
     if (this.#held !== null && this.#heldKey === key) return this.#held;
-    const c = combine(list);
+    let c = team ? combine([...list, team]) : null;
+    if (!c || !c.ok) c = combine(list);
     this.#builds += 1;
     this.#heldKey = key;
     return (this.#held = deepFreeze(c && c.ok ? c.view : {}));
@@ -236,6 +266,46 @@ export class Money {
 
   /** R30 (G55): how many times this instance has built the jurisdiction view. */
   viewBuilds() { return this.#builds; }
+
+  /* ---- R40, R41 (T53; DEC-458): which governments' fiscal years are known, and where each comes from ---- */
+
+  /** R40: the governments whose fiscal year is known, each with its year (`start`, `named_by`, `label`) and where it comes
+   *  from: `records` (the place's layers), or `stated` by a member (who, when, how, and R41's standing: `confirmed`,
+   *  `unconfirmed` for a lapsed one, `disputed` with the dispute named; a lapsed or disputed year is still known). A `*`
+   *  entry of the records is answered once as `every`, never as a government. With `body`, that one government: `known`
+   *  and its `year`, or the sentence for the screen (it names the government and says a member can state it). With none
+   *  known the list is empty with the none-known sentence. Writes nothing. */
+  fiscalYears({ body } = {}) {
+    const view = this.#view();
+    const fy = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
+    const team = this.#team();
+    const lf = this.#lf();
+    const row = (e) => {
+      const base = { start: e.start, named_by: e.named_by, label: e.label ?? null };
+      const gov = team && Array.isArray(team.fiscal_year) ? team.fiscal_year.find((t) => t && t.body === e.body)?.government ?? null : null;
+      if ((e.profile !== "team" && e.origin !== "team") || !gov) return { ...base, from: "records" };
+      const path = gov.level === "federal" ? "team/federal/fiscal_year" : `team/${gov.level}:${gov.place}/fiscal_year`;
+      let st = null;
+      try { st = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path, viewer: "admin" }) : null; } catch { st = null; }
+      const latest = st && isObj(st.latest) ? st.latest : null;
+      return { ...base, from: "stated", government: { level: gov.level, ...(gov.place ? { place: gov.place } : {}) },
+               stated: { by: latest ? latest.by ?? null : null, at: latest ? latest.at ?? null : null, how: latest ? latest.how ?? null : null },
+               status: st && typeof st.status === "string" ? st.status : "confirmed",
+               ...(st && st.status === "disputed" && typeof st.why === "string" ? { dispute: st.why } : {}) };
+    };
+    const every = fy.find((e) => e && e.body === "*");
+    const named = fy.filter((e) => e && typeof e.body === "string" && e.body !== "*" && typeof e.start === "string");
+    if (body !== undefined && body !== null && body !== "") {
+      const e = named.find((x) => x.body === body) ?? (every && typeof every.start === "string" ? every : null);
+      if (e) return { ok: true, body: String(body), known: true, year: { ...row(e), body: String(body) } };
+      return { ok: true, body: String(body), known: false,
+               says: localize("money.index.no_fiscal_year_is_held_for_2", "No fiscal year is held for {body} in the place's records, and no member has stated one. A member can state it.", { body: String(body) }) };
+    }
+    const years = named.map((e) => ({ body: e.body, ...row(e) })).sort((a, b) => (a.body < b.body ? -1 : a.body > b.body ? 1 : 0));
+    const all = every && typeof every.start === "string" ? row(every) : null;
+    return { ok: true, years, every: all,
+             ...(!years.length && !all ? { says: localize("money.index.no_government_s_fiscal_year_is_known", "No government's fiscal year is known: the place's records hold none and no member has stated one. A member can state a government's year.") } : {}) };
+  }
 
   /* ---- R31 (G55): the partial marker ---- */
 
@@ -289,7 +359,7 @@ export class Money {
       if (!named && (!entry || typeof entry.start !== "string"))
         return badPeriod(localize("money.index.no_body_named_for_fiscal", "no body was named for the fiscal year {fiscal}, and the active profiles hold no fiscal year that applies to every body, so it cannot be mapped", { fiscal: String(p.fiscal) }));
       if (!entry || typeof entry.start !== "string")
-        return badPeriod(localize("money.index.the_active_profiles_hold_no", "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
+        return badPeriod(localize("money.index.no_fiscal_year_is_held_for", "no fiscal year is held for {body} in the place's records, and no member has stated one, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
       const years = [...p.fiscal.matchAll(/\d{4}/g)].map((m) => Number(m[0]));
       for (const y of years.flatMap((y) => [y - 1, y])) {
         let fp;
@@ -300,7 +370,7 @@ export class Money {
         }
       }
       return named
-        ? badPeriod(localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }))
+        ? badPeriod(localize("money.index.the_fiscal_year_held_for_names_no_period", "the fiscal year held for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }))
         : badPeriod(localize("money.index.no_body_named_no_period", "no body was named, and the profiles' fiscal year names no period {fiscal}", { fiscal: String(p.fiscal) }));
     }
     return this.#range({ from: p.from, to: p.to ?? null, precision: p.precision || "day", zone });
@@ -706,6 +776,12 @@ export class Money {
     const citing = this.#rows(`SELECT f.fact_id FROM money_facts f WHERE f.source_fact=? AND (${g.sql}) ORDER BY f.at, f.fact_id`, row.fact_id, ...g.args).map((r) => r.fact_id);
     return { ok: true, found: true, fact: { ...this.#view_(row, viewer ?? ""), adjustments, cited_by: citing } };
   }
+  /* A fact as `readFact` answers it (R8), for a read that lists facts whole (R38). */
+  #whole(row, viewer) {
+    const g = this.#gate("f.sight_bundle", viewer);
+    const next = (col) => this.#rows(`SELECT f.fact_id FROM money_facts f WHERE f.${col}=? AND (${g.sql}) ORDER BY f.at, f.fact_id`, row.fact_id, ...g.args).map((r) => r.fact_id);
+    return { ...this.#view_(row, viewer), adjustments: next("adjusts"), cited_by: next("source_fact") };
+  }
 
   /* ---- R7 (T51; K5148): the checks money publishes for its callers ---- */
 
@@ -873,6 +949,73 @@ export class Money {
     return { ok: true, entity, count: facts.length, facts, undetermined,
              ...(undetermined.length ? { undetermined_why: word("money.undetermined_why") } : {}),
              limit: lim, truncated, says: word("money.says.facts_total") };
+  }
+
+  /* ---- R38: what an entity paid or received ---- */
+
+  /** R38 (T53; N1260): the facts in which `entity` is a party as entity or fund, not withdrawn, each as `readFact`
+   *  answers it plus its `direction`, ordered by period start then id with facts whose period is undetermined (an
+   *  asked period they only may overlap) after the rest and named so. Facts that merely concern the entity are not
+   *  answered (`moneyOf` answers those). No total, sum or ranking; writes nothing. */
+  moneyByParty({ entity, role, kinds, period, phases, limit, after, viewer } = {}) {
+    if (!filled(entity)) return noEntity(localize("money.index.what_an_entity_paid_or", "what an entity paid or received is read by the entity's id (moneyby&entity=ENT-...)"));
+    const ent = this.#ent();
+    if (!ent.has(entity)) return noSuchEntityAt(ent, entity, "entity");
+    const asRole = role === undefined || role === null || role === "" ? "either" : role;
+    if (!MONEYBY_ROLES.includes(asRole))
+      return refusal("MONEYBY_BAD_ROLE", localize("money.index.a_role_is_one_of", "a role is one of {list}", { list: String(list(MONEYBY_ROLES)) }), { list: MONEYBY_ROLES });
+    const ks = [];
+    for (const k of toList(kinds)) {
+      if (MONEY_KINDS.includes(k)) ks.push(k);
+      else if (CONNECTION_KIND_NAMES.includes(k)) ks.push(...kindsOfFamily(k));
+      else return refusal("UNKNOWN_MONEY_KIND", localize("money.index.kind_is_one_of_list_3", "kind is one of {list}, or one of the connection kinds {kinds}", { list: String(list(MONEY_KINDS)), kinds: String(list(CONNECTION_KIND_NAMES)) }), { list: MONEY_KINDS });
+    }
+    const ps = toList(phases);
+    for (const p of ps) if (!PHASES.includes(p)) return refusal("UNKNOWN_PHASE", localize("money.index.phase_is_one_of_list_3", "phase is one of {list}", { list: String(list(PHASES)) }));
+    let q = null;
+    if (period !== undefined && period !== null && period !== "") {
+      q = this.#period(typeof period === "string" ? safeJson(period) : period, this.#view());
+      if (q.ok === false) return q;
+    }
+    let lim = LIST_LIMIT_DEFAULT;
+    if (limit !== undefined && limit !== null && limit !== "") {
+      const n = typeof limit === "number" ? limit : /^\d+$/.test(String(limit).trim()) ? Number(String(limit).trim()) : NaN;
+      if (!Number.isInteger(n) || n < 1 || n > LIST_LIMIT_MAX)
+        return refusal("MONEYBY_BAD_LIMIT", localize("money.index.a_limit_is_a_whole", "a limit is a whole number from 1 to {max}", { max: String(LIST_LIMIT_MAX) }));
+      lim = n;
+    }
+    let cursor = null;
+    if (after !== undefined && after !== null && after !== "") {
+      cursor = decodeCursor(after);
+      if (!cursor) return refusal("MONEYBY_BAD_CURSOR", localize("money.index.after_is_not_a_page", "after is not a page this list gave; start again without it"));
+    }
+    const side = { payer: ["f.from_entity=? OR f.from_fund=?"], payee: ["f.to_entity=? OR f.to_fund=?"],
+                   either: ["f.from_entity=? OR f.from_fund=? OR f.to_entity=? OR f.to_fund=?"] }[asRole][0];
+    const g = this.#gate("f.sight_bundle", viewer ?? "");
+    const rows = this.#rows(`SELECT f.* FROM money_facts f WHERE f.withdrawn_at IS NULL AND (${side})
+         ${ks.length ? `AND f.kind IN (${[...new Set(ks)].map(() => "?").join(",")})` : ""}
+         ${ps.length ? `AND f.phase IN (${ps.map(() => "?").join(",")})` : ""}
+         AND (${g.sql}) ORDER BY f.period_start, f.fact_id`,
+      ...Array(asRole === "either" ? 4 : 2).fill(entity), ...(ks.length ? [...new Set(ks)] : []), ...ps, ...g.args);
+    const keyed = [];
+    for (const r of rows) {
+      const o = q ? Money.#overlap({ start: r.period_start, end: r.period_end }, q) : true;
+      if (o === false) continue;
+      keyed.push({ r, key: [o === true ? 0 : 1, r.period_start, r.fact_id] });
+    }
+    keyed.sort((x, y) => (x.key[0] - y.key[0]) || (x.key[1] < y.key[1] ? -1 : x.key[1] > y.key[1] ? 1 : 0)
+      || (x.key[2] < y.key[2] ? -1 : x.key[2] > y.key[2] ? 1 : 0));
+    const after_ = cursor ? keyed.filter((k) => cmpKey(k.key, cursor) > 0) : keyed;
+    const page = after_.slice(0, lim);
+    const truncated = after_.length > lim;
+    const facts = page.map(({ r, key }) => {
+      const paid = r.from_entity === entity || r.from_fund === entity, received = r.to_entity === entity || r.to_fund === entity;
+      return { ...this.#whole(r, viewer ?? ""), direction: paid && received ? "both" : paid ? "paid" : "received",
+               ...(key[0] === 1 ? { period_undetermined: true } : {}) };
+    });
+    const undetermined = page.some((k) => k.key[0] === 1);
+    return { ok: true, entity, role: asRole, facts, ...(undetermined ? { undetermined_why: word("money.undetermined_why") } : {}),
+             limit: lim, truncated, ...(truncated ? { next: encodeCursor(page[page.length - 1].key) } : {}) };
   }
 
   /* ---- R10: the summation rule ---- */
@@ -1253,18 +1396,28 @@ export class Money {
     if (r && r.ok) this.#registered = true;
     return r;
   }
-  static CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: CONNECTION_WORD, class: "evidentiary" })]);
+  /* R36 (T53; N1260): five kinds, each evidentiary, each word by key `label.connectionkinds.<kind>` (provisional plain words
+     until the design gives them, K1486; none says a word connection-grammar forbids). */
+  static CONNECTION_KINDS = CONNECTION_KINDS;
 
-  /* One fact as its R16 edge, or null when it is out of the date asked. */
-  #edge(r, at) {
+  /* A fact's validity as of `at` (R16): its period as the connection's `valid`, and `validAt`'s answer; null when out of the
+     date asked. Cheap, so R37 counts a node's facts by it before any edge is built. */
+  #validity(r, at) {
     const valid = { from: r.period_from, to: r.period_to, precision: r.period_precision, zone: r.period_zone };
     let v;
     try { v = validAt({ valid }, at); } catch (e) { v = { undetermined: true, why: String(e && e.message ? e.message : e) }; }
     if (v === "out" || (v && v.refused)) return null;
+    return { valid, v };
+  }
+  /* One fact as its R16 edge, or null when it is out of the date asked. R36: the edge carries the fact's family. */
+  #edge(r, at, known = null) {
+    const ok = known ?? this.#validity(r, at);
+    if (!ok) return null;
+    const { valid, v } = ok;
     const capture = this.#rootCapture(r);
     const ends = [this.#partyGrade(capture, r.from_entity ?? r.from_fund), this.#partyGrade(capture, r.to_entity ?? r.to_fund)];
     return {
-      id: r.fact_id, from: r.from_entity ?? r.from_fund, to: r.to_entity ?? r.to_fund, kind: CONNECTION_KIND, owner: "money",
+      id: r.fact_id, from: r.from_entity ?? r.from_fund, to: r.to_entity ?? r.to_fund, kind: MONEY_KIND_FAMILY[r.kind], owner: "money",
       valid, evidence: [r.source_fact ? { source: r.source_fact } : { source: r.source_capture_sha, ...(r.source_table ? { table: r.source_table, row: r.source_row } : { extent: JSON.parse(r.source_extent) }) }],
       grade: { assertion: r.grade_reading ?? LOWEST_GRADE, ends: ends.map((x) => x ?? LOWEST_GRADE) },
       derived: null,
@@ -1303,10 +1456,11 @@ export class Money {
     if (!items.length) return none;
     for (const d of docs.values()) {
       nodes.set(d.id, d);
-      items.push({ id: `${node}>${d.id}`, from: node, to: d.id, kind: CONNECTION_KIND, owner: "money", valid: { from: null, to: null, precision: "day", zone: items[0].valid.zone },
+      items.push({ id: `${node}>${d.id}`, from: node, to: d.id, kind: DOCUMENT_EDGE_KIND, owner: "money", valid: { from: null, to: null, precision: "day", zone: items[0].valid.zone },
         evidence: [{ source: d.capture_sha }], grade: { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] }, derived: null });
     }
-    const asked = Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND) ? [] : items;
+    /* R36: `kinds` filters each edge by its own family; the document edge is `money_other`. */
+    const asked = Array.isArray(kinds) ? items.filter((i) => kinds.includes(i.kind)) : items;
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
     const start = after ? asked.findIndex((i) => i.id > after) : 0;
     const from = start === -1 ? asked.length : start;
@@ -1320,17 +1474,34 @@ export class Money {
     if (viewer === undefined || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: localize("money.index.a_read_names_the_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     if (filled(node) && node.startsWith("MSR-")) return this.#setNeighbours({ node, kinds, at, page, viewer });
-    if (Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND)) return { items: [] };
-    if (!filled(node)) return { items: [] };
+    /* R37 (T53; N1260): only facts of the asked connection kinds (all five when `kinds` is absent) that are not withdrawn,
+       have both parties, are visible and are valid or undetermined at `at` are considered; a hub is judged on them, per
+       kind, against `hubBoundOf(kind)`. */
+    const askedKinds = Array.isArray(kinds) ? CONNECTION_KIND_NAMES.filter((k) => kinds.includes(k)) : CONNECTION_KIND_NAMES;
+    if (!askedKinds.length || !filled(node)) return { items: [] };
+    const factKinds = askedKinds.flatMap((k) => kindsOfFamily(k));
     const g = this.#gate("f.sight_bundle", viewer);
     const rows = this.#rows(`SELECT f.* FROM money_facts f WHERE f.withdrawn_at IS NULL
+        AND f.kind IN (${factKinds.map(() => "?").join(",")})
         AND COALESCE(f.from_entity, f.from_fund) IS NOT NULL AND COALESCE(f.to_entity, f.to_fund) IS NOT NULL
         AND (f.fact_id IN (SELECT fact_id FROM money_facts WHERE from_entity=? OR (from_entity IS NULL AND from_fund=?)
                            UNION SELECT fact_id FROM money_facts WHERE to_entity=? OR (to_entity IS NULL AND to_fund=?)))
-        AND (${g.sql}) ORDER BY f.fact_id`, node, node, node, node, ...g.args);
-    if (rows.length > BOUNDS.hub) return { items: [], hub: { set_size: rows.length, why: word("money.why.money_facts_name", { hub: String(BOUNDS.hub) }) } };
+        AND (${g.sql}) ORDER BY f.fact_id`, ...factKinds, node, node, node, node, ...g.args);
+    const valid = [], counts = new Map();
+    for (const r of rows) {
+      const known = this.#validity(r, at);
+      if (!known) continue;
+      valid.push([r, known]);
+      const fam = MONEY_KIND_FAMILY[r.kind];
+      counts.set(fam, (counts.get(fam) ?? 0) + 1);
+    }
+    const over = [...counts].filter(([fam, n]) => n > hubBoundOf(fam)).map(([, n]) => n);
+    if (over.length) {
+      const size = Math.max(...over);
+      return { items: [], hub: { set_size: size, why: word("money.why.money_facts_name", { hub: String(BOUNDS.hub) }) } };
+    }
     const items = [];
-    for (const r of rows) { const i = this.#edge(r, at); if (i) items.push(i); }
+    for (const [r, known] of valid) { const i = this.#edge(r, at, known); if (i) items.push(i); }
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
     const start = after ? items.findIndex((i) => i.id > after) : 0;
     const from = start === -1 ? items.length : start;
@@ -1370,6 +1541,17 @@ export class Money {
 
 /* events R49's refusal shape for VIEWER_MISSING and EXTENT_MALFORMED (K2114, K2116): no catalogue row (K231). */
 const shapeRefusal = (code, why) => ({ ok: false, refused: code, code, reason: code, why });
+
+/* R38: the roles of a party, and the opaque page cursor (the sort key of the last fact answered). */
+const MONEYBY_ROLES = Object.freeze(["payer", "payee", "either"]);
+const encodeCursor = (key) => btoa(JSON.stringify(key)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function decodeCursor(s) {
+  try {
+    const k = JSON.parse(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")));
+    return Array.isArray(k) && k.length === 3 && (k[0] === 0 || k[0] === 1) && typeof k[1] === "string" && typeof k[2] === "string" ? k : null;
+  } catch { return null; }
+}
+const cmpKey = (a, b) => (a[0] - b[0]) || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0) || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0);
 
 /* An unsigned exact decimal as calc-grammar's figure (R1's range check). */
 const exactFigure = (value) => ({ value: value.replace(/,/g, ""), sign: "+", precision: "exact" });
@@ -1457,6 +1639,9 @@ export function moneyOps(money, url, body) {
     money: () => money.readFact({ factId: q("id"), viewer: q("viewer") }),
     moneyof: () => money.moneyOf({ entity: q("entity"), period: q("period"), kinds: q("kinds"), phases: q("phases"),
                                    limit: q("limit"), viewer: q("viewer") }),
+    moneyfiscalyears: () => money.fiscalYears({ body: q("body"), viewer: q("viewer") }),
+    moneyby: () => money.moneyByParty({ entity: q("entity"), role: q("role"), kinds: q("kinds"), period: q("period"), phases: q("phases"),
+                                        limit: q("limit"), after: q("after"), viewer: q("viewer") }),
     moneysummable: () => money.summable({ factIds: ids("ids"), viewer: q("viewer") }),
     moneyreconcile: () => money.reconcile({ a: q("a"), b: q("b"), viewer: q("viewer") }),
     moneysetcreate: () => money.createSet(b),
@@ -1484,6 +1669,10 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["setId","factId","reason"], requires: ["setId","factId","reason"] } },
   reconcile: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.reconcile", "read: whether two money facts are consistent, or each dimension that differs; writes nothing"),
     fields: { accepts: ["a","b"], requires: ["a","b"] } },
+  fiscalyears: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.fiscalyears", "read: the governments whose fiscal year is known, each with its year and whether the place's records or a member gave it; writes nothing"),
+    fields: { accepts: ["body"], requires: [] } },
+  moneyby: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.moneyby", "read: the money facts an entity paid or received, by role, kind, period and phase, paged, never a total; writes nothing"),
+    fields: { accepts: ["entity","role","kinds","period","phases","limit","after"], requires: ["entity"] } },
   moneysets: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.moneysets", "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing"),
     fields: { accepts: ["concerns","purpose","limit","after"], requires: ["concerns"] } },
   committedagainstpaid: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.committedagainstpaid", "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing"),
