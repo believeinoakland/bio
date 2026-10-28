@@ -73,7 +73,7 @@ const csvOf = (size) => {
 };
 const statement = encodeURIComponent("a spreadsheet export the clerk handed me at the counter");
 
-test("R107 G41 (platform L): a 9 MB CSV in two parts uploaded through the plane is stored csv, declared text/csv or named x.csv; control: the same bytes with neither stay undetermined", async () => {
+test("R107 G41 (platform L): a 9 MB CSV in two parts uploaded through the plane is stored csv, declared text/csv or named x.csv; control: the same bytes with neither are plain text, never csv", async () => {
   const bytes = csvOf(9 * MiB);
   const seen = {};
   for (const [why, extra] of [["declared", "&type=text%2Fcsv&name=x.dat"], ["named", "&name=x.csv"], ["neither", "&name=x.dat"]]) {
@@ -87,5 +87,5 @@ test("R107 G41 (platform L): a 9 MB CSV in two parts uploaded through the plane 
     assert.equal(out.document.parts.length, 2, `${why}: two parts`);
     seen[why] = out.document.profile.format.format;
   }
-  assert.deepEqual(seen, { declared: "csv", named: "csv", neither: "undetermined" });
+  assert.deepEqual(seen, { declared: "csv", named: "csv", neither: "text" });
 });
