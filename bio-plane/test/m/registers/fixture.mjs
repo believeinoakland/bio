@@ -10,9 +10,14 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { monitoringOf } from "../../../src/monitoring/index.mjs";
 import { streamRegister, probeRegister, sourceChanged, keyedFetch } from "../../../src/acquisition/index.mjs";
 import { registersOf, Registers, registersOps } from "../../../src/registers/index.mjs";
-import { get } from "../../../../jurisdictions/index.mjs";
+import { get, combine } from "../../../../jurisdictions/index.mjs";
 
 export { network, governor };
+
+/** the combined view of the test profile, edited */
+export const viewWith = (edit) => { const v = combine(["test-port-ellery"]).view; edit(v); return v; };
+/** the town's register keyed by its source's own columns, so a changed row keeps its key (a content-keyed one is removed and added, R29) */
+export const sourceKeyed = () => viewWith((v) => { v.registers.find((r) => r.key === "town_filings").row_key_basis = "source"; });
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:ai";
@@ -29,6 +34,8 @@ export const rowOf = (i, extra = {}) => ({ filer: `F${10000 + (i % 7)}`, donor_n
   received: `0${1 + (i % 9)}/15/2025`, form_no: `460-${i}`, donor_city: "Port Ellery", donor_state: "ME", donor_zip: "04101", donor_street: SENT.street, donor_tel: SENT.tel, note: `note ${i}`, ...extra });
 const COLS = HEADER.split(",");
 export const csv = (n, { cell = (i) => rowOf(i), header = HEADER } = {}) => `${header}\n${Array.from({ length: n }, (_, i) => { const r = cell(i); return COLS.map((c) => r[c] ?? "").join(","); }).join("\n")}\n`;
+
+export const csvRows = (rows, header = HEADER) => `${header}\n${rows.map((r) => COLS.map((c) => r[c] ?? "").join(",")).join("\n")}\n`;
 
 /* a host that serves one file the way file hosts do: HEAD, ranges, validators */
 export function served(bytes, { etag = '"v1"', modified = "Wed, 01 Oct 2025 00:00:00 GMT", ranges = true, length = true, type = "text/csv", log = null } = {}) {
