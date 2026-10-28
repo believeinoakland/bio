@@ -605,6 +605,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-373 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-374 · K5565 · English in tests: its entry
 - T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
+- T53-576 · K5705, file-safety R1, R60 · the `safe_view` job is registered for `.png`/`.jpg` names, as file-safety R1's name rule reads them
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
@@ -676,6 +677,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-414 · K4354, P24 · `heldcaptures` out of Add's first wave
 - T53-415 · K5006 · reds: first settle, then fix
 - T53-416 · K5565 · English in tests: its entry
+- T53-575 · K5705, file-safety R60 · `open-file.test.mjs` (F-B15) pins a PNG photograph as having no safe view: it now reads kind `picture` and `safeview?picture=1`, and the screen draws it
 - rows: `build/plan/T53-R1/screens-intake.md`
 **screens-daily**
 - T53-417 · A6 · a line and two acts per key
