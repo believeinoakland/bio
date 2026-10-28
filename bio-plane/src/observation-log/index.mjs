@@ -71,6 +71,11 @@ export const INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(new Set(["document"]))
 export const AUTHORED_EXTRACTION_DETAIL = localize("observation-log.index.first_extraction_authored",
   "first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them");
 
+/* R6: the two words a content-level detail begins with, said once here; whether this capture was extracted before is derived from
+   the log, never from these. */
+export const FIRST_EXTRACTION_PREFIX = localize("observation-log.index.first_extraction_prefix", "first extraction; ");
+export const RE_EXTRACTION_PREFIX = localize("observation-log.index.re_extraction_prefix", "re-extraction; ");
+
 /* op=leadread's bound: `op=frontier`'s 200/2000 pair, and for its reason: the population is looks at ONE subject. */
 export const LEAD_READ_LIMIT_DEFAULT = 200;
 export const LEAD_READ_LIMIT_MAX = 2000;
@@ -432,7 +437,7 @@ export class ObservationLog {
         actorClass, actor, authorityKind: "extract", authority: bundleId == null ? null : String(bundleId),
         level: "content", subjectKind: "capture", subject: captureSha,
         state: r.state, condition: r.condition, resultKind: r.resultKind, resultRef: r.resultRef,
-        detail: (before ? "re-extraction; " : "first extraction; ") + r.detail,
+        detail: (before ? RE_EXTRACTION_PREFIX : FIRST_EXTRACTION_PREFIX) + r.detail,
       });
       if (bad) refused.push(bad); else written.push(r.state);
     }

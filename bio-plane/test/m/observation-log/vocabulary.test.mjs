@@ -166,8 +166,10 @@ test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586),
   }
   // C-22.1's detail names the offending value and the vocabulary it is not in
   const bad = ol.checkObservation({ authority_kind: "acquire", state: "MAYBE" });
-  assert.match(bad.detail, /'MAYBE' is not one of NEVER_LOOKED, LOOKED_ABSENT, LOOKED_INDETERMINATE, PRESENT, partial \(D-129\)/);
-  assert.match(ol.checkObservation({ authority_kind: "acquire" }).detail, /'\(absent\)' is not one of/);
+  const states = Object.keys(ol.OBSERVATION_STATES).join(", ");
+  assert.equal(bad.detail, word("observation-log.vocabulary.v1_is_not_one_of", { v1: "MAYBE", keys: states }));
+  assert.equal(ol.checkObservation({ authority_kind: "acquire" }).detail,
+    word("observation-log.vocabulary.v1_is_not_one_of", { v1: "(absent)", keys: states }));
   assert.equal(ol.checkCondition("no-such").check, "C-22.4");
   const lead = { LEAD_NOT_A_MEMBER: "C-54.2", LEAD_NO_WORDS: "C-54.3", LEAD_TOO_LONG: "C-54.4", LEAD_NOT_FOUND: "C-54.5",
                  LEAD_LOOK_STATE: "C-54.6", LEAD_LOOK_REFERENT: "C-54.7", LEAD_LOOK_NOT_A_MEMBER: "C-54.8",
