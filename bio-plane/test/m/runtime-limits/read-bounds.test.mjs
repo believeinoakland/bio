@@ -115,7 +115,7 @@ test("R30 (K4845): the heavy kinds' standards are K4628's per kind: documents 10
 
 /* the rows the quoting jobs of batch B reported (K4857, K4858, K4859, K4860; R30: a quoting job's row, added by this module, K4842 (1)) */
 const ADDED = [
-  ["office", "text_bytes", 104857600, 20 * MiB, 104857600],
+  ["office", "text_bytes", 20 * MiB, 20 * MiB, 104857600],
   ["office", "streamed_text_bytes", 104857600, 32 * MiB, 104857600],
   ["archive", "member_bytes", 2 * GiB, 256 * MiB, 2 * GiB],
   ["office", "decoded_chars", 67108864, 67108864, 67108864],
