@@ -20,10 +20,10 @@ const stubOf = (c) => ({ calls: [], async fetch(req) {
 } });
 const route = (c, name, qs = "", body = null) => doorbellOps(c, new URL(`http://x/${name}?${qs}`), body)[name]();
 
-test("R1 R3 R13 R15 R18 R19: the module's routes are the nine the doorbell's ops reach, each answering what its service answers, its stamps from the query", async () => {
+test("R1 R3 R13 R15 R18 R19: the module's routes are the ten the doorbell's ops reach, each answering what its service answers, its stamps from the query", async () => {
   const { c, rows } = fresh({ evidence: bucket(), env: { INSTANCE_NAME: "i" } });
   assert.deepEqual(Object.keys(doorbellOps(c, new URL("http://x/"), null)).sort(),
-                   ["doorbellrefused", "doorbelltally", "inboxget", "inboxlist", "inboxpull", "inboxresolve", "knock", "knocksof", "pulledknocks"]);
+                   ["doorbellrefused", "doorbelltally", "inboxget", "inboxlist", "inboxpull", "inboxresolve", "inboxview", "knock", "knocksof", "pulledknocks"]);
   /* knock: the source and the country are the control plane's stamps, never the body's */
   const k = await route(c, "knock", "source=198.51.100.1&country=NZ", { content: "a tip", sourceAddress: "forged", country: "XX",
                                                                         knockerSecret: "a knocker secret of twenty-plus" });

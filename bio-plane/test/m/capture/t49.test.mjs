@@ -168,7 +168,7 @@ test("R91 R78: an examination that never settles holds up no other row: every ro
   const asked = counting(w, () => never());
   const { result: r } = await runOut(() => w.c.heldCaptures({ viewer: ADMIN, limit: 6 }));
   assert.equal(r.held.length, 6);
-  assert.ok(r.held.every((row) => row.eligible === null && /did not answer in time/.test(row.eligibility_basis)));
+  assert.ok(r.held.every((row) => row.eligible === null && row.eligibility_basis === word("capture.undetermined.examination_did_answer", { module: "ratification" })));
   assert.equal(asked.size, 6, "every row's examination was asked when the page began, so one that hangs holds up no other row");
 });
 
@@ -208,7 +208,7 @@ test("R91 R77 R78: a file beside an archive whose examination never settles read
   const zip = r.held[0];
   assert.equal(zip.eligible, true);
   assert.deepEqual(zip.files.map((f) => [f.document, f.eligible]), a.files.map((f) => [f, null]));
-  assert.ok(zip.files.every((f) => /did not answer in time/.test(f.eligibility_basis)));
+  assert.ok(zip.files.every((f) => f.eligibility_basis === word("capture.undetermined.examination_did_answer", { module: "ratification" })));
   assert.equal(zip.files_total, 2, "its files are named and counted: only their eligibility is undetermined");
   /* the listing is slow (3 s a call): the page gives up at the wait, and the abandoned grouping asks nothing more once it has */
   const slow = world();

@@ -399,7 +399,7 @@ test("R29 (C-68.1, K850; T50, N1064): every path that answers EVIDENCE_STORAGE_N
   const l = await w.acq.archiveList({ archiveSha: "a".repeat(64), viewer: ADMIN });
   assert.equal(l.reason, "ARCHIVE_NOT_HELD");
   /* keyedFetch holds nothing in the evidence store: with none bound it answers its own refusals, never this code */
-  const k = await keyedFetch(w.store, { service: "courtlistener", request: { url: "https://www.courtlistener.com/api/rest/v4/citation-lookup/", method: "POST", form: { text: "x" } } });
+  const k = await keyedFetch(w.store, { service: "courtlistener", purpose: "citation-lookup", request: { url: "https://www.courtlistener.com/api/rest/v4/citation-lookup/", method: "POST", form: { text: "x" } } });
   assert.notEqual(k.reason, "EVIDENCE_STORAGE_NOT_CONFIGURED");
   assert.equal(k.reason, "KEYED_SERVICE_OFF");
   /* negative control: with storage the same acts answer neither */

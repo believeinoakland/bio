@@ -84,7 +84,7 @@ test("R15: taskEnqueue accepts only a known kind and a 64-hex digest, bounds sub
   assert.equal((await c.taskEnqueue({ captureSha: A.toUpperCase() })).reason, "BAD_CAPTURE_SHA");
   /* N458: the refusal's sentence says "record", the member's word, never the developer's "bundle" */
   const bad = await c.taskEnqueue({ captureSha: "abc" });
-  assert.match(bad.detail, /a record does not exist yet at capture time/); assert.ok(!/bundle/i.test(bad.detail));
+  assert.equal(bad.detail, word("capture.index.sha_identifies_event")); assert.ok(!/bundle/i.test(bad.detail));
   const r = await c.taskEnqueue({ captureSha: A, subject: "line one\nline two\u0007 " + "x".repeat(3000), locator: "y".repeat(2001), at: "2026-02-02T00:00:00Z" });
   assert.equal(r.ok, true); assert.equal(r.queued, true); assert.equal(r.deduped, false); assert.equal(r.enqueued, "2026-02-02T00:00:00Z");
   const row = rows(`SELECT * FROM task_queue`)[0];
@@ -131,7 +131,7 @@ test("R22 R46 R103: a session holds resume state for its ttl and is live only wi
   assert.deepEqual(Object.keys(live[0]).sort(), ["base", "created", "expires", "locator", "primaryFile", "primarySha", "session", "state", "ticks", "updated"]);
   assert.deepEqual(c.liveCaptureSessions("2026-03-01T05:00:00Z"), [], "expiry is after now");
   assert.equal(c.loadCaptureSession({ session: "nope" }).found, false);
-  assert.match(c.loadCaptureSession({ session: "nope" }).note, /never existed|expired/);
+  assert.equal(c.loadCaptureSession({ session: "nope" }).note, word("capture.note.capture_session_either"));
   c.saveCaptureSession({ session: "cs2", locator: "l", primarySha: B, primaryFile: "f", base: "b", state: {}, ttlMs: 1000, at: t0 });
   const gone = c.loadCaptureSession({ session: "cs2", at: "2026-03-01T00:00:05Z" });
   assert.deepEqual([gone.found, gone.expired], [true, true], "an expired session is still held: R103, the clock ends no owed work");
@@ -150,7 +150,7 @@ test("R23: the ceiling is learned by being refused; an unrefused run records not
   const { c } = fresh();
   assert.deepEqual([c.captureLimit("subrequests").observed, c.captureLimit("subrequests").probeDue], [null, true]);
   const n = c.recordCaptureLimit({ runtime: "subrequests", observed: null });
-  assert.equal(n.recorded, false); assert.match(n.note, /nothing about where it is/);
+  assert.equal(n.recorded, false); assert.equal(n.note, word("capture.note.run_refused_says"));
   assert.equal(c.captureLimit("subrequests").observed, null, "an unrefused run records no ceiling");
   c.recordCaptureLimit({ runtime: "subrequests", observed: 50, at: "2026-01-01T00:00:00Z" });
   assert.deepEqual([c.captureLimit("subrequests").observed, c.captureLimit("subrequests").probeDue], [50, false]);
@@ -251,12 +251,13 @@ test("R27: recordLinks replaces a capture's rows; linksTo answers every source a
   assert.equal(by["https://t.example/none"].resolution, "offsite");
   assert.equal(by["https://t.example/arch"].resolution, "offsite", "archive receipts are not the target's direct receipts");
   assert.equal(by["#top"].resolution, "anchor");
-  assert.match(r.note, /resting state/);
+  assert.equal(r.note, word("capture.note.undetermined_resting_state"));
   /* bracketing captures differ */
   receipt(s, { address: "https://t.example/r", capture: B, first: "2026-05-01T00:00:00Z" });
   receipt(s, { address: "https://t.example/r", capture: C, first: "2026-05-20T00:00:00Z" });
   const r2 = c.resolveLinks({ sourceCapture: A }).links.find((l) => l.link_ref === "https://t.example/r#findings");
-  assert.equal(r2.verdict, "undetermined"); assert.match(r2.detail, /bracketing captures differ/);
+  assert.equal(r2.verdict, "undetermined");
+  assert.equal(r2.detail, word("capture.index.bracketing_captures_differ", { before: B.slice(0, 12), before_at: "2026-05-01T00:00:00Z", after: C.slice(0, 12), after_at: "2026-05-20T00:00:00Z" }));
   /* recordLinkVerdict */
   c.recordLinkVerdict({ sourceCapture: A, addressNorm: "https://t.example/x", verdict: "undetermined", basis: "b1", at: "2026-05-11T00:00:00Z" });
   const lv = c.recordLinkVerdict({ sourceCapture: A, addressNorm: "https://t.example/x", verdict: "contemporaneous", basis: "b2", at: "2026-05-12T00:00:00Z" });
@@ -292,7 +293,7 @@ test("R27 (N133): resolveLinks decides each verdict over the target's direct cap
   assert.equal(by["https://t.example/pre"].basis, word("capture.basis.record_captures_target"));
   assert.deepEqual([by["https://t.example/post"].verdict, by["https://t.example/post"].target_retrieved], ["superseded", day(140)], "the first capture after T");
   assert.equal(by["https://t.example/tie"].target_capture, hx(40002), "of two captures first seen together, the later digest is the last before T");
-  assert.match(by["https://t.example/tie"].detail, /bracketing captures differ/);
+  assert.equal(by["https://t.example/tie"].detail, word("capture.index.bracketing_captures_differ", { before: hx(40002).slice(0, 12), before_at: by["https://t.example/tie"].target_last_seen, after: hx(40003).slice(0, 12), after_at: "2026-05-20T00:00:00Z" }));
   /* A target capture the viewer may not see is neither counted nor picked. */
   s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('dave', 'd', 'member', 'active', '2026-01-01', '2026-01-01')`);
   register(s, hx(9002), "PROJ-9", { type: "project" });
@@ -378,7 +379,7 @@ test("R40: renderSpend frees the slot, adds the elapsed time ceiled, releases at
   assert.equal(rows(`SELECT count(*) n FROM render_slots`)[0].n, 0);
   const b = c.renderAdmit({ allowanceMs: 10000, reserveMs: 300, cap: 1, at });
   const un = c.renderSpend({ slot: b.slot, releaseMs: 300, at });
-  assert.deepEqual([un.reserved_ms, un.released_ms], [300, 0]); assert.match(un.why, /stays charged/);
+  assert.deepEqual([un.reserved_ms, un.released_ms], [300, 0]); assert.equal(un.why, word("capture.why.renderer_reported_elapsed"));
   assert.equal(rows(`SELECT count(*) n FROM render_slots`)[0].n, 0, "the slot is freed on every path");
   assert.equal(c.renderSpend({ ms: 0, releaseMs: 99999, at }).reserved_ms, 0, "never below zero");
 });

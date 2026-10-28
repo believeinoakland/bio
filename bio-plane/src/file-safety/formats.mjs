@@ -30,7 +30,10 @@ const CONTAINER_NAMES = Object.freeze(CONTAINERS.map(([f]) => f));
    is the cells the reader read. */
 const ROUTE = Object.freeze({ pdf: "pdf", docx: "office", pptx: "office", odt: "office", odp: "office",
                               xlsx: "data", ods: "data", csv: "data" });
-export const safeViewRoute = (format) => ROUTE[format] || null;
+/* R60 (T53; DEC-460): a baseline JPEG or PNG photograph has a safe picture, redrawn from its pixels (`image-cover`); another picture kind is
+   a `NO_SAFE_VIEW` until the container decodes it (R66). */
+export const PICTURE_IMAGES = Object.freeze(["jpeg", "png"]);
+export const safeViewRoute = (format, image = null) => (format === "image" ? (PICTURE_IMAGES.includes(image) ? "picture" : null) : ROUTE[format] || null);
 
 /* R6: the formats with an `active` list from their reader, and those low by their kind alone. */
 export const ACTIVE_FORMATS = Object.freeze(["pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "rtf", "eml"]);

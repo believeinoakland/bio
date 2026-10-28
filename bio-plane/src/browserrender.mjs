@@ -175,16 +175,16 @@ async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
     const text = await acq.text().catch(() => "");
-    throw transientFailure(new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text.slice(0, 200)}`));
+    throw transientFailure(new Error(localize("capture-sources.browserrender.binding_refused_a_session", "the Browser Rendering binding refused a session: HTTP {status} {text}", { status: String(acq.status), text: text.slice(0, 200) })));
   }
   let sessionId = null;
   try { sessionId = (await acq.json()).sessionId; } catch { sessionId = null; }
   if (typeof sessionId !== "string" || !sessionId)
-    throw new Error("the Browser Rendering binding acquired a session with no sessionId");
+    throw new Error(localize("capture-sources.browserrender.binding_acquired_no_session_id", "the Browser Rendering binding acquired a session with no sessionId"));
   const up = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser/${sessionId}`, {
     headers: { Upgrade: "websocket", "cf-brapi-client": CLIENT_HEADER } });
   if (!up.webSocket) {
-    const refused = new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
+    const refused = new Error(localize("capture-sources.browserrender.binding_did_not_upgrade", "the Browser Rendering binding did not upgrade session {sessionId} to a websocket (HTTP {status})", { sessionId, status: String(up.status) }));
     throw up.status === 429 || up.status >= 500 ? transientFailure(refused) : refused;
   }
   up.webSocket.accept();
@@ -291,7 +291,7 @@ export async function collectBodies(conn, sessionId, entries, { now = () => Date
 async function boundedOpen(binding, ms) {
   let timer = null;
   const expire = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(transientFailure(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`))), ms);
+    timer = setTimeout(() => reject(transientFailure(new Error(localize("capture-sources.browserrender.binding_gave_no_session", "the Browser Rendering binding gave no session within the {ms} ms navigation bound", { ms: String(ms) })))), ms);
   });
   const opening = openSession(binding);
   try { return await Promise.race([opening, expire]); }
@@ -402,7 +402,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
      NAME rather than sending a command with a zero or negative bound. */
   const left = (deadline, phase) => {
     const ms = deadline - now();
-    if (ms <= 0) throw new Error(`the render's ${phase} bound was spent before it finished`);
+    if (ms <= 0) throw new Error(localize("capture-sources.browserrender.phase_bound_spent", "the render's {phase} bound was spent before it finished", { phase }));
     return ms;
   };
   const navLeft = () => left(navDeadline, `navigation (${navMs} ms)`);
@@ -468,7 +468,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     /* R64: the network domain is part of the hold (the socket refusal is applied only on an enabled domain), so a
        network domain that will not enable fails the render by name instead of answering `requests: null`. */
     try { await conn.send("Network.enable", {}, sessionId, navLeft()); sawNetwork = true; }
-    catch (e) { throw new Error(`the browser would not hold this render's requests (its network domain would not enable: ${String((e && e.message) || e).slice(0, 200)}), so nothing was rendered`); }
+    catch (e) { throw new Error(localize("capture-sources.browserrender.would_not_hold_network_domain", "the browser would not hold this render's requests (its network domain would not enable: {err}), so nothing was rendered", { err: String((e && e.message) || e).slice(0, 200) })); }
     try { await conn.send("Page.enable", {}, sessionId, navLeft()); } catch { /* the load event is one of two wait conditions; the other still works */ }
     try { await conn.send("Debugger.enable", {}, sessionId, navLeft()); sawDebugger = true; } catch { /* scripts -> null */ }
 
@@ -597,7 +597,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
 
     /* R64: THE HOLD, on before the navigation; a part that will not take fails the render by name, unrendered. */
     try { await guard(sessionId, navLeft); }
-    catch (e) { throw new Error(`the browser would not hold this render's requests (request interception could not be enabled: ${String((e && e.message) || e).slice(0, 200)}), so nothing was rendered`); }
+    catch (e) { throw new Error(localize("capture-sources.browserrender.would_not_hold_interception", "the browser would not hold this render's requests (request interception could not be enabled: {err}), so nothing was rendered", { err: String((e && e.message) || e).slice(0, 200) })); }
 
     /* NAVIGATE. A navigation the browser refuses outright (`errorText`) is a
        failed render and says which address and why — it is never a render of
@@ -668,7 +668,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       navigatedTo = typeof parsed.url === "string" ? parsed.url : null;
     } catch { html = null; }
     if (typeof html !== "string" || !html)
-      throw new Error("the browser returned no serialised document after the render");
+      throw new Error(localize("capture-sources.browserrender.no_serialised_document", "the browser returned no serialised document after the render"));
 
     /* D-529: AFTER the document is taken, so collecting bodies cannot change what the
        page showed, and before the session closes, which is when the browser drops them. */

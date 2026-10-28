@@ -59,10 +59,12 @@ test("R116 (unpack): an `acquire` of a ZIP registers one `unpack` row with the a
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const r = await run(w, { "https://f.example/b.zip": () => new Response(z, { headers: { "content-type": "application/zip" } }) }, { locator: "https://f.example/b.zip" }, member);
   assert.equal(r.status, 200);
-  assert.deepEqual(j.rows().map((x) => [x.kind, x.sha]), [["unpack", sha(z)]]);
+  assert.deepEqual(j.rows().filter((x) => x.kind === "unpack").map((x) => [x.kind, x.sha]), [["unpack", sha(z)]]);
+  assert.deepEqual(j.rows().filter((x) => x.kind === "member").map((x) => x.session), [`${sha(z)}!0`], "R136: R38 registers the entry's member row as it records the entry's outcome");
   const again = await run(w, { "https://f.example/b.zip": () => new Response(z, { headers: { "content-type": "application/zip" } }) }, { locator: "https://f.example/b.zip" }, member);
   assert.equal(again.status, 200);
-  assert.equal(j.rows().length, 1, "a second press leaves one row");
+  assert.equal(j.rows().filter((x) => x.kind === "unpack").length, 1, "a second press leaves one row");
+  assert.equal(j.rows().filter((x) => x.kind === "member").length, 1, "and one member row (R136: idempotent)");
 });
 
 test("R116: a registrar that refuses is stated in the answer, never swallowed; with no registrar at all the answer says so; a small plain capture owes nothing and registers nothing (control)", async () => {
@@ -124,7 +126,7 @@ test("R116 (G175, keep): the `keep` row, the `subresources` row and the `unpack`
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const u = await run(wu, { "https://f.example/b.zip": () => new Response(z, { headers: { "content-type": "application/zip" } }) }, { locator: "https://f.example/b.zip" }, member);
   assert.equal(u.status, 200);
-  assert.deepEqual(ju.rows().map((x) => x.kind), ["unpack"]);
+  assert.deepEqual(ju.rows().map((x) => x.kind), ["unpack", "member"]);
   assert.equal(ju.armed(), true, "unpack");
 });
 

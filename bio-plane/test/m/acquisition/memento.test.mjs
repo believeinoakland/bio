@@ -56,7 +56,7 @@ test("R32: with no usable memento at the TimeGate, the TimeMap is read and its c
   assert.equal(look.body.chosen.timestamp, "20240101000000");
   const words = look.body.rejected.map((x) => x.refused);
   assert.ok(words.includes("statuscode 500, not 200") && words.includes("statuscode 302, not 200"), JSON.stringify(words));
-  assert.ok(look.body.rejected.some((x) => x.uri === TG && /holds no memento/.test(x.refused)), "the TimeGate's 404 is named");
+  assert.ok(look.body.rejected.some((x) => x.uri === TG && x.refused === word("acquisition.refused.timegate_holds_memento")), "the TimeGate's 404 is named");
 });
 
 /* Each Memento refusal, answered by name on both arms, nothing filed. */
@@ -83,7 +83,7 @@ test("R32: each Memento refusal (MEMENTO_LINK_MALFORMED, MEMENTO_NO_ORIGINAL, ME
   /* an empty memento is refused by selectCapture's own reason, the empty-body digest */
   const w = await fresh();
   const e = await run(w, wayback([{ ts: "20250101000000", body: "" }]), ARCH, ADMIN);
-  assert.ok(e.body.considered.some((c) => /empty-body digest/.test(c.refused)), JSON.stringify(e.body.considered));
+  assert.ok(e.body.considered.some((c) => c.refused.includes(word("capture-sources.cdx.digest_is_the_empty_body"))), JSON.stringify(e.body.considered));
   assert.equal(EMPTY_BODY_DIGEST.length, 32);
   /* negative control: the same world with a usable memento files one capture */
   const ok = await run(w, wayback([{ ts: "20250101000000", body: "x" }]), ARCH, ADMIN);
@@ -150,7 +150,7 @@ test("R32 (N510): an empty 200 memento is passed over for the next candidate, on
   const look = await lookup(await fresh(), routes, { address: ADDR });
   assert.deepEqual([look.status, look.body.chosen.timestamp, look.body.chosen.digest], [200, "20240101000000", sha("the older memento")]);
   const empty = look.body.rejected.find((x) => x.timestamp === "20250301000000");
-  assert.ok(empty && /empty-body digest/.test(empty.refused), JSON.stringify(look.body.rejected));
+  assert.ok(empty && empty.refused.includes(word("capture-sources.cdx.digest_is_the_empty_body")), JSON.stringify(look.body.rejected));
   /* negative control: every memento empty, so none may stand in; each is tried once and named, nothing filed */
   for (const arm of ["acquire", "archiveLookup"]) {
     const nw = await fresh();
@@ -158,7 +158,7 @@ test("R32 (N510): an empty 200 memento is passed over for the next candidate, on
     const n = arm === "acquire" ? await run(nw, allEmpty, ARCH, ADMIN) : await lookup(nw, allEmpty, { address: ADDR });
     assert.deepEqual([n.status, n.body.ok, n.body.reason], [404, false, "NO_USABLE_CAPTURE"], arm);
     assert.deepEqual(n.net.seen.map((x) => x.url), [TG, RAW("20250301000000"), TM, RAW("20240101000000")], arm);
-    assert.deepEqual(n.body.considered.filter((c) => /empty-body digest/.test(c.refused)).map((c) => c.timestamp).sort(),
+    assert.deepEqual(n.body.considered.filter((c) => c.refused.includes(word("capture-sources.cdx.digest_is_the_empty_body"))).map((c) => c.timestamp).sort(),
                      ["20240101000000", "20250301000000"], `${arm}: both named with selectCapture's reason`);
     nothingFiled(nw, n, arm);
     assert.equal(nw.store.state.outcomes.length, 3, `${arm}: no success recorded for the document`);

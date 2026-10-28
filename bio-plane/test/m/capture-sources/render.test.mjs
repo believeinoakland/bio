@@ -13,7 +13,7 @@ import {
   renderBlock, renderedAuthority, rendererFor, isEmptyShell, RENDER_COPY_STATEMENT, KEEP_LANES,
 } from "../../../src/render.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "../../../src/subresources.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HOST = "portal.example.gov";
 const PAGE = `https://${HOST}/agenda`;
@@ -183,9 +183,9 @@ test("R9: a completed load not kept reads undetermined with its reason; a report
     { url: "https://x.example/4", outcome: "completed", sha256: claim },
   ] }, store());
   assert.equal(out[0].sha256, "undetermined");
-  assert.match(out[0].digest_reason, /did not deliver this response's bytes \(evicted by the browser\)/);
+  assert.ok(out[0].digest_reason.includes(word("render.renderer_deliver_response", { is_str: " (evicted by the browser)", bytes: "" })));
   assert.equal(out[0].renderer_sha256, claim);
-  assert.match(out[1].digest_reason, /not valid base64/);
+  assert.equal(out[1].digest_reason, word("render.renderer_body_request"));
   assert.equal(out[2].digest_reason, word("render.body_bytes_byte", { bytes: String(Math.ceil((SUBRESOURCE_MAX + 3) / 3) * 3), subresource_max: String(SUBRESOURCE_MAX) }));
   assert.deepEqual([out[3].sha256, out[3].renderer_sha256], ["undetermined", claim]);
   assert.ok(out.every((o) => o.kept !== true && !("bytes" in o)));
@@ -208,7 +208,7 @@ test("R9: a completed load not kept reads undetermined with its reason; a report
   for (const s of [store({ failPut: true }), store({ failHash: true })]) {
     const o = await keepRenderBodies({ requests: [{ url: "https://x.example/f", outcome: "completed", body_text: "x" }] }, s);
     assert.equal(o[0].sha256, "undetermined");
-    assert.match(o[0].digest_reason, /could not keep the bytes \((bucket unavailable|no digest)\)/);
+    assert.ok(["bucket unavailable", "no digest"].some((entry) => o[0].digest_reason === word("render.group_civicsmith_keep", { entry })));
     assert.equal(s.kept.size, 0);
   }
 });
@@ -264,7 +264,7 @@ test("R8 R9 (C13a, P7): results stay in the requests' order whichever body finis
   const s = slowStore({ failOn: (b) => String.fromCharCode(...b).startsWith("r-3") });
   const o2 = await keepRenderBodies({ requests: bodies(8) }, s);
   assert.equal(o2[3].sha256, "undetermined");
-  assert.match(o2[3].digest_reason, /could not keep the bytes \(bucket unavailable\)/);
+  assert.equal(o2[3].digest_reason, word("render.group_civicsmith_keep", { entry: "bucket unavailable" }));
   assert.deepEqual(o2.filter((_, i) => i !== 3).map((o) => o.kept), Array(7).fill(true));
 
   /* the count ceiling is held in the requests' order, and a body whose put failed does not count: the first body past the ceiling
@@ -294,16 +294,16 @@ test("R10: originKey is scheme//host, or null when unparseable", () => {
 });
 
 test("R11: renderBlock refuses an answer that is not ok, has no document, answered a status of 400 or more, ended on a chrome-error:// page or holds an empty shell; anything short of that is recorded", () => {
-  assert.match(block({ ok: false, error: "browser crashed" }).problem, /did not answer ok \(browser crashed\)/);
-  assert.match(block(null).problem, /no answer/);
+  assert.equal(block({ ok: false, error: "browser crashed" }).problem, word("render.renderer_answer", { answer: "browser crashed" }));
+  assert.equal(block(null).problem, word("render.renderer_answer", { answer: "no answer" }));
   assert.equal(block(answer({ html: "" })).ok, false);
-  assert.match(block(answer({ html: 5 })).problem, /no rendered document/);
+  assert.equal(block(answer({ html: 5 })).problem, word("render.renderer_answered_rendered"));
   /* the page did not render (R69: permanent), each for its own reason, none of them a document */
-  const notRendered = (a, re) => { const r = block(a); assert.equal(r.ok, false); assert.match(r.problem, /^the page did not render/); assert.match(r.problem, re); assert.equal(r.failure_class, "permanent"); };
-  for (const status of [400, 403, 404, 429, 500, 503]) notRendered(answer({ status }), new RegExp(`status ${status}`));
-  notRendered(answer({ navigated_to: "chrome-error://chromewebdata/" }), /error page/);
-  notRendered(answer({ navigated_to: " CHROME-ERROR://chromewebdata/" }), /error page/);
-  notRendered(answer({ html: "<html><head><title>x</title></head><body><div id=\"root\"></div></body></html>" }), /empty shell/);
+  const notRendered = (a, expected) => { const r = block(a); assert.equal(r.ok, false); assert.equal(r.problem, expected); assert.equal(r.failure_class, "permanent"); };
+  for (const status of [400, 403, 404, 429, 500, 503]) notRendered(answer({ status }), word("capture-sources.render.the_page_did_not_render_status", { status: String(status) }));
+  notRendered(answer({ navigated_to: "chrome-error://chromewebdata/" }), word("capture-sources.render.the_page_did_not_render_error_page"));
+  notRendered(answer({ navigated_to: " CHROME-ERROR://chromewebdata/" }), word("capture-sources.render.the_page_did_not_render_error_page"));
+  notRendered(answer({ html: "<html><head><title>x</title></head><body><div id=\"root\"></div></body></html>" }), word("capture-sources.render.the_page_did_not_render_empty_shell"));
   /* Anything short of that is recorded with its gaps named. */
   for (const status of [200, 204, 301, 399, null]) assert.equal(block(answer({ status })).ok, true, String(status));
   assert.equal(block(answer({ navigated_to: "https://portal.example.gov/chrome-error://" })).ok, true);
@@ -344,7 +344,7 @@ test("R12: requests counted by outcome; subresources and data carry the plane's 
   const js = r.subresources[1];
   assert.deepEqual(js, { address: `https://${HOST}/app.js`, type: "script", sha256: hex(enc("x()")), bytes: 3, body_as: "bytes", digest_by: "plane" });
   assert.equal(r.subresources[2].sha256, "undetermined");
-  assert.match(r.subresources[2].digest_reason, /did not deliver/);
+  assert.ok(r.subresources[2].digest_reason.includes(word("render.renderer_deliver_response", { is_str: "", bytes: "" })));
   /* data: the non-code, non-layout completed loads, origin against the page's host. */
   assert.deepEqual(r.data.map((d) => [d.address, d.origin, d.host, d.approximate === true, d.reported_by]), [
     [PAGE, "same_host", HOST, false, "renderer"],
@@ -368,7 +368,7 @@ test("R12: requests counted by outcome; subresources and data carry the plane's 
   /* No requests recorded: all three null, and said. */
   const none = block(answer({ requests: null })).render;
   assert.deepEqual([none.requests, none.subresources, none.data], [null, null, null]);
-  assert.ok(none.undetermined.some((u) => /did not record the page's requests/.test(u)));
+  assert.ok(none.undetermined.some((u) => u.includes(word("capture-sources.render.requests_the_renderer_did_not"))));
 });
 
 test("R13: scripts_executed and third_party_executed are sorted origins, or 'undetermined', never []", () => {
@@ -383,7 +383,7 @@ test("R13: scripts_executed and third_party_executed are sorted origins, or 'und
   assert.deepEqual([e.scripts_executed, e.third_party_executed], [[], []]);
   const u = block(answer({ scripts: null })).render;
   assert.deepEqual([u.scripts_executed, u.third_party_executed], ["undetermined", "undetermined"]);
-  assert.ok(u.undetermined.some((x) => /could not record which scripts executed/.test(x)));
+  assert.ok(u.undetermined.some((x) => x.includes(word("render.scripts_renderer_record"))));
 });
 
 test("R14: render.wait and render.completeness follow R3's class, each gap stated", () => {
@@ -406,11 +406,11 @@ test("R14: render.wait and render.completeness follow R3's class, each gap state
 
   const odd = block(answer({ wait: { fired: "#root" } }), { asked }).render;
   assert.deepEqual([odd.wait.fired_class, odd.completeness], ["undetermined", "undetermined"]);
-  assert.ok(odd.undetermined.some((u) => /fired on `#root`, which is neither/.test(u)));
+  assert.ok(odd.undetermined.some((u) => u.includes(word("capture-sources.render.the_renderer_reported_the_wait", { waitFired: "#root", until: "networkidle" }))));
   const silent = block(answer({ wait: null }), { asked }).render;
   assert.deepEqual([silent.wait.fired, silent.wait.fired_class, silent.completeness], [null, "undetermined", "undetermined"]);
   assert.ok(silent.undetermined.includes("wait.fired: not reported by the renderer"));
-  assert.ok(silent.undetermined.some((u) => /did not report which wait ended the render/.test(u)));
+  assert.ok(silent.undetermined.some((u) => u.includes(word("render.renderer_report_wait"))));
 });
 
 test("R15: the render's facts are the renderer's or null with their absence stated; nothing defaulted", () => {
@@ -453,13 +453,14 @@ test("R17: otherwise undetermined, the dated basis naming every reason and the o
     "https://data.example.gov supplied data (same_site, which approximates and is not the host)",
     "https://api.vendor.net supplied data (third_party)", "https://cdn.vendor.net ran code"])
     assert.ok(a.authority_basis.includes(part), part);
-  assert.equal(a.authority_basis, localize("capture-sources.render.rendered_capture_at_reasons_a", "rendered capture, {at}: {reasons}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).", { at: AT, reasons: [word("render.served_shell_authority"), "https://api.vendor.net supplied data (third_party)", "https://data.example.gov supplied data (same_site, which approximates and is not the host)", "https://cdn.vendor.net ran code"].join("; ") }));
+  assert.equal(a.authority_basis, word("capture-sources.render.rendered_capture_at_reasons_a", { at: AT, reasons: [word("render.served_shell_authority"), "https://api.vendor.net supplied data (third_party)", "https://data.example.gov supplied data (same_site, which approximates and is not the host)", "https://cdn.vendor.net ran code"].join("; ") }));
   assert.deepEqual(a.authority_other_origins, ["https://api.vendor.net", "https://cdn.vendor.net", "https://data.example.gov"]);
 
   /* Neither list known: the origins are undetermined, and both unknowns are named. */
   const u = renderedAuthority({ asserted: "Example Council", render: block(answer({ requests: null, scripts: null })).render, at: AT });
   assert.equal(u.authority_other_origins, "undetermined");
-  assert.match(u.authority_basis, /which origins supplied data is undetermined.*which scripts executed is undetermined/);
+  assert.ok(u.authority_basis.includes(word("render.origins_supplied_data")));
+  assert.ok(u.authority_basis.includes(word("capture-sources.render.which_scripts_executed_is")));
   /* One list known: the union of what is known. */
   const half = renderedAuthority({ asserted: "Example Council", render: block(answer({ scripts: null })).render, at: AT });
   assert.deepEqual(half.authority_other_origins, []);
@@ -484,7 +485,7 @@ test("R18: rendererFor chooses the service, then a browser binding, then names w
   assert.equal(br.kind, "browser-binding");
   const fails = await br.render({ url: PAGE, navigation_timeout_ms: 1000, wait: { timeout_ms: 1000 } });
   assert.equal(fails.ok, false);
-  assert.match(fails.error, /refused a session: HTTP 503/);
+  assert.ok(fails.error.includes(word("capture-sources.browserrender.binding_refused_a_session", { status: "503", text: fails.error.split(" 503 ")[1] })));
   assert.deepEqual(rendererFor({ BROWSER: "not-a-fetcher" }), { kind: "browser-binding-without-driver", render: null });
   assert.deepEqual(rendererFor({ RENDERER: {} }), { kind: "none", render: null });
   assert.deepEqual(rendererFor({}), { kind: "none", render: null });
@@ -540,7 +541,7 @@ test("R50: completeness and authority are separate axes: a timed-out same-host r
   assert.equal(renderedAuthority({ asserted: "Example Council", render: vendor, at: AT }).authority_state, "undetermined");
   /* The record never carries a grade or method of its own to lower. */
   assert.ok(!("grade" in to) && !("method" in to));
-  assert.ok(to.undetermined.some((u) => /keeps its grade and its method/.test(u)));
+  assert.ok(to.undetermined.some((u) => u.includes(word("capture-sources.render.completeness_render_incomplete_reading_the", { RENDER_INCOMPLETE_READING: word("render.render_incomplete_wait"), v1: " (15000 ms asked)", v2: word("capture-sources.render.rather_than_on_the_condition", { until: "networkidle" }) }))));
 });
 
 test("R69: the render block states what the copy is among its gaps (the first load, not scrolled, banners and dialogs not dismissed, no frames or shadow content), once", () => {
@@ -558,7 +559,7 @@ test("R71: a page whose document is over the render-DOM bound the caller gives i
   const bound = 25 * 1024 * 1024;
   const over = block(answer(), { domBound: { size: bound + 1, bound } });
   assert.equal(over.ok, false);
-  assert.match(over.problem, /^the page did not render/);
+  assert.equal(over.problem, word("capture-sources.render.the_page_did_not_render_over_bound", { size: String(bound + 1), bound: String(bound) }));
   assert.ok(over.problem.includes(String(bound + 1)) && over.problem.includes(String(bound)), over.problem);
   assert.equal(over.failure_class, "permanent");
   /* at the bound, and under it, and with no bound given: recorded */
@@ -623,7 +624,7 @@ test("R70: the ceilings are read off the string and not the decoded bytes: the s
       { url: "https://x.example/5", outcome: "completed", body_text: "é".repeat(SUBRESOURCE_MAX / 2 + 1) },
     ] }, store());
     assert.deepEqual(out.map((o) => o.sha256), Array(5).fill("undetermined"));
-    assert.match(out[0].digest_reason, /not valid base64/);
+    assert.equal(out[0].digest_reason, word("render.renderer_body_request"));
     assert.equal(out[1].digest_reason, word("render.body_bytes_byte", { bytes: String(Math.ceil((SUBRESOURCE_MAX + 3) / 3) * 3), subresource_max: String(SUBRESOURCE_MAX) }));
     assert.equal(out[3].digest_reason, word("render.body_bytes_byte", { bytes: String(SUBRESOURCE_MAX + 1), subresource_max: String(SUBRESOURCE_MAX) }));
     assert.equal(out[4].digest_reason, word("render.body_bytes_byte", { bytes: String(SUBRESOURCE_MAX + 2), subresource_max: String(SUBRESOURCE_MAX) }));

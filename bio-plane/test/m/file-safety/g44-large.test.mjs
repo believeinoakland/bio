@@ -14,6 +14,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { filedWorld as world, enc } from "./fixture.mjs";
 import * as FS from "../../../src/file-safety/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { makeZip } from "../../make-zip.mjs";
@@ -93,7 +94,7 @@ test("R11: a row of 200,000 fields is cut to SAFE_VIEW_CELLS_MAX cells and the s
   assert.ok(JSON.stringify(a).length < 200_000);
   /* control: the cells of a row under the cap are not cut */
   const w = world();
-  const ok = (await view(w, await w.capture(enc(`${Array.from({ length: 50 }, (_, i) => i).join(",")}\n${Array.from({ length: 50 }, (_, i) => i).join(",")}\n`)))).sheets[0];
+  const ok = (await view(w, await w.capture(enc(`${Array.from({ length: 50 }, (_, i) => i).join(",")}\n${Array.from({ length: 50 }, (_, i) => i).join(",")}\n`), { type: "text/csv" }))).sheets[0];
   assert.deepEqual([ok.cells.length, ok.truncated], [100, false]);
 });
 
@@ -104,7 +105,7 @@ test("R11: a small workbook and a small CSV answer what they always did beside t
   assert.deepEqual(v.sheets, [{ name: "Budget", cells: [{ ref: "A1", value: "1", type: "number" }, { ref: "A2", value: "2", type: "number" }],
     rows: { from: 1, to: 2 }, total_rows: 2, truncated: false, next_row: null }]);
   assert.deepEqual([v.sheets_total, v.sheets_truncated], [1, false]);
-  const c = await view(w, await w.capture(enc("year,amount\n2025,310000\n")));
+  const c = await view(w, await w.capture(enc("year,amount\n2025,310000\n"), { type: "text/csv" }));
   assert.deepEqual(c.sheets, [{ name: "csv", cells: [{ ref: "A1", value: "year", type: "text" }, { ref: "B1", value: "amount", type: "text" },
     { ref: "A2", value: "2025", type: "text" }, { ref: "B2", value: "310000", type: "text" }], rows: { from: 1, to: 2 }, total_rows: 2, truncated: false, next_row: null }]);
   /* an empty sheet is an empty sheet: no rows, nothing cut, no reason */
@@ -131,7 +132,7 @@ test("R11: the first rows of a cut sheet are the cells the reader lists for thos
     assert.equal(a.truncated, a.cells.length < listed.length);
   }
   const { bytes, rows } = csvOf(300_000);
-  const c = (await view(w, await w.capture(bytes))).sheets[0];
+  const c = (await view(w, await w.capture(bytes, { type: "text/csv" }))).sheets[0];
   const lines = new TextDecoder().decode(bytes).split("\n").slice(0, 3);
   assert.deepEqual(c.cells.slice(0, 3).map((x) => x.value), [lines[0].split(",")[0], "label 1 of the row", "1.5"]);
   assert.equal(c.total_rows, rows);
@@ -146,14 +147,16 @@ test("R11 R51: a file above what a preview can show is stated with its size and 
     assert.ok(Number.isFinite(r.size) && Number.isFinite(r.bound) && r.size > r.bound, JSON.stringify([r.size, r.bound]));
     for (const [k, v] of Object.entries(extra)) assert.equal(r[k], v, k);
   };
-  /* a workbook of 26.2 MB declared (read in pieces past 20 MiB): stated, size and bound */
-  const { xml } = genSheetXml(26.2 * MIB);
+  /* a workbook declared 2.4 MiB over its reader's declared-text row (the table's active figure; read in pieces past it): stated, size and bound */
+  const { xml } = genSheetXml(boundOf("xlsx", "declared_text") + 2.4 * MIB);
   stated(await view(w, await w.capture(xlsxOf([{ name: "Big", xml }]))), "PREVIEW_NOT_DRAWN", { format: "xlsx" });
-  /* a CSV of 18.5 MB is drawn (the light kinds take the standard's figure, K4834: the reader's old 17 MiB is gone) and one of 20,971,571 B (over GRADE_READ_MAX) is stated */
-  assert.equal((await view(w, await w.capture(csvOf(18_500_000).bytes))).kind, "data");
-  stated(await view(w, await w.capture(csvOf(20_971_571).bytes)), "TOO_LARGE", { format: "csv", bound: GRADE_READ_MAX });
+  /* a CSV of 18.5 MB is drawn (the light kinds take the standard's figure, K4834); one just over its row (`csv.bytes`) is not drawn, its size and bound stated;
+     and one a byte over GRADE_READ_MAX is stated as too large (T53-510: each figure is the table's active one) */
+  assert.equal((await view(w, await w.capture(csvOf(18_500_000).bytes, { type: "text/csv" }))).kind, "data");
+  stated(await view(w, await w.capture(csvOf(boundOf("csv", "bytes") + 1000).bytes, { type: "text/csv" })), "PREVIEW_NOT_DRAWN", { format: "csv", bound: boundOf("csv", "bytes") });
+  stated(await view(w, await w.capture(csvOf(GRADE_READ_MAX + 1).bytes, { type: "text/csv" })), "TOO_LARGE", { format: "csv", bound: GRADE_READ_MAX });
   /* an xlsx file above GRADE_READ_MAX (the package, not its text): the zip is never loaded, and says why */
-  const pad = new Uint8Array(21 * MIB);
+  const pad = new Uint8Array(GRADE_READ_MAX + MIB);
   stated(await view(w, await w.capture(xlsxOf([{ name: "S", xml: smallSheetXml(2) }], [{ name: "xl/media/big.bin", data: pad, method: 0 }]))), "TOO_LARGE", { bound: GRADE_READ_MAX });
   /* an ODS whose content.xml declares more than its bound: stated, the part never read (the central directory lies, the bytes are small) */
   const lie = { central: { uncompressedSize: FS.SAFE_VIEW_ODS_DECLARED_MAX + 1 } };
@@ -169,7 +172,7 @@ test("R11 R51: a file above what a preview can show is stated with its size and 
   /* controls: a workbook, a CSV and an ODS just inside their bounds are drawn */
   const inside = await view(w, await w.capture(xlsxOf([{ name: "S", xml: genSheetXml(19 * MIB).xml }])));
   assert.deepEqual([inside.ok, inside.kind], [true, "data"]);
-  assert.equal((await view(w, await w.capture(csvOf(5_000_000).bytes))).kind, "data");
+  assert.equal((await view(w, await w.capture(csvOf(5_000_000).bytes, { type: "text/csv" }))).kind, "data");
   assert.equal((await view(w, await w.capture(odsOf(100_000).bytes))).kind, "data");
 });
 

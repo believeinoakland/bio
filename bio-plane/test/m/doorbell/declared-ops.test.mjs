@@ -58,6 +58,12 @@ test("R26 doorbell declares inboxget: its requires alone raise no refusal naming
     refusedNaming: named({"id":["NO_SUCH_KNOCK"]}, true), same: sameOk });
 });
 
+/* R31: a read keyed by the knock, for a member session */
+test("R26 doorbell declares inboxview: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "inboxview", declaration: DECLARED_OPS["inboxview"], call: mk("inboxview", {"viewer":"member:m1"}, null, null, (fields, env) => (withKnock(fields, env))),
+    refusedNaming: named({"id":["NO_SUCH_KNOCK"],"knockId":["NO_SUCH_KNOCK"]}, true), same: sameOk });
+});
+
 test("R26 doorbell declares doorbelltally: it accepts no field, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "doorbelltally", declaration: DECLARED_OPS["doorbelltally"], call: mk("doorbelltally", {"viewer":"member:m1"}),
     refusedNaming: named({}), same: sameOk });

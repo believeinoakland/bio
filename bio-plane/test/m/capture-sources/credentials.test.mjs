@@ -20,7 +20,7 @@ import {
   credentialsOf, CaptureCredentials, CAPTURE_CREDENTIAL_CHECKS, CREDENTIAL_KINDS, CREDENTIAL_SCOPES, REVOCATION,
   CREDENTIALS_TABLE, CREDENTIAL_LIST_LIMIT, hostNameOf, principalMember,
 } from "../../../src/capture-sources/credentials.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const KEY = "test-instance-secret-not-a-real-one";
 const SECRET = "s3cret-Pa55word-for-the-source";
@@ -216,7 +216,7 @@ test("R56: narrowest scope, then the newest; none admitted, no key, or no decryp
   /* None admitted. */
   const none = await ask({ host: "other.example" });
   assert.deepEqual(none.credentials, []);
-  assert.match(none.reason, /no credential supplied for other\.example is admitted/);
+  assert.equal(none.reason, word("capture-sources.none.credential_supplied_admitted", { h: "other.example" }));
   /* A ciphertext that will not decrypt: the reason names the credential, never its secret, and no other is tried. */
   w.db.prepare(`UPDATE ${CREDENTIALS_TABLE} SET ciphertext=(SELECT ciphertext FROM ${CREDENTIALS_TABLE} WHERE credential_id=?) WHERE credential_id=?`)
     .run(g1.credential, m.credential);
@@ -684,7 +684,7 @@ test("R55, R65: a credential for one of the group's own hosts is refused OWN_HOS
   }
   const own = await w.supply({ host: "plane.grp.example" });
   assert.equal(own.check, "C-105.12");
-  assert.match(own.detail, /one of your team's own/);
+  assert.equal(own.detail, word("capture-sources.credentials.the_host_given_is_one"));
   assert.equal(w.raw().length, 0);
   /* Not one of them: a parent of a suffix entry, a host beside the Civicsmith's, a look-alike. */
   for (const host of ["acct.workers.dev", "grp.example", "plane.grp.example.evil.example", HOST]) {
@@ -711,7 +711,7 @@ test("R56, R65: a credential for one of the group's own hosts is never answered 
   for (const host of ["plane.grp.example", "PLANE.GRP.EXAMPLE", "agent.acct.workers.dev"]) {
     const a = await ask(host);
     assert.deepEqual(a.credentials, [], host);
-    assert.match(a.reason, /^CAPTURE_CREDENTIAL_OWN_HOST: \S+ is one of your team's own hosts, so no credential is used for it and the fetch goes without credentials$/, host);
+    assert.equal(a.reason, word("capture-sources.credentials.capture_credential_own_host_h", { h: host.toLowerCase() }), host);
     noLeak(a, SECRET, host);
   }
   assert.equal((await ask(HOST)).credentials[0].credential, other.credential);
@@ -727,15 +727,15 @@ test("R55, R56 (DEC-149, credentials.mjs:60, :268, :302, :360, :368): the refusa
   assert.equal(row.translation, word("refusal.CAPTURE_CREDENTIAL_NO_KEY"));
   /* :268, the supplier who is not a member. */
   const w = await world();
-  assert.equal((await w.supply({ by: "nobody" })).detail, localize("capture-sources.credentials.the_supplier_named_is_not", "the supplier named is not an active member of your team"));
+  assert.equal((await w.supply({ by: "nobody" })).detail, word("capture-sources.credentials.the_supplier_named_is_not"));
   /* :302, no key at supply. */
   const k = await world({ key: null });
-  assert.equal((await k.supply({})).detail, localize("capture-sources.credentials.no_encryption_key_is_set", "no encryption key is set for your team's Civicsmith, so nothing is stored in the clear"));
+  assert.equal((await k.supply({})).detail, word("capture-sources.credentials.no_encryption_key_is_set"));
   /* :360, no key at a fetch. */
   k.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
              VALUES ('CRED-x','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);
   assert.equal((await k.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" })).reason,
-    localize("capture-sources.credentials.capture_credential_no_key_no", "CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your team's Civicsmith, so no credential is used and the source's refusal stands"));
+    word("capture-sources.credentials.capture_credential_no_key_no"));
   /* :368, a ciphertext that will not decrypt. */
   w.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
              VALUES ('CRED-y','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);

@@ -138,7 +138,7 @@ test("R14: knockerDigestOf writes nothing and never throws: no secret, or no kno
   for (const s of [undefined, null, "", 42, {}]) assert.deepEqual([(await c.knockerDigestOf(s)).knocker_digest, (await c.knockerDigestOf(s)).pseudonym], [null, null]);
   const fresh0 = await c.knockerDigestOf(SECRET);
   assert.deepEqual([fresh0.knocker_digest, fresh0.pseudonym], [null, null]);
-  assert.match(fresh0.basis, /no knock carrying a secret/);
+  assert.equal(fresh0.basis, localize("doorbell.index.no_secret_recognised", "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised"));
   assert.deepEqual(everything(rows), before, "nothing written, not even a key");
   await c.knock({ content: "x", knockerSecret: SECRET, sourceAddress: "1.2.3.4" });
   const known = await c.knockerDigestOf(SECRET);

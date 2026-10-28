@@ -204,10 +204,10 @@ test("R109 (keep): past MULTIPART_KEEP_MAX the keep handed to the plane is the `
   assert.deepEqual(rows.map((x) => x.kind).sort(), ["keep", "reading"]);
   const keep = rows.find((x) => x.kind === "keep");
   assert.deepEqual([keep.sha, keep.parts], [sha(big), r.document.parts.map((p) => p.sha256)]);
-  /* a file of no known kind this size is stated over the whole-load row, never read: the keep row alone is owed */
+  /* a file of no known kind this size is under the whole-load row (the document row, 100 MB in the beta, T53), so it is read: its reading is owed beside the keep */
   const w3 = setup(); const j3 = registrar(w3);
   assert.equal((await up(w3.c, varied(33 * MiB, 11))).ok, true);
-  assert.deepEqual(j3.rows().map((x) => x.kind), ["keep"]);
+  assert.deepEqual(j3.rows().map((x) => x.kind).sort(), ["keep", "reading"]);
   /* control: within the keep bound no keep row */
   const w2 = setup(); const j2 = registrar(w2);
   assert.equal((await up(w2.c, varied(20 * MiB, 12))).ok, true);
@@ -468,35 +468,26 @@ test("R111 (G124 quotes): the ceilings this module keeps are quoted, not written
 const wholeGets = (b) => b.calls.filter(([op, key, range]) => op === "get" && !range && /[0-9a-f]{64}/.test(String(key))).length;
 const pdfBytes = (n, seed) => varied(n, seed, [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
 
-test("R109 (G152, K4958; control-plane R125 (a), R132): a PDF stated over the whole-read ceiling of its kind registers no `reading` row and says so; the same bytes under it, and a kind with a higher row, still register theirs", async () => {
+test("R109 (G152, K4958; control-plane R125 (a), R132; T53 R119): an upload over its kind's whole-read ceiling is refused before it is held (the ceiling of a PDF, a CSV and a text is the kind's bound), so none is stated and owes no reading; a PDF and a CSV under theirs register their reading", async () => {
   const pdfMax = boundOf("pdf", "bytes"), csvMax = boundOf("csv", "bytes");
-  assert.ok(pdfMax < csvMax, "the text kinds' rows lie above the PDF's, so the kind decides");
+  assert.ok(csvMax <= pdfMax, "in the beta a spreadsheet's bound is not above a PDF's");
   const w = setup();
   const j = registrar(w);
-  const over = pdfBytes(pdfMax + MiB, 11);
-  const r = await up(w.c, over);
-  assert.equal(r.ok, true);
-  assert.equal(r.document.profile.format.format, "pdf");
-  assert.deepEqual(j.rows().map((x) => x.kind), [], "an upload stated over its ceiling is never read, so no reading is owed");
-  assert.equal(r.reading_stated, true, "the answer says it was stated, never silently");
-  assert.equal("jobs" in r, false);
-  /* the same upload again (bytes the record holds) registers none either */
-  const holdsOver = holdsWorld({ [sha(over)]: { registered: true, acquired: true } });
-  w.c.provenance.registerHolds = (a) => holdsOver.registerHolds(a);
-  const again = await up(w.c, over, { by: "m2", statement: "forwarded to me" });
-  assert.equal(again.existed, true);
-  assert.deepEqual(j.rows().map((x) => x.kind), [], "a second sighting of a stated upload owes no reading either");
-  assert.equal(again.reading_stated, true);
-  /* controls: a PDF at its ceiling registers its row, and a CSV over the PDF's figure but under its own does too */
+  const before = JSON.stringify([w.c.provenance.receipts, [...w.b.held.keys()]]);
+  const over = await w.c.uploadCapture({ bytes: streamOf(new Uint8Array(MiB), 1).stream, statement: STATEMENT, by: "m1", name: "big.csv", declared: csvMax + 1 });
+  assert.deepEqual([over.ok, over.reason, over.size, over.bound], [false, "TOO_LARGE", csvMax + 1, csvMax]);
+  assert.deepEqual(j.rows(), [], "nothing is owed for a file that was not held");
+  assert.equal(JSON.stringify([w.c.provenance.receipts, [...w.b.held.keys()]]), before);
+  /* controls: a PDF and a CSV under their ceilings register their row and are not said to be stated */
   const v = setup(); const jv = registrar(v);
-  const at = await up(v.c, pdfBytes(pdfMax, 12));
+  const at = await up(v.c, pdfBytes(3 * MiB, 12));
   assert.equal(at.ok, true);
   assert.deepEqual(jv.rows().map((x) => x.kind), ["reading"]);
   assert.equal("reading_stated" in at, false);
-  const csv = new Uint8Array(pdfMax + MiB).map((_, i) => (i % 8 === 7 ? 10 : i % 8 === 1 ? 44 : 48 + (i % 10)));
+  const csv = new Uint8Array(3 * MiB).map((_, i) => (i % 8 === 7 ? 10 : i % 8 === 1 ? 44 : 48 + (i % 10)));
   const c = setup(); const jc = registrar(c);
   const rc = await up(c.c, csv, { type: "text/csv", name: "rows.csv" });
-  assert.ok(rc.ok === true && pdfMax + MiB <= csvMax);
+  assert.equal(rc.ok, true);
   assert.deepEqual(jc.rows().map((x) => x.kind), ["reading"], "a CSV under the CSV row is read");
   assert.equal("reading_stated" in rc, false);
 });

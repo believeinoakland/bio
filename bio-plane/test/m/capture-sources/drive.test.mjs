@@ -10,7 +10,7 @@ import {
 } from "../../../src/drive.mjs";
 import { archiveHop, selectCapture } from "../../../src/cdx.mjs";
 import { renderLocaleFor } from "../../../src/render.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ID = "1AbCdEfGhIjKlMnOpQrStUvWxYz_-0123456789";
 const DOC = `https://docs.google.com/document/d/${ID}/edit`;
@@ -103,7 +103,7 @@ test("R42: driveHop states Google's conversion, from the address and the fetch, 
                       `lives at ${d.address}`])
     assert.ok(h.asserts.includes(part), part);
   for (const part of [`export address ${exp}`, "export format ods (application/vnd.oasis.opendocument.spreadsheet)",
-                      "producer Google Drive export", localize("capture-sources.drive.the_export_address_was_composed", "the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in {address}, and no part of it was read from the request (D-112)", { address: d.address }),
+                      "producer Google Drive export", word("capture-sources.drive.the_export_address_was_composed", { address: d.address }),
                       "canonicalised to docs.google.com, though the link named sheets.google.com",
                       "redirected to https://doc-0s.googleusercontent.com/export/abc", "confirmed from the bytes: ods (certain)"])
     assert.ok(h.evidence.includes(part), part);
@@ -112,17 +112,17 @@ test("R42: driveHop states Google's conversion, from the address and the fetch, 
                      export_format_confirmed: h.export_format_confirmed },
     { bound: false, via: "direct", export_address: exp, export_format: "ods", producer: word("drive.google_drive_export"),
       drive_file_id: ID, drive_kind: "spreadsheet", document_address: d.address, export_format_confirmed: true });
-  assert.match(h.unsigned_reason, /not the original file/);
+  assert.equal(h.unsigned_reason, word("drive.attestation_exists_google"));
   const doc = readDriveAddress(DOC);
   const same = driveHop(doc, { retrieved: "t", resolved: EXPORT });
-  assert.ok(!/though the link named/.test(same.evidence) && !/redirected/.test(same.evidence));
-  assert.match(same.evidence, /were not sniffed/);
+  assert.ok(!same.evidence.includes(word("capture-sources.drive.though_the_link_named", { host: drive.host })) && !/redirected/.test(same.evidence));
+  assert.ok(same.evidence.includes(word("capture-sources.drive.the_bytes_were_not_sniffed")));
   assert.equal(same.export_format_confirmed, null);
   const disagree = driveHop(doc, { retrieved: "t", detected: { format: "ods", confidence: "certain", signals: ["x"] } });
-  assert.match(disagree.evidence, /NOT confirmed from the bytes: odt was asked for and the bytes detect as ods/);
+  assert.ok(disagree.evidence.includes(word("capture-sources.drive.not_confirmed_from_the_bytes", { format: "odt", format_2: "ods", confidence: "certain", signals: "x" })));
   assert.equal(disagree.export_format_confirmed, false);
   /* A detection without signals is still recorded. */
-  assert.match(driveHop(doc, { retrieved: "t", detected: { format: "odt" } }).evidence, /confirmed from the bytes: odt/);
+  assert.ok(driveHop(doc, { retrieved: "t", detected: { format: "odt", confidence: "certain", signals: [] } }).evidence.includes(word("capture-sources.drive.confirmed_from_the_bytes_format", { format: "odt", confidence: "certain", signals: "" })));
 });
 
 test("R43: driveConvertStep is the conversion as a derivation step, its cap undetermined and stated", () => {
@@ -147,9 +147,7 @@ test("R43, R42: for every kind and every host spelling, the step is the hop's co
     const h = driveHop(d, { retrieved: "2026-09-30T00:00:00Z" });
     assert.equal(s.format, h.export_format, where);
     /* Stated, not left blank: unmeasured, and what would raise it. */
-    assert.match(s.measured_by, /^unmeasured: /, where);
-    assert.match(s.measured_by, /calibration row raises it/, where);
-    assert.match(s.measured_by, /CAP-11 measures/, where);
+    assert.equal(s.measured_by, word("capture-sources.drive.convert_source"), where);
     assert.equal(s.measured_by, driveConvertStep(readDriveAddress(DOC)).measured_by, where);
   }
   /* A fresh step each call: a caller that edits one (a later calibration's copy) changes no other. */
@@ -215,7 +213,7 @@ test("R46: classifyDriveBaseline judges from the plane's retrievals and the regi
   assert.deepEqual({ baseline: v.baseline, handler: v.handler, format: v.format, fetched_address: v.fetched_address, fetched_record: v.fetched_record },
     { baseline: { sha256: "b".repeat(64), locator: DOC, retrieved: "2026-09-01T00:00:00Z" }, handler: "client_rendered", format: "html",
       fetched_address: DOC, fetched_record: "page" });
-  assert.match(v.basis, /not the export address/);
+  assert.equal(v.basis, word("drive.why.group_civicsmith_recorded_fetching_export", { fetched_address: DOC, said: word("drive.register_profile_says") }));
   assert.equal(classifyDriveBaseline({ drive, locator: DOC, rows: [regRow(DOC)], retrievals: both }).fetched_record, "both");
   assert.equal(classifyDriveBaseline({ drive, locator: DOC, rows: [regRow(DOC)], retrievals: "junk" }).fetched_record, "none");
 });

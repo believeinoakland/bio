@@ -88,7 +88,7 @@ export function parseLinkFormat(text) {
   if (i === n) return { ok: true, links };
   for (;;) {
     ws();
-    if (text[i] !== "<") return bad(`entry ${links.length} does not begin with "<" at character ${i}`);
+    if (text[i] !== "<") return bad(localize("capture-sources.memento.entry_does_not_begin", "entry {n} does not begin with \"<\" at character {i}", { n: String(links.length), i: String(i) }));
     const close = text.indexOf(">", i + 1);
     if (close < 0) return bad(`entry ${links.length} has no closing ">"`);
     const link = { uri: text.slice(i + 1, close).trim(), rel: [] };

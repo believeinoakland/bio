@@ -11,7 +11,7 @@ import {
   readMementoAnswer, mementoRow, mementoHop,
 } from "../../../src/capture-sources/memento.mjs";
 import { EMPTY_BODY_DIGEST, selectCapture } from "../../../src/cdx.mjs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fx = (name) => readFileSync(new URL(`./fixtures/memento/${name}`, import.meta.url), "utf8");
 const fxj = (name) => JSON.parse(fx(name));
@@ -62,7 +62,7 @@ test("R37: link-format (RFC 6690, RFC 7089 §5) is read entry by entry, and one 
   assert.equal(m.ok, false);
   assert.equal(m.reason, "MEMENTO_LINK_MALFORMED");
   assert.equal(m.entry, 1);
-  assert.match(m.detail, /entry 1 does not begin with "<"/);
+  assert.equal(m.detail, word("capture-sources.memento.entry_does_not_begin", { n: "1", i: m.detail.split(" ").pop() }));
   for (const [t, entry] of [["<https://a.example/x", 0], ["<>; rel=original", 0], ['<https://a.example/>; rel="original', 0],
                             ["<https://a.example/>; =x", 0], ["<https://a.example/> junk", 0], ["<https://a.example/>, <https://b.example/>; rel=", 1]]) {
     const r = parseLinkFormat(t);
@@ -136,7 +136,7 @@ test("R37: a TimeGate's negotiated redirect is read as where it sends, and a mem
      a Memento-Datetime that is not a date; a memento that names no original; a malformed Link header. */
   const nd = readMementoAnswer(fxj("memento-no-datetime.json"));
   assert.deepEqual([nd.ok, nd.reason], [false, "MEMENTO_NO_DATETIME"]);
-  assert.match(nd.detail, /HTTP 200.*no Memento-Datetime/);
+  assert.equal(nd.detail, word("capture-sources.memento.the_answer_http_v1_carries", { v1: "200" }));
   assert.equal(readMementoAnswer({ url: "x", status: 302, headers: {} }).reason, "MEMENTO_NOT_NEGOTIATED");
   assert.equal(readMementoAnswer({ status: 200, headers: { "Memento-Datetime": "2026-03-03", Link: `<${ORIG}>; rel=original` } }).reason, "MEMENTO_BAD_DATETIME");
   assert.equal(readMementoAnswer({ status: 200, headers: { "Memento-Datetime": "Tue, 03 Mar 2026 12:00:00 GMT" } }).reason, "MEMENTO_NO_ORIGINAL");
@@ -156,7 +156,7 @@ test("R37: a fetched memento feeds the same selection as a CDX row: 200 only, no
   /* Negative controls: an empty memento is refused by R29's own reason; one outside the window by R30's. */
   const emptyRow = mementoRow(readMementoAnswer(fxj("memento-200.json")), { sha256: SHA, bytes: 0 });
   assert.equal(emptyRow.digest, EMPTY_BODY_DIGEST);
-  assert.deepEqual(selectCapture([emptyRow]).considered, [{ timestamp: "20260303120000", refused: localize("capture-sources.cdx.digest_is_the_empty_body", "digest is the empty-body digest: the capture holds nothing") }]);
+  assert.deepEqual(selectCapture([emptyRow]).considered, [{ timestamp: "20260303120000", refused: word("capture-sources.cdx.digest_is_the_empty_body") }]);
   assert.deepEqual(selectCapture([ok], { notAfter: "20260302000000" }).considered,
     [{ timestamp: "20260303120000", refused: "later than the requested bound 20260302000000" }]);
   /* Not a memento, or no digest of the plane's: no row. */
@@ -173,13 +173,13 @@ test("R37: the memento's hop is R34's shape for any archive, every fact from wha
   assert.deepEqual(Object.keys(h).sort(), ["asserts", "bound", "document_address", "evidence", "unsigned_reason", "via", "who"]);
   assert.equal(h.who, word("capture-sources.name.internet_archive_wayback"));
   assert.equal(h.via, "archive.org");
-  assert.equal(h.asserts, localize("capture-sources.memento.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: ORIG, archived_at: "2026-03-03T12:00:00Z", statuscode: "200" }));
+  assert.equal(h.asserts, word("capture-sources.memento.these_bytes_were_served_for", { original: ORIG, archived_at: "2026-03-03T12:00:00Z", statuscode: "200" }));
   for (const part of ["Memento-Datetime: Tue, 03 Mar 2026 12:00:00 GMT", `memento ${WB}/20260303120000id_/${ORIG}`, `rel="original" ${ORIG}`,
     `rel="timegate" ${WB}/${ORIG}`, `rel="timemap" ${WB}/timemap/link/${ORIG}`, "mimetype application/pdf",
-    localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: SHA })])
+    word("capture-sources.memento.sha_256_digest_computed_by", { digest: SHA })])
     assert.ok(h.evidence.includes(part), part);
   assert.equal(h.bound, false);
-  assert.match(h.unsigned_reason, /no cryptographic attestation exists over a Internet Archive Wayback Machine memento; this is a dated third-party claim we are trusting, not verifying/);
+  assert.equal(h.unsigned_reason, word("capture-sources.unsigned_reason", { name: word("capture-sources.name.internet_archive_wayback") }));
   assert.equal(h.document_address, ORIG);
   /* Another archive names itself. */
   const o = mementoHop(chosen, "https://arxiv.example.net/web/x", { archive: OTHER, answer });
@@ -194,5 +194,5 @@ test("R37: the memento's hop is R34's shape for any archive, every fact from wha
   assert.equal(mh.document_address, ORIG);
   assert.ok(!mh.asserts.includes(asked));
   /* With no answer recorded, the hop says so rather than inventing a datetime. */
-  assert.ok(mementoHop(chosen, answer.memento_uri).evidence.includes(localize("capture-sources.memento.no_memento_datetime_was_recorded", "no Memento-Datetime was recorded with this hop")));
+  assert.ok(mementoHop(chosen, answer.memento_uri).evidence.includes(word("capture-sources.memento.no_memento_datetime_was_recorded")));
 });

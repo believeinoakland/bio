@@ -109,12 +109,12 @@ test("R45: a text file under a scan hold still gets its safe view; the capture's
   assert.equal((await w.fs.safeView({ captureSha: s, viewer: "member:m2" })).code, "FILE_NOT_HELD");
 });
 
-test("R45 control: a PNG, an HTML file, an SVG, a file holding a NUL, bytes that are not UTF-8 and an archive still answer NO_SAFE_VIEW (its words now naming plain text); a CSV is still data; a PDF is still queued and SAFE_VIEW_PENDING until rendered", async () => {
+test("R45 control: a TIFF, an HTML file, an SVG, a file holding a NUL, bytes that are not UTF-8 and an archive still answer NO_SAFE_VIEW (its words now naming plain text); a CSV is still data; a PDF is still queued and SAFE_VIEW_PENDING until rendered", async () => {
   const w = world();
   const row = FILE_SAFETY_CHECKS.NO_SAFE_VIEW;
   assert.equal(row.translation, word("refusal.NO_SAFE_VIEW"));
   assert.match(row.translation, /plain text/);
-  const none = [new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]), enc("<!doctype html><html><body>hi</body></html>"),
+  const none = [new Uint8Array([0x49, 0x49, 0x2a, 0x00, 8, 0, 0, 0, 1]), enc("<!doctype html><html><body>hi</body></html>"),
     enc('<svg xmlns="http://www.w3.org/2000/svg"></svg>'), new Uint8Array([0x61, 0x62, 0x00, 0x63, 0x0a]), new Uint8Array([0xff, 0xfe, 0xfd, 0x0a]),
     makeZip([{ name: "a", data: "a" }])];
   for (const [i, b] of none.entries()) {
@@ -122,7 +122,8 @@ test("R45 control: a PNG, an HTML file, an SVG, a file holding a NUL, bytes that
     assert.equal(r.code, "NO_SAFE_VIEW", String(i));
     assert.equal(r.translation, row.translation);
   }
-  const csv = await w.fs.safeView({ captureSha: await w.capture(enc("year,amount\n2025,310000\n")), ...V });
+  /* R70: a table is drawn as cells when its recorded type is CSV */
+  const csv = await w.fs.safeView({ captureSha: await w.capture(enc("year,amount\n2025,310000\n"), { type: "text/csv" }), ...V });
   assert.deepEqual([csv.kind, csv.sheets.length], ["data", 1]);
   const p = await w.capture(pdf(false, "text-control"));
   assert.equal((await w.fs.safeView({ captureSha: p, ...V })).code, "SAFE_VIEW_PENDING");

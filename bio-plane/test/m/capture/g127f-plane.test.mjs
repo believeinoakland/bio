@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
+import { storedZip, ZIP_OVERHEAD } from "./fixture.mjs";
 
 const SRC = fileURLToPath(new URL("./g127f-worker.mjs", import.meta.url));
 const MiB = 1024 * 1024;
@@ -30,7 +31,7 @@ const varied = (n, seed) => { const b = new Uint8Array(n); for (let i = 0; i < n
 const partsOf = (bytes, size) => { const out = []; for (let at = 0; at < bytes.length; at += size) out.push(bytes.subarray(at, Math.min(at + size, bytes.length))); return out; };
 
 test("R113 (L): a 105 MiB file is begun, its seven 16 MiB parts sent in separate requests and completed into one object under the whole's digest, with one receipt and the document naming no parts", { timeout: 600000 }, async () => {
-  const file = varied(105 * MiB, 3), whole = sha(file);
+  const file = storedZip(varied(105 * MiB - ZIP_OVERHEAD, 3)), whole = sha(file);
   const b = await call("begin", {}, { sha256: whole, bytes: file.length, statement: STATEMENT });
   assert.deepEqual([b.ok, b.part_bytes, b.parts, b.held], [true, 16 * MiB, 7, false], JSON.stringify(b).slice(0, 300));
   const ps = partsOf(file, b.part_bytes);
