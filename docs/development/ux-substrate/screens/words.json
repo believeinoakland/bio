@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2608,
+  "refusal": 2609,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -239,7 +239,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19834,
+  "total": 19835,
   "protected": 1181
  },
  "words": [
@@ -85921,6 +85921,13 @@
    "note": "DEC-488: the copy's state: current"
   },
   {
+   "key": "refusal.BYTES_CHANGED",
+   "en": "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -96702,7 +96709,7 @@
   },
   {
    "key": "refusal.NO_SAFE_VIEW",
-   "en": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
+   "en": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets, plain text and ordinary JPEG or PNG photographs (a photograph is shown redrawn). This file is none of them, so it has no safe view.",
    "protected": false,
    "source": "DEC-260",
    "note": "file-safety's translation, keyed by its code; DEC-259: reworded"

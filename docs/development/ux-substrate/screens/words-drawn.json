@@ -46559,6 +46559,12 @@
    "en": "The list of AIs is up to date.",
    "protected": false,
    "note": "DEC-488: the copy's state: current"
+  },
+  {
+   "key": "refusal.BYTES_CHANGED",
+   "en": "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.",
+   "protected": false,
+   "note": "DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)"
   }
  ],
  "rewrite": {
@@ -46708,7 +46714,7 @@
   "stake.none": "No stake of its own beyond the team's",
   "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
   "refusal.ACCOUNT_MEMBER_NOT_ACTIVE": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
-  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
+  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets, plain text and ordinary JPEG or PNG photographs (a photograph is shown redrawn). This file is none of them, so it has no safe view.",
   "refusal.MACHINE_CANNOT_MARK": "Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written.",
   "screen.held.archivefiles": "Open its files",
   "screen.proceeding.kind.help": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
