@@ -80,6 +80,8 @@ const T47_FUNCTIONS = {
  * in pieces. R34 pins every name T47 held, and these. */
 const T51_FUNCTIONS = { cutAfterTag: 1, cutBefore: 1, decodeText: 2, pieceWhy: 1, readPartPieces: 5, textPlan: 1 };
 /* What fix round 9 added (R3, R5, R30, R36): the office entries, the directory, the name and the structural part limits. */
+/* What T53-524 added: the compound-file reader, its signature test and its signature. */
+const T53_FUNCTIONS = { hasCfbMagic: 1, readCfb: 1 };
 const T51_CONSTANTS = {
   STREAMED_TEXT_BOUND_BYTES: boundOf("office", "streamed_text_bytes"), OFFICE_ENTRIES_MAX: boundOf("office", "entries"),
   ARCHIVE_DIRECTORY_MAX: boundOf("archive", "directory"), ARCHIVE_NAME_MAX: boundOf("archive", "name"),
@@ -143,11 +145,11 @@ const T47_VBA = {
 };
 
 function assertT47Exports(ns) {
-  const names = [...Object.keys(T47_FUNCTIONS), ...Object.keys(T51_FUNCTIONS), ...Object.keys(T47_CONSTANTS),
-    ...Object.keys(T51_CONSTANTS), "ARCHIVE_LIMITS", "CONTAINER_FLAVOURS",
+  const names = [...Object.keys(T47_FUNCTIONS), ...Object.keys(T51_FUNCTIONS), ...Object.keys(T53_FUNCTIONS), ...Object.keys(T47_CONSTANTS),
+    ...Object.keys(T51_CONSTANTS), "CFB_MAGIC", "ARCHIVE_LIMITS", "CONTAINER_FLAVOURS",
     "IMAGE_MIME_BY_EXT", "OOXML_FLAVOURS", "ODF_FLAVOURS", ...Object.keys(T47_VBA)].sort();
   assert.deepEqual(Object.keys(ns).sort(), names);
-  for (const [name, arity] of Object.entries({ ...T47_FUNCTIONS, ...T51_FUNCTIONS })) {
+  for (const [name, arity] of Object.entries({ ...T47_FUNCTIONS, ...T51_FUNCTIONS, ...T53_FUNCTIONS })) {
     assert.equal(typeof ns[name], "function", name);
     assert.equal(ns[name].length, arity, name);
   }
