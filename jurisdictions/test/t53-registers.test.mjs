@@ -197,3 +197,6 @@ test("R133 the first profile lists what was measured and no more; what was not r
   /* every shipped and test definition validates */
   for (const r of [...all, ...combine([TEST]).view.registers]) assert.equal(validateRegisterDefinition(r, combine([r.system && /fec|calaccess|oakland/.test(r.system) ? FIRST : TEST]).view).ok, true, r.key);
 });
+
+/* Not yet met: named here, never red and never a pin of today's behaviour (build/situations/job.md). */
+test.todo("R133 the state's company service as a systems entry of the first profile, with the terms its sign-up page states and its call limits [waits: the sign-up page read]");

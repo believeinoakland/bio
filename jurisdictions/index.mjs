@@ -627,7 +627,7 @@ function validateInto(p, errors) {
       else {
         fields(`${at}.rate_limits`, rl, ["per_minute", "per_hour", "per_day", "basis", "measured_at"]);
         if (!["per_minute", "per_hour", "per_day"].some((k) => own(rl, k))) err(`${at}.rate_limits`, "VALUE_INVALID", "rate_limits states at least one count");
-        for (const k of ["per_minute", "per_hour", "per_day"]) if (own(rl, k) && !isPosInt(rl[k])) err(`${at}.rate_limits.${k}`, "VALUE_INVALID", "a call count is a positive integer");
+        for (const k of ["per_minute", "per_hour", "per_day"]) if (own(rl, k) && !isPosInt(rl[k])) err(`${at}.rate_limits.${k}`, "VALUE_INVALID", localize("jurisdictions.index.a_call_count_is_a_positive", "a call count is a positive integer", {}));
         if (!isDate(rl.measured_at)) err(`${at}.rate_limits.measured_at`, "VALUE_INVALID", "measured_at is the date the limit was read, YYYY-MM-DD");
         basis(`${at}.rate_limits`, rl);
       }
@@ -635,7 +635,7 @@ function validateInto(p, errors) {
     if (own(s, "gated") && !SYSTEM_GATES.includes(s.gated)) err(`${at}.gated`, "VALUE_INVALID", `gated is ${SYSTEM_GATES.join(", ")}`);
     if (own(s, "terms")) str(`${at}.terms`, s.terms, "terms");
     if (own(s, "volatile")) {
-      if (!Array.isArray(s.volatile) || !s.volatile.length) err(`${at}.volatile`, "VALUE_INVALID", "volatile is a non-empty list of patterns");
+      if (!Array.isArray(s.volatile) || !s.volatile.length) err(`${at}.volatile`, "VALUE_INVALID", localize("jurisdictions.index.volatile_is_a_non_empty_list", "volatile is a non-empty list of patterns", {}));
       else s.volatile.forEach((v, j) => pattern(`${at}.volatile[${j}]`, v));
     }
     if (own(s, "use_limit") && !isStr(s.use_limit)) err(`${at}.use_limit`, "USE_LIMIT_INVALID", "use_limit names a use_limits key");
@@ -753,11 +753,11 @@ function validateInto(p, errors) {
         /* T53-502: a street suffix as the Postal Service writes it, with the abbreviations it accepts for it */
         if (key === "street_types") {
           fields(ea, e, ["suffix", "abbreviations", "basis"]);
-          if (typeof e.suffix !== "string" || !/^[A-Z]+$/.test(e.suffix)) err(`${ea}.suffix`, "VALUE_INVALID", "suffix is the suffix's primary name, upper-case letters");
+          if (typeof e.suffix !== "string" || !/^[A-Z]+$/.test(e.suffix)) err(`${ea}.suffix`, "VALUE_INVALID", localize("jurisdictions.index.suffix_is_the_suffix_s_primary", "suffix is the suffix's primary name, upper-case letters", {}));
           else if (once.has(e.suffix)) err(`${ea}.suffix`, "VALUE_INVALID", localize("jurisdictions.index.v_is_given_twice_v1", "'{v}' is given twice {v1}", { v: String(e.suffix), v1: "" }));
           else once.add(e.suffix);
           if (!Array.isArray(e.abbreviations) || !e.abbreviations.every((x) => typeof x === "string" && /^[A-Z]+$/.test(x)) || new Set(e.abbreviations).size !== e.abbreviations.length)
-            err(`${ea}.abbreviations`, "VALUE_INVALID", "abbreviations is a list of upper-case words, each once");
+            err(`${ea}.abbreviations`, "VALUE_INVALID", localize("jurisdictions.index.abbreviations_is_a_list_of_upper", "abbreviations is a list of upper-case words, each once", {}));
           basis(ea, e);
           return;
         }
@@ -1094,10 +1094,21 @@ function validateInto(p, errors) {
         err(`${ra}.reviewed_text_sha`, "VALUE_INVALID", "reviewed_text_sha is the SHA-256 of the text as reviewed, 64 lowercase hexadecimal characters");
     });
   };
+  /* R137 (T53): what the link check wrote about a text's sources: whether one changed (the re-review flag), when, and the day all were
+     last found unchanged. A flag is not a withdrawal: the text stays offered. */
+  const sourceCheck = (path, sc) => {
+    if (!isObj(sc)) { err(path, "VALUE_INVALID", "source_check is {flag, changed_on?, checked_on}"); return; }
+    fields(path, sc, ["flag", "changed_on", "checked_on"]);
+    if (typeof sc.flag !== "boolean") err(`${path}.flag`, "VALUE_INVALID", localize("jurisdictions.index.flag_is_true_or_false", "flag is true or false", {}));
+    if (sc.flag === true && !isDate(sc.changed_on)) err(`${path}.changed_on`, "VALUE_INVALID", "a flagged text names the date a source changed, YYYY-MM-DD");
+    if (sc.flag === false && own(sc, "changed_on")) err(`${path}.changed_on`, "VALUE_INVALID", localize("jurisdictions.index.an_unflagged_text_names_no_change", "an unflagged text names no change", {}));
+    if (own(sc, "checked_on") && !isDate(sc.checked_on)) err(`${path}.checked_on`, "VALUE_INVALID", "checked_on is the date the check last found every source unchanged, YYYY-MM-DD");
+  };
   const templateOf = (ta, t, k, inList) => {
     if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
     else {
-      fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", "machine_draft", ...(inList ? ["purpose"] : [])]);
+      fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", "source_check", "machine_draft", ...(inList ? ["purpose"] : [])]);
+      if (own(t, "source_check")) sourceCheck(`${ta}.source_check`, t.source_check);
       for (const f of TEMPLATE_FIELDS)
         if (!own(t, f) || t[f] === undefined || t[f] === null) err(`${ta}.${f}`, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.the_templates_f_is_missing", "the template's {f} is missing", { f: String(f) }));
       const bad = (f, why) => { if (own(t, f) && t[f] !== undefined && t[f] !== null) err(`${ta}.${f}`, "VALUE_INVALID", why); };
@@ -1139,8 +1150,10 @@ function validateInto(p, errors) {
     if (isObj(t) && (inList || own(t, "sources"))) {
       if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", localize("jurisdictions.index.sources_lists_one_public_source", "sources lists at least one public source, each with a citation"));
       else t.sources.forEach((x, j) => {
-        if (!isObj(x) || Object.keys(x).some((f) => f !== "citation") || !isStr(x.citation))
+        if (!isObj(x) || Object.keys(x).some((f) => f !== "citation" && f !== "address") || !isStr(x.citation))
           err(`${ta}.sources[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.a_source_has_a_citation", "a source has one field, citation, which is non-empty"));
+        else if (own(x, "address") && !(typeof x.address === "string" && /^https:\/\/[^\s{}]+$/.test(x.address)))
+          err(`${ta}.sources[${j}].address`, "VALUE_INVALID", localize("jurisdictions.index.address_is_the_source_s_own", "address is the source's own page, an https address", {}));
       });
     }
   };
@@ -1356,9 +1369,9 @@ function validateInto(p, errors) {
       if (typeof u.key !== "string" || !REGISTER_KEY_RE.test(u.key)) err(`${at}.key`, "USE_LIMIT_INVALID", "key matches ^[a-z][a-z0-9_]*$");
       else if (seen.has(u.key)) err(`${at}.key`, "USE_LIMIT_INVALID", localize("jurisdictions.index.v_is_given_twice_v1", "'{v}' is given twice {v1}", { v: String(u.key), v1: "" }));
       else { seen.add(u.key); useLimitKeys.add(u.key); }
-      if (!isStr(u.citation)) err(`${at}.citation`, "USE_LIMIT_INVALID", "citation is the rule as cited");
+      if (!isStr(u.citation)) err(`${at}.citation`, "USE_LIMIT_INVALID", localize("jurisdictions.index.citation_is_the_rule_as_cited", "citation is the rule as cited", {}));
       if (!isStr(u.text_key)) err(`${at}.text_key`, "USE_LIMIT_INVALID", "text_key is a words key stating the limit");
-      if (u.export !== "never") err(`${at}.export`, "USE_LIMIT_INVALID", "export is never: this release accepts no other value");
+      if (u.export !== "never") err(`${at}.export`, "USE_LIMIT_INVALID", localize("jurisdictions.index.export_is_never_this_release_accepts", "export is never: this release accepts no other value", {}));
       if (!USE_LIMIT_ON_PUBLISH.includes(u.on_publish)) err(`${at}.on_publish`, "USE_LIMIT_INVALID", `on_publish is ${USE_LIMIT_ON_PUBLISH.join(", ")}`);
       basis(at, u);
     });
@@ -1384,43 +1397,43 @@ function validateInto(p, errors) {
       fields(at, r, ["key", "label", "publisher", "system", "url", "pieces", "delimiter", "header_from", "columns", "row_key", "row_key_basis",
         "schemes", "use_limit", "terms_basis", "gate", "phase", "status", "listing", "refresh", "count", "basis"]);
       if (typeof r.key !== "string" || !REGISTER_KEY_RE.test(r.key)) bad(`${at}.key`, "key matches ^[a-z][a-z0-9_]*$");
-      else if (registerKeys.has(r.key)) bad(`${at}.key`, "a key is given once");
+      else if (registerKeys.has(r.key)) bad(`${at}.key`, localize("jurisdictions.index.a_key_is_given_once", "a key is given once", {}));
       else registerKeys.set(r.key, r);
-      for (const f of ["label", "publisher"]) if (!isStr(r[f])) bad(`${at}.${f}`, `${f} is plain text`);
+      for (const f of ["label", "publisher"]) if (!isStr(r[f])) bad(`${at}.${f}`, localize("jurisdictions.index.field_is_plain_text", "{field} is plain text", { field: String(f) }));
       const notMeasured = r.status === "not_measured";
       if (own(r, "status") && !notMeasured) bad(`${at}.status`, "status is absent or not_measured");
       const sys = isStr(r.system) ? ownSystems.get(r.system) : undefined;
       if (own(r, "system") || !notMeasured) {
-        if (!isStr(r.system)) bad(`${at}.system`, "system is a system's origin");
-        else if (!sys && !inheritsLists) bad(`${at}.system`, `no system of this profile has origin '${r.system}'`);
+        if (!isStr(r.system)) bad(`${at}.system`, localize("jurisdictions.index.system_is_a_system_s_origin", "system is a system's origin", {}));
+        else if (!sys && !inheritsLists) bad(`${at}.system`, localize("jurisdictions.index.no_system_of_this_profile_4", "no system of this profile has origin '{String}'", { String: String(r.system) }));
       }
       const urlHost = httpsHost(r.url, false);
-      if (!urlHost) bad(`${at}.url`, "url is the register's own public https page");
-      else if (sys && !sys.hosts.includes(urlHost)) bad(`${at}.url`, "the url's host is not one of the system's hosts");
+      if (!urlHost) bad(`${at}.url`, localize("jurisdictions.index.url_is_the_register_s_own", "url is the register's own public https page", {}));
+      else if (sys && !sys.hosts.includes(urlHost)) bad(`${at}.url`, localize("jurisdictions.index.the_url_s_host_is_not", "the url's host is not one of the system's hosts", {}));
       if (own(r, "delimiter") && !REGISTER_DELIMITERS.includes(r.delimiter)) bad(`${at}.delimiter`, `delimiter is ${REGISTER_DELIMITERS.join(", ")}`);
       if (!own(r, "gate") && !notMeasured) bad(`${at}.gate`, "gate is none, account, fee or people_search");
       if (own(r, "gate") && !REGISTER_GATES.includes(r.gate)) bad(`${at}.gate`, "gate is none, account, fee or people_search");
-      if (sys && r.gate === "none" && sys.gated && sys.gated !== "none") bad(`${at}.gate`, `a register of the ${sys.gated}-gated system ${r.system} is not gate: none`);
-      if (own(r, "phase") ? !REGISTER_PHASES.includes(r.phase) : !notMeasured) bad(`${at}.phase`, "phase is alpha or beta");
+      if (sys && r.gate === "none" && sys.gated && sys.gated !== "none") bad(`${at}.gate`, localize("jurisdictions.index.a_register_of_a_gated_system", "a register of the {gated}-gated system {system} is not gate: none", { gated: String(sys.gated), system: String(r.system) }));
+      if (own(r, "phase") ? !REGISTER_PHASES.includes(r.phase) : !notMeasured) bad(`${at}.phase`, localize("jurisdictions.index.phase_is_alpha_or_beta", "phase is alpha or beta", {}));
       if (notMeasured && !own(r, "phase")) { /* a bare listing entry: key, label, publisher, url, status */ }
       /* pieces */
       const pieceKeys = new Set();
       const pieces = own(r, "pieces") ? r.pieces : (notMeasured ? [] : undefined);
       if (!Array.isArray(pieces)) bad(`${at}.pieces`, "pieces is a list");
       else {
-        if (!pieces.length && r.phase !== "beta" && !(notMeasured && !own(r, "phase"))) bad(`${at}.pieces`, "pieces is a non-empty list");
+        if (!pieces.length && r.phase !== "beta" && !(notMeasured && !own(r, "phase"))) bad(`${at}.pieces`, localize("jurisdictions.index.pieces_is_a_non_empty_list", "pieces is a non-empty list", {}));
         pieces.forEach((pc, j) => {
           const pa = `${at}.pieces[${j}]`;
           if (!entry(pa, pc)) return;
           fields(pa, pc, ["key", "label", "locator", "member", "delimiter", "header_from"]);
           if (typeof pc.key !== "string" || !REGISTER_KEY_RE.test(pc.key)) bad(`${pa}.key`, "key matches ^[a-z][a-z0-9_]*$");
-          else if (pieceKeys.has(pc.key)) bad(`${pa}.key`, "a piece key is given once");
+          else if (pieceKeys.has(pc.key)) bad(`${pa}.key`, localize("jurisdictions.index.a_piece_key_is_given_once", "a piece key is given once", {}));
           else pieceKeys.add(pc.key);
           if (!isStr(pc.label)) bad(`${pa}.label`, "label is plain text");
           const host = httpsHost(pc.locator, true);
-          if (!host) bad(`${pa}.locator`, "locator is an https address, or a template with the holes {cycle} or {table}");
-          else if (sys && !sys.hosts.includes(host)) bad(`${pa}.locator`, "the locator's host is not one of the system's hosts");
-          if (own(pc, "member") && !isStr(pc.member)) bad(`${pa}.member`, "member is a zip member's name");
+          if (!host) bad(`${pa}.locator`, localize("jurisdictions.index.locator_is_an_https_address", "locator is an https address, or a template with the holes {cycle}, {cycle2} or {table}", { cycle: "{cycle}", cycle2: "{cycle2}", table: "{table}" }));
+          else if (sys && !sys.hosts.includes(host)) bad(`${pa}.locator`, localize("jurisdictions.index.the_locator_s_host_is_not", "the locator's host is not one of the system's hosts", {}));
+          if (own(pc, "member") && !isStr(pc.member)) bad(`${pa}.member`, localize("jurisdictions.index.member_is_a_zip_member_s", "member is a zip member's name", {}));
           if (own(pc, "delimiter") && !REGISTER_DELIMITERS.includes(pc.delimiter)) bad(`${pa}.delimiter`, `delimiter is ${REGISTER_DELIMITERS.join(", ")}`);
         });
         pieces.forEach((pc, j) => {
@@ -1431,18 +1444,18 @@ function validateInto(p, errors) {
       /* columns */
       const colNames = new Set();
       if (own(r, "columns") || !notMeasured) {
-        if (!Array.isArray(r.columns) || !r.columns.length) bad(`${at}.columns`, "columns is a non-empty list");
+        if (!Array.isArray(r.columns) || !r.columns.length) bad(`${at}.columns`, localize("jurisdictions.index.columns_is_a_non_empty_list", "columns is a non-empty list", {}));
         else r.columns.forEach((c, j) => {
           const ca = `${at}.columns[${j}]`;
           if (!entry(ca, c)) return;
           fields(ca, c, ["name", "role", "keep", "date_format", "currency"]);
-          if (!isStr(c.name)) bad(`${ca}.name`, "name is the column's header");
-          else if (colNames.has(c.name)) bad(`${ca}.name`, "a column is listed once");
+          if (!isStr(c.name)) bad(`${ca}.name`, localize("jurisdictions.index.name_is_the_column_s_header", "name is the column's header", {}));
+          else if (colNames.has(c.name)) bad(`${ca}.name`, localize("jurisdictions.index.a_column_is_listed_once", "a column is listed once", {}));
           else colNames.add(c.name);
-          if (!REGISTER_ROLES.includes(c.role)) bad(`${ca}.role`, `role is one of ${REGISTER_ROLES.join(", ")}`);
-          if (typeof c.keep !== "boolean") bad(`${ca}.keep`, "keep is true or false");
+          if (!REGISTER_ROLES.includes(c.role)) bad(`${ca}.role`, localize("jurisdictions.index.role_is_one_of_register", "role is one of {REGISTER_ROLES}", { REGISTER_ROLES: String(REGISTER_ROLES.join(", ")) }));
+          if (typeof c.keep !== "boolean") bad(`${ca}.keep`, localize("jurisdictions.index.keep_is_true_or_false", "keep is true or false", {}));
           if (own(c, "date_format") && !isStr(c.date_format)) bad(`${ca}.date_format`, "date_format is a format name");
-          if (own(c, "currency") && !/^[A-Z]{3}$/.test(String(c.currency))) bad(`${ca}.currency`, "currency is a three-letter code");
+          if (own(c, "currency") && !/^[A-Z]{3}$/.test(String(c.currency))) bad(`${ca}.currency`, localize("jurisdictions.index.currency_is_a_three_letter_code", "currency is a three-letter code", {}));
         });
       }
       if (own(r, "row_key") || !notMeasured) {
@@ -1450,7 +1463,7 @@ function validateInto(p, errors) {
         if (!["source", "content"].includes(r.row_key_basis)) bad(`${at}.row_key_basis`, "row_key_basis is source or content");
       }
       if (own(r, "schemes")) {
-        if (!Array.isArray(r.schemes) || !r.schemes.every((x) => isStr(x) && (inheritsLists || schemeNames.has(x)))) bad(`${at}.schemes`, "schemes is a list of the profile's identifier scheme names");
+        if (!Array.isArray(r.schemes) || !r.schemes.every((x) => isStr(x) && (inheritsLists || schemeNames.has(x)))) bad(`${at}.schemes`, localize("jurisdictions.index.schemes_is_a_list_of_the", "schemes is a list of the profile's identifier scheme names", {}));
       }
       if (own(r, "use_limit") && (!isStr(r.use_limit) || (!inheritsLists && !useLimitKeys.has(r.use_limit)))) err(`${at}.use_limit`, "USE_LIMIT_INVALID", "use_limit names a use_limits key of this profile");
       /* R129: the listing's figures each with their basis, a count query, a refresh */
@@ -1468,9 +1481,9 @@ function validateInto(p, errors) {
             if (!REGISTER_FIGURE_BASES.includes(fg.basis)) bad(`${at}.listing.${f}.basis`, `basis is ${REGISTER_FIGURE_BASES.join(", ")}`);
             else if (fg.basis === "not_stated") { if (fg.value !== null) bad(`${at}.listing.${f}.value`, "a not_stated figure's value is null"); }
             else {
-              if (!Number.isInteger(fg.value) || fg.value < 0) bad(`${at}.listing.${f}.value`, "a figure's value is a count");
+              if (!Number.isInteger(fg.value) || fg.value < 0) bad(`${at}.listing.${f}.value`, localize("jurisdictions.index.a_figure_s_value_is_a", "a figure's value is a count", {}));
               if (!isDate(L.measured_at)) bad(`${at}.listing.measured_at`, "a figure with a basis needs measured_at");
-              if (fg.basis === "estimated" && !isStr(fg.how)) bad(`${at}.listing.${f}.how`, "an estimate states its method in how");
+              if (fg.basis === "estimated" && !isStr(fg.how)) bad(`${at}.listing.${f}.how`, localize("jurisdictions.index.an_estimate_states_its_method_in", "an estimate states its method in how", {}));
             }
           }
         }
@@ -1482,9 +1495,9 @@ function validateInto(p, errors) {
           fields(`${at}.count`, C, ["kind", "template", "supports"]);
           if (C.kind !== "source_count_query") bad(`${at}.count.kind`, "kind is source_count_query");
           const h = httpsHost(typeof C.template === "string" ? C.template.replace(/\{[a-z_]+\}/g, "x") : null, false);
-          if (!h) bad(`${at}.count.template`, "template is an https address template");
-          else if (sys && !sys.hosts.includes(h)) bad(`${at}.count.template`, "the template's host is not one of the system's hosts");
-          if (!Array.isArray(C.supports) || !C.supports.every(isStr)) bad(`${at}.count.supports`, "supports is a list of filter criteria");
+          if (!h) bad(`${at}.count.template`, localize("jurisdictions.index.template_is_an_https_address_template", "template is an https address template", {}));
+          else if (sys && !sys.hosts.includes(h)) bad(`${at}.count.template`, localize("jurisdictions.index.the_template_s_host_is_not", "the template's host is not one of the system's hosts", {}));
+          if (!Array.isArray(C.supports) || !C.supports.every(isStr)) bad(`${at}.count.supports`, localize("jurisdictions.index.supports_is_a_list_of_filter", "supports is a list of filter criteria", {}));
         }
       }
       if (own(r, "refresh")) {
@@ -1493,9 +1506,9 @@ function validateInto(p, errors) {
         else {
           fields(`${at}.refresh`, F, ["cadence_hours", "validators", "append_only"]);
           if (!isPosInt(F.cadence_hours)) bad(`${at}.refresh.cadence_hours`, "cadence_hours is a positive integer");
-          if (!Array.isArray(F.validators) || !F.validators.every((v) => REGISTER_VALIDATORS.includes(v))) bad(`${at}.refresh.validators`, `validators is a list of ${REGISTER_VALIDATORS.join(", ")}`);
+          if (!Array.isArray(F.validators) || !F.validators.every((v) => REGISTER_VALIDATORS.includes(v))) bad(`${at}.refresh.validators`, localize("jurisdictions.index.validators_is_a_list_of", "validators is a list of {REGISTER_VALIDATORS}", { REGISTER_VALIDATORS: String(REGISTER_VALIDATORS.join(", ")) }));
           if (own(F, "append_only") && typeof F.append_only !== "boolean") bad(`${at}.refresh.append_only`, "append_only is true or false");
-          if (Array.isArray(F.validators) && F.validators.includes("count") && !own(r, "count")) bad(`${at}.refresh.validators`, "the count validator needs a count query");
+          if (Array.isArray(F.validators) && F.validators.includes("count") && !own(r, "count")) bad(`${at}.refresh.validators`, localize("jurisdictions.index.the_count_validator_needs_a_count", "the count validator needs a count query", {}));
         }
       }
       if (own(r, "basis") || !notMeasured) {
@@ -1517,24 +1530,24 @@ function validateInto(p, errors) {
       fields(at, q, ["scheme", "register", "template", "basis"]);
       if (!schemesByName.has(q.scheme) && !inheritsLists) err(`${at}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.no_identifier_scheme_of_this", "no identifier scheme of this profile is '{String}'", { String: String(String(q.scheme)) }));
       const reg = registerKeys.get(q.register);
-      if (!reg && !inheritsLists) err(`${at}.register`, "REGISTER_INVALID", `no register of this profile has key '${String(q.register)}'`);
+      if (!reg && !inheritsLists) err(`${at}.register`, "REGISTER_INVALID", localize("jurisdictions.index.no_register_of_this_profile", "no register of this profile has key '{String}'", { String: String(String(q.register)) }));
       const k = `${q.scheme}\u0000${q.register}`;
-      if (seen.has(k)) err(`${at}.scheme`, "QUERY_TEMPLATE_INVALID", "a scheme has one template for a register");
+      if (seen.has(k)) err(`${at}.scheme`, "QUERY_TEMPLATE_INVALID", localize("jurisdictions.index.a_scheme_has_one_template_for", "a scheme has one template for a register", {}));
       seen.add(k);
-      if (typeof q.template !== "string" || /\s/.test(q.template)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "template is an https address with one hole {value}");
+      if (typeof q.template !== "string" || /\s/.test(q.template)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", localize("jurisdictions.index.template_is_an_https_address_one", "template is an https address with one hole {value}", { value: "{value}" }));
       else {
         const holes = [...q.template.matchAll(/\{([^{}]*)\}/g)].map((m) => m[1]);
         const stripped = q.template.replace(/\{[^{}]*\}/g, "");
-        if (holes.some((h) => ["name", "first", "last", "person"].includes(h))) err(`${at}.template`, "QUERY_TEMPLATE_NOT_NUMBER", "a watch is by a number: a name has no hole");
-        else if (holes.length !== 1 || holes[0] !== "value" || /[{}]/.test(stripped)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "template has exactly one hole, {value}");
+        if (holes.some((h) => ["name", "first", "last", "person"].includes(h))) err(`${at}.template`, "QUERY_TEMPLATE_NOT_NUMBER", localize("jurisdictions.index.a_watch_is_by_a_number", "a watch is by a number: a name has no hole", {}));
+        else if (holes.length !== 1 || holes[0] !== "value" || /[{}]/.test(stripped)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", localize("jurisdictions.index.template_has_exactly_one_hole", "template has exactly one hole, {value}", { value: "{value}" }));
         else {
           let host = null;
           try { const u = new URL(q.template.replace("{value}", "x")); host = u.protocol === "https:" ? u.hostname : null; } catch { host = null; }
           const authority = q.template.replace(/^https:\/\//, "").split("/")[0].split("?")[0];
-          if (!host || authority.includes("{")) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "template is an https address with its hole outside the host");
+          if (!host || authority.includes("{")) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", localize("jurisdictions.index.template_is_an_https_address_with", "template is an https address with its hole outside the host", {}));
           else if (reg) {
             const rs = (Array.isArray(p.systems) ? p.systems : []).find((s) => isObj(s) && s.origin === reg.system);
-            if (rs && !rs.hosts.includes(host)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", "the template's host is not one of the register's system hosts");
+            if (rs && !rs.hosts.includes(host)) err(`${at}.template`, "QUERY_TEMPLATE_INVALID", localize("jurisdictions.index.the_template_s_host_is_not_2", "the template's host is not one of the register's system hosts", {}));
           }
         }
       }
@@ -1838,7 +1851,8 @@ function validateInto(p, errors) {
       const at = `procedure_guides[${i}]`;
       if (!entry(at, g)) return;
       for (const f of ["review_opt_out", "not_reviewed"]) if (own(g, f)) err(`${at}.${f}`, "VALUE_INVALID", "a profile guide has no review opt-out: that is a team's own guide's");
-      fields(at, g, ["kind", "items", "notes", "machine_draft", "authored_by", "reviews", "approved_by", "approved_at", "status", "basis", "review_opt_out", "not_reviewed"]);
+      fields(at, g, ["kind", "items", "notes", "machine_draft", "authored_by", "reviews", "approved_by", "approved_at", "status", "basis", "review_opt_out", "not_reviewed", "source_check"]);
+      if (own(g, "source_check")) sourceCheck(`${at}.source_check`, g.source_check);
       if (!profileKinds.has(g.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of_4", "'{String}' is no kind of this profile", { String: String(String(g.kind)) }));
       else if (guided.has(g.kind)) err(`${at}.kind`, "VALUE_INVALID", localize("jurisdictions.index.kind_has_one_guide", "{kind} has one guide", { kind: String(g.kind) }));
       else guided.add(g.kind);
@@ -2343,6 +2357,32 @@ export function countedReview(entry) {
     }
     return best;
   } catch { return null; }
+}
+
+/**
+ * R137 (T53): where a profile text stands on `today` (`YYYY-MM-DD`): `reviewed` `{name, organisation, at}` from its counted review (or
+ * null), `lacks` (R126), and `statements` `[{key, vars}]`, the words keys to draw and their fills, in the order shown:
+ * `text.reviewedby` (name, organisation, date) for a counted review; `text.sourcechanged` (date) when the link check flagged the text,
+ * which stays offered; `text.lastchecked` (date) when the latest counted review is over 12 months old, the date the check last found
+ * every source unchanged, or the review date where it has none. A text whose own content changed after its review has no counted
+ * review, so no `reviewed`. Pure; the sentences are the word table's. Never throws.
+ */
+export function textStanding(entry, today) {
+  try {
+    const c = countedReview(entry);
+    const reviewed = c ? { name: c.reviewer, organisation: c.organisation, at: c.at } : null;
+    const statements = [];
+    const sc = isObj(entry) && isObj(entry.source_check) ? entry.source_check : null;
+    if (reviewed) statements.push({ key: "text.reviewedby", vars: { name: reviewed.name, organisation: reviewed.organisation, date: reviewed.at } });
+    if (sc && sc.flag === true && isDate(sc.changed_on)) statements.push({ key: "text.sourcechanged", vars: { date: sc.changed_on } });
+    if (reviewed && isDate(today)) {
+      const [y, m, d] = reviewed.at.split("-").map(Number);
+      const cut = new Date(Date.UTC(y + 1, m - 1, d)).toISOString().slice(0, 10); /* a year after the review */
+      const last = new Date(Date.UTC(y + 1, m - 1, d)); if (last.getUTCDate() !== d) last.setUTCDate(0); /* 29 February */
+      if (today > last.toISOString().slice(0, 10) && cut) statements.push({ key: "text.lastchecked", vars: { date: sc && isDate(sc.checked_on) ? sc.checked_on : reviewed.at } });
+    }
+    return { reviewed, lacks: attributionLacks(entry), statements };
+  } catch { return { reviewed: null, lacks: ["writer", "sources", "professional_review", "second_approval"], statements: [] }; }
 }
 
 /** R126: what a template or guide lacks, a subset of `writer`, `sources`, `professional_review`, `second_approval`, in that order. */

@@ -3,7 +3,7 @@
  * kind, R138 a named writer and a declared machine draft. Tested at the module's interface over the test profile. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { get, validate, attributionLacks, countedReview, textsLack } from "../index.mjs";
+import { get, validate, attributionLacks, countedReview, textsLack, textStanding } from "../index.mjs";
 import { canonicalJson, sha256HexSync } from "../../bio-plane/src/record-grammar/index.mjs";
 
 const TEST = "test-port-ellery";
@@ -108,3 +108,79 @@ test("R138 a text's writer is a named person; a machine may compose a declared f
   assert.ok(hasError(g((x) => { x.authored_by = "claude"; }), "MACHINE_CANNOT_DRAFT_TEMPLATE", "procedure_guides[0].authored_by"));
   assert.ok(hasError(g((x) => { x.machine_draft = true; x.notes = ""; }), "VALUE_INVALID", "procedure_guides[0].notes"));
 });
+
+test("R137 a text with a complete review stands reviewed, by whoever reviewed it; a review short of organisation, credential or date, a machine's, or of other text is not counted", () => {
+  const t = template();
+  const s = textStanding(t, "2026-09-01");
+  assert.deepEqual(s.reviewed, { name: "Dee Example", organisation: "Marlow Commons Legal Society (test)", at: "2026-08-20" });
+  assert.deepEqual(s.lacks, []);
+  assert.deepEqual(s.statements, [{ key: "text.reviewedby", vars: { name: "Dee Example", organisation: "Marlow Commons Legal Society (test)", date: "2026-08-20" } }]);
+  for (const f of ["organisation", "credential", "reviewer"]) {
+    const bad = template(); delete bad.reviews[0][f];
+    assert.equal(textStanding(bad, "2026-09-01").reviewed, null, f);
+    assert.ok(textStanding(bad, "2026-09-01").lacks.includes("professional_review"), f);
+  }
+  const noDate = template(); noDate.reviews[0].at = "soon";
+  assert.equal(textStanding(noDate, "2026-09-01").reviewed, null);
+  const machine = template(); machine.reviews[0].reviewer = "claude";
+  assert.equal(textStanding(machine, "2026-09-01").reviewed, null);
+  /* edited after review: not counted, then counted again with a new review; the sentence names the later reviewer */
+  const edited = template({ text: `${text} (edited)` });
+  assert.equal(textStanding(edited, "2026-09-01").reviewed, null);
+  assert.ok(textStanding(edited, "2026-09-01").lacks.includes("professional_review"));
+  const again = template({ text: `${text} (edited)` });
+  again.reviews.push(review(`${text} (edited)`, { reviewer: "Eli Example", organisation: "Fenwick & Co (test)", at: "2026-09-10" }));
+  assert.equal(textStanding(again, "2026-09-11").statements[0].vars.name, "Eli Example");
+  /* control: a volunteer and a firm are treated alike; a profile with no text is unchanged */
+  const firm = template(); firm.reviews[0].organisation = "A Paid Firm (test)";
+  assert.equal(textStanding(firm, "2026-09-01").reviewed.organisation, "A Paid Firm (test)");
+  assert.deepEqual(textsLack({}), []);
+  assert.deepEqual(textStanding(null, "2026-09-01").statements, []);
+});
+
+test("R137 a changed source flags the text: it stays offered and shows the sourcechanged statement; unchanged sources carry no flag", () => {
+  const flagged = template({ source_check: { flag: true, changed_on: "2026-10-01", checked_on: "2026-09-15" } });
+  const s = textStanding(flagged, "2026-10-05");
+  assert.deepEqual(s.lacks, [], "a flag is not a withdrawal");
+  assert.ok(s.reviewed);
+  assert.deepEqual(s.statements.map((x) => x.key), ["text.reviewedby", "text.sourcechanged"]);
+  assert.deepEqual(s.statements[1].vars, { date: "2026-10-01" });
+  const clean = template({ source_check: { flag: false, checked_on: "2026-10-01" } });
+  assert.deepEqual(textStanding(clean, "2026-10-05").statements.map((x) => x.key), ["text.reviewedby"]);
+  assert.deepEqual(textStanding(template(), "2026-10-05").statements.map((x) => x.key), ["text.reviewedby"]);
+});
+
+test("R137 a text last reviewed 12 months and a day ago shows its review date and the last-checked line; 11 months ago, only the sentence", () => {
+  const t = template({ source_check: { flag: false, checked_on: "2027-07-01" } });
+  const old = textStanding(t, "2027-08-21"); /* the review is of 2026-08-20 */
+  assert.deepEqual(old.statements.map((x) => x.key), ["text.reviewedby", "text.lastchecked"]);
+  assert.deepEqual(old.statements[1].vars, { date: "2027-07-01" }, "the day the check last found every source unchanged");
+  assert.deepEqual(textStanding(template(), "2027-08-21").statements[1].vars, { date: "2026-08-20" }, "no check: the review date");
+  assert.deepEqual(textStanding(t, "2027-08-20").statements.map((x) => x.key), ["text.reviewedby"], "exactly 12 months is not over");
+  assert.deepEqual(textStanding(t, "2027-07-20").statements.map((x) => x.key), ["text.reviewedby"], "11 months");
+});
+
+test("R137 a source may carry an address; a text may carry source_check; both are shape-checked", () => {
+  const withIt = (fn) => { const p = get(TEST); fn(kindOf(p, "records_request").templates ? kindOf(p, "records_request") : kindOf(p, "records_request")); return p; };
+  const p = get(TEST); const k = p.action_kinds.find((x) => Array.isArray(x.templates) && x.templates.some((t) => Array.isArray(t.sources)));
+  assert.ok(k, "the test profile has a list template with sources");
+  const t0 = k.templates.find((t) => Array.isArray(t.sources));
+  const at = `action_kinds[${p.action_kinds.indexOf(k)}].templates[${k.templates.indexOf(t0)}]`;
+  const edit = (fn) => { const q = structuredClone(p); const kk = q.action_kinds[p.action_kinds.indexOf(k)]; fn(kk.templates[k.templates.indexOf(t0)]); return validate(q); };
+  assert.deepEqual(edit((t) => { t.sources[0].address = "https://records.port-ellery.example/law"; t.source_check = { flag: true, changed_on: "2026-10-01", checked_on: "2026-09-30" }; }).errors, []);
+  assert.ok(hasError(edit((t) => { t.sources[0].address = "http://x.example/"; }), "VALUE_INVALID", `${at}.sources[0].address`));
+  assert.ok(hasError(edit((t) => { t.sources[0].other = 1; }), "VALUE_INVALID", `${at}.sources[0]`));
+  assert.ok(hasError(edit((t) => { t.source_check = { flag: true }; }), "VALUE_INVALID", `${at}.source_check.changed_on`));
+  assert.ok(hasError(edit((t) => { t.source_check = { flag: "yes" }; }), "VALUE_INVALID", `${at}.source_check.flag`));
+  assert.ok(hasError(edit((t) => { t.source_check = { flag: false, changed_on: "2026-10-01" }; }), "VALUE_INVALID", `${at}.source_check.changed_on`));
+  assert.ok(hasError(edit((t) => { t.source_check = { flag: false, checked_on: "yesterday" }; }), "VALUE_INVALID", `${at}.source_check.checked_on`));
+  const g = structuredClone(p); g.procedure_guides[0].source_check = { flag: false, checked_on: "2026-10-01" };
+  assert.deepEqual(validate(g).errors, [], "a guide carries one too");
+  g.procedure_guides[0].source_check = { flag: 1 };
+  assert.ok(hasError(validate(g), "VALUE_INVALID", "procedure_guides[0].source_check.flag"));
+  void withIt;
+});
+
+/* Not yet met: named here, never red and never a pin of today's behaviour (build/situations/job.md). */
+test.todo("R137 a template and a guide are offered with `reviewed` and the sentence, and withheld on a changed text [filing-templates' and reading-guides' side of the offer]");
+test.todo("R124 a member states a government's fiscal year with how they checked it, by factConfirm correct, with no second member [local-facts' act: this module holds the shape, R134]");

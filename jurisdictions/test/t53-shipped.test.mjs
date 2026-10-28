@@ -136,7 +136,7 @@ test("R111 the Alameda County layer holds the county's facts and only where a so
   assert.equal(c.layer.within, STATE);
   assert.ok(c.counterparties.every((o) => o.level === "county"));
   assert.deepEqual(c.counterparties.map((o) => o.role), ["Civil Grand Jury"]);
-  assert.ok(c.forums.some((f) => /Superior Court/.test(f.label)));
+  assert.ok(c.forums.some((f) => f.forum_kind === "court"));
   assert.ok(c.systems.length && c.systems.every((s) => s.basis !== "UNMEASURED"));
   assert.ok(c.spaces.parcel);
   /* control: no entry is placed here for want of anywhere else: every fact carries a basis */
@@ -223,3 +223,8 @@ test("T53-502 the federal layer holds the street suffixes as data: each with its
   assert.ok(codes(bad((l) => { l[0].abbreviations = ["ALY", "ALY"]; })).includes("VALUE_INVALID"));
   assert.ok(codes(bad((l) => { delete l[0].basis; })).length > 0);
 });
+
+/* Not yet met: named here, never red and never a pin of today's behaviour (build/situations/job.md). */
+test.todo("R109 the federal layer's records_help block for FOIA: the statute's figures and the ten citations, read on the text [owed: a reading of 5 U.S.C. § 552 and which kind of day its twenty are shown as]");
+test.todo("R119 the federal layer holds one counterparties entry per office of the government's own FOIA list [waits: measure F4, the list's size, and the makers' key]");
+test.todo("R120 the snapshot script writes the layer's data file and the diff against the last snapshot; a release is blocked when as_of is too old [waits: the makers' key and the measured bound]");

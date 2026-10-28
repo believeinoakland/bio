@@ -165,7 +165,7 @@ test("R72 under one name and kind, a translation in one language is one value pe
   const k = r.conflicts[0];
   assert.equal(k.at, "local_names[Town Clerk/office].translations[es]");
   assert.deepEqual(k.values, [{ profile: "a", value: "Secretaría", basis: "TEST" }, { profile: "c", value: "Oficina del Secretario", basis: "TEST" }]);
-  assert.match(k.says, /official translations/); assert.ok(k.says.length > 20);
+  assert.equal(typeof k.says, "string"); assert.ok(k.says.length > 20); /* the sentence is the profile's own (T53-14): not copied here */
   /* the name itself stays, unchanged, with every giver */
   assert.equal(r.view.local_names[0].name, "Town Clerk");
   assert.deepEqual(r.view.local_names[0].bases.map((x) => x.profile), ["a", "b", "c"]);
