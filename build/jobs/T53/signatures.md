@@ -1,6 +1,6 @@
 # signatures (T53)
 
-**Status** · session_018BhceeVjx2uYzrUetpWc1A · depth 2 · WAITING: BOB to add bio-plane/scripts/catalogue-keys.html to signatures' paths in modules.json (ownership check refuses it); page and tests done, suite 130/130
+**Status** · session_018BhceeVjx2uYzrUetpWc1A · depth 2 · WORKING
 **Sessions** · 1
 
 ## Completion (2026-10-27)
