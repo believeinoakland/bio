@@ -435,7 +435,7 @@ test("R118 an unwatched address draws the unwatched key and Watch for changes an
 
 test("R118 control: a testimony offers neither watching nor checking and says nothing of being unwatched", async () => {
   const TESTIMONY = ["---", `id: ${D}`, "object_type: information", "title: \"The pothole at 4th and Main\"", `project: ${P}`, "source:", "  locator: \"a member's firsthand observation, authored in this record\"",
-    "  retrieved: 2026-10-04T09:00:00Z", "---", "", "## Provenance Notes", "", "Authored through op=testify.", ""].join("\n");
+    "  retrieved: 2026-10-04T09:00:00Z", "---", "", "## Provenance Notes", "", word("provenance.testify.provenance_notes", { obs: "2026-10-04T09:00:00Z", recorded: "2026-10-04T09:00:00Z" }), ""].join("\n");
   const p = await openWith(at, withMd(TESTIMONY));
   assert.ok(!actsIn(main(p)).includes("monitor") && !actsIn(main(p)).includes("monitorset") && !says(main(p), "screen.document.unwatched"));
 });

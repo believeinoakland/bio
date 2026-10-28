@@ -129,6 +129,6 @@ test("R5 R36 a refusal with a size and a bound draws the no-preview sentence in 
   }
   /* the owner states the figures with this refusal every time, so a refusal without them is a scripted one */
   const t = await held(xlsxOf([{ name: "S", xml: sheetXml(2) }]));
-  const plain = await drawn(t, { safeview: refused("SAFE_VIEW_FAILED", "The safe view could not be made.", 422, { renderer_reason: "TOO_LARGE" }) });
-  assert.match(text(plain), /The safe view could not be made\./);
+  const plain = await drawn(t, { safeview: refused("SAFE_VIEW_FAILED", word("file-safety.index.the_safe_view_could_not_be_made"), 422, { renderer_reason: "TOO_LARGE" }) });
+  assert.ok(text(plain).includes(word("file-safety.index.the_safe_view_could_not_be_made")));
 });

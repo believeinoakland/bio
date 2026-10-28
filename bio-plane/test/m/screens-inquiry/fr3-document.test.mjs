@@ -181,7 +181,7 @@ async function attestIt(p) {
 const WEB = DOCUMENT_MD;
 const HTTP_MD = DOCUMENT_MD.replace("https://example.org/ai-4-12.pdf", "http://example.org/ai-4-12.pdf");
 const TESTIMONY_MD = ["---", `id: ${D}`, "object_type: information", "title: \"The pothole at 4th and Main\"", `project: ${P}`, "source:", "  locator: \"a member's firsthand observation, authored in this record\"",
-  "  retrieved: 2026-10-04T09:00:00Z", "---", "", "## Provenance Notes", "", "Authored through op=testify.", ""].join("\n");
+  "  retrieved: 2026-10-04T09:00:00Z", "---", "", "## Provenance Notes", "", word("provenance.testify.provenance_notes", { obs: "2026-10-04T09:00:00Z", recorded: "2026-10-04T09:00:00Z" }), ""].join("\n");
 const withMd = (md) => ({ images: { [D]: { "bundle.md": md, "data/provenance.json": provenanceOf(SHA) } } });
 
 /** A copy captured from a public address for a question and brought back from aside (`recipes.setAside`, `heldrestore`): the world's network serves the address. */
