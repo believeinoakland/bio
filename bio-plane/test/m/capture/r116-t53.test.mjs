@@ -9,6 +9,7 @@ import { UPLOAD_STATEMENT_MAX, MAIL_WITHIN_FAILED_DETAIL } from "../../../src/ca
 import { CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { byteLedger } from "../../../src/byte-ledger.mjs";
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { withAttachments, attachmentPart, eml, STANDARD } from "../mail-reader/fixtures.mjs";
 
@@ -19,6 +20,7 @@ const setup = () => {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
   const j = jobRegistrarStub();
+  // fixtures-contract: store-assembly job-registrar
   f.c.registerJob = j.registerJob;
   f.c.armJobs = j.armJobs;
   /* the registrar as plane wires it: the filing transaction rolls back with a refusal, and the registrar's rows with it */
@@ -140,6 +142,7 @@ test("R117: each attachment mail-reader lists registers one `member` row keyed `
 test("R117: a registrar that refuses a member row rolls the filing back with no receipt and no actor; with no registrar the answer says which rows it could not register", async () => {
   const w = setup();
   const real = w.c.registerJob;
+  // fixtures-contract: store-assembly job-registrar
   w.c.registerJob = (e) => (e.kind === "member" ? { ok: false, reason: "JOB_ENTRY_INVALID" } : real(e));
   const r = await w.c.emailCapture({ bytes: three(), ...mail() });
   assert.deepEqual([r.ok, r.reason, r.job.kind], [false, "JOB_NOT_REGISTERED", "member"]);

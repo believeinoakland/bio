@@ -162,7 +162,7 @@ export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
 /** R116: the one sentence of a message's `MAIL_WITHIN_FAILED` (500, as `UPLOAD_WITHIN_FAILED`, K2452), never the thrown message. */
 export const MAIL_WITHIN_FAILED_DETAIL =
-  "the act run with the message did not complete, so the message was rolled back and nothing was written";
+  localize("capture.index.mail_within_failed", "the act run with the message did not complete, so the message was rolled back and nothing was written");
 
 /* R86: an upload's bytes as a reader of chunks, whatever form the caller holds them in: a `ReadableStream` (the request's
    raw body), bytes (`Uint8Array`, any typed array or `ArrayBuffer`), or an async iterable of byte chunks. `cancel` stops a
@@ -2033,7 +2033,7 @@ export class Capture {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha))
       return Capture.#missingArgument("previewmore", "captureSha", "64 lowercase hex characters", captureSha);
     if (!Number.isSafeInteger(fromRow) || fromRow < 1)
-      return Capture.#missingArgument("previewmore", "fromRow", "the row to continue from, a whole number from 1", fromRow);
+      return Capture.#missingArgument("previewmore", "fromRow", localize("capture.index.shape_row_from", "the row to continue from, a whole number from 1"), fromRow);
     if (sheet != null && (typeof sheet !== "string" || [...sheet].length > PREVIEW_SHEET_MAX))
       return Capture.#missingArgument("previewmore", "sheet", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(PREVIEW_SHEET_MAX) }), sheet);
     const none = { ok: false, reason: "NO_SUCH_CAPTURE", status: 404, key: "capture.index.no_such_capture",
@@ -2043,9 +2043,10 @@ export class Capture {
       if (!this.#captureSeen(captureSha, viewer) || !(await this.#holds(captureSha))) return none;
       const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
       if (!ev) return none;
-      const reason = (r, extra = {}) => ({ ok: false, reason: r, status: 422, key: `capture.index.preview_${r}`, ...extra,
-        detail: localize(`capture.index.preview_${r}`, r === "bytes_not_held" ? "the record holds no whole copy of this file to read more rows from; nothing was read"
-          : r === "too_large" ? "this file is larger than a preview reads rows from; nothing was read" : "this file has no rows to show; nothing was read") });
+      const reason = (r) => ({ ok: false, reason: r, status: 422, key: `capture.index.preview_${r}`,
+        detail: r === "bytes_not_held" ? localize("capture.index.preview_bytes_not_held", "the record holds no whole copy of this file to read more rows from; nothing was read")
+          : r === "too_large" ? localize("capture.index.preview_too_large", "this file is larger than a preview reads rows from; nothing was read")
+          : localize("capture.index.preview_cells_not_interpretable", "this file has no rows to show; nothing was read") });
       const obj = await ev.get(captureSha);
       if (!obj) return reason("bytes_not_held");
       if (Number.isFinite(obj.size) && obj.size > boundOf("spreadsheet", "bytes")) return reason("too_large");

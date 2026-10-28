@@ -6,6 +6,7 @@ import { fresh, bucket, sha } from "./fixture.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { formatNameFor } from "../../../src/formats.mjs";
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
 const te = new TextEncoder();
@@ -15,6 +16,7 @@ const setup = () => {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
   const j = jobRegistrarStub();
+  // fixtures-contract: store-assembly job-registrar
   f.c.registerJob = j.registerJob;
   f.c.armJobs = j.armJobs;
   const state = () => JSON.stringify([f.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((t) => [t.name, f.rows(`SELECT * FROM ${t.name}`)]), [...b.held.keys()].sort(), j.rows()]);
