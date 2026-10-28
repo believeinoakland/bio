@@ -13,6 +13,7 @@ import { fresh, hold, doc, sha } from "./fixture.mjs";
 import pdfWorker from "../../../../pdf-worker/src/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { said } from "./said.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -68,8 +69,8 @@ test("R3 R10 R11 R16 (N391): a staff directory tier 1 cannot map is sent to the 
   /* R11: the basis names the reader, the tier and the tier-2 note, and where references were read */
   assert.match(r.basis, /staff_directory reader/);
   assert.match(r.basis, /\(tier 2\)/);
-  assert.match(r.basis, /re-read by the tier-2 decoder/);
-  assert.match(r.basis, /every reference carries where it was read \(12 of 12\)/);
+  assert.match(r.basis, said("textchain.say.push.page_re_read"));
+  assert.match(r.basis, said("reading-pipeline.reference_carries_read", { positioned: 12, entities: 12 }));
 });
 
 test("R3 R11 (N391): the same directory with no pdf-worker bound leaves tier 1 standing: a failed reading naming the unbound member and the no_tounicode residue, and no content type claimed", async () => {
@@ -80,7 +81,7 @@ test("R3 R11 (N391): the same directory with no pdf-worker bound leaves tier 1 s
   assert.equal(r.text_tier, 1);
   assert.deepEqual(r.entities, []);
   assert.notEqual(r.content_type, "staff_directory");
-  assert.match(r.basis, /no pdf-worker member is set up in your team's Civicsmith/);
+  assert.match(r.basis, said("reading-pipeline.tier_read_essentially"));
   assert.match(r.basis, /no_tounicode/);
 });
 

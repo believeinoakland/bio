@@ -4,10 +4,11 @@
    whole read are at most twice the file's, counted (R-CLOCK). The carry cases run at a scaled window against the whole read. Each test names the ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { read, CAPTURE_TEXT_UNIT_CAP, WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
+import { read, CAPTURE_TEXT_UNIT_CAP, TEXT_WINDOW_FROM } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc } from "./fixture.mjs";
 
-const MiB = 1048576, TEXT_BOUND = 52428800;
+const MiB = 1048576, TEXT_BOUND = boundOf("text", "bytes");
 const readOf = (b, document, opts = {}) => read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", ...opts });
 async function allPieces(b, document, extra = {}) {
   const pieces = [];
@@ -30,7 +31,7 @@ for (const [kind, ct] of [["text", "text/plain"], ["json", "application/json"], 
   test(`R50 (G131i, ${kind}): a ${kind} of 30 MiB is read in windows from its first piece, never whole, each line once, the last token read, the bytes pulled at most twice the file`, async () => {
     const { text, n } = lines(30 * MiB, kind === "xml" ? "<end>LASTTOKEN-XML</end>" : kind === "json" ? '{"last":"LASTTOKEN-JSON"}' : "LASTTOKEN-TEXT");
     const size = Buffer.byteLength(text);
-    assert.ok(size > WHOLE_READ_MAX && size < TEXT_BOUND);
+    assert.ok(size > TEXT_WINDOW_FROM && size < TEXT_BOUND);
     const b = bucket();
     const d = await hold(b, text);
     const document = doc({ digest: d, bytes: size, ct, format: "undetermined", fromText: true });
@@ -73,7 +74,7 @@ test("R50 R47 (G131i): a JSON of one 30 MiB line is read in the chunks the whole
   const body = Array.from({ length: 1_500_000 }, (_, i) => `"k${i}":"v${i}"`).join(", ");
   const text = `{${body}, "last":"LASTTOKEN-JSON"}`;
   const size = Buffer.byteLength(text);
-  assert.ok(size > WHOLE_READ_MAX, `${size}`);
+  assert.ok(size > TEXT_WINDOW_FROM, `${size}`);
   const b = bucket();
   const d = await hold(b, text);
   const document = doc({ digest: d, bytes: size, ct: "application/json", format: "undetermined", fromText: true });
@@ -143,7 +144,7 @@ for (const [name, enc, ct] of [["windows-1252", "windows-1252", "text/plain; cha
       for (let i = 0; i < str.length; i++) (le ? u.writeUInt16LE : u.writeUInt16BE).call(u, str.charCodeAt(i), 2 + i * 2);
       bytes = u;
     }
-    assert.ok(bytes.length > WHOLE_READ_MAX && bytes.length < TEXT_BOUND, `${bytes.length}`);
+    assert.ok(bytes.length > TEXT_WINDOW_FROM && bytes.length < TEXT_BOUND, `${bytes.length}`);
     const b = bucket();
     const d = await hold(b, new Uint8Array(bytes));
     const document = doc({ digest: d, bytes: bytes.length, ct, format: "undetermined", fromText: true });

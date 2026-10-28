@@ -6,7 +6,8 @@
  * never stored under its own digest). A text equals the truth or the reading states the refusal; UTF-8 is the control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { read, WHOLE_READ_MAX, MULTIPART_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
+import { read, TEXT_WINDOW_FROM, MULTIPART_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, sha } from "./fixture.mjs";
 
 const MiB = 1048576, KB = 1000;
@@ -226,7 +227,7 @@ for (const [label, target] of [["100 KB", 100 * KB], ["3 MiB", 3 * MiB], ["9 MiB
       test(`R49 (${label} ${shape === upload ? "upload" : "fetch"}, ${e.name}): the text equals the truth and the reading states the encoding`, async () => {
         const lines = textOf(e, target);
         const bytes = e.bytes(lines.join("\n"));
-        assert.ok(bytes.length <= (shape === upload ? WHOLE_READ_MAX : MULTIPART_READ_MAX), `${bytes.length}`);
+        assert.ok(bytes.length <= (shape === upload ? TEXT_WINDOW_FROM : MULTIPART_READ_MAX), `${bytes.length}`);
         const out = await readAll(await shape(bytes, e.ct));
         assert.equal(out.reading.failure, undefined, out.reading.basis);
         assert.equal(out.reading.encoding, e.want);
@@ -256,7 +257,7 @@ for (const e of BIG) {
     lines.push("DERNIÈRE-LIGNE fin");
     const bytes = e.bytes(lines.join("\n").replace(/È/g, e.want === "iso-8859-2" ? "E" : "È"));
     if (e.want === "iso-8859-2") lines[n] = "DERNIERE-LIGNE fin";
-    assert.ok(bytes.length > WHOLE_READ_MAX && bytes.length < 52428800, `${bytes.length}`);
+    assert.ok(bytes.length > TEXT_WINDOW_FROM && bytes.length < boundOf("text", "bytes"), `${bytes.length}`);
     const { b, document } = await upload(bytes, e.ct);
     const whole = await read(document, { evidence: evidenceStore(b), env: {} });
     assert.equal(whole.reading.failure, "transient", "a read not in pieces says it is read in pieces");
@@ -281,12 +282,12 @@ for (const e of BIG) {
 
 test("R49 R50 R54 (ENCODING_UNSUPPORTED past a whole read): a text of about 26 MiB declared in an encoding the rule cannot decode is not windowed and not guessed: it is stated against the whole-read bound with its size, final", async () => {
   const text = enc.encode(`${rowsOf(Math.ceil((26 * MiB) / enc.encode(`${lineOf(0)}\n`).length)).join("\n")}\n`);
-  assert.ok(text.length > WHOLE_READ_MAX && text.length < 52428800, `${text.length}`);
+  assert.ok(text.length > TEXT_WINDOW_FROM && text.length < boundOf("text", "bytes"), `${text.length}`);
   const { b, document } = await upload(text, "text/plain; charset=shift_jis");
   const out = await read(document, { evidence: evidenceStore(b), env: {} });
   assert.equal(out.reading.failure, "final");
   assert.equal(out.reading.reason, "TOO_LARGE");
   assert.equal(out.reading.size, text.length);
-  assert.equal(out.reading.bound, WHOLE_READ_MAX);
+  assert.equal(out.reading.bound, TEXT_WINDOW_FROM);
   assert.equal(out.text_units, undefined);
 });

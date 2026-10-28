@@ -12,6 +12,7 @@ import { EVIDENCE_PREFIX, fresh, bucket, evidenceStore, hold, doc, member, withE
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { said } from "./said.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -78,7 +79,7 @@ test("R23 R4 R5 R6 R9: needsTier3 selects a scan unless encrypted; tier3Extend f
   assert.equal(needsTier3(i2([{ page: 0, text: "text" }])), false);
   /* no member bound: unread, said, still wanting */
   const none = await tier3Extend({}, { sha: "d", storeName: "bio", i2text: scan, wiredTier: 1, tier2PerPage: null, fmt: "pdf" });
-  assert.match(none.ocrNote, /no OCR engine is installed/);
+  assert.match(none.ocrNote, said("reading-pipeline.document_text_layer"));
   assert.deepEqual([none.stillWanting, none.filled, none.wiredTier, none.chainSet], [true, [], 1, false]);
   /* a member: both pages filled, tier 3, the chain names the calibration the callback answered */
   const cal = calibration({ live: [{ calibration_id: "CAL-9", engine: "tess", version: "5.3" }] });
@@ -105,7 +106,7 @@ test("R23 R4 R5 R6 R9: needsTier3 selects a scan unless encrypted; tier3Extend f
   const never = member(() => new Error("must not be asked"));
   const kept = await tier3Extend({ OCR_WORKER: never }, { sha: "d", storeName: "bio", i2text: scan, wiredTier: 1, tier2PerPage: null, fmt: "pdf", seed: all });
   assert.equal(never.calls.length, 0);
-  assert.match(kept.ocrNote, /was already transcribed by an earlier reading/);
+  assert.match(kept.ocrNote, said("reading-pipeline.page_document_without"));
   /* no seed from a chain that does not check, or from no units */
   assert.equal(tier3SeedFrom({ text_source: [{ step: "nonsense" }] }, [{ page: 0, text: "x" }]), null);
   assert.equal(tier3SeedFrom(reading, []), null);

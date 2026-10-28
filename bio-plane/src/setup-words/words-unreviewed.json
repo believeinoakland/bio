@@ -47843,28 +47843,28 @@
       "en": "the AI declined{reason}",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 941
+      "line": 955
     },
     {
       "id": "reading-pipeline.index.ai_reading_label",
       "en": "the AI's reading",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 844
+      "line": 858
     },
     {
       "id": "reading-pipeline.index.csv_in_pieces",
       "en": "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2927
+      "line": 2955
     },
     {
       "id": "reading-pipeline.index.decoded_glyphs",
       "en": "{glyphs} decoded glyph(s)",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 295
+      "line": 301
     },
     {
       "id": "reading-pipeline.index.document_not_read_text",
@@ -47878,7 +47878,28 @@
       "en": "the text declares the encoding {name}, which is not read here, so nothing was read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2967
+      "line": 3008
+    },
+    {
+      "id": "reading-pipeline.index.held_unread",
+      "en": "held, not read: {name}",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 2987
+    },
+    {
+      "id": "reading-pipeline.index.interpret_cells",
+      "en": "read from the cells of {sheet}, rows {from} to {to}",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 3604
+    },
+    {
+      "id": "reading-pipeline.index.interpret_units",
+      "en": "read from {count} text unit(s), numbers {first} to {last}",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 3633
     },
     {
       "id": "reading-pipeline.index.multipart",
@@ -47892,7 +47913,7 @@
       "en": "a piece of this document advanced nothing, so its reading ends here, stated, and is never shown as being read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2745
+      "line": 2766
     },
     {
       "id": "reading-pipeline.index.non_textual_large",
@@ -47906,161 +47927,161 @@
       "en": "the OCR member was not asked inside this request: {count} page(s) are owed to the reading that follows it",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 700
+      "line": 706
     },
     {
       "id": "reading-pipeline.index.ocr_pages_stated",
       "en": "no page was asked of the OCR member: every page it would read is stated",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 697
+      "line": 703
     },
     {
       "id": "reading-pipeline.index.pages_not_asked_request",
       "en": "{count} of them ({pages}) were not asked for in this request: the OCR member reads one page per call and one request may make at most {limit} such calls here (Cloudflare states a limit of 32 Worker invocations per request — their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 467
+      "line": 473
     },
     {
       "id": "reading-pipeline.index.pages_not_read_text_recognition",
       "en": "{count} page(s) ({pages}) could not be read by text recognition",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 368
+      "line": 374
     },
     {
       "id": "reading-pipeline.index.placement_not_read",
       "en": "a placement the structure op reported could not be read as {shape}",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2430
+      "line": 2451
     },
     {
       "id": "reading-pipeline.index.read_one_undivided_string",
       "en": " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 3089
+      "line": 3130
     },
     {
       "id": "reading-pipeline.index.reported_characters",
       "en": "{reported} character(s) its producer counted and no text this merge can read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 294
+      "line": 300
     },
     {
       "id": "reading-pipeline.index.text_in_pieces",
       "en": "this file is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2938
+      "line": 2967
     },
     {
       "id": "reading-pipeline.index.unit_killed_reader",
       "en": "A part of this document could not be read after three tries, so it is skipped and the rest goes on.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2690
+      "line": 2711
     },
     {
       "id": "reading-pipeline.index.unsupported_avif",
       "en": "AVIF is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2629
+      "line": 2650
     },
     {
       "id": "reading-pipeline.index.unsupported_bmp",
       "en": "BMP is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2630
+      "line": 2651
     },
     {
       "id": "reading-pipeline.index.unsupported_email",
       "en": "Email is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2620
+      "line": 2641
     },
     {
       "id": "reading-pipeline.index.unsupported_gif",
       "en": "GIF is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2626
+      "line": 2647
     },
     {
       "id": "reading-pipeline.index.unsupported_heic",
       "en": "HEIC is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2628
+      "line": 2649
     },
     {
       "id": "reading-pipeline.index.unsupported_ico",
       "en": "ICO is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2632
+      "line": 2653
     },
     {
       "id": "reading-pipeline.index.unsupported_jp2",
       "en": "JPEG 2000 is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2631
+      "line": 2652
     },
     {
       "id": "reading-pipeline.index.unsupported_kind",
       "en": "{kind} is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2633
+      "line": 2654
     },
     {
       "id": "reading-pipeline.index.unsupported_legacy_excel",
       "en": "Legacy Excel is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2622
+      "line": 2643
     },
     {
       "id": "reading-pipeline.index.unsupported_legacy_office",
       "en": "This older Office file is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2624
+      "line": 2645
     },
     {
       "id": "reading-pipeline.index.unsupported_legacy_powerpoint",
       "en": "Legacy PowerPoint is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2623
+      "line": 2644
     },
     {
       "id": "reading-pipeline.index.unsupported_rtf",
       "en": "RTF is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2619
+      "line": 2640
     },
     {
       "id": "reading-pipeline.index.unsupported_tiff",
       "en": "TIFF is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2625
+      "line": 2646
     },
     {
       "id": "reading-pipeline.index.unsupported_webp",
       "en": "WebP is not read yet.",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2627
+      "line": 2648
     },
     {
       "id": "reading-pipeline.readingprov.which_no_reading_provenance_it",

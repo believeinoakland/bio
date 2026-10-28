@@ -26,6 +26,7 @@ import { bucket, evidenceStore, hold, doc, withEntry, i2, noText, folio, member,
 import { registerDoctype, readText } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 import { wordRx } from "../../word-rx.mjs";
+import { said } from "./said.mjs";
 
 registerDoctypes(registerDoctype);
 const { tier4Pages, tier4Extend, tier3SeedFrom, tier3Extend, TRANSCRIBE_USE, AI_READING_LABEL, AI_TRANSCRIPTION_SOURCE } = rp;
@@ -130,9 +131,9 @@ test("R29 R23: a member's act on her own account, within its limits: the pages C
   assert.doesNotMatch(JSON.stringify(out), /"grade"/);
   /* labelled: the basis says it, the chain's sentence says it */
   assert.match(r.basis, /pages 2-3 that Civicsmith's own text recognition could not read were transcribed by the AI \(vision-model 3\) at a member's request, on the account that pays for it: this text is the AI's reading, not yet determined/);
-  assert.match(r.basis, /page 3 already held a little text of its own \(a folio\), which was kept, and the AI's reading was appended after it/);
+  assert.match(r.basis, said("reading-pipeline.already_held_little", { appended: "page 3" }));
   /* re-recorded at fix round 9 (K4861 (3), K4863): text-chain R39 spells the pages 1-based, as a reader counts */
-  assert.match(describeChain(c0), /the AI's reading of the page \(vision-model 3\) \(pages 2-3\)/, "the chain's own sentence (text-chain's 1-based pages)");
+  assert.match(describeChain(c0), new RegExp(`${said("textchain.label.ai_reading_page").source} \\(vision-model 3\\) \\(pages 2-3\\)`), "the chain's own sentence (text-chain's 1-based pages)");
   assert.doesNotMatch(r.basis, /\binstance\b|\bthe plane\b/i, "DEC-149's words");
   /* R18: pages the AI read are tier 4, named by the model; the folio page has both producers */
   const pg = Object.fromEntries(r.provenance.pages.map((p) => [p.page, p]));
@@ -211,7 +212,7 @@ test("R29 R21: without a member's act `read` is tiers 1-3's exactly (no key adde
   const a = ai(() => { throw new Error("must not be asked"); });
   const plain = await readWith({ pages: [{ page: 0, text: "all text" }], transcription: { member: "ann", accounts: counting, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
   assert.deepEqual([asked, a.calls.length, plain.reading.text_tier], [0, 0, 1]);
-  assert.match(plain.reading.basis, /no page was left that Civicsmith's own text recognition could not read/);
+  assert.match(plain.reading.basis, said("reading-pipeline.page_left_civicsmith"));
   /* tier 3 fills page 1; only the folio page OCR did not fill is the AI's */
   const ocr = member((body) => ocrAnswer(body.pages.filter((p) => p === 1)));
   const b = ai((q) => model(q.pages));
@@ -233,16 +234,16 @@ test("R29 R6 R9 R23: tier4Pages and tier4Extend: the pages selected are the unre
                                      { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: rp.layerChainFor(i2(PAGES), { tier: 1, container: "pdf" }) });
   const unnamed = await go({ ok: true, pages: [{ page: 1, text: "x" }] });
   assert.deepEqual([unnamed.filled, unnamed.wiredTier], [[], 1]);
-  assert.match(unnamed.aiNote, /did not name the model/);
+  assert.match(unnamed.aiNote, said("reading-pipeline.answer_name_model"));
   const declined = await go({ ok: false, reason: "busy" });
-  assert.match(declined.aiNote, /the AI declined \(busy\)/);
+  assert.match(declined.aiNote, said("reading-pipeline.index.ai_declined", { reason: " (busy)" }));
   const mixed = await go(model([0, 1, 7]));
   assert.deepEqual(mixed.filled, [1]);
   assert.match(mixed.aiNote, /page 3 the AI did not transcribe, and it stays unread/);
-  assert.match(mixed.aiNote, /2 page\(s\) the AI returned were not merged: page 1 \(the AI was not asked for it\), page 8 \(the document has no such page\)/);
+  assert.match(mixed.aiNote, said("reading-pipeline.page_returned_merged", { refused_why: 2, page: `page 1 (${word("reading-pipeline.asked")}), page 8 (${word("reading-pipeline.document_page")})` }));
   assert.equal(mixed.i2text.pages[0].text, "Staff report on the capital plan", "a page with text is never replaced");
   const nothing = await go(model([]));
-  assert.match(nothing.aiNote, /returned no text for any page/);
+  assert.match(nothing.aiNote, said("reading-pipeline.returned_text_page"));
   const thrown = await tier4Extend({ member: "ann", accounts: acc, useCheck: async () => null, transcribe: async () => { throw new Error("down"); } },
                                    { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: null });
   assert.match(thrown.aiNote, wordRx("reading-pipeline.reached"));
@@ -342,7 +343,7 @@ test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRe
   }
   const none = await t4On({ ...base, transcribe: async () => model([0]) }, i2([{ page: 0, text: "all text" }]));
   assert.deepEqual(["aiRefusal" in none, none.filled], [false, []]);
-  assert.match(none.aiNote, /no page was left/);
+  assert.match(none.aiNote, said("reading-pipeline.page_left_civicsmith"));
   const filled = await t4On({ ...base, transcribe: async (q) => model(q.pages) });
   assert.deepEqual(["aiRefusal" in filled, filled.filled, filled.wiredTier], [false, [1, 2], 4]);
   assert.equal("aiRefusal" in (await tier4Extend(null, { i2text: i2(PAGES) })), false, "no act at all");
@@ -543,7 +544,7 @@ test("R30: the AI's page is never dropped when the OCR member has every page alr
   /* the OCR member cannot be reached */
   const down = reReadEnv(() => new Error("down"));
   const d = await go(down);
-  assert.match(d.ocrNote, /could not be reached/);
+  assert.match(d.ocrNote, said("reading-pipeline.ocr_member_reached"));
   keepsAi(d, "member down");
   /* no OCR member bound: kept, and only page 4 (index 3) is left for the AI */
   const n = await go({});
@@ -563,7 +564,7 @@ test("R30: the AI's page is never dropped when the OCR member has every page alr
   assert.equal(full.text.has(3), false, "page 3 is no transcribing part's, so it is not seeded");
   const three = i2(SCAN4.slice(0, 3));
   const allKept = await go(reReadEnv(() => new Error("must not be asked")), seed, three);
-  assert.match(allKept.ocrNote, /every page of this document without a text layer \(3\) was already transcribed by an earlier reading/);
+  assert.match(allKept.ocrNote, said("reading-pipeline.page_document_without", { kept: 3 }));
   assert.deepEqual([allKept.filled, allKept.seeded, allKept.stillWanting], [[], [0, 1, 2], false]);
   keepsAi(allKept, "all kept");
   assert.deepEqual(tier4Pages(allKept.i2text), []);

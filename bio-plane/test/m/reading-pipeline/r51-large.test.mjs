@@ -1,10 +1,10 @@
-/* reading-pipeline R51 (fix round 10; READING-PIPELINE #40; K4630, K5211): an HTML page past a whole read (`WHOLE_READ_MAX`) and within the text bound, held whole or in parts, is read by the
+/* reading-pipeline R51 (fix round 10; READING-PIPELINE #40; K4630, K5211): an HTML page past a whole read (`TEXT_WINDOW_FROM`) and within the text bound, held whole or in parts, is read by the
  * one streaming pass in byte windows with a carry; its units equal the same page read whole. A page of 25 MiB and a half (just past the ceiling; the window of the job is scaled to 64 KiB, below the
  * page, and one window is larger than it) is made once; its reference is the page decoded and read whole by `textUnitsOfText`. Entered at `read` through the evidence store, in pieces by a cursor, as the
  * ledger reads a page that large. The pass itself, at every window size and every cut, is in r51-windows.test.mjs. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { read, textUnitsOfText, WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
+import { read, textUnitsOfText, TEXT_WINDOW_FROM } from "../../../src/reading-pipeline/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { bucket, evidenceStore, hold, doc, sha } from "./fixture.mjs";
 
@@ -27,7 +27,7 @@ function pageBytes(minBytes, { charset = "utf-8" } = {}) {
   parts.push(`</main><footer>Contact the clerk</footer></body></html>`);
   return parts.join("");
 }
-const text = pageBytes(WHOLE_READ_MAX + 300 * 1024);
+const text = pageBytes(TEXT_WINDOW_FROM + 300 * 1024);
 const bytes = enc.encode(text);
 
 const asUpload = async () => {   /* one object under the capture's digest, however large the upload (R45) */
@@ -65,7 +65,7 @@ const reference = (() => {
 })();
 
 test("R51: an HTML page past a whole read, within the text bound, held as one object and read in pieces through byte windows of 64 KiB, has the units of the page read whole, each once", async () => {
-  assert.ok(bytes.length > WHOLE_READ_MAX && bytes.length <= boundOf("text", "bytes"), "past the ceiling, within the bound");
+  assert.ok(bytes.length > TEXT_WINDOW_FROM && bytes.length <= boundOf("text", "bytes"), "past the ceiling, within the bound");
   const ref = (await reference()).textUnits;
   const got = await piecesOf(await asUpload(), 64 * 1024);
   assert.ok(got.pieces > 5, "read in pieces");
@@ -122,7 +122,7 @@ test("R51 R54: an HTML page above the text bound is refused TOO_LARGE with its s
 });
 
 test("R51 R49: a page past a whole read in a single-byte charset its own meta declares (windows-1252) is read through windows decoded by it: the units are those of the page decoded and read whole", async () => {
-  const latin = pageBytes(WHOLE_READ_MAX + 100 * 1024, { charset: "windows-1252" })
+  const latin = pageBytes(TEXT_WINDOW_FROM + 100 * 1024, { charset: "windows-1252" })
     .replace(/[œ—]/g, "e");   /* every character is in windows-1252 */
   const b1252 = new Uint8Array(Buffer.from(latin, "latin1"));
   const b = bucket(), d = await hold(b, b1252);

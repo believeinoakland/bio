@@ -261,9 +261,9 @@ test("R48 (G128b, SCAN C11 shape): a text page with one large unread picture cou
 
 /* ---- G130, G132 (R45): the reader contract's pieces ---- */
 
-test("R45 (G130): rangeSource reads only the ranges asked; plan of a 40 MB file reads its head and its tail, detects the kind, and judges the size against the kind's bound", async () => {
+test("R45 (G130): rangeSource reads only the ranges asked; plan of a file past the whole-read ceiling reads its head and its tail, detects the kind, and judges the size against the kind's bound", async () => {
   const b = bucket();
-  const big = new Uint8Array(40 * 1024 * 1024);
+  const big = new Uint8Array(WHOLE_READ_MAX + 1024 * 1024);
   big.set(new TextEncoder().encode("%PDF-1.7\n"), 0);
   big.set(new TextEncoder().encode("\nstartxref\n0\n%%EOF\n"), big.length - 20);
   const d = await hold(b, big);

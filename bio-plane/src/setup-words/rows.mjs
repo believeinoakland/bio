@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7988 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7991 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -26683,6 +26683,9 @@ export const WORD_ROWS = Object.freeze([
   ["reading-pipeline.index.decoded_glyphs","{glyphs} decoded glyph(s)",null,null,false,"code"],
   ["reading-pipeline.index.document_not_read_text","the document was not read as text ({why}), so no reading was attempted",null,null,false,"code"],
   ["reading-pipeline.index.encoding_unsupported","the text declares the encoding {name}, which is not read here, so nothing was read",null,null,false,"code"],
+  ["reading-pipeline.index.held_unread","held, not read: {name}",null,null,false,"code"],
+  ["reading-pipeline.index.interpret_cells","read from the cells of {sheet}, rows {from} to {to}",null,null,false,"code"],
+  ["reading-pipeline.index.interpret_units","read from {count} text unit(s), numbers {first} to {last}",null,null,false,"code"],
   ["reading-pipeline.index.multipart","multipart",null,null,false,"code"],
   ["reading-pipeline.index.no_progress","a piece of this document advanced nothing, so its reading ends here, stated, and is never shown as being read",null,null,false,"code"],
   ["reading-pipeline.index.non_textual_large","non-textual or too large",null,null,false,"code"],
