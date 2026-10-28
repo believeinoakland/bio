@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { noSha } from "../../../src/extraction/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, DAY } from "./fixture.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const T = (w, entityId, placements) =>
   w.p.threadInstance({ progressionKey: "proc", entityId, placements, threadedBy: "member:alice", viewer: MEMBER });
@@ -128,7 +129,7 @@ test("R18 R22 R12: a decision keyed on (progression, stage) names no project, ag
     [["proc::award", "deferred", "revisit after the budget cycle", "member:bea", "2026-09-04T00:00:00.000Z", true]]);
   const reads = JSON.stringify([twice, w.p.readInstance({ progressionKey: "proc", entityId: "ENT-1", viewer: MEMBER }),
                                 w.p.captureProgressions({ captureSha: "sa", nowMs: Date.parse("2026-09-05") })]);
-  assert.doesNotMatch(reads, /predates the record/);
+  assert.doesNotMatch(reads, wordRx("review.statement_by_stated.undetermined_draft_predates"));
   assert.equal(w.p.readInstance({ progressionKey: "proc", entityId: "ENT-2", viewer: MEMBER }).findings[0].disposition.state, "deferred");
   // negative control: the other stage's question is untouched by either decision
   assert.deepEqual(twice.proposals.map((p) => p.key), ["proc::contract"]);

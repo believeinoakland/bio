@@ -45,3 +45,27 @@ The rows file marks this job `sonnet-5-5`, because a B site needs a source key f
 
 Tests: 96/96. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcefkfuJhoEDmxX32LxQ): test runs 1, module lines 2251
+
+## Completion (2026-10-28)
+
+# T53 R1 · progressions · job report, round 2 (entry T53-153, K5565: English in tests)
+
+## Entries applied
+
+- **T53-153 · K5565 · English in tests** — PART DONE, as BOB decided (CHANGE, then option b).
+  - Commit `9772ce4d` (round 1): basis:70, overdue:108 → `wordRx("progressions.why.time_zone_governs")`; owndates:61 → `wordRx("progressions.events_holds_dated_fact")`; owndates:71 → `word("progressions.event_placed_nowhere", { event_id: E1 })`.
+  - Commit `fa21bcc1` (round 2): feeds:131 asserts review's `review.statement_by_stated.undetermined_draft_predates` is absent (`wordRx`); owndates:139 → `word("progressions.why.overlaps_term_last", { own_date: "2026-02 (edtf, America/New_York)", value: "2026-02-09" })`; owndates:148 → `word("progressions.why.document_date", { capture_sha: "sa", own_date_why: word("progressions.events_holds_dated_fact"), from: "" })`.
+  - Commit `01a15ff4` (round 2): feeds:179 reverted to its inline sentence (BOB's option b).
+- Module suite: 96 pass, 0 fail. Words check: 0 failures, testcopy 0, testenglish 0.
+
+## Not done, and why
+
+- **feeds:179** (`/capture sha256/`, an inline `noSha` sentence in `src/progressions/index.mjs`): wrapping it as `localize` made extraction's `nosha.test.mjs` (lines 13, 16, its own input string) a words testcopy finding. Extraction's test has to take its own input first; then progressions keys feeds:179. BOB places both as completion-round entries.
+- **define:214**: an identifier path, not prose. Left as is (BOB).
+- **C sites** (define:195, overdue:101, owndates:59): test input. Left as is (BOB).
+- **Baseline** (`build/tests-english-baseline.json`): not touched. Outside the job's paths; BOB lowers at the layer close: basis and overdue to be removed, owndates 4 → 2.
+
+**Met** · none
+
+Tests: 96/96. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcefkfuJhoEDmxX32LxQ): test runs 2, module lines 2251
