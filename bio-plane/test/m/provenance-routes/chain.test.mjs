@@ -7,6 +7,7 @@ import { world, sha, V, provDoc } from "./fixture.mjs";
 import { chainFromEvidence, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { DOORBELL_ORIGIN, UPLOAD_ORIGIN } from "../../../src/provenance/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const fetched = { locator: "https://e.org/d", retrieved: "2026-09-01T00:00:00Z",
                   capture: { method: "acquire", actor_class: "session", sha256: sha("d") } };
@@ -16,7 +17,7 @@ test("R1: a fetched route gives one hop by this instance, a custodian one by the
   assert.equal(a.ok, true);
   assert.equal(a.hops.length, 1);
   const h = a.hops[0];
-  assert.match(h.who, /^instance civic /);
+  assert.equal(h.who, word("provenance-routes.who.instance_capture_method", { instance_name: "civic", actor: "session ", method: "acquire" }));
   assert.equal(h.asserts, "these bytes were served for https://e.org/d at 2026-09-01T00:00:00Z");
   assert.equal(h.via, "direct");
   assert.equal(h.bound, false);
@@ -24,7 +25,7 @@ test("R1: a fetched route gives one hop by this instance, a custodian one by the
   assert.equal(h.reconstructed.at, "2026-09-27T00:00:00Z");
   /* A timestamp is evidence for the bytes and the instant, never the address. */
   const ts = chainFromEvidence({ ...fetched, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } });
-  assert.match(ts.hops[0].evidence, /binds these bytes to their capture instant, not to the address/);
+  assert.ok(ts.hops[0].evidence.includes(word("provenance-routes.text.rfc_token_binds", { tsr_file: "snapshots/t.tsr", tsr_auth: "tsa.example" })));
   assert.equal(ts.hops[0].bound, false);
   /* A custodian. */
   const m = chainFromEvidence({ locator: "in hand", capture: { sha256: sha("m") },
@@ -107,8 +108,8 @@ test("R1 (K581): a doorbell document is never a fetched route: its one hop is re
     assert.equal(u.missing.length, 1);
     assert.match(u.missing[0], /source\.receipt/);
   }
-  assert.match(chainFromEvidence({ ...d, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } }).hops[0].evidence,
-               /not to the address/);
+  assert.ok(chainFromEvidence({ ...d, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } }).hops[0].evidence
+    .includes(word("provenance-routes.text.rfc_token_binds", { tsr_file: "snapshots/t.tsr", tsr_auth: "tsa.example" })));
   /* The arm is the origin's alone: the same fields under a fetched origin are a fetched route. */
   assert.equal(chainFromEvidence({ ...d, origin: { kind: "named_request" } }).hops[0].via, "direct");
 });
@@ -133,7 +134,7 @@ test("R7: no hop is read from a request: every hop written is derived from field
   assert.equal(viaOp.applied, true, JSON.stringify(viaOp));
   const text2 = w2.record.readFile("INFO-2026-0002-y", "data/provenance.json").text;
   assert.equal(text2.includes("invented"), false);
-  assert.match(JSON.parse(text2).documents[0].provenance_chain[0].who, /^instance test-instance /);
+  assert.equal(JSON.parse(text2).documents[0].provenance_chain[0].who, word("provenance-routes.who.instance_capture_method", { instance_name: "test-instance", actor: "session ", method: "acquire" }));
   /* A chain already in the register document is kept as recorded, never rewritten. */
   const w3 = world();
   w3.promoteInfo("INFO-2026-0003-z", { captures: [a], docs: [provDoc(a, { provenance_chain: [{ who: "a named party" }] })] });
@@ -175,10 +176,10 @@ test("R1 (K2457): an upload document is never a fetched route: its one hop is re
     const u = chainFromEvidence(bad);
     assert.equal(u.ok, false);
     assert.equal(u.missing.length, 1);
-    assert.match(u.missing[0], /upload's receipt/);
+    assert.equal(u.missing[0], word("provenance-routes.index.the_uploads_receipt_it_was"));
   }
-  assert.match(chainFromEvidence({ ...d, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } }).hops[0].evidence,
-               /not to the address/);
+  assert.ok(chainFromEvidence({ ...d, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } }).hops[0].evidence
+    .includes(word("provenance-routes.text.rfc_token_binds", { tsr_file: "snapshots/t.tsr", tsr_auth: "tsa.example" })));
   /* Negative control: the arm is the origin's alone. The same fields under a fetched origin are a fetched route, and a
      doorbell document is still read from its knock's receipt. */
   assert.equal(chainFromEvidence({ ...d, origin: { kind: "named_request" } }).hops[0].via, "direct");

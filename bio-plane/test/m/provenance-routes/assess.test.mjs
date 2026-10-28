@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, provDoc, infoMd } from "./fixture.mjs";
 import { ROUTE_MARK_NOTE, ROUTE_MARK_CHECKS } from "../../../src/provenance-routes/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 function twoDocs(w, id, { secondRouted = false } = {}) {
   const a = w.cap(`${id}-a`), b = w.cap(`${id}-b`);
@@ -27,12 +28,12 @@ test("R4: a member's route assessment, marked only when it changes, never moving
   assert.deepEqual(m1.documents.map((d) => d.outcome), ["derivable", "undetermined"]);
   assert.ok(m1.documents[1].missing.length, "the undetermined document says what is missing");
   assert.deepEqual([m1.route.stateAt, m1.route.by, m1.route.seq, m1.route.at], ["collected", V("ruth"), 1, "2026-09-27T03:00:00Z"]);
-  assert.match(m1.detail, /Its state has NOT moved/);
+  assert.match(m1.detail, wordRx("provenance-routes.index.recorded_this_documents_route"));
   assert.deepEqual(w.head("INFO-2026-0001-x"), head0, "state and bytes never move");
   assert.deepEqual(w.record.readImage("INFO-2026-0001-x"), files0);
   const m2 = r({ bundleId: "INFO-2026-0001-x" });
   assert.equal(m2.appended, false, "the same finding appends nothing");
-  assert.match(m2.detail, /nothing was appended/);
+  assert.match(m2.detail, wordRx("provenance-routes.index.this_assessment_found_exactly"));
   assert.equal(w.count("provenance_route_marks"), 1);
   /* A different member finding the same thing appends nothing either: the mark records what was found. */
   assert.equal(r({ bundleId: "INFO-2026-0001-x", author: V("sam") }).appended, false);
@@ -56,7 +57,7 @@ test("R4: a member's route assessment, marked only when it changes, never moving
   const p = w3.routes.provenanceRouteAssess({ bundleId: "INFO-2026-0003-y", author: V("r"), viewer: V("r") });
   assert.deepEqual([p.route.finding, p.route.marked, p.route.note],
                    ["PRESENT", false, word("provenance-routes.note.document_route_assessed")]);
-  assert.match(p.detail, /every document in this register can show its route/);
+  assert.match(p.detail, wordRx("provenance-routes.index.recorded_every_document_in"));
 });
 
 test("R4: a document whose chain is already recorded is outcome `recorded`, and its route shows", () => {
@@ -153,8 +154,8 @@ test("R4: every C-34 refusal carries its row's check and translation, and every 
     assert.equal(row.translation.includes(c), false, c);
     assert.equal(row.where, "src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark", `${c}'s where names this module's site`);
   }
-  assert.match(cases[0][1].detail, /is a named act/);
-  assert.match(cases[2][1].detail, /is a machine credential/);
+  assert.equal(cases[0][1].detail, word("provenance-routes.index.recording_that_a_route_cannot"));
+  assert.equal(cases[2][1].detail, word("provenance-routes.index.who_is_a_machine_credential_2", { who: "token:member" }));
   assert.equal(w.count("provenance_route_marks"), 0, "no refusal appended a mark");
 });
 

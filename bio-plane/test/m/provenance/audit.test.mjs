@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, provDoc, evidence } from "./fixture.mjs";
 import { partsHeld, PART_VERIFY_READ_MAX, registerAuditReport } from "../../../src/provenance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const MiB = 1024 * 1024;
 const bytes = (n, seed) => Buffer.from(Uint8Array.from({ length: n }, (_, i) => (i * 7 + seed) % 256));
@@ -47,7 +48,7 @@ test("R6: partsNamed reads the parts the holding bundle's register names, or say
   assert.ok(head);
   assert.equal(revise("{nope", "k1").ok, true);
   assert.equal(w2.prov.partsNamed("INFO-2026-0002-u", a.sha).state, "unreadable");
-  assert.match(w2.prov.partsNamed("INFO-2026-0002-u", a.sha).why, /does not parse/);
+  assert.equal(w2.prov.partsNamed("INFO-2026-0002-u", a.sha).why, word("provenance.why.record_data_provenance_json"));
   assert.equal(revise(JSON.stringify({ documents: [{ capture: { sha256: a.sha }, parts: [{ file: "x", bytes: 3 }] }] }), "k2").ok, true);
   assert.equal(w2.prov.partsNamed("INFO-2026-0002-u", a.sha).state, "unreadable");
   assert.equal(revise(JSON.stringify({ documents: [{ capture: { sha256: a.sha }, parts: [{ file: "x", sha256: sha("x"), bytes: -1 }] }] }), "k3").ok, true);
@@ -80,7 +81,7 @@ test("R7: partsHeld names every part missing, disagreeing or unverified, and nev
   assert.equal(v.disagree.find((p) => p.file === "wrong-size").stored_bytes, 199);
   assert.equal(v.disagree.find((p) => p.file === "wrong-digest").stored_sha256, sha(bytes(300, 9)));
   assert.deepEqual(v.unverified.map((p) => p.file), ["too-big"]);
-  assert.match(v.unverified[0].why, /no stored checksum/);
+  assert.equal(v.unverified[0].why, word("provenance.why.stored_checksum_too"));
   /* The key is the caller's for each digest. */
   const keyed = evidence({ [`pre/${sha(ok1)}`]: ok1 });
   assert.deepEqual(await partsHeld(keyed, (s) => `pre/${s}`, [part(ok1, "a")]), { missing: [], disagree: [], unverified: [] });
@@ -161,7 +162,7 @@ test("R9: sound excludes only unbacked and mismatched; undetermined is counted b
   const rep4 = await w2.prov.registerAudit(null);
   assert.equal(rep4.probed, false);
   assert.equal(rep4.sound, false);
-  assert.match(rep4.sample[0].why, /no capture bucket/);
+  assert.equal(rep4.sample[0].why, word("provenance.why.capture_bucket_configured"));
   /* At most 40 sample rows. */
   const many = { total: 60, live: 0, superseded: 0, historical: 0,
     unresolved: Array.from({ length: 60 }, (_, i) => ({ capture_sha: sha(`m${i}`), bundle_id: "B", class: "unresolved" })) };
@@ -211,7 +212,7 @@ test("R37: undetermined is stated, never counted as sound, present or absent", a
   const u = rep.sample.find((s) => s.bundle_id === "INFO-2026-0001-p");
   assert.equal(rep.undetermined, 1);
   assert.equal(rep.held_in_parts + rep.captured, 0, "not counted as present");
-  assert.match(u.why, /could not be verified/);
+  assert.equal(u.why, word("provenance.why.part_record_names", { unverified: "1" }));
   assert.equal(w.prov.homeCensus({}).first_holder, "UNDETERMINED");
   /* A part's undetermined digest is reported in the sample with its reason, never as missing; the route that cannot be
      shown is provenance-routes' (its R11; N512). */

@@ -9,6 +9,7 @@ import { ARCHIVE_VIA, DOORBELL_VIA, UPLOAD_VIA, UNPACKED_VIA, UNPACKED_METHOD, U
          ARCHIVE_CAPTURE_GRADE, registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
 import { ARCHIVE_DEPTH_MAX } from "../../../src/ooxml.mjs";
 import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const T = (h) => `2026-09-27T${String(h).padStart(2, "0")}:00:00Z`;
 const ADDR = "https://e.org/minutes.zip", NORM = "e.org/minutes.zip";
@@ -204,8 +205,8 @@ test("R42: C-18.1 asks an unpacked document's container block, its shape and its
   assert.deepEqual(runPure([archiveDoc(), fileDoc()]), [], "the document as unpack writes it");
   assert.deepEqual(runPure([archiveDoc(), fileDoc({ block: container({ path: null, dos_time_stated: null, method: 0, name_raw: "" }) })]), []);
   const one = (doc) => { const f = runPure([archiveDoc(), doc]); assert.equal(f.length, 1, JSON.stringify(msgs(f))); assert.equal(f[0].check, "C-18.1"); assert.equal(f[0].severity, "error"); return f[0].message; };
-  assert.match(one(fileDoc({ noBlock: true })), /cut out of an archive \(capture\.method 'unpacked'\) and carries no container block/);
-  for (const block of [null, [], "zip"]) assert.match(one(fileDoc({ block })), /carries no container block/);
+  assert.equal(one(fileDoc({ noBlock: true })), word("provenance.register.unpacked_no_container", { i: "1", method: UNPACKED_METHOD }));
+  for (const block of [null, [], "zip"]) assert.equal(one(fileDoc({ block })), word("provenance.register.unpacked_no_container", { i: "1", method: UNPACKED_METHOD }));
   assert.match(one(fileDoc({ method: "acquire" })), /carries a container block but its capture\.method is 'acquire', not 'unpacked'/);
   for (const [k, v, said] of [
     ["archive_sha256", sha(ARCHIVE_BYTES).toUpperCase(), "archive_sha256"], ["archive_sha256", undefined, "archive_sha256"],
@@ -215,8 +216,8 @@ test("R42: C-18.1 asks an unpacked document's container block, its shape and its
     ["dos_time_stated", "", "dos_time_stated"], ["dos_time_stated", 5, "dos_time_stated"]])
     assert.match(one(fileDoc({ block: container({ [k]: v }) })), new RegExp(`container is malformed: ${said} \\(`), `${k}=${v}`);
   /* Without the record (the ratify gate's pure call), a letter must be one of the capture grades, or the basis stated. */
-  assert.match(one(fileDoc({ grade: "A+" })), /capture\.grade 'A\+' is not one of/);
-  assert.match(one(fileDoc({ grade: null })), /carries no capture\.grade and no grade_basis/);
+  assert.equal(one(fileDoc({ grade: "A+" })), word("provenance.register.grade_not_one_of", { i: "1", grade: "A+", grades: "A, B, C" }));
+  assert.equal(one(fileDoc({ grade: null })), word("provenance.register.unpacked_no_basis", { i: "1" }));
   assert.deepEqual(runPure([archiveDoc(), fileDoc({ grade: null, basis: "CAPTURE_RECEIVED_NOT_FETCHED" })]), []);
 });
 
@@ -298,7 +299,7 @@ test("R42: an archive held with no document of it to read is a finding: its orig
   const r = fileMember(w, fileDoc());
   assert.equal(r.reason, "PROVENANCE_REGISTER_REFUSED");
   assert.deepEqual(r.findings.map((x) => x.check), ["C-18.1"]);
-  assert.match(r.findings[0].detail, /no register document of that archive can be read, so its origin cannot be shown/);
+  assert.equal(r.findings[0].detail, word("provenance.register.unpacked_archive_unread", { i: "0", archive: sha(ARCHIVE_BYTES).slice(0, 16) }));
   /* Filed in the archive's bundle under another digest's document only: still none of the archive's. */
   const w2 = world();
   w2.prov.recordReceipt({ addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) });
@@ -308,7 +309,7 @@ test("R42: an archive held with no document of it to read is a finding: its orig
             { path: "data/provenance.json", text: JSON.stringify({ documents: [elsewhere] }) }],
     register: [{ sha256: sha(ARCHIVE_BYTES), path: archiveCap.path, encoding: "utf8", bytes: Buffer.byteLength(ARCHIVE_BYTES) }] });
   assert.equal(filed.ok, true, JSON.stringify(filed));
-  assert.match(fileMember(w2, fileDoc()).findings[0].detail, /no register document of that archive can be read/);
+  assert.equal(fileMember(w2, fileDoc()).findings[0].detail, word("provenance.register.unpacked_archive_unread", { i: "0", archive: sha(ARCHIVE_BYTES).slice(0, 16) }));
 });
 
 test("R42: the audit and a gate holding the record ask the same; a later direct capture of the file regrades nothing", async () => {
