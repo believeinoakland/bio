@@ -14,7 +14,7 @@ test("R36 eventsOps: one arm per act and read, parameters from the url (the cont
   const w = world();
   const ops = Object.keys(eventsOps(w.ev, new URL("https://plane.test/"), {})).sort();
   assert.deepEqual(ops, ["actalias", "datedfact", "datedfacts", "editacts", "event", "eventattest", "eventcreate", "eventforact",
-    "eventgovern", "eventimport", "eventmerge", "eventrelate", "eventrelationwithdraw", "eventsfor", "eventsplit", "participantadd",
+    "eventgovern", "eventwithdraw", "eventimport", "eventmerge", "eventrelate", "eventrelationwithdraw", "eventsfor", "eventsplit", "participantadd",
     "participantcorrect", "proceedingstatus", "readoptin", "registerimport", "sequence", "statementsof", "timeline", "whowassent",
     "discretionrecord", "assessmentrecord", "usewithdraw", "usesof"].sort());
   const s = w.capture("ops");

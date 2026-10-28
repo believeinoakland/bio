@@ -217,7 +217,6 @@
   "bio-plane/test/m/escalation/structure.test.mjs": 2,
   "bio-plane/test/m/escalation/t45.test.mjs": 1,
   "bio-plane/test/m/escalation/t47.test.mjs": 2,
-  "bio-plane/test/m/events/uses.test.mjs": 1,
   "bio-plane/test/m/explore/verify-timeline-ops.test.mjs": 1,
   "bio-plane/test/m/filings/join.test.mjs": 1,
   "bio-plane/test/m/filings/t45.test.mjs": 2,
