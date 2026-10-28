@@ -43293,49 +43293,56 @@
       "en": "member-directed: keyed by a new MTI- id; the member's own declared tie, seen by them and administrators only",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1891
+      "line": 1889
     },
     {
       "id": "people.declared.identityclaim",
       "en": "person-directed: keyed by a new IDC- id between two persons; a claim that links and never merges",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1883
+      "line": 1881
     },
     {
       "id": "people.declared.personexpunge",
       "en": "person-directed: keyed by a person fact, claim, tie or source link; an administrator removes its value on a listed ground and leaves a tombstone",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1889
+      "line": 1887
     },
     {
       "id": "people.declared.recordpersonfact",
       "en": "person-directed: keyed by a new PFA- id on a person; holds one cited fact and moves no bundle",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1887
+      "line": 1885
     },
     {
       "id": "people.declared.sourcepersonlink",
       "en": "source-directed: keyed by (source, person); a protected link seen only by its listed members",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1895
+      "line": 1893
     },
     {
       "id": "people.declared.withdrawidentityclaim",
       "en": "person-directed: keyed by claim; keeps it, shown withdrawn, and links nothing",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1885
+      "line": 1883
     },
     {
       "id": "people.declared.withdrawtie",
       "en": "member-directed: keyed by tie; keeps it, shown withdrawn",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1893
+      "line": 1891
+    },
+    {
+      "id": "people.index.candidates_detail",
+      "en": "candidates are not claims: each shares a name or an identifier with this person, and each field is compared as the record holds it (agrees, differs or absent), with the rows compared. Nothing is scored, ranked or written; a claim is a member's act (op=identityclaim).",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 694
     },
     {
       "id": "people.index.claim_joins_one_kind",
@@ -43349,7 +43356,7 @@
       "en": "the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1301
+      "line": 1299
     },
     {
       "id": "people.index.evidence_names_cited_line",
@@ -43363,28 +43370,28 @@
       "en": "A source link is read for one source (source_id) or one person (person); this read names neither.",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1525
+      "line": 1523
     },
     {
       "id": "people.index.org_fact_kinds",
       "en": "{id} is an organisation, which takes a name, address or contact fact; a {kind} fact is a person's",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 748
+      "line": 746
     },
     {
       "id": "people.index.person_item_not_held",
       "en": "No person fact, identity claim, member tie or source link here answers to that id. Nothing was removed.",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 845
+      "line": 843
     },
     {
       "id": "people.index.read_names_member",
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1810
+      "line": 1808
     },
     {
       "id": "people.index.registered_no_claim_joins",

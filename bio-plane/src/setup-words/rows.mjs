@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8026 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8027 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -26034,6 +26034,7 @@ export const WORD_ROWS = Object.freeze([
   ["people.declared.sourcepersonlink","source-directed: keyed by (source, person); a protected link seen only by its listed members",null,null,false,"code"],
   ["people.declared.withdrawidentityclaim","person-directed: keyed by claim; keeps it, shown withdrawn, and links nothing",null,null,false,"code"],
   ["people.declared.withdrawtie","member-directed: keyed by tie; keeps it, shown withdrawn",null,null,false,"code"],
+  ["people.index.candidates_detail","candidates are not claims: each shares a name or an identifier with this person, and each field is compared as the record holds it (agrees, differs or absent), with the rows compared. Nothing is scored, ranked or written; a claim is a member's act (op=identityclaim).",null,null,false,"code"],
   ["people.index.claim_joins_one_kind","a claim joins two entities of one kind; {a} is a {kind_a} and {b} is a {kind_b}. Nothing was written",null,null,false,"code"],
   ["people.index.directory_follows","the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added",null,null,false,"code"],
   ["people.index.evidence_names_cited_line","the evidence names the cited line held by each record (lines: {a, b})",null,null,false,"code"],
