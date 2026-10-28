@@ -120,7 +120,7 @@ function parse(ctx) {
   const why = {};
   if (n.why) why.number = n.why;
   if (!terminated) why.status_as_written = localize("court-doctypes.courtlistener.the_docket_page_states_no", "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none");
-  why.docket_number_core = "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given";
+  why.docket_number_core = localize("court-doctypes.courtlistener.docket_number_core", "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given");
   proceeding.why = why;
 
   const parties = [];
