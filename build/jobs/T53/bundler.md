@@ -1,6 +1,6 @@
 # bundler (T53)
 
-**Status** · session_018BhcecEeYk8AL3QJSwTuwv · depth 2 · WORKING
+**Status** · session_018BhcecEeYk8AL3QJSwTuwv · depth 2 · WAITING: T53-523: combined tree 171/173; R35 and R36 stay red until reader-container's image digest is recorded (marker null, wrangler 64 zeros); asked BOB
 **Sessions** · 1
 
 ## Completion (2026-10-27)
