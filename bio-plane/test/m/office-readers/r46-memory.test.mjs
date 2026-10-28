@@ -101,11 +101,16 @@ const R46_RECIPE = (rows) => ({ kind: "xlsx", seed: "r46-shape", size: { rows, c
 /* the declared text of a workbook: its worksheets' uncompressed sizes, from the central directory */
 function declaredSheetBytes(bytes) {
   const buf = Buffer.from(bytes);
+  /* the generator writes zip64: the directory's offset and any size of 0xFFFFFFFF are in the zip64 records */
+  const z64 = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x06, 0x06]));
   const eocd = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
-  let off = buf.readUInt32LE(eocd + 16), total = 0;
+  let off = z64 >= 0 ? Number(buf.readBigUInt64LE(z64 + 48)) : buf.readUInt32LE(eocd + 16), total = 0;
   while (off + 46 <= buf.length && buf.readUInt32LE(off) === 0x02014b50) {
     const nl = buf.readUInt16LE(off + 28), xl = buf.readUInt16LE(off + 30), cl = buf.readUInt16LE(off + 32);
-    if (buf.toString("utf8", off + 46, off + 46 + nl).startsWith("xl/worksheets/")) total += buf.readUInt32LE(off + 24);
+    const name = buf.toString("utf8", off + 46, off + 46 + nl);
+    let size = buf.readUInt32LE(off + 24);
+    if (size === 0xffffffff) size = Number(buf.readBigUInt64LE(off + 46 + nl + 4));
+    if (name.startsWith("xl/worksheets/")) total += size;
     off += 46 + nl + xl + cl;
   }
   return total;
