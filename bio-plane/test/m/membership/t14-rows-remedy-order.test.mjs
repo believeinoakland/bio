@@ -4,6 +4,7 @@
    to `project-roster`, its R3, T38). At the interface only. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V } from "./fixture.mjs";
 import { notAnAdmin, notAParticipant, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
@@ -20,7 +21,7 @@ test("R87 notAParticipant: {ok, reason, code, check, translation, project, detai
   const r = notAParticipant("PROJ-P", "ann");
   assert.deepEqual(r, { ok: false, reason: "NOT_A_PARTICIPANT", code: "NOT_A_PARTICIPANT", check: "C-56.3",
                         translation: row.translation, project: "PROJ-P", detail: r.detail });
-  assert.match(r.detail, /Nothing was changed\.$/);
+  assert.equal(r.detail, word("membership.index.not_a_participant_detail"));
   /* One sentence for every caller and every project; the id as asked, null when none. */
   assert.equal(notAParticipant("PROJ-Q", "bob").detail, r.detail);
   for (const id of [null, undefined]) assert.equal(notAParticipant(id, "ann").project, null);
