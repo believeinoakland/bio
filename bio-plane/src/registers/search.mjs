@@ -3,7 +3,7 @@
  * Methods installed on `Registers`. */
 import { sha256HexSync } from "../record-grammar/index.mjs";
 import { matches, filterFingerprint } from "../register-readers/index.mjs";
-import { isObj, str, json, parse, refusal, WORDS } from "./core.mjs";
+import { isObj, str, json, parse, refusal } from "./core.mjs";
 import { decodeAfter } from "./port.mjs";
 import { localize } from "../setup-words/index.mjs";
 import { reducedParser, csvField } from "./reduced.mjs";
@@ -41,10 +41,10 @@ export const searchMethods = {
     let targets;
     if (sc.import !== undefined && sc.import !== null) {
       importRow = this.importSeen(sc.import, viewer);
-      if (!importRow) return refusal("NO_SUCH_REGISTER_IMPORT", WORDS("NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
+      if (!importRow) return refusal("NO_SUCH_REGISTER_IMPORT", localize("registers.refusal.NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
       targets = [importRow.register];
     } else if (sc.register !== undefined && sc.register !== null) {
-      if (!this.definitionOf(sc.register)) return refusal("NO_SUCH_REGISTER", WORDS("NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof sc.register === "string" ? sc.register : null });
+      if (!this.definitionOf(sc.register)) return refusal("NO_SUCH_REGISTER", localize("registers.refusal.NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof sc.register === "string" ? sc.register : null });
       targets = [str(sc.register)];
     } else targets = [...this.shipped().map((r) => r.key), ...this.ownLatest().map((o) => o.key)];
     const raw = {};
@@ -65,21 +65,21 @@ export const searchMethods = {
     if (!filters.length) return firstRefusal ?? { ok: true, rows: [], matched: 0, capped: false, imports: [], no_import_held: true };
     if (firstRefusal && (sc.register || sc.import)) return firstRefusal;
     const n = limit === undefined || limit === null ? this.bounds.SEARCH_LIMIT_DEFAULT : limit;
-    if (!Number.isInteger(n) || n < 1 || n > this.bounds.SEARCH_LIMIT_MAX) return refusal("SEARCH_BAD_LIMIT", WORDS("SEARCH_BAD_LIMIT", "a search returns 1 to {max} rows at a time", { max: String(this.bounds.SEARCH_LIMIT_MAX) }), {});
+    if (!Number.isInteger(n) || n < 1 || n > this.bounds.SEARCH_LIMIT_MAX) return refusal("SEARCH_BAD_LIMIT", localize("registers.refusal.SEARCH_BAD_LIMIT", "a search returns 1 to {max} rows at a time", { max: String(this.bounds.SEARCH_LIMIT_MAX) }), {});
     const budget = budget_ms === undefined || budget_ms === null ? this.bounds.SEARCH_BUDGET_DEFAULT : budget_ms;
-    if (!Number.isFinite(budget) || budget < 1 || budget > this.bounds.SEARCH_BUDGET_MAX) return refusal("SEARCH_BAD_BUDGET", WORDS("SEARCH_BAD_BUDGET", "a search may take at most {max} ms", { max: String(this.bounds.SEARCH_BUDGET_MAX) }), {});
+    if (!Number.isFinite(budget) || budget < 1 || budget > this.bounds.SEARCH_BUDGET_MAX) return refusal("SEARCH_BAD_BUDGET", localize("registers.refusal.SEARCH_BAD_BUDGET", "a search may take at most {max} ms", { max: String(this.bounds.SEARCH_BUDGET_MAX) }), {});
     let cursor = { c: null, n: 0 };
     if (after !== undefined && after !== null && after !== "") {
       const u = unb64(after);
-      if (!isObj(u) || !Number.isInteger(u.n) || u.n < 0 || (u.c !== null && !decodeAfter(u.c))) return refusal("BAD_CURSOR", WORDS("BAD_CURSOR", "that page marker is not one this search gave"), {});
+      if (!isObj(u) || !Number.isInteger(u.n) || u.n < 0 || (u.c !== null && !decodeAfter(u.c))) return refusal("BAD_CURSOR", localize("registers.refusal.BAD_CURSOR", "that page marker is not one this search gave"), {});
       cursor = u;
     }
     /* R27: a register with a data-use limit is searched only by a criterion, and pages to a cap */
     const limited = filters.filter((f) => this.useLimitOf(f.def));
-    if (limited.length && filters.some((f) => this.useLimitOf(f.def) && !Object.keys(f.filter).length)) return refusal("NO_CRITERIA", WORDS("NO_CRITERIA", "this register is searched by a name, a number, an amount or a date, never listed whole"), {});
+    if (limited.length && filters.some((f) => this.useLimitOf(f.def) && !Object.keys(f.filter).length)) return refusal("NO_CRITERIA", localize("registers.refusal.NO_CRITERIA", "this register is searched by a name, a number, an amount or a date, never listed whole"), {});
     let allowed = n;
     if (limited.length) {
-      if (cursor.n >= this.bounds.RESULT_CAP) return refusal("RESULT_CAP", WORDS("RESULT_CAP", "a search of this register shows at most {max} rows; narrow it", { max: String(this.bounds.RESULT_CAP) }), {});
+      if (cursor.n >= this.bounds.RESULT_CAP) return refusal("RESULT_CAP", localize("registers.refusal.RESULT_CAP", "a search of this register shows at most {max} rows; narrow it", { max: String(this.bounds.RESULT_CAP) }), {});
       allowed = Math.min(n, this.bounds.RESULT_CAP - cursor.n);
     }
     const scopes = this.scopesOf(viewer);
@@ -142,7 +142,7 @@ export const searchMethods = {
 
   rowOf({ import: id, row_key, src_row, viewer } = {}) {
     const got = this.rowIn(id, { row_key, src_row }, viewer);
-    if (!got || !got.m) return refusal("NO_SUCH_REGISTER_ROW", WORDS("NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
+    if (!got || !got.m) return refusal("NO_SUCH_REGISTER_ROW", localize("registers.refusal.NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
     const { imp, def, m, cells } = got;
     const seg = this.one(`SELECT * FROM register_segments WHERE import_id=? AND piece=? AND n=?`, imp.import_id, m.piece, m.seg_n);
     const red = parse(imp.reduction) || {};
@@ -163,11 +163,11 @@ export const searchMethods = {
 
   citeRow({ import: id, row_key, author, viewer } = {}) {
     const by = str(author);
-    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_CITE_ROW", WORDS("MACHINE_CANNOT_CITE_ROW", "citing a row is a member's act"), {});
+    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_CITE_ROW", localize("registers.refusal.MACHINE_CANNOT_CITE_ROW", "citing a row is a member's act"), {});
     const got = this.rowIn(id, { row_key }, viewer ?? by);
-    if (!got) return refusal("NO_SUCH_REGISTER_ROW", WORDS("NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
-    if (got.removed) return refusal("ROW_REMOVED", WORDS("ROW_REMOVED", "this row was removed and is not cited"), {});
-    if (!got.m) return refusal("NO_SUCH_REGISTER_ROW", WORDS("NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
+    if (!got) return refusal("NO_SUCH_REGISTER_ROW", localize("registers.refusal.NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
+    if (got.removed) return refusal("ROW_REMOVED", localize("registers.refusal.ROW_REMOVED", "this row was removed and is not cited"), {});
+    if (!got.m) return refusal("NO_SUCH_REGISTER_ROW", localize("registers.refusal.NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
     const { imp, def, m, cells } = got;
     const seg = this.one(`SELECT * FROM register_segments WHERE import_id=? AND piece=? AND n=?`, imp.import_id, m.piece, m.seg_n);
     const red = parse(imp.reduction) || {};
@@ -179,12 +179,12 @@ export const searchMethods = {
     const held = this.one(`SELECT content_id FROM register_cites WHERE register=? AND row_key=? AND content_hash=? AND import_id=?`, imp.register, m.row_key, m.content_hash, imp.import_id);
     if (held) return { ok: true, existed: true, content_id: held.content_id, extract };
     if (!seg.bundle_id || !this.content || typeof this.content.contentMint !== "function")
-      return refusal("SEGMENT_NOT_FILED", WORDS("SEGMENT_NOT_FILED", "this segment is not filed as a document yet, so a row of it cannot be cited"), {});
+      return refusal("SEGMENT_NOT_FILED", localize("registers.refusal.SEGMENT_NOT_FILED", "this segment is not filed as a document yet, so a row of it cannot be cited"), {});
     const n = m.row_no + 2;
     const cols = this.kept(def).length + 1;
     const colName = (i) => { let s = ""; for (let x = i; x > 0; x = Math.floor((x - 1) / 26)) s = String.fromCharCode(65 + ((x - 1) % 26)) + s; return s; };
     const minted = this.content.contentMint({ bundleId: seg.bundle_id, extent: { kind: "sheet-range", sheet: file, range: `A${n}:${colName(cols)}${n}` }, mintedBy: by, viewer: viewer ?? by });
-    if (!minted || minted.ok === false) return refusal(minted?.reason || "CITE_REFUSED", minted?.detail || WORDS("CITE_REFUSED", "the row could not be cited"), {});
+    if (!minted || minted.ok === false) return refusal(minted?.reason || "CITE_REFUSED", minted?.detail || localize("registers.refusal.CITE_REFUSED", "the row could not be cited"), {});
     const contentId = minted.content_id ?? minted.id;
     this.sql.exec(`INSERT OR IGNORE INTO register_cites (register, row_key, content_hash, import_id, content_id, project, by, at) VALUES (?,?,?,?,?,?,?,?)`, imp.register, m.row_key, m.content_hash, imp.import_id, contentId, imp.project, by, this.nowIso());
     const lim = this.useLimitOf(def);
@@ -205,8 +205,8 @@ export const searchMethods = {
 
   compare({ import_a, import_b, viewer, limit, after, budget_ms } = {}) {
     const a = this.importSeen(import_a, viewer), b = this.importSeen(import_b, viewer);
-    if (!a || !b) return refusal("NO_SUCH_REGISTER_IMPORT", WORDS("NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
-    if (a.register !== b.register) return refusal("COMPARE_REFUSED", WORDS("COMPARE_REFUSED", "two imports are compared only when they are of one register"), {});
+    if (!a || !b) return refusal("NO_SUCH_REGISTER_IMPORT", localize("registers.refusal.NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
+    if (a.register !== b.register) return refusal("COMPARE_REFUSED", localize("registers.refusal.COMPARE_REFUSED", "two imports are compared only when they are of one register"), {});
     const def = this.definitionOf(a.register)?.definition;
     const [early, late] = a.import_id <= b.import_id ? [a, b] : [b, a];
     const sameFilter = early.filter_fp === late.filter_fp;
@@ -216,9 +216,9 @@ export const searchMethods = {
     const q = (sql, ...args) => this.rows(sql, ...args);
     const counts = this.diffCounts(E, Lt);
     const n = limit === undefined || limit === null ? this.bounds.COMPARE_PAGE_MAX : limit;
-    if (!Number.isInteger(n) || n < 1 || n > this.bounds.COMPARE_PAGE_MAX) return refusal("SEARCH_BAD_LIMIT", WORDS("SEARCH_BAD_LIMIT", "a search returns 1 to {max} rows at a time", { max: String(this.bounds.COMPARE_PAGE_MAX) }), {});
+    if (!Number.isInteger(n) || n < 1 || n > this.bounds.COMPARE_PAGE_MAX) return refusal("SEARCH_BAD_LIMIT", localize("registers.refusal.SEARCH_BAD_LIMIT", "a search returns 1 to {max} rows at a time", { max: String(this.bounds.COMPARE_PAGE_MAX) }), {});
     const cur = after ? unb64(after) : null;
-    if (after && (!isObj(cur) || typeof cur.k !== "string" || !["added", "changed", "removed"].includes(cur.kind))) return refusal("BAD_CURSOR", WORDS("BAD_CURSOR", "that page marker is not one this search gave"), {});
+    if (after && (!isObj(cur) || typeof cur.k !== "string" || !["added", "changed", "removed"].includes(cur.kind))) return refusal("BAD_CURSOR", localize("registers.refusal.BAD_CURSOR", "that page marker is not one this search gave"), {});
     const kinds = ["added", "changed", "removed"];
     const items = [];
     let next = null;
@@ -263,17 +263,17 @@ export const searchMethods = {
   async rowExpunge({ register, row_key, ground, reason, order, demandKind, author } = {}) {
     const by = str(author);
     const member = this.memberOf(by);
-    if (!member) return refusal("MACHINE_CANNOT_EXPUNGE_ROW", WORDS("MACHINE_CANNOT_EXPUNGE_ROW", "removing a row is a member's act"), {});
-    if (!this.membership.isAdministrator(member)) return refusal("NOT_AN_ADMIN", WORDS("NOT_AN_ADMIN", "this is an administrator's act"), {});
-    if (!str(reason)) return refusal("ROW_EXPUNGE_NO_REASON", WORDS("ROW_EXPUNGE_NO_REASON", "removing a row states its reason"), {});
+    if (!member) return refusal("MACHINE_CANNOT_EXPUNGE_ROW", localize("registers.refusal.MACHINE_CANNOT_EXPUNGE_ROW", "removing a row is a member's act"), {});
+    if (!this.membership.isAdministrator(member)) return refusal("NOT_AN_ADMIN", localize("registers.refusal.NOT_AN_ADMIN", "this is an administrator's act"), {});
+    if (!str(reason)) return refusal("ROW_EXPUNGE_NO_REASON", localize("registers.refusal.ROW_EXPUNGE_NO_REASON", "removing a row states its reason"), {});
     if (!["unlawful", "confidential", "court_order", "lawful_demand"].includes(ground) || (ground === "court_order" && !str(order)))
-      return refusal("EXPUNGE_GROUND_REFUSED", WORDS("EXPUNGE_GROUND_REFUSED", "a row is removed only as unlawful to hold, confidential, under a recorded court order or under a lawful demand the jurisdiction lists"), {});
+      return refusal("EXPUNGE_GROUND_REFUSED", localize("registers.refusal.EXPUNGE_GROUND_REFUSED", "a row is removed only as unlawful to hold, confidential, under a recorded court order or under a lawful demand the jurisdiction lists"), {});
     if (ground === "lawful_demand") {
       const kinds = (Array.isArray(this.view().lawful_demands) ? this.view().lawful_demands : []).map((d) => d && d.kind).filter((k) => typeof k === "string" && k);
-      if (!kinds.includes(demandKind)) return refusal("DEMAND_KIND_UNLISTED", WORDS("DEMAND_KIND_UNLISTED", "the active jurisdiction profiles list no lawful demand of that kind"), { demand_kinds: kinds });
+      if (!kinds.includes(demandKind)) return refusal("DEMAND_KIND_UNLISTED", localize("registers.refusal.DEMAND_KIND_UNLISTED", "the active jurisdiction profiles list no lawful demand of that kind"), { demand_kinds: kinds });
     }
     const reg = str(register), key = typeof row_key === "string" ? row_key : "";
-    if (!this.definitionOf(reg) || !key) return refusal("NO_SUCH_REGISTER_ROW", WORDS("NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
+    if (!this.definitionOf(reg) || !key) return refusal("NO_SUCH_REGISTER_ROW", localize("registers.refusal.NO_SUCH_REGISTER_ROW", "no row answers to that key in this import here"), {});
     /* where the row stands, before it goes */
     const places = this.rows(`SELECT m.import_id, m.piece, m.seg_n, m.row_no FROM register_import_rows m JOIN register_imports i ON i.import_id=m.import_id WHERE i.register=? AND m.row_key=?`, reg, key);
     const shas = new Map();
@@ -292,7 +292,7 @@ export const searchMethods = {
     });
     if (!done || done.ok === false) {
       const code = done && done.reason === "EXPUNGE_NOTHING" ? "NO_SUCH_REGISTER_ROW" : done && done.reason === "EXPUNGE_GROUND_UNKNOWN" ? "EXPUNGE_GROUND_REFUSED" : (done && done.reason) || "EXPUNGE_REFUSED";
-      return refusal(code, WORDS(code, "the row was not removed"), {});
+      return refusal(code, localize("registers.refusal.row_not_removed", "the row was not removed"), {});
     }
     /* each segment that held the row is replaced by the segment minus the row (a new digest), the old object purged (R30) */
     const rewritten = [];

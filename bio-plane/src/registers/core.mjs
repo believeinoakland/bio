@@ -20,8 +20,6 @@ export const parse = (s) => { try { return JSON.parse(s); } catch { return null;
 export const refusal = (code, detail, extra = {}) => ({ ok: false, reason: code, code, detail, ...extra });
 export const NOT_STATED = Object.freeze({ value: null, basis: "not_stated" });
 
-/** The words of the module's refusals, by key (R39): the sentence is written once, at its use. */
-export const WORDS = (code, en, vars = {}) => localize(`registers.refusal.${code}`, en, vars);
 
 export const SCOPE_TEAM = "team";
 export const scopeKeyOf = (scope, project) => (scope === "project" ? `project:${project}` : SCOPE_TEAM);
@@ -165,11 +163,11 @@ export class Registers {
   /** R3-R5: why an act on a register is refused before anything is fetched, or null. */
   actRefusal(definition, { forRead = false } = {}) {
     if (definition.phase === "beta" && this.phase !== "beta" && !forRead)
-      return refusal("REGISTER_NOT_IN_ALPHA", WORDS("REGISTER_NOT_IN_ALPHA", "this register is not part of this release"), { register: definition.key, reason_key: `register.beta.${definition.key}` });
+      return refusal("REGISTER_NOT_IN_ALPHA", localize("registers.refusal.REGISTER_NOT_IN_ALPHA", "this register is not part of this release"), { register: definition.key, reason_key: `register.beta.${definition.key}` });
     if (definition.status === "not_measured")
-      return refusal("REGISTER_NOT_MEASURED", WORDS("REGISTER_NOT_MEASURED", "this register has not been measured, so it cannot be imported yet; your team can bring it in with its own definition"), { register: definition.key });
+      return refusal("REGISTER_NOT_MEASURED", localize("registers.refusal.REGISTER_NOT_MEASURED", "this register has not been measured, so it cannot be imported yet; your team can bring it in with its own definition"), { register: definition.key });
     if (definition.gate && definition.gate !== "none")
-      return refusal("member_act_required", WORDS("member_act_required", "this register is behind an account or a fee, so a member brings the file in with their own account; nothing was fetched"), { register: definition.key, gate: definition.gate });
+      return refusal("member_act_required", localize("registers.refusal.member_act_required", "this register is behind an account or a fee, so a member brings the file in with their own account; nothing was fetched"), { register: definition.key, gate: definition.gate });
     return null;
   }
 
@@ -225,18 +223,18 @@ export class Registers {
     const by = str(author);
     if (withdraw === true) {
       const p = this.one(`SELECT * FROM register_proposals WHERE proposal_id=?`, Number(id));
-      if (!p) return refusal("NO_SUCH_PROPOSAL", WORDS("NO_SUCH_PROPOSAL", "no proposal answers to that id"), {});
-      if (p.by !== by && !this.isAdmin(by)) return refusal("NOT_YOUR_PROPOSAL", WORDS("NOT_YOUR_PROPOSAL", "only the member who proposed it, or an administrator, withdraws a proposal"), {});
+      if (!p) return refusal("NO_SUCH_PROPOSAL", localize("registers.refusal.NO_SUCH_PROPOSAL", "no proposal answers to that id"), {});
+      if (p.by !== by && !this.isAdmin(by)) return refusal("NOT_YOUR_PROPOSAL", localize("registers.refusal.NOT_YOUR_PROPOSAL", "only the member who proposed it, or an administrator, withdraws a proposal"), {});
       this.sql.exec(`UPDATE register_proposals SET state='withdrawn' WHERE proposal_id=?`, p.proposal_id);
       return { ok: true, id: p.proposal_id, state: "withdrawn" };
     }
-    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_PROPOSE", WORDS("MACHINE_CANNOT_PROPOSE", "a register is proposed by a member; a machine proposes nothing"), {});
+    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_PROPOSE", localize("registers.refusal.MACHINE_CANNOT_PROPOSE", "a register is proposed by a member; a machine proposes nothing"), {});
     for (const [field, v] of [["name", name], ["url", url], ["publisher", publisher]]) {
       const t = str(v);
-      if (!t || t.length > this.bounds.PROPOSAL_TEXT_MAX) return refusal("PROPOSAL_INVALID", WORDS("PROPOSAL_INVALID", "the proposal's {field} is blank or too long", { field }), { field });
+      if (!t || t.length > this.bounds.PROPOSAL_TEXT_MAX) return refusal("PROPOSAL_INVALID", localize("registers.refusal.PROPOSAL_INVALID", "the proposal's {field} is blank or too long", { field }), { field });
     }
     const u = str(url);
-    if (!this.publicUrl(u)) return refusal("PROPOSAL_NOT_PUBLIC", WORDS("PROPOSAL_NOT_PUBLIC", "the address is not a public https address (not a login page, a private address or one with credentials); it was not fetched"), { field: "url" });
+    if (!this.publicUrl(u)) return refusal("PROPOSAL_NOT_PUBLIC", localize("registers.refusal.PROPOSAL_NOT_PUBLIC", "the address is not a public https address (not a login page, a private address or one with credentials); it was not fetched"), { field: "url" });
     const norm = this.normUrl(u);
     const held = this.one(`SELECT * FROM register_proposals WHERE url_norm=? AND state='proposed'`, norm);
     if (held) return { ok: true, existed: true, proposal: this.proposalOf(held) };
@@ -258,7 +256,7 @@ export class Registers {
 
   /** R6: the held proposals, as data for an administrator to send on by their own act; this module sends nothing. */
   proposalsForUpstream({ viewer } = {}) {
-    if (!this.isAdmin(viewer)) return refusal("NOT_AN_ADMIN", WORDS("NOT_AN_ADMIN", "this is an administrator's act"), {});
+    if (!this.isAdmin(viewer)) return refusal("NOT_AN_ADMIN", localize("registers.refusal.NOT_AN_ADMIN", "this is an administrator's act"), {});
     return { ok: true, proposals: this.rows(`SELECT * FROM register_proposals WHERE state='proposed' ORDER BY proposal_id`).map((p) => this.proposalOf(p)) };
   }
 
@@ -266,20 +264,20 @@ export class Registers {
 
   registerDefine({ proposal, key, definition, author } = {}) {
     const by = str(author);
-    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_DEFINE", WORDS("MACHINE_CANNOT_DEFINE", "a register is defined by a member; a machine defines nothing"), {});
-    if (!isObj(definition)) return refusal("REGISTER_INVALID", WORDS("REGISTER_INVALID", "the definition is not a register definition"), { field: "definition" });
+    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_DEFINE", localize("registers.refusal.MACHINE_CANNOT_DEFINE", "a register is defined by a member; a machine defines nothing"), {});
+    if (!isObj(definition)) return refusal("REGISTER_INVALID", localize("registers.refusal.REGISTER_INVALID", "the definition is not a register definition"), { field: "definition" });
     const view = this.view();
     const systems = (Array.isArray(view.systems) ? view.systems : []).find((s) => isObj(s) && s.origin === definition.system);
-    if (definition.gate === "people_search") return refusal("REGISTER_PEOPLE_SEARCH", WORDS("REGISTER_PEOPLE_SEARCH", "a paid people-search is not a register this product reaches"), { field: "gate", register: definition.key ?? null });
-    if (systems && systems.gated && systems.gated !== "none") return refusal("member_act_required", WORDS("member_act_required", "this register is behind an account or a fee, so a member brings the file in with their own account; nothing was fetched"), { gate: systems.gated, register: definition.key ?? null });
+    if (definition.gate === "people_search") return refusal("REGISTER_PEOPLE_SEARCH", localize("registers.refusal.REGISTER_PEOPLE_SEARCH", "a paid people-search is not a register this product reaches"), { field: "gate", register: definition.key ?? null });
+    if (systems && systems.gated && systems.gated !== "none") return refusal("member_act_required", localize("registers.refusal.member_act_required", "this register is behind an account or a fee, so a member brings the file in with their own account; nothing was fetched"), { gate: systems.gated, register: definition.key ?? null });
     const v = validateRegisterDefinition(definition, view);
-    if (!v.ok) return refusal(v.code, WORDS(v.code, "the definition is refused ({code}, {field})", { code: String(v.code), field: String(v.field ?? "") }), { field: v.field ?? null, register: v.key ?? null });
+    if (!v.ok) return refusal(v.code, localize("registers.refusal.definition_refused", "the definition is refused ({code}, {field})", { code: String(v.code), field: String(v.field ?? "") }), { field: v.field ?? null, register: v.key ?? null });
     const k = str(definition.key) || str(key);
-    if (!/^[a-z0-9][a-z0-9_]{0,63}$/.test(k)) return refusal("REGISTER_INVALID", WORDS("REGISTER_INVALID", "the definition is not a register definition"), { field: "key" });
-    if (this.shipped().some((r) => r.key === k)) return refusal("REGISTER_KEY_TAKEN", WORDS("REGISTER_KEY_TAKEN", "that key names a register already on the list"), { field: "key" });
+    if (!/^[a-z0-9][a-z0-9_]{0,63}$/.test(k)) return refusal("REGISTER_INVALID", localize("registers.refusal.REGISTER_INVALID", "the definition is not a register definition"), { field: "key" });
+    if (this.shipped().some((r) => r.key === k)) return refusal("REGISTER_KEY_TAKEN", localize("registers.refusal.REGISTER_KEY_TAKEN", "that key names a register already on the list"), { field: "key" });
     const terms = str(definition.terms_basis);
-    if (!terms) return refusal("REGISTER_NO_TERMS", WORDS("REGISTER_NO_TERMS", "a register's terms are stated in the member's own words"), { field: "terms_basis" });
-    if (str(definition.gate) && definition.gate !== "none") return refusal("member_act_required", WORDS("member_act_required", "this register is behind an account or a fee, so a member brings the file in with their own account; nothing was fetched"), { gate: definition.gate });
+    if (!terms) return refusal("REGISTER_NO_TERMS", localize("registers.refusal.REGISTER_NO_TERMS", "a register's terms are stated in the member's own words"), { field: "terms_basis" });
+    if (str(definition.gate) && definition.gate !== "none") return refusal("member_act_required", localize("registers.refusal.member_act_required", "this register is behind an account or a fee, so a member brings the file in with their own account; nothing was fetched"), { gate: definition.gate });
     const at = this.nowIso();
     const prior = this.one(`SELECT MAX(version) AS v FROM register_definitions WHERE key=?`, k);
     const version = (prior && prior.v ? prior.v : 0) + 1;
@@ -314,7 +312,7 @@ export class Registers {
 
   registerFilter({ register, project, viewer } = {}) {
     const d = this.definitionOf(register);
-    if (!d) return refusal("NO_SUCH_REGISTER", WORDS("NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
+    if (!d) return refusal("NO_SUCH_REGISTER", localize("registers.refusal.NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
     const bad = this.actRefusal(d.definition);
     if (bad) return bad;
     if (project === undefined || project === null || project === "") return { ok: true, filter: {}, prefilled: false, basis: [], left_out: [] };
@@ -331,14 +329,14 @@ export class Registers {
   /** The filter a member states, validated against the definition; `{ok, filter, fingerprint}` or the refusal. */
   checkFilter(definition, filter) {
     const v = validateFilter(isObj(filter) ? filter : {}, definition, this.view());
-    if (!v.ok) return refusal(v.code, WORDS(v.code, "the filter is refused ({code}, {field})", { code: String(v.code), field: String(v.field ?? "") }), { field: v.field ?? null });
+    if (!v.ok) return refusal(v.code, localize("registers.refusal.filter_refused", "the filter is refused ({code}, {field})", { code: String(v.code), field: String(v.field ?? "") }), { field: v.field ?? null });
     return { ok: true, filter: v.filter, fingerprint: filterFingerprint(v.filter) };
   }
 
   /* ---- R44: which register issues a number's scheme ---- */
 
   registerFor({ scheme, name } = {}) {
-    if (name !== undefined && name !== null) return refusal("QUERY_NOT_NAMED", WORDS("QUERY_NOT_NAMED", "a watch is by a number, never by a name"), {});
+    if (name !== undefined && name !== null) return refusal("QUERY_NOT_NAMED", localize("registers.refusal.QUERY_NOT_NAMED", "a watch is by a number, never by a name"), {});
     const s = str(scheme);
     const regs = this.shipped().filter((r) => Array.isArray(r.schemes) && r.schemes.includes(s)).map((r) => r.key);
     return { ok: true, scheme: s, registers: regs };

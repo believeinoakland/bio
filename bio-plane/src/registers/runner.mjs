@@ -9,7 +9,7 @@ import { sha256HexSync, createSha256, MACHINE_AUTHOR_PREFIX } from "../record-gr
 import { ROW_KEY_SEPARATOR, filterFingerprint, matches, estimate, autoWatchable, createReducer } from "../register-readers/index.mjs";
 import { noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { contentHashOf } from "./port.mjs";
-import { isObj, str, json, parse, refusal, WORDS, scopeKeyOf, NOT_STATED, SCOPE_TEAM } from "./core.mjs";
+import { isObj, str, json, parse, refusal, scopeKeyOf, NOT_STATED, SCOPE_TEAM } from "./core.mjs";
 import { localize } from "../setup-words/index.mjs";
 import { reducedParser } from "./reduced.mjs";
 
@@ -41,7 +41,7 @@ export const runnerMethods = {
 
   async registerDelta({ register, filter, scope, project, budget_ms, viewer, holes } = {}) {
     const d = this.definitionOf(register);
-    if (!d) return refusal("NO_SUCH_REGISTER", WORDS("NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
+    if (!d) return refusal("NO_SUCH_REGISTER", localize("registers.refusal.NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
     const bad = this.actRefusal(d.definition);
     if (bad) return bad;
     const checked = this.checkFilter(d.definition, filter);
@@ -67,7 +67,7 @@ export const runnerMethods = {
       let pr;
       try { pr = await this.acq.probeRegister(this.store, { definition: def, piece: p.key, filter: checked.filter, holes, budget_ms: left, view: this.view() }, { bounds: this.bounds }); }
       catch { pr = { ok: false }; }
-      if (!pr || pr.ok !== true) { if (pr && pr.ok === false && pr.reason && !["HOST_COOLING_OFF"].includes(pr.reason) && pr.reason !== "FETCH_FAILED") return refusal(pr.reason, pr.detail || WORDS(pr.reason, "the register could not be probed"), { register: def.key }); bytesAll = false; rowsAll = false; continue; }
+      if (!pr || pr.ok !== true) { if (pr && pr.ok === false && pr.reason && !["HOST_COOLING_OFF"].includes(pr.reason) && pr.reason !== "FETCH_FAILED") return refusal(pr.reason, pr.detail || localize("registers.refusal.probe_refused", "the register could not be probed"), { register: def.key }); bytesAll = false; rowsAll = false; continue; }
       probed++;
       if (pr.timed_out) timedOut = true;
       if (pr.bytes && pr.bytes.basis === "stated") bytesSum += pr.bytes.value; else bytesAll = false;
@@ -114,9 +114,9 @@ export const runnerMethods = {
 
   importStart({ register, filter, scope, project, author, viewer, holes, pieces, file, kind = "import", reason = null, on_behalf = null, interest = null, previous = null, force = false } = {}) {
     const by = str(author);
-    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_IMPORT_REGISTER", WORDS("MACHINE_CANNOT_IMPORT_REGISTER", "an import is a member's act; a machine starts none"), {});
+    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_IMPORT_REGISTER", localize("registers.refusal.MACHINE_CANNOT_IMPORT_REGISTER", "an import is a member's act; a machine starts none"), {});
     const d = this.definitionOf(register);
-    if (!d) return refusal("NO_SUCH_REGISTER", WORDS("NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
+    if (!d) return refusal("NO_SUCH_REGISTER", localize("registers.refusal.NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), { register: typeof register === "string" ? register : null });
     /* R46 (2): a file in a member's hand is the one way into a register behind an account or a fee, and the phase does not stop it */
     const bytes = file instanceof Uint8Array ? file : file && file.bytes instanceof Uint8Array ? file.bytes : null;
     const isFile = file !== undefined && file !== null;
@@ -125,8 +125,8 @@ export const runnerMethods = {
     const checked = this.checkFilter(d.definition, filter);
     if (!checked.ok) return checked;
     const sc = scope === "team" ? "team" : scope === "project" ? "project" : null;
-    if (!sc) return refusal("SCOPE_INVALID", WORDS("SCOPE_INVALID", "an import is for a project or for the team"), { field: "scope" });
-    if (sc === "team" && !this.isAdmin(by)) return refusal("NOT_AN_ADMIN", WORDS("NOT_AN_ADMIN", "this is an administrator's act"), {});
+    if (!sc) return refusal("SCOPE_INVALID", localize("registers.refusal.SCOPE_INVALID", "an import is for a project or for the team"), { field: "scope" });
+    if (sc === "team" && !this.isAdmin(by)) return refusal("NOT_AN_ADMIN", localize("registers.refusal.NOT_AN_ADMIN", "this is an administrator's act"), {});
     let proj = null;
     if (sc === "project") {
       proj = str(project);
@@ -137,10 +137,10 @@ export const runnerMethods = {
     const dup = this.one(`SELECT * FROM register_imports WHERE register=? AND filter_fp=? AND scope_key=? AND state IN ('queued','fetching','reading','paused') ORDER BY import_id LIMIT 1`, d.definition.key, checked.fingerprint, key);
     if (dup) return { ok: true, existed: true, import: dup.import_id, state: dup.state };
     const active = Number(this.one(`SELECT COUNT(*) AS n FROM register_imports WHERE state IN ('queued','fetching','reading')`).n);
-    if (active >= this.bounds.MAX_ACTIVE_IMPORTS) return refusal("IMPORT_QUEUE_FULL", WORDS("IMPORT_QUEUE_FULL", "{n} imports are already queued or running; start another when one has finished", { n: String(active) }), { active, max: this.bounds.MAX_ACTIVE_IMPORTS });
+    if (active >= this.bounds.MAX_ACTIVE_IMPORTS) return refusal("IMPORT_QUEUE_FULL", localize("registers.refusal.IMPORT_QUEUE_FULL", "{n} imports are already queued or running; start another when one has finished", { n: String(active) }), { active, max: this.bounds.MAX_ACTIVE_IMPORTS });
     if (isFile) return this.fileImport({ def: d.definition, checked, sc, proj, key, by, bytes, holes, pieces });
     const plist = this.dataPieces(d.definition, pieces).map((p) => ({ piece: p.key, state: "pending" }));
-    if (!plist.length) return refusal("PIECE_UNKNOWN", WORDS("PIECE_UNKNOWN", "the register has no piece of that name"), { register: d.definition.key });
+    if (!plist.length) return refusal("PIECE_UNKNOWN", localize("registers.refusal.PIECE_UNKNOWN", "the register has no piece of that name"), { register: d.definition.key });
     const id = this.insertImport({ register: d.definition.key, checked, sc, key, proj, kind, by, on_behalf, interest, previous, holes, pieces: plist, cursor: { slices: 0, force: force === true, reason }, state: "queued" });
     this.told(this.queuedListeners, { import: id, register: d.definition.key, kind });
     return { ok: true, existed: false, import: id, state: "queued" };
@@ -160,9 +160,9 @@ export const runnerMethods = {
 
   /** R46 (2): what a file in a member's hand may be brought into: not a register that is unmeasured or a person-search, and a file with bytes */
   fileRefusal(def, bytes) {
-    if (def.status === "not_measured") return refusal("REGISTER_NOT_MEASURED", WORDS("REGISTER_NOT_MEASURED", "this register has not been measured, so it cannot be imported yet; your team can bring it in with its own definition"), { register: def.key });
-    if (def.gate === "people_search") return refusal("REGISTER_PEOPLE_SEARCH", WORDS("REGISTER_PEOPLE_SEARCH", "a paid people-search is not a register this product reaches"), { register: def.key });
-    if (!bytes || !bytes.length) return refusal("FILE_EMPTY", WORDS("FILE_EMPTY", "the file has no bytes; nothing was brought in"), { field: "file" });
+    if (def.status === "not_measured") return refusal("REGISTER_NOT_MEASURED", localize("registers.refusal.REGISTER_NOT_MEASURED", "this register has not been measured, so it cannot be imported yet; your team can bring it in with its own definition"), { register: def.key });
+    if (def.gate === "people_search") return refusal("REGISTER_PEOPLE_SEARCH", localize("registers.refusal.REGISTER_PEOPLE_SEARCH", "a paid people-search is not a register this product reaches"), { register: def.key });
+    if (!bytes || !bytes.length) return refusal("FILE_EMPTY", localize("registers.refusal.FILE_EMPTY", "the file has no bytes; nothing was brought in"), { field: "file" });
     return null;
   },
 
@@ -175,7 +175,7 @@ export const runnerMethods = {
     const CH = 1 << 20;
     for (let i = 0; i < bytes.length; i += CH) { const o = reducer.write(bytes.subarray(i, i + CH)); if (o.length) out.push(o); }
     const end = reducer.end();
-    if (!end.ok) return refusal("REGISTER_NOT_READABLE", WORDS("REGISTER_NOT_READABLE", "the file cannot be read as this register's file ({why}); nothing was brought in", { why: String(end.why) }), { why: end.why });
+    if (!end.ok) return refusal("REGISTER_NOT_READABLE", localize("registers.refusal.REGISTER_NOT_READABLE", "the file cannot be read as this register's file ({why}); nothing was brought in", { why: String(end.why) }), { why: end.why });
     if (end.bytes.length) out.push(end.bytes);
     const all = new Uint8Array(out.reduce((n, c) => n + c.length, 0));
     let at = 0;
@@ -193,7 +193,7 @@ export const runnerMethods = {
     for (const l of body) { if (cur.length && size + l.length > max) close(); cur.push(l); size += l.length; }
     close();
     const ev = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
-    if (!ev) return refusal("EVIDENCE_STORAGE_NOT_CONFIGURED", WORDS("EVIDENCE_STORAGE_NOT_CONFIGURED", "your team's Civicsmith has no evidence storage configured, so nothing was brought in"), {});
+    if (!ev) return refusal("EVIDENCE_STORAGE_NOT_CONFIGURED", localize("registers.refusal.EVIDENCE_STORAGE_NOT_CONFIGURED", "your team's Civicsmith has no evidence storage configured, so nothing was brought in"), {});
     const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
     const made = [];
     for (const [n, rows] of segs.entries()) {
@@ -518,7 +518,7 @@ export const runnerMethods = {
 
   importStatus({ import: id, viewer } = {}) {
     const row = this.importSeen(id, viewer);
-    if (!row) return refusal("NO_SUCH_REGISTER_IMPORT", WORDS("NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
+    if (!row) return refusal("NO_SUCH_REGISTER_IMPORT", localize("registers.refusal.NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
     const pieces = (parse(row.pieces) || []).map((p) => ({ piece: p.piece, state: p.state === "pending" ? "pending" : p.state === "fetching" || p.state === "reading" ? "reading" : p.state === "failed" ? "failed" : "done",
       ...(p.address ? { address: p.address, retrieved_at: p.retrieved_at, source_date: p.source_date, original: p.original, segments: (p.segments || []).map((s) => ({ n: s.n, sha256: s.sha256, bytes: s.bytes, rows: s.rows, final: s.final, existed: !!s.existed })) } : {}) }));
     return { ok: true, import: row.import_id, register: row.register, scope: row.scope, ...(row.project ? { project: row.project } : {}), state: row.state, pieces, progress: this.progressOf(row),
@@ -530,29 +530,29 @@ export const runnerMethods = {
 
   importSet({ import: id, action, author, viewer } = {}) {
     const by = str(author);
-    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_SET_IMPORT", WORDS("MACHINE_CANNOT_SET_IMPORT", "pausing, resuming or stopping an import is a member's act"), {});
+    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_SET_IMPORT", localize("registers.refusal.MACHINE_CANNOT_SET_IMPORT", "pausing, resuming or stopping an import is a member's act"), {});
     const row = this.importSeen(id, viewer ?? by);
-    if (!row) return refusal("NO_SUCH_REGISTER_IMPORT", WORDS("NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
-    if (row.author !== by && !this.isAdmin(by)) return refusal("NOT_YOUR_IMPORT", WORDS("NOT_YOUR_IMPORT", "only the member who started an import, or an administrator, pauses, resumes or stops it"), {});
-    if (!["pause", "resume", "stop"].includes(action)) return refusal("IMPORT_ACTION_UNKNOWN", WORDS("IMPORT_ACTION_UNKNOWN", "an import is paused, resumed or stopped"), { field: "action" });
+    if (!row) return refusal("NO_SUCH_REGISTER_IMPORT", localize("registers.refusal.NO_SUCH_REGISTER_IMPORT", "no register import answers to that id here"), {});
+    if (row.author !== by && !this.isAdmin(by)) return refusal("NOT_YOUR_IMPORT", localize("registers.refusal.NOT_YOUR_IMPORT", "only the member who started an import, or an administrator, pauses, resumes or stops it"), {});
+    if (!["pause", "resume", "stop"].includes(action)) return refusal("IMPORT_ACTION_UNKNOWN", localize("registers.refusal.IMPORT_ACTION_UNKNOWN", "an import is paused, resumed or stopped"), { field: "action" });
     if (action === "stop") {
       if (row.state === "stopped") return { ok: true, existed: true, state: "stopped" };
-      if (["indexed", "failed"].includes(row.state)) return refusal("IMPORT_ENDED", WORDS("IMPORT_ENDED", "that import has already ended"), { state: row.state });
+      if (["indexed", "failed"].includes(row.state)) return refusal("IMPORT_ENDED", localize("registers.refusal.IMPORT_ENDED", "that import has already ended"), { state: row.state });
       this.sql.exec(`UPDATE register_imports SET state='stopped', finished_at=?, paused_reason=NULL WHERE import_id=?`, this.nowIso(), row.import_id);
       const rowsKept = Number(this.one(`SELECT COUNT(*) AS n FROM register_import_rows WHERE import_id=?`, row.import_id).n);
       return { ok: true, state: "stopped", kept: { rows: rowsKept, segments: Number(this.one(`SELECT COUNT(*) AS n FROM register_segments WHERE import_id=?`, row.import_id).n) } };
     }
-    if (row.state === "stopped") return refusal("IMPORT_STOPPED", WORDS("IMPORT_STOPPED", "a stopped import is not resumed; start a new one"), {});
+    if (row.state === "stopped") return refusal("IMPORT_STOPPED", localize("registers.refusal.IMPORT_STOPPED", "a stopped import is not resumed; start a new one"), {});
     if (action === "pause") {
       if (row.state === "paused") return { ok: true, existed: true, state: "paused" };
-      if (!ACTIVE.includes(row.state)) return refusal("IMPORT_ENDED", WORDS("IMPORT_ENDED", "that import has already ended"), { state: row.state });
+      if (!ACTIVE.includes(row.state)) return refusal("IMPORT_ENDED", localize("registers.refusal.IMPORT_ENDED", "that import has already ended"), { state: row.state });
       this.sql.exec(`UPDATE register_imports SET state='paused', paused_reason='member' WHERE import_id=?`, row.import_id);
       return { ok: true, state: "paused", reason: "member" };
     }
     if (row.state !== "paused") return { ok: true, existed: true, state: row.state };
     const s = this.shelf(parse(row.cursor)?.est_stored ?? 0);
     if (row.paused_reason === "shelf" && s.free_bytes !== null && s.would_use_pct >= this.bounds.SHELF_REFUSE_PCT)
-      return refusal("SHELF_NEARLY_FULL", WORDS("SHELF_NEARLY_FULL", "the object is nearly full ({pct}%), so the import is not resumed until room is made", { pct: String(s.would_use_pct) }), { shelf: s });
+      return refusal("SHELF_NEARLY_FULL", localize("registers.refusal.SHELF_NEARLY_FULL", "the object is nearly full ({pct}%), so the import is not resumed until room is made", { pct: String(s.would_use_pct) }), { shelf: s });
     const cur = parse(row.cursor) || {};
     this.sql.exec(`UPDATE register_imports SET state=?, paused_reason=NULL, due_ms=? WHERE import_id=?`, cur.ing ? "reading" : "fetching", this.nowMs(), row.import_id);
     return { ok: true, state: cur.ing ? "reading" : "fetching" };
