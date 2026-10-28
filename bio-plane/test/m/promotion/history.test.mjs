@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { runGate, recordChecks } from "../../../src/promotion/index.mjs";
 import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { STATE_MOVE_FENCED_SINCE } from "../../../src/promotion/history.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ID = "INFO-2026-0001-report";
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -52,7 +53,7 @@ test("R30: C-20.1 walks write order (seq): a mechanical promotion written last i
   /* The same image without seq is walked by key, which here cannot see the change, and says it walked by key. */
   const byKey = of(await all(image(promos, { noSeq: true })), "C-20.1");
   assert.deepEqual(byKey.map((f) => f.severity), ["info"]);
-  assert.match(byKey[0].message, /carries no write order/);
+  assert.equal(byKey[0].message, localize("promotion.history.manifest_no_write_order_audit", "the history manifest carries no write order (a seq on every entry), so mechanical promotions were audited in snap-key order, which is not a clock: \"prior\" may not be the snapshot written before (I-20)"));
   /* Inside the envelope: nothing. And the gate runs it (the catalogue no longer does). */
   const inside = [{ key: "z1", text: md() }, { key: "a1", text: md({ last_updated: '"2026-07-02T00:00:00Z"' }), writer: "mechanical", operation: "member-attest" }];
   assert.deepEqual(of(await all(image(inside)), "C-20.1"), []);
@@ -73,10 +74,10 @@ test("R30: C-17.2 classifies a pending package's divergence along write order (s
   const extra = { "PENDING_PROMOTION.json": pending, "data/c.json.pending": "c" };
   const w = of(await all(image(promos, { extra })), "C-17.2");
   assert.deepEqual(w.map((f) => f.severity), ["info"]);
-  assert.match(w[0].message, /disjoint-auto: base found in history at (before a1|after z1); intervening promotion\(s\) \[a1\]/);
+  assert.ok(["before a1", "after z1"].some((base) => w[0].message === localize("promotion.history.divergence_disjoint_auto", "divergence classified disjoint-auto: base found in history at {base}; intervening promotion(s) [{intervening}] touched {{touched}}, package touches {{package}}, sets disjoint; apply in sequence recording both bases", { base, intervening: "a1", touched: "bundle.md, data/b.json", package: "data/c.json" })), w[0].message);
   const k = of(await all(image(promos, { extra, noSeq: true })), "C-17.2");
   assert.deepEqual(k.map((f) => f.severity).sort(), ["info", "warn"]);
-  assert.ok(k.some((f) => /carries no write order/.test(f.message)));
+  assert.ok(k.some((f) => f.message === localize("promotion.history.manifest_no_write_order_divergence", "the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)")));
   /* Overlapping files are adjudicated in either order. */
   const overlap = { ...extra, "PENDING_PROMOTION.json": pending.replace("data/c.json", "data/b.json") };
   assert.match(of(await all(image(promos, { extra: overlap })), "C-17.2")[0].message, /adjudicated: overlapping substantive divergence on \{data\/b\.json\}/);
@@ -98,7 +99,7 @@ test("R32: an undeclared edge in the document's own state_history is an error, r
   const before = image([{ key: "k1", text: verified }, { key: "k2", text: back("2026-07-02T00:00:00Z"), created: "2026-07-02T00:00:00Z" }]);
   const got = await c42(before);
   assert.deepEqual(got.map((x) => x[0]), ["info"]);
-  assert.match(got[0][1], /made by a path the current rules do not allow .*\(promotion k2\)/);
+  assert.equal(got[0][1], localize("promotion.history.transition_earlier_rules", "transition {from} -> {to} is not a legal {type} edge: made by a path the current rules do not allow (at or before {fence}); the record's own history holds the same move (promotion {key}), dated by its writer {date}", { from: "verified", to: "collected", type: "information", fence, key: "k2", date: "2026-07-02T00:00:00Z" }));
   /* On the fence's own day is at the fence: still earlier rules. After it: an error. */
   const onFence = image([{ key: "k1", text: verified }, { key: "k2", text: back(`${fence}T09:00:00Z`), created: `${fence}T09:00:00Z` }]);
   assert.deepEqual((await c42(onFence)).map((x) => x[0]), ["info"]);
@@ -116,7 +117,7 @@ test("R32: an undeclared edge in the document's own state_history is an error, r
   assert.deepEqual(edges.map((x) => x[0]).sort(), ["error", "info"]);
   /* The document's history agreeing with where it stands, and the rest of C-4.2's arms. */
   assert.deepEqual(await c42({ "bundle.md": md() }), []);
-  assert.ok((await c42({ "bundle.md": md({ prior_state: "verified" }) })).some((x) => /state_history is empty/.test(x[1])));
+  assert.ok((await c42({ "bundle.md": md({ prior_state: "verified" }) })).some((x) => x[1] === localize("promotion.history.prior_state_but_history_empty", "prior_state is '{prior}' but state_history is empty (expected null)", { prior: "verified" })));
   assert.ok((await c42({ "bundle.md": md({ current_state: "verified", prior_state: "collected",
     state_history: `\n  - timestamp: "2026-07-02T00:00:00Z"\n    from_state: collected\n    to_state: verified` }) }))
     .some((x) => /missing 'blurb'/.test(x[1])));

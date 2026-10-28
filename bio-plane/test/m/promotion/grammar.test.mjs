@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { INFO2_GRAMMAR, checkInfo2Contract, promotionOf } from "../../../src/promotion/index.mjs";
 import { checkBundle, EXTENSION_ARMS, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { makeRecord, makeMembership, makePromotion } from "./fixtures.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ID = "INFO-2026-0001-report";
 const hex = (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -62,7 +63,7 @@ test("R55: C-18.6 — a registered capture's stored bytes must hash to the recor
   assert.deepEqual(await arm(image()), []);
   const bad = await arm(image({ stored: "other bytes" }));
   assert.deepEqual(bad.map((x) => [x.check, x.severity]), [["C-18.6", "error"]]);
-  assert.match(bad[0].message, /^provenance documents\[0\]: stored bytes hash .* but the register records .*silent content mutation fails the gate \(@2\)$/);
+  assert.equal(bad[0].message, localize("promotion.info2.stored_bytes_hash_differs", "provenance documents[{index}]: stored bytes hash {actual}… but the register records {registered}…; silent content mutation fails the gate (@2)", { index: 0, actual: hex("other bytes").slice(0, 12), registered: hex(CAP).slice(0, 12) }));
   assert.deepEqual([bad[0].repairable, bad[0].repairs.length], [true, 2]);
   /* base64 decodes before hashing; parts hash in order. */
   assert.deepEqual(await arm(image({ stored: Buffer.from(CAP).toString("base64"), encoding: "base64" })), []);
@@ -71,7 +72,7 @@ test("R55: C-18.6 — a registered capture's stored bytes must hash to the recor
   assert.deepEqual(await arm(split), []);
   assert.deepEqual((await arm({ ...split, "data/p2": "zzz" })).map((x) => x.check), ["C-18.6"]);
   const mixed = { ...image({ parts, encoding: "binary" }), "data/p1": CAP.slice(0, 5), "data/p2": new TextEncoder().encode(CAP.slice(5)) };
-  assert.match((await arm(mixed))[0].message, /could not be decoded for hash verification \(parts mix text and binary storage\)/);
+  assert.equal((await arm(mixed))[0].message, localize("promotion.info2.stored_content_could_not_be_decoded", "provenance documents[{index}]: stored content could not be decoded for hash verification ({reason}) (@2)", { index: 0, reason: "parts mix text and binary storage" }));
   /* Nothing to judge: not information@2, no register, an unreadable one, an unstated digest. */
   assert.deepEqual(await arm(image({ stored: "other", schema: "information@1" })), []);
   assert.deepEqual(await arm({ "bundle.md": md() }), []);

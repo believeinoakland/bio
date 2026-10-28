@@ -3,6 +3,7 @@
  * it in the arm's place and order, as the catalogue's `LEGACY_GRAMMARS` entry did. The catalogue's notes are kept. */
 
 import { b64ToBytes, createSha256 } from "../record-grammar/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* The catalogue's finding shape, `{check, severity, message, repairable?, repairs?}`. */
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairable: true, repairs } : {}) });
@@ -80,7 +81,7 @@ export async function checkInfo2Contract(ctx, findings) {
         hashable = storedToHashable(ctx.files.get(String(d.file)), cap.encoding);
       }
     } catch (err) {
-      findings.push(f('C-18.6', 'error', `provenance documents[${i}]: stored content could not be decoded for hash verification (${err && err.message}) (@2)`));
+      findings.push(f('C-18.6', 'error', localize("promotion.info2.stored_content_could_not_be_decoded", "provenance documents[{index}]: stored content could not be decoded for hash verification ({reason}) (@2)", { index: i, reason: String(err && err.message) })));
       continue;
     }
     if (actual === null) {
@@ -88,7 +89,7 @@ export async function checkInfo2Contract(ctx, findings) {
       actual = await ctx.sha256(hashable);
     }
     if (actual !== cap.sha256) {
-      findings.push(f('C-18.6', 'error', `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}… but the register records ${String(cap.sha256).slice(0, 12)}…; silent content mutation fails the gate (@2)`,
+      findings.push(f('C-18.6', 'error', localize("promotion.info2.stored_bytes_hash_differs", "provenance documents[{index}]: stored bytes hash {actual}… but the register records {registered}…; silent content mutation fails the gate (@2)", { index: i, actual: actual.slice(0, 12), registered: String(cap.sha256).slice(0, 12) }),
         ['restore the capture from history', 'correct the register only if the recorded hash was wrong at intake, with a Session Log entry']));
     }
   }

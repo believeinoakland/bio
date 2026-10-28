@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as P from "../../../src/promotion/index.mjs";
 import { makePromotion, doc, infoDoc, create, T0 } from "./fixtures.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const { projectNameKey, checkProjectNameUniqueness, withProducingGroup, MECHANICAL_FIELD_SETS,
         PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS } = P;
@@ -139,7 +140,7 @@ test("R8: MECHANICAL_FIELD_SETS is promotion's frozen registry of declared opera
   for (const op of ["invent", "toString", "__proto__", "", null]) {
     const r = p.promote({ ...create("INFO-2026-0099", infoDoc("INFO-2026-0099")), writer: "mechanical", operation: op });
     assert.equal(r.reason, "UNDECLARED_OPERATION", String(op));
-    assert.equal(r.detail, `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`);
+    assert.equal(r.detail, localize("promotion.index.mechanical_promotion_names_one_of", "a mechanical promotion names one of: {operations}", { operations: Object.keys(MECHANICAL_FIELD_SETS).join(", ") }));
   }
 });
 
@@ -162,7 +163,9 @@ test("R1, R4, R5, R7, R13, R15, R19, R20, R21, R33, R39, R40, R41, R47: the rows
       assert.equal(row.check, check, code);
       assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
       /* Each `where` names this module's site: its file, function and, inside a function that also writes, its region. */
-      assert.match(row.where, /^src\/(promotion\/index|gate)\.mjs [#A-Za-z]+( > [a-z-]+)?(, reached from op=promote)?$/, code);
+      const [site, ...via] = row.where.split(", ");
+      assert.match(site, /^src\/(promotion\/index|gate)\.mjs [#A-Za-z]+( > [a-z-]+)?$/, code);
+      assert.ok(via.length <= 1 && via.every((v) => v.endsWith("op=promote")), code);
     }
   }
   /* C-64.1's copy names the region of #promote that mints it. */

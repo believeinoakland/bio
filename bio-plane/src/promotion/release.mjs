@@ -10,6 +10,7 @@
 import { verifySshsig } from "../sshsig.mjs";
 import { canonicalJson, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { historyWriteOrder } from "./history.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** The exact message a release signature covers (design 5.1), canonical JSON so signer and verifier agree byte for byte. */
 export function releaseMessage(fields) {
@@ -136,7 +137,7 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
   const regAny = releaseRegistry || null;
   /* An unreadable registry refuses at EVERY schema: "cannot check" is never "passed". */
   if (regAny && regAny.unavailable) {
-    findings.push(finding("error", `the key registry is declared present but unreadable at this call site (${regAny.reason || "no reason given"}); the gate cannot check signatures and will not pass them`,
+    findings.push(finding("error", localize("promotion.release.registry_unreadable_here", "the key registry is declared present but unreadable at this call site ({reason}); the gate cannot check signatures and will not pass them", { reason: regAny.reason || "no reason given" }),
       ["restore access to the registry record", "do not promote until the registry reads"]));
     return findings;
   }
@@ -147,7 +148,7 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
     if (!migration) return findings;
     for (const e of history.filter((x) => x && x.from_state === "collected" && x.to_state === "verified"
                                          && x.timestamp && x.timestamp >= migration))
-      findings.push(finding("error", `release at ${e.timestamp} is at or after the migration instant ${migration}, but this record is ${fm.schema || "a pre-contract schema"}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
+      findings.push(finding("error", localize("promotion.release.cannot_carry_a_signature", "release at {at} is at or after the migration instant {migration}, but this record is {schema}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check", { at: e.timestamp, migration, schema: fm.schema || "a pre-contract schema" }),
         ["migrate the record to information@2, then sign the transition and add the releases[] entry",
          "or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed",
          "either way the repair is made where the record stands: C-4.2 refuses any transition that is not an edge in this machine"]));
@@ -160,7 +161,7 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
   const reg = regAny;
   const root = await verifyRegistryRoot(reg);
   if (!root.trusted) {
-    findings.push(finding("error", `the key registry does not prove itself (${root.reason}); it is treated as absent, so no principal in it resolves`,
+    findings.push(finding("error", localize("promotion.release.registry_does_not_prove_itself", "the key registry does not prove itself ({reason}); it is treated as absent, so no principal in it resolves", { reason: root.reason }),
       ["restore the registry root signature", "sign the registry with a pinned root key", "clear root.enforce_from only with a recorded reason"]));
     return findings;
   }
@@ -209,14 +210,14 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
       to_state: e.to_state, signer: rec.signer, bundle_md_sha256: await sha256(released.bytes),
       registry_sha256: rec.registry_sha256 || reg.sha256 }));
     if (message === null) {
-      findings.push(finding("error", `release at ${e.timestamp}: its release message holds a character the signer's one-byte encoding cannot carry, so no signature over it can be checked`,
+      findings.push(finding("error", localize("promotion.release.character_cannot_be_carried", "release at {at}: its release message holds a character the signer's one-byte encoding cannot carry, so no signature over it can be checked", { at: e.timestamp }),
         ["record the signer and the transition in Latin-1 characters"]));
       continue;
     }
     const v = await verifyFor({ armored: asText(armored), message, signersText: reg.signers, namespace,
                                 principal: rec.signer, at: e.timestamp });
     if (!v.ok)
-      findings.push(finding("error", `release at ${e.timestamp} does not verify (${v.reason}) for signer '${rec.signer}'`,
+      findings.push(finding("error", localize("promotion.release.does_not_verify", "release at {at} does not verify ({reason}) for signer '{signer}'", { at: e.timestamp, reason: v.reason, signer: rec.signer }),
         ["re-sign the transition over the exact released bundle.md", "confirm the signer key is registered and valid at the transition instant"]));
   }
   return findings;

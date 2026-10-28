@@ -702,3 +702,27 @@ test("R53: every bundle is committed with the project its document states, which
   /* What the commit is handed is exactly that: record-core is asked to record each. */
   assert.deepEqual(record.commitCalls.filter((c) => c.bundleId === pln).map((c) => c.project), [P1, "PROJ-2026-0002-other", null, null]);
 });
+
+test("R62 (JOURNEYS R-73): a question opened from a chain is committed with the project its document states, and its recorded title is the one its question derives, with no raw id or arrow", () => {
+  const { p, record } = makePromotion();
+  const proj = p.promote({ base: null, snapKey: "p", author: "member:ann", ownerMemberId: "ann", meta: {},
+    files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Sewer Fund", current_state: "forming", created: T0, last_updated: T0 }) }] });
+  assert.equal(proj.ok, true, JSON.stringify(proj));
+  const P1 = proj.bundleId;
+  const question = (id, project) => doc({ id, object_type: "inquiry", current_state: "open", created: T0, last_updated: T0, group: "test-group", project },
+    "\n## Question\n\nIs ENTITY_A a member of ENTITY_B?\n\n## Session Log\n");
+  const Q1 = "INQ-2026-0001", Q2 = "INQ-2026-0002";
+  /* The envelope's raw chain label is not obeyed: the record goes by the document's own question. */
+  const raw = p.promote(create(Q1, question(Q1, P1), { meta: { title: "ENT-2026-0004 -> member_of -> ENT-2026-0005" } }));
+  assert.deepEqual([raw.ok, raw.reason], [false, "ENVELOPE_TITLE_DISAGREES"]);
+  const r1 = p.promote(create(Q1, question(Q1, P1)));
+  assert.equal(r1.ok, true, JSON.stringify(r1));
+  assert.equal(record.bundleInfo(Q1).project, P1);
+  const title = record.head(Q1).title;
+  assert.equal(title, "Is ENTITY_A a member of ENTITY_B?");
+  assert.equal(/ENT-|->/.test(title), false);
+  /* Control: a question opened from no project is committed with none, so no project's pickers list it. */
+  assert.equal(p.promote(create(Q2, question(Q2, undefined))).ok, true);
+  assert.equal(record.bundleInfo(Q2).project, null);
+  assert.equal(record.commitCalls.filter((c) => c.bundleId === Q1).map((c) => c.project)[0], P1);
+});

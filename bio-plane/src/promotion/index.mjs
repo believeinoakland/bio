@@ -437,7 +437,7 @@ class Promotion {
     const operation = writer ? pkg.operation : null;
     if (writer && !(typeof operation === "string" && Object.prototype.hasOwnProperty.call(MECHANICAL_FIELD_SETS, operation)))
       return { ok: false, reason: "UNDECLARED_OPERATION",
-               detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`,
+               detail: localize("promotion.index.mechanical_promotion_names_one_of", "a mechanical promotion names one of: {operations}", { operations: Object.keys(MECHANICAL_FIELD_SETS).join(", ") }),
                got: operation ?? null };
     /* R7: references and basis legs are read from bundle.md, never the payload. */
     if (Array.isArray(pkg.refs) && pkg.refs.length)
@@ -486,19 +486,16 @@ class Promotion {
       /* DEC-49 REGION is-project-id-supplied */
       if (idSupplied)
         return refusal("PROJECT_ID_SUPPLIED",
-          "a new project's id is minted by the record and returned; send the creation with no bundleId. "
-          + "A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
+          localize("promotion.index.new_project_id_minted_by_record", "a new project's id is minted by the record and returned; send the creation with no bundleId. A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created."));
       /* END DEC-49 REGION is-project-id-supplied */
       projectMd = sentMd;
       /* DEC-49 REGION is-project-id-bytes */
       if (!sentFm)
         return refusal("PROJECT_DOCUMENT_UNREADABLE",
-          "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, "
-          + "because the record writes the minted id into it. Nothing was created.");
+          localize("promotion.index.new_project_document_unreadable", "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, because the record writes the minted id into it. Nothing was created."));
       if (has(sentFm, "id"))
         return refusal("PROJECT_ID_IN_BYTES",
-          "the new project's bundle.md already carries a top-level id: line. The record writes the id it mints; "
-          + "remove the line and send it again. Nothing was created.");
+          localize("promotion.index.new_project_document_has_id", "the new project's bundle.md already carries a top-level id: line. The record writes the id it mints; remove the line and send it again. Nothing was created."));
       /* END DEC-49 REGION is-project-id-bytes */
     }
     /* R7 */
@@ -1037,7 +1034,7 @@ class Promotion {
     /* DEC-49 REGION is-project-fork-id-supplied */
     if (newId !== undefined && newId !== null && newId !== "")
       return refusal("PROJECT_FORK_ID_SUPPLIED",
-        "a fork's id is minted by the record and returned as newId; send the fork with no newId. Nothing was forked.");
+        localize("promotion.index.fork_id_minted_by_record", "a fork's id is minted by the record and returned as newId; send the fork with no newId. Nothing was forked."));
     /* END DEC-49 REGION is-project-fork-id-supplied */
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */
