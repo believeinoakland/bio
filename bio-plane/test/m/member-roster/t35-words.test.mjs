@@ -69,7 +69,7 @@ test("R65 the sweep's row index.mjs:2246: the founder is not removed, because yo
   const w = await world().group();
   const r = w.m.adminRemove({ memberId: "admin", by: "second", reason: "r" });
   assert.equal(r.reason, "ROOT_OF_TRUST");
-  assert.match(r.detail, /because your team's Civicsmith runs in somebody's hosting account\./);
+  assert.equal(r.detail, word("membership.index.the_founding_administrator_holds_admin_2"));
 });
 
 test("R65 R43 R70 the court statement is `court.statement`, read by key", async () => {
@@ -92,9 +92,9 @@ test("R65 every row this module holds translates without calling the group's Civ
       assert.doesNotMatch(row.translation, FORBIDDEN, `${table}.${code} (${row.check})`);
     }
   /* T47-82 (P8): exactly the rows held: the member rows of `membership`'s 47 (T51-145 split the project rows off: 27 +
-     1 + 8 here); a row added or dropped is a change this test is re-pinned for, never passed by a lower bound. */
+     1 + 8 here; T53 adds NO_WAITING_PROPOSAL and NOT_YOUR_PROPOSAL); a row added or dropped is a change this test is re-pinned for, never passed by a lower bound. */
   assert.deepEqual(Object.keys(TABLES).sort(), ["CUSTODIAL_CHECKS", "MEMBERSHIP_CHECKS", "MEMBER_ID_CHECKS"]);
-  assert.equal(n, 36, `every row read (${n})`);
+  assert.equal(n, 38, `every row read (${n})`);
   /* the rows the sweep moved read their keys (R151) */
   for (const [code, row] of [["LISTENER_MALFORMED", MEMBERSHIP_CHECKS.LISTENER_MALFORMED],
                              ["LISTENER_DECLARED", MEMBERSHIP_CHECKS.LISTENER_DECLARED],
@@ -117,7 +117,6 @@ test("R65 every refusal and answer a battery of this module's acts gives (detail
     ["adminRemove founder", w.m.adminRemove({ memberId: "admin", by: "second", reason: "r" })],
     ["adminRemove target", w.m.adminRemove({ memberId: "ann", by: "second", reason: "r" })],
     ["adminRemove self", w.m.adminRemove({ memberId: "second", by: "second", reason: "r" })],
-    ["adminRemove at two", w.m.adminRemove({ memberId: "second", by: "admin", reason: "r" })],
     ["adminRemove no reason", w.m.adminRemove({ memberId: "second", by: "admin", reason: "" })],
     ["memberAdd bad id", await w.m.memberAdd({ memberId: "A", cover: "c", by: "admin" })],
     ["memberAdd reserved", await w.m.memberAdd({ memberId: "admin", cover: "c", by: "admin" })],
@@ -126,7 +125,9 @@ test("R65 every refusal and answer a battery of this module's acts gives (detail
     ["memberAdd expertise", await w.m.memberAdd({ memberId: "zed", cover: "c", expertise: ["CPA"], by: "admin" })],
     ["memberAdd expiry", await w.m.memberAdd({ memberId: "zed", cover: "c", expiresInDays: 99, by: "admin" })],
     ["memberAdd not admin", await w.m.memberAdd({ memberId: "zed", cover: "c", by: "ann" })],
-    ["memberAdd consensus", await w.m.memberAdd({ memberId: "adm3", cover: "c", role: "admin", by: "admin" })],
+    ["memberAdd consensus", await w.m.memberAdd({ memberId: "adm3", cover: "c", role: "admin", by: "second" })],
+    ["adminProposalCancel none", w.m.adminProposalCancel({ memberId: "ann", by: "admin" })],
+    ["adminProposalCancel", w.m.adminProposalCancel({ memberId: "adm3", by: "second" })],
     ["memberSet vote", w.m.memberSet({ memberId: "second", status: "revoked", by: "admin" })],
     ["memberCaps grant", w.m.memberCaps({ memberId: "second", capabilities: ["publish"], by: "admin" })],
     ["adminEndorse not proposed", await w.m.adminEndorse({ memberId: "ann", by: "admin" })],
@@ -180,6 +181,6 @@ test("R65 every refusal and answer a battery of this module's acts gives (detail
     clean(r, label);
   }
   /* T38 (N783): the moved acts' refusals are project-roster's battery now. T47-82 (P8): exact, not lower bounds. */
-  assert.deepEqual([answers.length, refusals, texts], [54, 50, 95],
+  assert.deepEqual([answers.length, refusals, texts], [55, 50, 96],
     `the battery reached ${answers.length} answers, ${refusals} refusals and ${texts} texts`);
 });

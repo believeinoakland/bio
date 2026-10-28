@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { world } from "./fixture.mjs";
+import { world, fiveAdmins } from "./fixture.mjs";
 import { Members, WORD_KEYS, notAnAdmin, noSuchMember, listenerRefusal } from "../../../src/member-roster/index.mjs";
 import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
 const { MEMBERSHIP_CHECKS, CUSTODIAL_CHECKS, MEMBER_ID_CHECKS } = MEMBER_ROSTER_ROWS;
@@ -61,7 +61,7 @@ test("R70 every refusal row's translation is the words of its key (refusal.<CODE
       assert.equal(row.translation, rowWord(code));
       assert.ok(WORD_KEYS.includes(key), key);
     }
-  assert.equal(n, 36, "every row read");
+  assert.equal(n, 38, "every row read");
   assert.deepEqual([rowKey("HANDLE_CHECK_PAUSED"), rowKey("NOT_AN_ADMIN")], ["handle.refused.paused", "refusal.NOT_AN_ADMIN"]);
   /* a placeholder is left in place when the answer carries the value for the screen to fill */
   assert.match(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation, /\{minutes\}/);
@@ -120,16 +120,14 @@ test("R70 over fixtures, what the module answers equals word(key, vars): the ref
 });
 
 test("R70 the carried removal's alsoDo and the audit's finding read their keys, with the values the finding names", async () => {
-  const w = await world().group();
-  /* three administrators: the founder, second and third; a majority of two removes the third */
-  const added = await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "admin" });
-  assert.equal(added.reason, "CONSENSUS_REQUIRED");
-  const endorsed = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  assert.equal(endorsed.ok, true);
-  assert.equal((await w.m.enroll({ invite: endorsed.invite, handle: "third", password: "third-passphrase-x" })).ok, true);
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "r" }).reason, "VOTES_SHORT");
-  const carried = w.m.adminRemove({ memberId: "third", by: "second", reason: "r" });
+  /* five administrators: the founder removes alone, and the others carry a removal by three of their votes (K5562) */
+  const w = await fiveAdmins();
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "second", reason: "r" }).reason, "VOTES_SHORT");
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "third", reason: "r" }).reason, "VOTES_SHORT");
+  const carried = w.m.adminRemove({ memberId: "fifth", by: "fourth", reason: "r" });
   assert.equal(carried.removed, true);
+  const alone = w.m.adminRemove({ memberId: "fourth", by: "admin", reason: "r" });
+  assert.equal(alone.alsoDo, word("membership.also_do"));
   assert.equal(carried.alsoDo, word("membership.also_do"));
   /* the audit finding for a member enrolled under the reserved id, and for none */
   const finding = () => w.m.reservedIdFinding();

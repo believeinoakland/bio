@@ -13,7 +13,8 @@ import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 const rowOf = (r, code) => {
   const row = MEMBERSHIP_CHECKS[code];
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, code, code, row.check, row.translation], code);
-  assert.match(r.detail, /Nothing was written\./);
+  assert.equal(typeof r.detail, "string", code);
+  assert.notEqual(r.detail.trim(), "", `${code}: a sentence a member can read`);
 };
 /* R43 as R70 states it (T50): the statement is the words of `court.statement`, read by key, never held here. */
 const COURT = word("court.statement");

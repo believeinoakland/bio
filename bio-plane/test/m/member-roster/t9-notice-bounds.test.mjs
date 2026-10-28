@@ -3,7 +3,7 @@
    (R80 `inSight` is `membership`'s.) */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
+import { world, fiveAdmins } from "./fixture.mjs";
 import { Members, listenerRefusal, MODULE_ORDER } from "../../../src/member-roster/index.mjs";
 import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
 const { MEMBERSHIP_CHECKS } = MEMBER_ROSTER_ROWS;
@@ -59,17 +59,14 @@ test("R25 a revocation (R16) notifies every listener once, inside the act, after
 });
 
 test("R25 a carried administrator removal (R5) notifies with the completing voter; a vote short of it does not", async () => {
-  const w = await world().group();
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
-  assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  await w.m.enroll({ invite: e.invite, handle: "third", password: "third-passphrase-x" });
+  const w = await fiveAdmins();
   const heard = [];
   w.m.onRevoked("capture-sources", (n) => heard.push(n));
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "one" }).reason, "VOTES_SHORT");
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "second", reason: "one" }).reason, "VOTES_SHORT");
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "third", reason: "two" }).reason, "VOTES_SHORT");
   assert.deepEqual(heard, []);
-  assert.equal(w.m.adminRemove({ memberId: "third", by: "second", reason: "two" }).ok, true);
-  assert.deepEqual(heard.map((n) => [n.memberId, n.by]), [["third", "second"]]);
+  assert.equal(w.m.adminRemove({ memberId: "fifth", by: "fourth", reason: "three" }).ok, true);
+  assert.deepEqual(heard.map((n) => [n.memberId, n.by]), [["fifth", "fourth"]]);
 });
 
 test("R25 a listener that throws or rejects changes neither the revocation, its answer, nor another's notice", async () => {
