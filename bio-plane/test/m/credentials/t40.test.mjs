@@ -33,16 +33,16 @@ test("R27 aiGrantMint takes `project`, asking R56 for {kind: ask, member, projec
   const s = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
   const mint = (project) => w.c.aiGrantMint({ member: "bob", by: "bob", session: s, project });
   assert.equal((await mint()).reason, "NO_ACCOUNT");
-  await w.c.projectKeySet({ project: "P", key: KEY, by: "ann" });
-  w.c.projectAccountSwitch({ project: "P", on: true, by: "ann" });
+  await w.c.accounts.projectKeySet({ project: "P", key: KEY, by: "ann" });
+  w.c.accounts.projectAccountSwitch({ project: "P", on: true, by: "ann" });
   const before = w.snapshot();
   assert.deepEqual(shape(await mint("P")), refusal("PROJECT_KEY_NOTICE_DUE"));
   assert.deepEqual(await mint("S"), noSuchProject("S"));
   assert.equal((await mint()).reason, "NO_ACCOUNT", "without the project, nothing serves bob");
-  w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "ann" });
-  w.c.projectKeyNoticeSeen({ member: "bob", project: "P", by: "bob" });
+  w.c.accounts.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "ann" });
+  w.c.accounts.projectKeyNoticeSeen({ member: "bob", project: "P", by: "bob" });
   assert.deepEqual(shape(await mint("P")), refusal("AI_USE_SWITCHED_OFF"));
-  w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: true, by: "ann" });
+  w.c.accounts.accountUsesSet({ owner: "project:P", switch: "ask", on: true, by: "ann" });
   const g = await mint("P");
   assert.equal(g.ok, true);
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, projectViewer("member:bob", "P"),

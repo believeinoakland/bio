@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS } from "../../../src/credentials/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
 const MACHINE = CREDENTIALS_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
@@ -97,7 +98,7 @@ test("R83 refusals, each writing nothing: BAD_KEY for a key of no shape, the abs
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "SIGNER_NOT_SELF_ACTIVE", "SIGNER_NOT_SELF_ACTIVE", "C-96.55"], key);
     assert.equal(typeof r.translation, "string");
     assert.equal(typeof r.detail, "string");
-    assert.match(r.detail, /Nothing was written\.$/);
+    assert.equal(r.detail, word("credentials.index.only_a_key_a_member"));
   }
   /* a self-registered key whose administrator re-registered it (origin admin), and one revoked by an administrator */
   assert.equal(w.c.signerRegisterOwn({ keyB64: "AAAAanntwo", by: "ann" }).ok, true);

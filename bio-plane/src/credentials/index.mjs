@@ -11,11 +11,12 @@
  * N1186, K3557), the optional project a grant or a run's credential is minted in, which fences the viewer it makes
  * (R79: membership R149's `projectViewer`).
  *
- * Which AI account pays for an assistant's act (each member's own reference and sign-in, the group's API key, a
+ * Which AI account pays for an assistant's act (each member's own accounts, the team's, a
  * project's account, the switches for each kind of use, the material limits, the notices and the disclosure, each
  * account's history) moved to `ai-accounts` in T48 (T48-10, T48-11; N996, K3101), split by copy (K617, K624). This
- * module creates it in its factory with the seal secret and asks it, never a copy (R27, R29, R32, R63, R73), and answers
- * its services, `USE_KINDS`, `ACCOUNT_CHECKS` and its ops through thin delegates until their users re-point (R72).
+ * module creates it in its factory with the seal secret and asks it, never a copy (R27, R29, R32, R63, R73). Its
+ * transitional delegates and its ops are gone (R72 retired, T53, K5457); `USE_KINDS` and the `ACCOUNT_CHECKS` view stay
+ * re-exported only until their last readers re-point.
  *
  * Requirements: build/requirements/credentials.md (R1–R79; R26, and R22–R25, R33–R37, R43, R51, R52, R54–R62, R64, R70
  * moved to `ai-accounts`, retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
@@ -36,7 +37,7 @@
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, projectViewer } from "../membership/index.mjs";
-import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
+import { aiAccountsOf, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -44,13 +45,14 @@ import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCO
 import { word, localize } from "../setup-words/index.mjs";
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS }
   from "./checks.mjs";
-/* R72 (T48, transitional; K3101): `ACCOUNT_CHECKS` as its readers knew it, a frozen view of `ai-accounts`' rows
-   (`AI_ACCOUNT_CHECKS`) with this module's own C-29 rows (`checks.mjs`' `ACCOUNT_CHECKS`), answered from here only and
-   never from `checks.mjs`, until its readers re-point. Each row is the holding module's own object. */
+/* (T48, transitional; K3101; R72 retired T53, K5457) `ACCOUNT_CHECKS` as its readers knew it, a frozen view of
+   `ai-accounts`' rows (`AI_ACCOUNT_CHECKS`) with this module's own C-29 rows (`checks.mjs`' `ACCOUNT_CHECKS`), answered
+   from here only and never from `checks.mjs`, until its readers re-point (store-door's and control-plane's tests). Each
+   row is the holding module's own object. */
 const ACCOUNT_CHECKS_VIEW = Object.freeze({ ...AI_ACCOUNT_CHECKS, ...ACCOUNT_CHECKS });
 export { ACCOUNT_CHECKS_VIEW as ACCOUNT_CHECKS };
 
-/* R72 (T48, transitional; K3101): the kinds of use, `ai-accounts`' own (its R14), answered here unchanged until this
+/* (T48, transitional; K3101) the kinds of use, `ai-accounts`' own (its R14), answered here unchanged until this
    module's users read them from there. */
 export { USE_KINDS };
 /* R27: an ask grant's life, in seconds (it also ends with the member's session). */
@@ -82,6 +84,8 @@ export const AI_RUN_WRITES = Object.freeze(["airuntick", "suggest", "capturerequ
 /* R63: a run segment's credential's life, in seconds: under one day (the job's value, six hours, well past any one
    segment's wall-clock bound), never renewed; the next segment mints its own. */
 export const AI_RUN_CREDENTIAL_TTL_SECONDS = 6 * 3600;
+/* R73 (T53; `ai-accounts` R26): the reasons an account is cleared, as that module's notice words them. */
+export const ACCOUNT_CLEARED_WHY = Object.freeze(["removed", "disconnected", "revoked", "refused", "unresolved"]);
 /* R42 (F15; K1934 (2)): an agent credential's life in whole days, and its default. */
 export const AI_CREDENTIAL_EXPIRY_DAYS = Object.freeze({ min: 1, max: 365, default: 90 });
 /* R44 (N703; DEC-165, DEC-166; K1934 (2)): the tally's kinds, and how long its counts are kept. */
@@ -118,7 +122,7 @@ const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(
 const ROOT = Membership.ROOT_ADMIN;
 
 export class Credentials {
-  /* `accounts` is `ai-accounts`' instance on the same storage, made by `credentialsOf` with the seal secret (R72). */
+  /* `accounts` is `ai-accounts`' instance on the same storage, made by `credentialsOf` with the seal secret (`ai-accounts` R32). */
   constructor({ sql, core = null, membership = null, accounts = null, now = null } = {}) {
     this.sql = sql;
     this.core = core;
@@ -215,7 +219,7 @@ export class Credentials {
     } catch { return null; }
   }
 
-  /* This module's tables, at every boot, idempotent: (T48; R72) `ai-accounts`' own first (its R32), then the additive
+  /* This module's tables, at every boot, idempotent: (T48) `ai-accounts`' own first (its R32), then the additive
      columns an older store lacks, then every table and index created if absent, then R18's purge exemption declared.
      Run by the host inside its boot. */
   migrate() {
@@ -646,7 +650,7 @@ export class Credentials {
   }
 
   /* R66 (T47; K3061 D3): REAUTH_DUE, minted here alone (K231): an in-plane read, reached by no route, that the gate
-     serving each weighty act (signing or publishing a case, changing administrators, connecting Claude) relays: null
+     serving each weighty act (signing or publishing a case, changing administrators, connecting an AI account) relays: null
      while the session `token` names is live, unlocked and inside its re-ask window, else the refusal. Writes nothing;
      never throws. */
   reauthDue({ token = null } = {}) {
@@ -1273,19 +1277,19 @@ export class Credentials {
    * the member, only its token's SHA-256 kept), with the run on its row; its writes a non-empty list of AI_RUN_WRITES;
    * it expires AI_RUN_CREDENTIAL_TTL_SECONDS after minting, never renewed. At most one is live per run: a new mint
    * revokes every earlier one of the same run, and the run's end (`aiRunCredentialsEnd`), the member's revocation (R16)
-   * and her sign-in's clearing (`ai-accounts` R18, R27, told through R73) revoke them, changing nothing else. The
+   * and an account of hers cleared (`ai-accounts` R26, told through R73) revoke them, changing nothing else. The
    * token has the shape the gate reads (`aik-` and 64 hexadecimal characters, admission's AI_TOKEN_SHAPE) and is
    * answered once, never logged or stored. */
   /* (T50; R79, N1186) It takes `project?`, the project the run was opened in: kept on the row, and the viewer
      `aiCredentialLook` answers for it is membership R149's `projectViewer` of the member's own. */
-  aiRunCredentialMint({ member = null, run = null, writes = null, project = null } = {}) {
+  aiRunCredentialMint({ member = null, run = null, writes = null, project = null, account_id = null } = {}) {
     const id = Credentials.#memberOf(member);
     /* R78 (T49; K3392, K3398; amends R63, as R76 amends R27): the founder holds no member row; the member who resolves to
        her (`#isFounder`, R76's one test) is admitted as an active member, for her own run only. */
     if (id === null || isMachineIdentity(member) || isMachineIdentity(id)
         || (id === ROOT ? !this.#isFounder(ROOT) : this.#memberFacts(id)?.status !== "active"))
       return this.accounts.accountMemberNotActive(localize("credentials.index.a_runs_credential_is", "a run's credential is minted only for an active member's own run. Nothing was minted."), { member: id });
-    const malformed = Credentials.#runCredentialFault(run, writes, project);
+    const malformed = Credentials.#runCredentialFault(run, writes, project, account_id);
     if (malformed) return malformed;
     /* R79 (T50; N1186): a project the run was opened in, one the member sees and has joined, asked after R63's shape and
        before the keep-away; none present leaves the credential as it was */
@@ -1307,21 +1311,22 @@ export class Credentials {
       this.#revokeRunCredentials(`run=?`, [run], now, id);   /* the next segment: every earlier one of this run */
       this.sql.exec(
         `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope, scope_writes, scope_note,
-           minted_by, minted_at, confined_to, expires_at, run, project)
-         VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?, ?)`,
+           minted_by, minted_at, confined_to, expires_at, run, project, account_id)
+         VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?, ?, ?)`,
         tokenId, sha256HexSync(token), `member:${id}`, JSON.stringify(declared),
-        localize("credentials.index.minted_by_your_teams_civicsmith", "minted by your team's Civicsmith for one segment of your run"), id, now, expiresAt, run, named ? project : null);
+        localize("credentials.index.minted_by_your_teams_civicsmith", "minted by your team's Civicsmith for one segment of your run"), id, now, expiresAt, run, named ? project : null, typeof account_id === "string" ? account_id : null);
     });
     return { ok: true, tokenId, token, run, writes: declared, expiresAt };
   }
 
   /* R63, R79: AI_RUN_CREDENTIAL_MALFORMED, minted here alone, naming what: `run` a non-empty string, `writes` a non-empty
      list of AI_RUN_WRITES entries, `project` (present) a non-empty string. */
-  static #runCredentialFault(run, writes, project = null) {
+  static #runCredentialFault(run, writes, project = null, accountId = null) {
     const what = typeof run !== "string" || run.trim() === "" ? "run"
       : !Array.isArray(writes) || !writes.length || !writes.every((w) => typeof w === "string" && AI_RUN_WRITES.includes(w))
         ? "writes"
       : project !== null && project !== undefined && (typeof project !== "string" || project.trim() === "") ? "project"
+      : accountId !== null && accountId !== undefined && (typeof accountId !== "string" || accountId.trim() === "") ? "account_id"
       : null;
     if (what === null) return null;
     /* DEC-49 REGION is-ai-run-credential-shape */
@@ -1329,6 +1334,8 @@ export class Credentials {
       ? localize("credentials.index.a_runs_credential_names", "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.")
       : what === "project"
         ? localize("credentials.index.a_runs_credential_names_the", "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.")
+      : what === "account_id"
+        ? localize("credentials.index.a_runs_credential_names_account", "a run's credential names the account that serves the segment as a non-empty string, or names none, and this was neither. Nothing was minted.")
       : localize("credentials.index.a_runs_credential_holds", "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.", { writes: AI_RUN_WRITES.join(", ") }), { what });
     /* END DEC-49 REGION is-ai-run-credential-shape */
   }
@@ -1379,7 +1386,7 @@ export class Credentials {
     } catch { return { ok: false, revoked: 0, unreadable: true }; }
   }
 
-  /* ===== THE SPLIT WITH `ai-accounts` (R72, R73; T48, N996; K3101) =====
+  /* ===== THE SPLIT WITH `ai-accounts` (R73; T48, N996; K3101) =====
    *
    * Which AI account pays for an assistant's act is `ai-accounts`' (each member's own reference and sign-in, the
    * group's key, a project's account, the switches for each kind of use, the material limits, the notices and the
@@ -1401,16 +1408,23 @@ export class Credentials {
     return { ok: false, reason: code, code, check: r.check, translation: r.translation, detail, ...(extra || {}) };
   }
 
-  /* R73: `ai-accounts`' notice that a member's account was cleared, inside the clearing act (its R26). A sign-in
-     cleared revokes her run credentials (R63); a reference removed, or a sign-in cleared while no reference of hers is
-     held, ends her standing grants (R32). Anything else changes nothing. */
-  #accountCleared({ member = null, account = null, by = null, reference_held = false } = {}) {
+  /* R73 (T53; K3218, K5457; `ai-accounts` R26): `ai-accounts`' notice that an account was cleared, refused, revoked or
+     found to resolve to nothing, told inside the clearing act: `{account_id, owner, member, means, by, why,
+     other_account_serves}`, `member` the owner of a member's account and null for a project's or the team's, `why` one of
+     ACCOUNT_CLEARED_WHY. Whatever the means, the run credentials of the runs the account served (those carrying its
+     `account_id`, R63) are revoked, and for a member-owned account every run credential of that member; her standing grants
+     (R32) end unless another account of hers still serves (`other_account_serves`; `reference_held` is the same fact as the
+     earlier notice spelled it). Anything else changes nothing. */
+  #accountCleared({ account_id = null, member = null, by = null, why = null, other_account_serves = undefined,
+                    reference_held = undefined } = {}) {
+    if (!ACCOUNT_CLEARED_WHY.includes(why)) return;
+    const at = stampSecond(this.#nowMs());
+    const actor = Credentials.#memberOf(by);
+    if (typeof account_id === "string" && account_id !== "") this.#revokeRunCredentials(`account_id=?`, [account_id], at, actor);
     const id = Credentials.#memberOf(member);
-    if (id === null || (account !== "reference" && account !== "signin")) return;
-    if (account === "signin")
-      this.#revokeRunCredentials(`principal=?`, [`member:${id}`], stampSecond(this.#nowMs()), Credentials.#memberOf(by));
-    if (account === "reference" || reference_held !== true)
-      this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
+    if (id === null) return;
+    this.#revokeRunCredentials(`principal=?`, [`member:${id}`], at, actor);
+    if ((other_account_serves ?? reference_held) !== true) this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
   }
 
   /* ===== THE ASK GRANT (R27, R28, R31, R32; Q1-3, K1450, K1505 (14), K1609, K1685) =====
@@ -1419,8 +1433,8 @@ export class Credentials {
    * session (R27), or for a standing question's AI half by `answers` alone (R32). Only its token's SHA-256 is kept; it
    * writes no run row and no observation row and keeps no read log (K1450). An ask's grant ends at
    * `AI_GRANT_TTL_SECONDS`, or with the session it was minted under, whichever is first; a standing question's at its
-   * time; each at once when its member is revoked (R16), and a standing one when they remove their reference or their
-   * sign-in is cleared while no reference is held (`ai-accounts` R1, R18, told through R73). */
+   * time; each at once when its member is revoked (R16), and a standing one when the account that serves it is cleared
+   * and no other account of theirs serves (`ai-accounts` R26, told through R73). */
   static async #sha256(text) {
     const d = await crypto.subtle.digest("SHA-256", Credentials.#enc.encode(text));
     return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -1434,13 +1448,13 @@ export class Credentials {
     return { ok: true, token, expires };
   }
 
-  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them
-     (`ai-accounts` R7: no reference of their own, not connected through their subscription, and the group key not held
-     or off; T38, K2275), and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice
-     (its R8). A member served by their own sign-in is granted, no notice asked. (T40) It takes `project?`, a project
-     the member has joined, and asks the cascade (`ai-accounts` R11) for `{kind: "ask", member, project}`: its refusals
-     are this mint's (PROJECT_KEY_NOTICE_DUE for a project's key whose notice is due, AI_USE_SWITCHED_OFF, ...). (T48;
-     K3101) The bar, the cascade and NOT_YOUR_ACCOUNT are `ai-accounts`' R25 reads, the keep-away its R7's. */
+  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (no account
+     of their own, none of the project's and none of the team's that serves their act: `ai-accounts` R11; T38, K2275),
+     and RECIPIENT_NOTICE_DUE when the account that would serve them sends to a recipient whose notice they have not read
+     (`ai-accounts` R51; K5457). A member served by an account, its notice read, is granted. (T40) It takes `project?`, a
+     project the member has joined, and asks the cascade (`ai-accounts` R11) for `{kind: "ask", member, project}`: its
+     refusals are this mint's, as it answers them (AI_USE_SWITCHED_OFF, ...). (T48; K3101) The bar, the cascade and
+     NOT_YOUR_ACCOUNT are `ai-accounts`' R25 reads, the keep-away its R7's. */
   async aiGrantMint({ member = null, by = null, session = null, project = null } = {}) {
     const bar = this.accounts.accountActBar({ member, by });
     if (bar) return bar;
@@ -1463,10 +1477,10 @@ export class Credentials {
   }
 
   /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session.
-     (T41; N796, Bob K2425) A member served by their own sign-in is asked their sign-in's `standing` switch
-     (`ai-accounts` R14), off by default and set only by their own act, as a reference's is; a sign-in is never refused
-     for being one. (T48; K3101) The serving account and the two account rows are `ai-accounts`' R25 reads, the
-     keep-away its R7's; this module's own rows are STANDING_SWITCH_OFF and NO_QUESTION. */
+     (T41; N796, Bob K2425; T53, K5457) The member's serving account (`ai-accounts` R25's `servingAccountOf`) is asked its
+     `standing` switch (`ai-accounts` R14), off by default and set only by the owner's own act. (T48; K3101) The serving
+     account and the two account rows are `ai-accounts`' R25 reads, the keep-away its R7's; this module's own rows are
+     STANDING_SWITCH_OFF and NO_QUESTION. */
   async aiGrantMintStanding({ member = null, question = null } = {}) {
     const id = Credentials.#memberOf(member);
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
@@ -1479,7 +1493,7 @@ export class Credentials {
     /* DEC-49 REGION is-standing-grant */
     if (!serving.standing)
       return refuse("STANDING_SWITCH_OFF", localize("credentials.index.standing_questions_are_off", "standing questions are off for the {who}, which would serve this one. Nothing was minted.", { who: serving.level === "group"
-        ? "team's key" : serving.signin ? "member's own sign-in" : "member's own account" }));
+        ? "team's account" : serving.level === "project" ? "project's account" : "member's own account" }));
     if (typeof question !== "string" || question.trim() === "")
       return refuse("NO_QUESTION", localize("credentials.index.no_standing_question_was", "no standing question was named. Nothing was minted."));
     /* END DEC-49 REGION is-standing-grant */
@@ -2094,7 +2108,7 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
   if (!c) {
     const core = record ?? recordOf(ctx);
     const m = membership ?? membershipOf(ctx, { record });
-    /* R72 (T48; `ai-accounts` R32): `ai-accounts` is made here, first, with the seal secret this module is given */
+    /* (T48; `ai-accounts` R32) `ai-accounts` is made here, first, with the seal secret this module is given */
     const accounts = aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now });   /* K5197: the instance clock reaches it */
     c = new Credentials({ sql: storage.sql, core, membership: m, accounts, now });
     OF.set(storage, c);
@@ -2102,22 +2116,6 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
   }
   return c;
 }
-
-/* R72 (T48, transitional; K3101): each service that moved to `ai-accounts` (its R1–R23) answered here through its own,
-   byte for byte: a delegate per name, never a copy of its code (K624). Deleted, with `ACCOUNT_CHECKS`' view and the
-   spread in `credentialsOps`, by this module's first job after its last user re-points (split map §5). */
-export const MOVED_TO_AI_ACCOUNTS = Object.freeze([
-  "accountReferenceSet", "accountReferenceRemove", "accountReferenceState", "accountReferenceFor", "accountFor",
-  "registerDisclosureRead", "disclosureDue", "accountUsesSet", "accountUses", "accountUsesOf", "accountHistory",
-  "subscriptionConnected", "subscriptionDisconnect", "subscriptionTokenHold", "subscriptionTokenRefused",
-  "groupKeySet", "groupKeyRemove", "groupKeySwitch", "groupKeyState", "groupKeySwitches", "groupKeyNotice",
-  "groupKeyNoticeSeen", "aiKeepAwaySet", "aiKeepAwayState", "aiKeptAway", "projectKeySet", "projectSigninSet",
-  "projectAccountRemove", "projectAccountSwitch", "projectAccountState", "projectKeyNotice", "projectKeyNoticeSeen",
-  "projectAccountsSuspended", "projectAiKeepAwaySet", "projectAiKeepAwayState", "projectsKeptAway",
-]);
-for (const name of MOVED_TO_AI_ACCOUNTS)
-  Object.defineProperty(Credentials.prototype, name, {
-    value: function (...a) { return this.accounts[name](...a); }, writable: true, configurable: true });
 
 /* The ops this module answers, as entries of the plane's one route map (plane R5: `routes` spreads them in, after
    membership's, and control-plane's `dispatch` answers every store request over it). `url` carries the control
@@ -2130,10 +2128,6 @@ export function credentialsOps(c, url, body, env) {
   const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
   const by = () => url.searchParams.get("by");
   return {
-    /* R72 (T48, transitional; K3101): the 24 ops that moved to `ai-accounts`, answered by its own route map over this
-       module's delegates, so each answers byte for byte as `ai-accounts`' does until its callers re-point; this
-       module's own ops follow and none of them shares a name with one of these. */
-    ...aiAccountsOps(c, url, body, env),
     /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
        value, hashes it, and this module never sees the value. R53 (N761; K2129): the digest is read from the body
        only, where the control plane sets it after removing any a caller sent; a `secretSha` in the query is never

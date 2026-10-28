@@ -46,12 +46,12 @@ test("R63 aiRunCredentialMint: in-plane, member-scoped, its run on its row, its 
       AI_CREDENTIAL_CHECKS.AI_RUN_CREDENTIAL_MALFORMED.translation, what], `${run} ${JSON.stringify(writes)}`);
   }
   /* keep-away: the group's limit, whatever uses it covers (R35's aiKeptAway(), asked with no use) */
-  assert.equal(w.c.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "second" }).ok, true);
+  assert.equal(w.c.accounts.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "second" }).ok, true);
   const mid = w.snapshot();
   const away = w.c.aiRunCredentialMint({ member: "ann", run: "RUN-1", writes: ["airuntick"] });
   assert.deepEqual([away.ok, away.code], [false, "AI_KEPT_AWAY"]);
   assert.equal(w.snapshot(), mid, "kept away: nothing minted");
-  assert.equal(w.c.aiKeepAwaySet({ on: false, by: "second" }).ok, true);
+  assert.equal(w.c.accounts.aiKeepAwaySet({ on: false, by: "second" }).ok, true);
   assert.equal(w.rows(`SELECT * FROM ai_credentials`).length, 0, "no refusal minted");
   assert.ok(before.length > 0);
   /* the mint */
@@ -106,7 +106,7 @@ test("R63 revocation: the next segment's mint revokes every earlier credential o
   const c1 = mint("cy", "RUN-C");
   assert.equal((await w.signin("ann")).ok, true);
   const b2 = mint("ann", "RUN-B");
-  assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: true });
+  assert.deepEqual(w.c.accounts.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: true });
   assert.deepEqual([live(b2), live(c1)], [false, true]);
   assert.equal(w.c.aiCredentialLook({ secretSha: "a".repeat(64) }).credential.revoked, false, "her own R12 credential is not touched");
   /* the member's revocation (R16) */

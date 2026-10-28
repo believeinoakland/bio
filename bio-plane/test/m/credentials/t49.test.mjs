@@ -213,8 +213,8 @@ test("R75 ten refused `admin` attempts do not pause the founder's own handle: R3
 
 async function withAccount() {
   const w = await founded();
-  assert.equal((await w.c.accountReferenceSet({ member: "admin", kind: "apikey", secret: "sk-founder-own", by: "admin" })).ok, true);
-  assert.equal((await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann-own", by: "ann" })).ok, true);
+  assert.equal((await w.c.accounts.accountReferenceSet({ member: "admin", kind: "apikey", secret: "sk-founder-own", by: "admin" })).ok, true);
+  assert.equal((await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann-own", by: "ann" })).ok, true);
   const f = (await w.c.login({ handle: FOUNDER_HANDLE, password: FOUNDER_PASSWORD })).token;
   const a = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   return { w, f, a };
@@ -245,7 +245,7 @@ test("R76 controls: a grant for a member minted under the founder's session is r
   assert.equal(unCounted(w), before, "nothing minted");
   assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: a })).ok, true, "control: a member under her own");
   /* the founder is judged as a member is: with her reference removed and no group key, no account serves her */
-  assert.equal(w.c.accountReferenceRemove({ member: "admin", by: "admin" }).ok, true);
+  assert.equal(w.c.accounts.accountReferenceRemove({ member: "admin", by: "admin" }).ok, true);
   assert.equal((await w.c.aiGrantMint({ member: "admin", by: "admin", session: f })).reason, "NO_ACCOUNT");
   /* a machine credential and an unclaimed store are refused as before */
   assert.equal((await w.c.aiGrantMint({ member: "admin", by: "class:ai", session: f })).ok, false);
@@ -336,11 +336,11 @@ test("R78 controls: an inactive enrolled member is still refused ACCOUNT_MEMBER_
   /* her other refusals stand: malformed, then the keep-away */
   for (const [run, writes] of [["", ["airuntick"]], [null, ["airuntick"]], ["RUN-1", []], ["RUN-1", ["promote"]]])
     assert.equal(w.c.aiRunCredentialMint({ member: "admin", run, writes }).code, "AI_RUN_CREDENTIAL_MALFORMED");
-  assert.equal(w.c.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "admin" }).ok
-    || w.c.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "ann" }).ok, true);
+  assert.equal(w.c.accounts.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "admin" }).ok
+    || w.c.accounts.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "ann" }).ok, true);
   assert.equal(w.c.aiRunCredentialMint({ member: "admin", run: "RUN-1", writes: ["airuntick"] }).code, "AI_KEPT_AWAY");
   assert.equal(w.rows(`SELECT * FROM ai_credentials`).length, 0, "no refusal minted");
   /* control: a member's own run is minted as before */
-  assert.equal(w.c.aiKeepAwaySet({ on: false, by: "admin" }).ok || w.c.aiKeepAwaySet({ on: false, by: "ann" }).ok, true);
+  assert.equal(w.c.accounts.aiKeepAwaySet({ on: false, by: "admin" }).ok || w.c.accounts.aiKeepAwaySet({ on: false, by: "ann" }).ok, true);
   assert.equal(w.c.aiRunCredentialMint({ member: "ann", run: "RUN-A", writes: ["airuntick"] }).ok, true);
 });

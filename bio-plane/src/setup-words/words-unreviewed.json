@@ -6882,6 +6882,13 @@
       "line": 203
     },
     {
+      "id": "ai.reauth.connect",
+      "en": "connecting an AI account",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/checks.mjs",
+      "line": 16
+    },
+    {
       "id": "answer-envelope.checks.this_teams_civicsmith_keeps_a",
       "en": "This team's Civicsmith keeps a trace of sign-ins only when it runs as a test instance, and this one does not. Nothing was read or changed.",
       "module": "answer-envelope",
@@ -20753,560 +20760,574 @@
       "en": "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/checks.mjs",
-      "line": 80
+      "line": 84
     },
     {
       "id": "credentials.checks.an_agent_credential_has_to",
       "en": "An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/checks.mjs",
-      "line": 61
+      "line": 65
     },
     {
       "id": "credentials.checks.only_a_key_a_member_registered",
       "en": "Only a key a member registered for themselves, and that is still in use, can be marked as one you know about. This key was registered by an administrator, or it has been withdrawn, so there is nothing to confirm. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/checks.mjs",
-      "line": 125
+      "line": 129
     },
     {
       "id": "credentials.checks.only_a_named_person_signed",
       "en": "Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it — not even about itself.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/checks.mjs",
-      "line": 56
+      "line": 60
+    },
+    {
+      "id": "credentials.checks.reauth_due",
+      "en": "Type your password again to do this. Signing or publishing a case, changing administrators and {connect} always ask for it. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/checks.mjs",
+      "line": 163
     },
     {
       "id": "credentials.declared.claim",
       "en": "claims an instance at bootstrap",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2230
+      "line": 2224
     },
     {
       "id": "credentials.declared.passwordreset",
       "en": "credential: a reset link and a new password, reached with no session; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2234
+      "line": 2228
     },
     {
       "id": "credentials.declared.passwordresetlink",
       "en": "credential: an administrator's reset link for one member, answered once; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2236
+      "line": 2230
     },
     {
       "id": "credentials.declared.reauth",
       "en": "session-directed: the caller's own session, its password asked again for five minutes; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2238
+      "line": 2232
     },
     {
       "id": "credentials.declared.recover",
       "en": "credential: a recovery code and a new password, reached with no session; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2240
+      "line": 2234
     },
     {
       "id": "credentials.declared.recoverycodesissue",
       "en": "credential: an administrator's own recovery codes, shown once; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2242
+      "line": 2236
     },
     {
       "id": "credentials.declared.setpassword",
       "en": "session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2246
+      "line": 2240
     },
     {
       "id": "credentials.declared.signeradd",
       "en": "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2248
+      "line": 2242
     },
     {
       "id": "credentials.declared.signerknown",
       "en": "signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2254
+      "line": 2248
     },
     {
       "id": "credentials.declared.signerregisterown",
       "en": "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2250
+      "line": 2244
     },
     {
       "id": "credentials.declared.signerrevokeown",
       "en": "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2252
+      "line": 2246
     },
     {
       "id": "credentials.declared.signerset",
       "en": "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2256
+      "line": 2250
     },
     {
       "id": "credentials.declared.signout",
       "en": "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2258
+      "line": 2252
     },
     {
       "id": "credentials.declared.signouteverywhere",
       "en": "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2260
+      "line": 2254
     },
     {
       "id": "credentials.declared.unlock",
       "en": "session-directed: the caller's own locked session, cleared with their password; moves no bundle",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2262
+      "line": 2256
     },
     {
       "id": "credentials.index.a_member_changes_their_own",
       "en": "a member changes their own password from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 424
+      "line": 428
     },
     {
       "id": "credentials.index.a_member_registers_their",
       "en": "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 962
+      "line": 966
     },
     {
       "id": "credentials.index.a_member_scoped_credential",
       "en": "a member-scoped credential acts for the member who mints it, and '{principalMember}' is not '{minter}'. A member cannot authorise an agent in another member's name. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1121
+      "line": 1125
     },
     {
       "id": "credentials.index.a_reset_link_is_made",
       "en": "a reset link is made only for an active member of the team. Nothing was made.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1925
+      "line": 1939
     },
     {
       "id": "credentials.index.a_run_in_a_project",
       "en": "a run in a project",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1346
+      "line": 1353
     },
     {
       "id": "credentials.index.a_runs_credential_holds",
       "en": "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1332
+      "line": 1339
     },
     {
       "id": "credentials.index.a_runs_credential_is",
       "en": "a run's credential is minted only for an active member's own run. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1287
+      "line": 1291
     },
     {
       "id": "credentials.index.a_runs_credential_names",
       "en": "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1329
+      "line": 1334
+    },
+    {
+      "id": "credentials.index.a_runs_credential_names_account",
+      "en": "a run's credential names the account that serves the segment as a non-empty string, or names none, and this was neither. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1338
     },
     {
       "id": "credentials.index.a_runs_credential_names_the",
       "en": "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1331
+      "line": 1336
     },
     {
       "id": "credentials.index.a_standing_question_runs",
       "en": "a standing question runs only for an active member. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1474
+      "line": 1488
     },
     {
       "id": "credentials.index.an_administrator_says_they_know",
       "en": "an administrator says they know about a member's signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no administrator behind them to say it. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 963
+      "line": 967
     },
     {
       "id": "credentials.index.an_asks_grant_admits",
       "en": "an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1538
+      "line": 1552
     },
     {
       "id": "credentials.index.an_asks_grant_is",
       "en": "an ask's grant is minted only under the member's own live session. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1452
+      "line": 1466
     },
     {
       "id": "credentials.index.empty_nothing_was",
       "en": "{empty}. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2024
+      "line": 2038
     },
     {
       "id": "credentials.index.expected_the_base64_field",
       "en": "expected the base64 field of an ssh-ed25519 public key",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 879
+      "line": 883
     },
     {
       "id": "credentials.index.expiresindays_is_a",
       "en": "expiresInDays is a whole number of days from {min} to {max}, {default} when it is left out, and this was not one. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1149
+      "line": 1153
     },
     {
       "id": "credentials.index.from_is_before_the",
       "en": "from is before the counts kept, which go back {days} days",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1653
+      "line": 1667
     },
     {
       "id": "credentials.index.from_is_not_an",
       "en": "from is not an instant",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1647
+      "line": 1661
     },
     {
       "id": "credentials.index.from_is_not_before",
       "en": "from is not before to",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1649
+      "line": 1663
     },
     {
       "id": "credentials.index.id_already_names_a_credential",
       "en": "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1138
+      "line": 1142
     },
     {
       "id": "credentials.index.memberid_has_not_enrolled_status",
       "en": "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 858
+      "line": 862
     },
     {
       "id": "credentials.index.memberid_is_on_the",
       "en": "{memberId} is on the roster with status '{status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 860
+      "line": 864
     },
     {
       "id": "credentials.index.minted_by_your_teams_civicsmith",
       "en": "minted by your team's Civicsmith for one segment of your run",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1313
+      "line": 1317
     },
     {
       "id": "credentials.index.no_credential_in_your_teams",
       "en": "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1196
+      "line": 1200
     },
     {
       "id": "credentials.index.no_digest_of_the",
       "en": "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1157
+      "line": 1161
     },
     {
       "id": "credentials.index.no_live_grant_answers",
       "en": "no live grant answers to this token: it expired, its session ended, or it never existed. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1525
+      "line": 1539
     },
     {
       "id": "credentials.index.no_live_session_answers",
       "en": "no live session answers to this token: it ended, it expired, or it never existed. Nothing was ended.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 666
+      "line": 670
     },
     {
       "id": "credentials.index.no_member_is_named",
       "en": "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1113
+      "line": 1117
     },
     {
       "id": "credentials.index.no_member_is_named_2",
       "en": "no member is named on this act, and a withdrawal nobody authored is not one.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1190
+      "line": 1194
     },
     {
       "id": "credentials.index.no_password_was_set",
       "en": "no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1850
+      "line": 1864
     },
     {
       "id": "credentials.index.no_standing_question_was",
       "en": "no standing question was named. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1484
+      "line": 1498
     },
     {
       "id": "credentials.index.only_a_key_a_member",
       "en": "only a key a member registered for themselves and that is still active can be marked as known; this one was registered by an administrator or has been revoked. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 988
+      "line": 992
     },
     {
       "id": "credentials.index.pass_an_identity",
       "en": "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1139
+      "line": 1143
     },
     {
       "id": "credentials.index.period_refused_detail",
       "en": "{what}. {rule} Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1663
+      "line": 1677
     },
     {
       "id": "credentials.index.principalkind_was",
       "en": "principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1133
+      "line": 1137
     },
     {
       "id": "credentials.index.recovery_codes_are_issued",
       "en": "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1822
+      "line": 1836
     },
     {
       "id": "credentials.index.registered_to_you_and",
       "en": "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 950
+      "line": 954
     },
     {
       "id": "credentials.index.saying_you_know_about_a_key",
       "en": "saying you know about a member's signing key",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 978
+      "line": 982
     },
     {
       "id": "credentials.index.setting_the_teams_key",
       "en": "setting the team's key for an outside service",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2012
+      "line": 2026
     },
     {
       "id": "credentials.index.sign_in_refused",
       "en": "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 485
+      "line": 489
     },
     {
       "id": "credentials.index.standing_questions_are_off",
       "en": "standing questions are off for the {who}, which would serve this one. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1481
+      "line": 1495
     },
     {
       "id": "credentials.index.string_is_a_machine_identity",
       "en": "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1112
+      "line": 1116
     },
     {
       "id": "credentials.index.string_is_a_machine_identity_2",
       "en": "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1189
+      "line": 1193
     },
     {
       "id": "credentials.index.switching_the_teams_key",
       "en": "switching the team's key for an outside service",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2039
+      "line": 2053
     },
     {
       "id": "credentials.index.the_current_password_given",
       "en": "the current password given does not derive the hash stored for this account, so the password was not changed. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 442
+      "line": 446
     },
     {
       "id": "credentials.index.the_keyed_services_are",
       "en": "the keyed services are {services}, and {prefix}<tool id> for each security tool. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1981
+      "line": 1995
     },
     {
       "id": "credentials.index.the_kinds_counted_are",
       "en": "the kinds counted are {kinds}. Nothing was counted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1622
+      "line": 1636
     },
     {
       "id": "credentials.index.the_period_is_from",
       "en": "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1714
+      "line": 1728
     },
     {
       "id": "credentials.index.the_period_is_from_2",
       "en": "The period is from an earlier instant to a later one.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1770
+      "line": 1784
     },
     {
       "id": "credentials.index.the_period_is_longer",
       "en": "the period is longer than {days} days",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1651
+      "line": 1665
     },
     {
       "id": "credentials.index.the_security_counts_could",
       "en": "the security counts could not be read, so no figure is given: they are absent, never zero. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1783
+      "line": 1797
     },
     {
       "id": "credentials.index.the_teams_key_for",
       "en": "the team's key for this service is off or not held; the caller goes on without it.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 2067
+      "line": 2081
     },
     {
       "id": "credentials.index.this_act_asks_for",
       "en": "this act asks for the password again, and it was not given in the last {minutes} minutes. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 658
+      "line": 662
     },
     {
       "id": "credentials.index.this_key_is_already",
       "en": "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 949
+      "line": 953
     },
     {
       "id": "credentials.index.this_key_is_registered",
       "en": "this key is registered to another member of this team, and a registered key is never rebound by its own member's act. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 927
+      "line": 931
     },
     {
       "id": "credentials.index.this_key_of_yours",
       "en": "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 935
+      "line": 939
     },
     {
       "id": "credentials.index.this_reset_link_does",
       "en": "this reset link does not work: it was used, it expired, a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1914
+      "line": 1928
     },
     {
       "id": "credentials.index.this_session_is_locked",
       "en": "this session is locked after a while without use: only unlocking it with the password, or signing out, is served. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 610
+      "line": 614
     },
     {
       "id": "credentials.index.to_is_after_the",
       "en": "to is after the present hour",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1654
+      "line": 1668
     },
     {
       "id": "credentials.index.to_is_not_an",
       "en": "to is not an instant",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1648
+      "line": 1662
     },
     {
       "id": "credentials.index.too_many_attempts_were",
       "en": "too many attempts were refused recently, so this one was not judged: no password, code or claim was checked and nothing changed. Try again later.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 744
+      "line": 748
     },
     {
       "id": "doc-clean.images.a_malformed_referred_to_count",

@@ -69,7 +69,7 @@ export function world({ sealSecret = SEAL, now = null } = {}) {
     },
     /* (T47; R70) `id` signs in through their Claude subscription: the door holds the token the sign-in printed. */
     async signin(id, validFor = null) {
-      return c.subscriptionTokenHold({ member: id, token: SIGNIN_TOKEN(id), validFor });
+      return c.accounts.subscriptionTokenHold({ member: id, token: SIGNIN_TOKEN(id), validFor });
     },
     /* The founder plus a second administrator, so ordinary members may be added; then each member, enrolled. */
     async group(...members) {

@@ -9,7 +9,7 @@ import { world, PASSWORD, SEAL } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, SECURITY_KINDS, SECURITY_SERVICE_PREFIX,
          credentialsOf } from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const H = 3600e3;
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -113,12 +113,12 @@ test("R29 a set with no key removes the service's key and the service is off: fo
 
 async function servedWorld() {
   const w = await world().group("ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ANN", by: "ann" });
-  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
-  await w.c.groupKeySet({ key: "sk-ant-api03-GROUP", by: "admin" });
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
-  w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
+  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ANN", by: "ann" });
+  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
+  await w.c.accounts.groupKeySet({ key: "sk-ant-api03-GROUP", by: "admin" });
+  w.c.accounts.groupKeySwitch({ on: true, by: "admin" });
+  w.c.accounts.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
+  w.c.accounts.groupKeyNoticeSeen({ member: "bob", by: "bob" });
   w.session = {};
   for (const id of ["ann", "bob"]) w.session[id] = (await w.c.login({ handle: `${id}`, password: PASSWORD(id) })).token;
   return w;
@@ -126,25 +126,25 @@ async function servedWorld() {
 
 test("R35 while the group keeps its material away every account is refused AI_KEPT_AWAY (C-29.31) with R52's reason, who and when, before any account is read: the member's own reference and the group key alike, for every act and every caller; R27 and R32 are refused the same, minting nothing", async () => {
   const w = await servedWorld();
-  assert.equal((await w.c.accountFor({ member: "ann", act: ask("ann") })).level, "member");
-  assert.equal((await w.c.accountFor({ member: "bob", act: ask("bob") })).level, "group");
-  const set = w.c.aiKeepAwaySet({ on: true, reason: "A confidentiality order.", by: "second" });
+  assert.equal((await w.c.accounts.accountFor({ member: "ann", act: ask("ann") })).level, "member");
+  assert.equal((await w.c.accounts.accountFor({ member: "bob", act: ask("bob") })).level, "group");
+  const set = w.c.accounts.aiKeepAwaySet({ on: true, reason: "A confidentiality order.", by: "second" });
   const keepAway = { reason: "A confidentiality order.", set_by: "second", set_at: set.set_at };
   const want = (r, label) => {
     assert.deepEqual(shape(r), row(ACCOUNT_CHECKS, "AI_KEPT_AWAY"), label);
     assert.deepEqual(r.keep_away, keepAway, label);
   };
   /* the refusal carries the setting's reason, who and when, as R52 answers them */
-  const kept = await w.c.accountFor({ member: "ann", act: ask("ann") });
+  const kept = await w.c.accounts.accountFor({ member: "ann", act: ask("ann") });
   assert.deepEqual(Object.keys(kept).sort(), ["check", "code", "detail", "keep_away", "ok", "reason", "translation"]);
-  const { on, uses, ...state } = w.c.aiKeepAwayState();
+  const { on, uses, ...state } = w.c.accounts.aiKeepAwayState();
   assert.deepEqual([on, kept.keep_away], [true, state]);
   const before = w.snapshot();
   for (const [member, act] of [["ann", ask("ann")], ["ann", { kind: "run", member: "ann" }], ["ann", { kind: "standing", member: "ann" }],
                                ["bob", ask("bob")], ["bob", { kind: "run", member: "bob" }], ["ann", ask("bob")], ["class:ai", ask("class:ai")],
                                ["ghost", ask("ghost")], [null, null]]) {
-    want(await w.c.accountFor({ member, act }), `accountFor ${member} ${JSON.stringify(act)}`);
-    want(await w.c.accountReferenceFor({ member, act }), `accountReferenceFor ${member}`);
+    want(await w.c.accounts.accountFor({ member, act }), `accountFor ${member} ${JSON.stringify(act)}`);
+    want(await w.c.accounts.accountReferenceFor({ member, act }), `accountReferenceFor ${member}`);
   }
   for (const id of ["ann", "bob"]) {
     want(await w.c.aiGrantMint({ member: id, by: id, session: w.session[id] }), `R27 ${id}`);
@@ -153,32 +153,32 @@ test("R35 while the group keeps its material away every account is refused AI_KE
   assert.equal(w.snapshot(), before, "nothing read, unsealed, minted or written");
   /* before any account is read: a reference that would not open is not reached */
   const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret" });
-  want(await other.accountFor({ member: "ann", act: ask("ann") }), "before the seal");
+  want(await other.accounts.accountFor({ member: "ann", act: ask("ann") }), "before the seal");
   /* R22's own-act refusals still come first for the mint: they are about the caller, not an account */
   assert.equal((await w.c.aiGrantMint({ member: "ann", by: "bob", session: w.session.bob })).reason, "NOT_YOUR_ACCOUNT");
   /* turned off: served again, each as before */
-  w.c.aiKeepAwaySet({ on: false, by: "admin" });
-  assert.equal((await w.c.accountFor({ member: "ann", act: ask("ann") })).level, "member");
-  assert.equal((await w.c.accountFor({ member: "bob", act: ask("bob") })).level, "group");
+  w.c.accounts.aiKeepAwaySet({ on: false, by: "admin" });
+  assert.equal((await w.c.accounts.accountFor({ member: "ann", act: ask("ann") })).level, "member");
+  assert.equal((await w.c.accounts.accountFor({ member: "bob", act: ask("bob") })).level, "group");
   assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.session.ann })).ok, true);
   assert.equal((await w.c.aiGrantMintStanding({ member: "bob", question: "q" })).ok, true);
   /* a setting that cannot be read keeps everything away (fail closed), naming that it could not be read */
   w.sql.exec(`DROP TABLE ai_keep_away`);
-  const unread = await w.c.accountFor({ member: "ann", act: ask("ann") });
+  const unread = await w.c.accounts.accountFor({ member: "ann", act: ask("ann") });
   assert.deepEqual([shape(unread), unread.keep_away], [row(ACCOUNT_CHECKS, "AI_KEPT_AWAY"), { reason: null, set_by: null, set_at: null }]);
-  assert.match(unread.detail, /could not be read/);
+  assert.equal(unread.detail, word("ai-accounts.index.whether_the_team_keeps_its"));
 });
 
 test("R35 R52 the refusal carries the reason R52 answers, in the administrator's words", async () => {
   const w = await servedWorld();
   const words = "Our counsel asked us to keep case material away from every AI service until the appeal is decided.";
-  w.c.aiKeepAwaySet({ on: true, reason: words, by: "admin" });
-  for (const r of [await w.c.accountFor({ member: "ann", act: ask("ann") }), await w.c.accountFor({ member: "bob", act: ask("bob") }),
+  w.c.accounts.aiKeepAwaySet({ on: true, reason: words, by: "admin" });
+  for (const r of [await w.c.accounts.accountFor({ member: "ann", act: ask("ann") }), await w.c.accounts.accountFor({ member: "bob", act: ask("bob") }),
                    await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.session.ann }),
                    await w.c.aiGrantMintStanding({ member: "bob", question: "q" })]) {
     assert.equal(r.reason, "AI_KEPT_AWAY");
     assert.equal(r.keep_away.reason, words);
-    assert.equal(r.keep_away.reason, w.c.aiKeepAwayState().reason);
+    assert.equal(r.keep_away.reason, w.c.accounts.aiKeepAwayState().reason);
   }
 });
 

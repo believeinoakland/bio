@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD, FOUNDER_PASSWORD, sha, FOUNDER_HANDLE } from "./fixture.mjs";
 import { CREDENTIALS_WORDS } from "../../../src/credentials/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { SIGN_IN_CHECKS, ACCOUNT_CHECKS, AI_CREDENTIAL_CHECKS, SIGN_IN_WINDOW, SIGN_IN_STATED } from "../../../src/credentials/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -27,8 +28,8 @@ const NEW = "a-new-passphrase-9";
 /* ann signed in twice (one session presents the change), with an ask grant under each and a standing grant; bob signed in */
 async function signedIn() {
   const w = await world().group("ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
+  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   w.s = {};
   for (const k of ["ann1", "ann2", "ann3"]) w.s[k] = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   w.s.bob = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
@@ -49,7 +50,7 @@ test("R3 passwordChange refuses, in order, each writing nothing but its count: M
   for (const by of [null, undefined, "", "class:admin", "class:member", "class:ai", "token:ai", "token:member"]) {
     const r = await w.c.passwordChange({ current: PASSWORD("ann"), password: NEW, by, session: w.s.ann1 });
     assert.deepEqual(shape(r), row(SIGN_IN_CHECKS, "MACHINE_CANNOT_SET_PASSWORD"), String(by));
-    assert.match(r.detail, /Nothing was changed\.$/);
+    assert.equal(r.detail, word("credentials.index.a_member_changes_their_own"));
   }
   assert.equal(w.snapshot(), before, "a machine's refusal writes nothing");
   /* no live session: unknown, expired, ended, none: R39's one answer */
@@ -70,7 +71,7 @@ test("R3 passwordChange refuses, in order, each writing nothing but its count: M
     const r = await w.c.passwordChange({ current, password: NEW, by: "ann", session: w.s.ann1, source: `s-${current}` });
     assert.deepEqual(shape(r), row(SIGN_IN_CHECKS, "CURRENT_PASSWORD_WRONG"), String(current));
     assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);
-    assert.match(r.detail, /Nothing was changed\.$/);
+    assert.equal(r.detail, word("credentials.index.the_current_password_given"));
   }
   assert.equal(uncounted(w), untouched, "no password set, no session ended");
   assert.equal(counts(w, "signin"), 5, "each wrong current password counts as R44's `signin`");
@@ -78,7 +79,7 @@ test("R3 passwordChange refuses, in order, each writing nothing but its count: M
   assert.equal((await w.c.login({ handle: "ann", password: PASSWORD("ann") })).ok, true, "the password unchanged");
   /* the rows: C-96's next free numbers, in R48's words */
   assert.deepEqual([SIGN_IN_CHECKS.MACHINE_CANNOT_SET_PASSWORD.check, SIGN_IN_CHECKS.CURRENT_PASSWORD_WRONG.check], ["C-96.45", "C-96.46"]);
-  assert.match(SIGN_IN_CHECKS.MACHINE_CANNOT_SET_PASSWORD.translation, /Nothing was changed\./);
+  assert.equal(SIGN_IN_CHECKS.MACHINE_CANNOT_SET_PASSWORD.translation, word("refusal.MACHINE_CANNOT_SET_PASSWORD"));
   /* (T49; N1075) CURRENT_PASSWORD_WRONG's words are words.json's `refusal.CURRENT_PASSWORD_WRONG`, read by key */
   assert.equal(SIGN_IN_CHECKS.CURRENT_PASSWORD_WRONG.translation, CREDENTIALS_WORDS["refusal.CURRENT_PASSWORD_WRONG"]);
 });
@@ -179,29 +180,29 @@ test("R44 R3 a wrong current password is R44's `signin`, held without a place un
 
 test("R27 R32 R63 (T48) the keep-away refusal R27, R32 and R63 answer is exactly ai-accounts' one AI_KEPT_AWAY (its R7, C-29.31, its `where` in ai-accounts) with keep_away as its R21 answers it, null while the group does not keep its material away; asking it writes nothing and no route reaches it", async () => {
   const w = await signedIn();
-  assert.equal(w.c.aiKeptAway(), null, "off by default");
-  w.c.aiKeepAwaySet({ on: false, reason: "not now", by: "admin" });
-  assert.equal(w.c.aiKeptAway(), null, "set off");
-  const set = w.c.aiKeepAwaySet({ on: true, reason: "A confidentiality order.", by: "second" });
+  assert.equal(w.c.accounts.aiKeptAway(), null, "off by default");
+  w.c.accounts.aiKeepAwaySet({ on: false, reason: "not now", by: "admin" });
+  assert.equal(w.c.accounts.aiKeptAway(), null, "set off");
+  const set = w.c.accounts.aiKeepAwaySet({ on: true, reason: "A confidentiality order.", by: "second" });
   const before = w.snapshot();
-  const k = w.c.aiKeptAway();
+  const k = w.c.accounts.aiKeptAway();
   assert.deepEqual(shape(k), row(ACCOUNT_CHECKS, "AI_KEPT_AWAY"));
   assert.deepEqual(Object.keys(k).sort(), ["check", "code", "detail", "keep_away", "ok", "reason", "translation"]);
   assert.deepEqual(k.keep_away, { reason: "A confidentiality order.", set_by: "second", set_at: set.set_at });
-  const { on, uses, ...state } = w.c.aiKeepAwayState();
+  const { on, uses, ...state } = w.c.accounts.aiKeepAwayState();
   assert.deepEqual([on, k.keep_away], [true, state]);
   assert.deepEqual(k, w.c.accounts.aiKeptAway(), "ai-accounts' own answer");
   assert.match(ACCOUNT_CHECKS.AI_KEPT_AWAY.where, /^src\/ai-accounts\/index\.mjs /);
-  for (const r of [await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-                   await w.c.accountReferenceFor({ member: "ann", act: { kind: "run", member: "ann" } }),
+  for (const r of [await w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
+                   await w.c.accounts.accountReferenceFor({ member: "ann", act: { kind: "run", member: "ann" } }),
                    await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.s.ann1 }),
                    await w.c.aiGrantMintStanding({ member: "ann", question: "q" }),
                    w.c.aiRunCredentialMint({ member: "ann", run: "RUN-K", writes: ["airuntick"] })])
     assert.deepEqual(r, k, "the one refusal, through the one site");
   assert.equal(w.snapshot(), before, "it writes nothing");
   assert.ok(!Object.keys(w.ops()).some((op) => /keptaway/i.test(op)), "reached by no route (aikeepawaystate is R52's)");
-  w.c.aiKeepAwaySet({ on: false, by: "admin" });
-  assert.equal(w.c.aiKeptAway(), null, "turned off again");
+  w.c.accounts.aiKeepAwaySet({ on: false, by: "admin" });
+  assert.equal(w.c.accounts.aiKeptAway(), null, "turned off again");
 });
 
 
@@ -215,7 +216,7 @@ test("R53 aiCredentialMint refuses a secretSha that is not 64 lowercase hexadeci
                            7, ["a".repeat(64)], { s: "a".repeat(64) }]) {
     const r = w.c.aiCredentialMint({ ...base, secretSha });
     assert.deepEqual(shape(r), row(AI_CREDENTIAL_CHECKS, "AI_CREDENTIAL_NO_SECRET"), JSON.stringify(secretSha)?.slice(0, 20));
-    assert.match(r.detail, /Nothing was written\.$/);
+    assert.equal(r.detail, word("credentials.index.no_digest_of_the"));
   }
   assert.equal(w.snapshot(), before, "no refusal writes");
   assert.equal(w.c.aiCredentialMint({ ...base, who: "class:ai" }).reason, "AI_CREDENTIAL_MINT_NOT_A_MEMBER");

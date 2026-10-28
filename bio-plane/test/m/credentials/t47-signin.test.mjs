@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CREDENTIALS_WORDS } from "../../../src/credentials/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, PASSWORD, FOUNDER_PASSWORD, SIGNIN_TOKEN, sha, FOUNDER_HANDLE } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, SIGN_IN_CHECKS, Credentials, SESSION_DEVICES, SESSION_LIMITS, REAUTH_WINDOW_MS, RESET_LINK_DAYS }
   from "../../../src/credentials/index.mjs";
@@ -98,7 +99,7 @@ test("R65 a request marked background is no activity; the session route reads ba
 
 test("R65 R71 a locked session serves only unlock and sign-out: another act answers SESSION_LOCKED (C-29.43) through sessionLockedRefusal, writing nothing; control: unlocked, the act is served", async () => {
   const { w, token } = await signedIn("own");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   const late = T0 + SESSION_LIMITS.ownLock + S;
   assert.deepEqual(said(Credentials.sessionLockedRefusal()), row("SESSION_LOCKED"));
   const before = w.snapshot();
@@ -115,7 +116,7 @@ test("R65 R71 a locked session serves only unlock and sign-out: another act answ
 
 test("R65 R71 an ask's grant is not admitted while its session is locked, and again once it is unlocked", async () => {
   const { w, token } = await signedIn("own");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   const g = await at(T0, () => w.c.aiGrantMint({ member: "ann", by: "ann", session: token }));
   const late = T0 + SESSION_LIMITS.ownLock + S;
   w.sql.exec(`UPDATE ai_grants SET expires=?`, late + 3600 * S);
@@ -146,6 +147,19 @@ test("R65 unlock clears the lock with the session's password, under R38's window
 });
 
 /* ===== R66: the password asked again ===== */
+
+test("R66 the password-again prompt names the act of connecting an AI account by the key `ai.reauth.connect`, read from the word table, and its resolved sentence names no one provider; control: the design's earlier prompt, which named one, is not what this module answers", async () => {
+  const w = await signedIn("shared");
+  const due = w.w.c.reauthDue({ token: "none" });
+  assert.equal(due.code, "REAUTH_DUE");
+  const connect = word("ai.reauth.connect");
+  assert.equal(ACCOUNT_CHECKS.REAUTH_DUE.translation, word("credentials.checks.reauth_due", { connect: { key: "ai.reauth.connect" } }));
+  assert.ok(ACCOUNT_CHECKS.REAUTH_DUE.translation.includes(connect), "the key's sentence is in the prompt");
+  assert.ok(due.translation.includes(connect));
+  for (const text of [connect, ACCOUNT_CHECKS.REAUTH_DUE.translation])
+    assert.doesNotMatch(text, /\b(?:claude|anthropic|openai|gpt|gemini|mistral)\b/i);
+  assert.notEqual(ACCOUNT_CHECKS.REAUTH_DUE.translation, word("refusal.REAUTH_DUE"), "control: not the earlier design sentence");
+});
 
 test("R66 R71 reauth opens a 5-minute window that session answers as reauthUntil; reauthDue answers null inside it and REAUTH_DUE (C-29.42) outside, one second either side, a locked or unknown session included; control: an act not named is unaffected", async () => {
   assert.equal(REAUTH_WINDOW_MS, 5 * 60 * S);
@@ -267,7 +281,7 @@ test("R68 R71 recoveryCodesIssue by anyone but an active member or the claimed f
   assert.equal(w.snapshot(), before);
   /* the refusal says "member": its detail does; (T49; N1075) its row's translation is words.json's, read by key */
   const refused = await w.c.recover({ handle: "nobody-here", code: "x", password: "new-passphrase-1" });
-  assert.match(refused.detail, /active member's/);
+  assert.equal(refused.detail, word("credentials.index.no_password_was_set"));
   assert.doesNotMatch(refused.detail, /administrator/);
   assert.equal(SIGN_IN_CHECKS.RECOVERY_REFUSED.translation, CREDENTIALS_WORDS["refusal.RECOVERY_REFUSED"]);
   assert.equal(w.c.recoveryCodesIssue({ by: "admin" }).ok, true, "control: the founder");

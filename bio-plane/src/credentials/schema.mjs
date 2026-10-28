@@ -128,10 +128,14 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   -- R79 (T50; N1186): the project a run's credential was minted in (aiRunCredentialMint's optional \`project\`), the
   -- project that fences the viewer the credential makes; NULL for a credential minted with none, and for every
   -- earlier one. Never changes after minting; never back-filled.
-  project         TEXT
+  project         TEXT,
+  -- R63 (T53; K5457): the account that served the segment this run credential was minted for, given by ai-runs from the
+  -- account accountFor answered; revoked with it (R73). NULL for R12's and for every earlier credential.
+  account_id      TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_run ON ai_credentials(run);
+CREATE INDEX IF NOT EXISTS ai_credentials_account ON ai_credentials(account_id);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
 
 -- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, stored only sealed
@@ -267,6 +271,9 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["ai_credentials", "run", "TEXT"],
   /* R79 (T50): the project a grant or a run's credential was minted in; NULL for every earlier one */
   ["ai_credentials", "project", "TEXT"],
+  /* R63 (T53; K5457): the account that served the segment a run's credential was minted for (`ai-runs` passes the account
+     `accountFor` answered); NULL for every earlier credential and for R12's. Never back-filled. */
+  ["ai_credentials", "account_id", "TEXT"],
   ["ai_grants", "project", "TEXT"],
   /* R65, R66 (T47): a session's device, its last activity and its re-ask window */
   ["sessions", "device", "TEXT"],

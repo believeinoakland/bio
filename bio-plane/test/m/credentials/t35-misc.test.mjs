@@ -30,7 +30,7 @@ test("R42 R12 aiCredentialMint takes an optional expiresInDays, a whole number f
     const r = w.c.aiCredentialMint({ ...base, tokenId: "t", expiresInDays });
     assert.deepEqual(shape(r), { ok: false, reason: "AI_CREDENTIAL_BAD_EXPIRY", code: "AI_CREDENTIAL_BAD_EXPIRY", check: "C-29.28",
       translation: AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_BAD_EXPIRY.translation }, String(expiresInDays));
-    assert.match(r.detail, /Nothing was written\.$/);
+    assert.equal(r.detail, word("credentials.index.expiresindays_is_a", { min: "1", max: "365", default: "90" }));
   }
   assert.equal(w.snapshot(), before, "nothing written");
   for (const [tokenId, expiresInDays, want] of [["d", undefined, "2026-12-30T12:00:00Z"], ["n", null, "2026-12-30T12:00:00Z"],
@@ -198,29 +198,29 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   has(unknown.detail, localize("credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", { v1: "nope" }));
   /* :153, :154 (C-29.22) and index :794 */
   const bare = await world({ sealSecret: null }).group("ann");
-  const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
+  const unsealed = await bare.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
   /* (T50; plan rule 6) ai-accounts' rows are read by key, never quoted: the row's translation is the word itself */
   assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
   has(unsealed.detail, localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read."));
   /* index :822 */
-  has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
+  has((await w.c.accounts.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
     "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
   assert.equal(refused.detail, localize("credentials.index.sign_in_refused", "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential."));
   assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
   /* index :880, :1060, :1243: a sealed key that no longer opens */
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  await w.c.groupKeySet({ key: "sk-group", by: "admin" });
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.groupKeyNoticeSeen({ member: "dee", by: "dee" });
+  await w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.c.accounts.groupKeySet({ key: "sk-group", by: "admin" });
+  w.c.accounts.groupKeySwitch({ on: true, by: "admin" });
+  w.c.accounts.groupKeyNoticeSeen({ member: "dee", by: "dee" });
   await w.c.keyedServiceSet({ service: "courtlistener", key: "cl", by: "admin" });
   w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
   const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: `${SEAL}-changed` });
-  has((await other.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
+  has((await other.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
     localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
-  w.c.groupKeyNoticeSeen({ member: "second", by: "second" });
-  has((await other.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
+  w.c.accounts.groupKeyNoticeSeen({ member: "second", by: "second" });
+  has((await other.accounts.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
     localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
   has((await other.keyedServiceFor({ service: "courtlistener" })).detail,
     localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
@@ -244,31 +244,31 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
     w.c.aiCredentialMint({ who: "ann", principalKind: "organisation", tokenId: "t" }),
     w.c.aiCredentialMint({ who: "ann", principalKind: "member", tokenId: "t", expiresInDays: 0 }),
     w.c.aiCredentialRevoke({ who: "class:ai" }), w.c.aiCredentialRevoke({ who: "ann", tokenId: "x" }),
-    w.c.accountReferenceSet({ member: "ann", kind: "x", secret: "s", by: "ann" }), w.c.accountReferenceSet({ member: "ann", by: null }),
-    w.c.accountReferenceSet({ member: "ann", by: "dee" }), w.c.accountReferenceSet({ member: "dee", by: "dee" }),
-    w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "", by: "ann" }), w.c.accountUsesSet({ owner: "member:ann", switch: "x", by: "ann" }),
-    w.c.accountReferenceFor({ member: "ann", act: null }), w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    w.c.groupKeySet({ key: "k", by: "ann" }), w.c.groupKeyState({ viewer: null }),
+    w.c.accounts.accountReferenceSet({ member: "ann", kind: "x", secret: "s", by: "ann" }), w.c.accounts.accountReferenceSet({ member: "ann", by: null }),
+    w.c.accounts.accountReferenceSet({ member: "ann", by: "dee" }), w.c.accounts.accountReferenceSet({ member: "dee", by: "dee" }),
+    w.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "", by: "ann" }), w.c.accounts.accountUsesSet({ owner: "member:ann", switch: "x", by: "ann" }),
+    w.c.accounts.accountReferenceFor({ member: "ann", act: null }), w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
+    w.c.accounts.groupKeySet({ key: "k", by: "ann" }), w.c.accounts.groupKeyState({ viewer: null }),
     w.c.aiGrantAdmit({ token: "x" }), w.c.aiGrantMintStanding({ member: "ann", question: "q" }),
     w.c.keyedServiceFor({ service: "x" }), w.c.keyedServiceFor({ service: "courtlistener" }), w.c.keyedServiceSet({ service: "courtlistener", key: "", by: "admin" }),
-    w.c.subscriptionConnected({ member: "ann", token: "t" }), w.c.subscriptionConnected({ member: "dee" }),
+    w.c.accounts.subscriptionConnected({ member: "ann", token: "t" }), w.c.accounts.subscriptionConnected({ member: "dee" }),
     w.c.securityCount({ kind: "x" }), w.c.securityMap({ from: "x", to: "y", by: "admin" }), w.c.securityMap({ by: "ann" }),
     w.c.signOut({ token: "x" }), w.c.recoveryCodesIssue({ by: "ann" }),
     w.c.recover({ handle: "ann", code: "x", password: "new-passphrase-1", source: "a" }),
     w.c.login({ handle: "x", password: "wrong-passphrase", source: "b" }),
-    bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" }),
+    bare.c.accounts.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" }),
     /* T37's refusals: R3's three of its own, R53's mint with no digest */
     w.c.passwordChange({ by: "class:admin" }), w.c.passwordChange({ by: "ann", session: "none" }),
     w.c.aiCredentialMint({ who: "ann", tokenId: "nd", principalKind: "member" }),
     /* T36's refusals: AI_KEEP_AWAY_NO_REASON, a security tool's empty set, the totals' period and failure */
-    w.c.aiKeepAwaySet({ on: true, by: "admin" }), w.c.keyedServiceSet({ service: "security:t1", key: { a: "" }, by: "admin" }),
+    w.c.accounts.aiKeepAwaySet({ on: true, by: "admin" }), w.c.keyedServiceSet({ service: "security:t1", key: { a: "" }, by: "admin" }),
     w.c.keyedServiceSet({ service: "security:", key: "k", by: "admin" }), w.c.securityTotals({ from: "x", to: "y" }),
     w.c.securityTotals.call(Object.create(Object.getPrototypeOf(w.c)), { from: 0, to: 1 })]) await keep(p);
   /* AI_KEPT_AWAY, read and unread */
-  w.c.aiKeepAwaySet({ on: true, reason: "r", by: "admin" });
-  await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
+  w.c.accounts.aiKeepAwaySet({ on: true, reason: "r", by: "admin" });
+  await keep(w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
   w.sql.exec(`DROP TABLE ai_keep_away`);
-  await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
+  await keep(w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
   for (let i = 0; i < 10; i++) await w.c.login({ handle: "y", password: "wrong", source: `p${i}` });
   await keep(w.c.login({ handle: "y", password: "wrong", source: "p" }));
   let n = 0;

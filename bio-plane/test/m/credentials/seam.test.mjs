@@ -114,7 +114,7 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal(typeof sess, "string");
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
   w.c.aiCredentialMint({ tokenId: "t1", secretSha: "a".repeat(64), principalKind: "member", who: "second" });
-  assert.equal((await w.c.accountReferenceSet({ member: "second", kind: "apikey", secret: "sk-test", by: "second" })).ok, true);
+  assert.equal((await w.c.accounts.accountReferenceSet({ member: "second", kind: "apikey", secret: "sk-test", by: "second" })).ok, true);
   assert.equal((await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-key", by: "second" })).ok, true);
   assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
   assert.equal(w.c.passwordResetLinkMake({ member: "second", by: "admin" }).ok, true);   /* T47: R69's table */
