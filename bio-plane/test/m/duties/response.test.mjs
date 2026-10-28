@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, fictionalView, E, BOB, CAROL, MACHINE, ZONE, SHA } from "./fixture.mjs";
 import { DUTIES_CHECKS, CAPTURES_MAX, STATED_BASIS, BASIS_KINDS } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AS_OF = "2026-03-02T12:00:00Z";
 const day = (value) => ({ value, precision: "day", zone: ZONE });
@@ -127,7 +128,7 @@ test("R23 the fifth basis kind, the other side's stated deadline, is a deadline 
     row(r, "UNKNOWN_BASIS_KIND");
     assert.deepEqual(r.bases, ["rule", "commitment", "dependency", "window"]);
     for (const b of r.bases) assert.ok(r.detail.includes(b), b);
-    assert.match(r.detail, /a deadline on the team/);
+    assert.ok(r.detail.includes(word("duties.index.stated_basis_team_deadline")));
   }
   assert.equal(STATED_BASIS, "stated", "action-clocks' spelling (its R7)");
   assert.ok(!BASIS_KINDS.includes(STATED_BASIS));

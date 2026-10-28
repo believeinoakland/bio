@@ -46,6 +46,22 @@ export const CONCERNS_KINDS = Object.freeze(["contract", "fund", "program", "pro
 /** The change notice's changes (R23). */
 export const CHANGES = Object.freeze(["added", "withdrawn", "adjusted", "set_changed"]);
 
-/* The members' words (K1486): money words by context, a followed flow a "money trail". The connection kind's word. */
-export const CONNECTION_KIND = "money_flow";
-export const CONNECTION_WORD = "money";
+/* R36 (T53; N1260): the connection kinds are five families of the closed fact kinds (R1), not one. Each fact is one hop
+   from payer to payee carrying its own `money.kind`; its edge is under exactly one family. The words are the design's by
+   key `label.connectionkinds.<kind>` (K1486); money holds provisional plain ones until the design gives them. */
+export const CONNECTION_FAMILIES = Object.freeze({
+  money_transfer: Object.freeze(["transfer", "allocation"]),
+  money_payment: Object.freeze(["expenditure", "payment", "settlement"]),
+  money_contribution: Object.freeze(["contribution", "gift", "behested"]),
+  money_revenue: Object.freeze(["revenue", "income", "fee charged"]),
+  money_other: Object.freeze(["debt", "balance", "other"]),
+});
+export const CONNECTION_KIND_NAMES = Object.freeze(Object.keys(CONNECTION_FAMILIES));
+/** R36: each of the 14 closed fact kinds, to exactly one connection kind. */
+export const MONEY_KIND_FAMILY = Object.freeze(Object.fromEntries(
+  Object.entries(CONNECTION_FAMILIES).flatMap(([family, ks]) => ks.map((k) => [k, family]))));
+/** R36: the fact kinds of a connection kind (empty for a name that is not one). */
+export const kindsOfFamily = (connectionKind) =>
+  Object.prototype.hasOwnProperty.call(CONNECTION_FAMILIES, connectionKind) ? CONNECTION_FAMILIES[connectionKind] : Object.freeze([]);
+/* R36: a set's source-document edge has no fact's kind. */
+export const DOCUMENT_EDGE_KIND = "money_other";

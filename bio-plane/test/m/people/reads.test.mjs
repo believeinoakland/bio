@@ -105,10 +105,10 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   assert.equal(held.issuer_identifier_why, undefined);
   const none = creds.find((x) => x.line_id === bare);
   assert.equal(none.issuer_identifier, null);
-  assert.match(none.issuer_identifier_why, /holds no identifier under port_ellery_registry/);
+  assert.equal(none.issuer_identifier_why, word("people.issuer_holds_identifier", { named: "port_ellery_registry, committee, company", plural: "s" }));
   const unnamed = creds.find((x) => x.line_id === guilded);
   assert.equal(unnamed.issuer_identifier, null);
-  assert.match(unnamed.issuer_identifier_why, /name no identifier scheme for an issuer of kind movement/);
+  assert.equal(unnamed.issuer_identifier_why, word("people.active_jurisdiction_profiles", { kind: "movement" }));
   assert.ok(!("issuer_identifier" in creds.find((x) => x.kind === "educated_at")));
   /* with no profile active, no scheme is named: null with why, never a guess */
   const w0 = world({ profiles: [] });
@@ -116,7 +116,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   w0.line("credentialed_by", p0, i0, span("1996-01-01", "2026-12-31"));
   const c0 = w0.p.credentialsOf({ entityId: p0, viewer: ANN }).credentials[0];
   assert.equal(c0.issuer_identifier, null);
-  assert.match(c0.issuer_identifier_why, /name no identifier scheme/);
+  assert.equal(c0.issuer_identifier_why, word("people.active_jurisdiction_profiles", { kind: "institution" }));
   const asOf = w.p.credentialsOf({ entityId: a, at: "2000-01-01", viewer: ANN }).credentials;
   assert.deepEqual(asOf.map((x) => x.line_id).sort(), [cred, bare, guilded].sort());
   const share = w.line("owns_interest_in", a, co, span("2016-01-01", "2016-12-31"));
