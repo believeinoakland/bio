@@ -5,7 +5,8 @@
 import { localize } from "../setup-words/index.mjs";
 import { refusal } from "./core.mjs";
 
-const MEMBER = ["admin", "member", "probe"];
+/* no op is a machine credential's: the module refuses a machine author itself, and op-declarations is told so (`machineClasses: []`) */
+const MEMBER = ["admin", "member"];
 const ADMIN = ["admin", "member"];
 
 /* op: [arm kind, classes, mutating, weight, ms, accepts, requires, description] */
@@ -34,7 +35,7 @@ const TABLE = {
 
 /** R38: every op the module serves, declared, each held true by calling it as the door does. */
 export const DECLARED_OPS = Object.freeze(Object.fromEntries(Object.entries(TABLE).map(([op, [, classes, mutating, weight, ms, accepts, requires, description]]) => [op, {
-  classes: [...classes], mutating, weight,
+  classes: [...classes], machineClasses: [], mutating, weight, stamps: ["viewer", "by"], needs: "contribute",
   description, budget_ms: ms,
   fields: { accepts: [...accepts], requires: requires.map((r) => (Array.isArray(r) ? [...r] : r)) } }])));
 
