@@ -10,11 +10,10 @@
  * the bound it was judged against on a refusal. */
 import { boundOf, statement } from "../read-bounds.mjs";
 import { localize } from "../setup-words/index.mjs";
-import { listArchive, streamMember, hasZipMagic } from "../ooxml.mjs";
+import { listArchive, streamMember, hasZipMagic, hasCfbMagic } from "../ooxml.mjs";
 import { allOf, firstOf, decodeWords, parseDate } from "./mime.mjs";
 import { parseEml } from "./eml.mjs";
 import { parseMsg, isMsg } from "./msg.mjs";
-import { hasCfbMagic } from "./cfb.mjs";
 import { sourceOf, countMessages, readPiece } from "./mbox.mjs";
 
 /* The ceilings, each read when it is needed (R14; `runtime-limits` R37, R46). */
