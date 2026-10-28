@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import * as M from "../../../src/odf.mjs";
 import { CONTAINER_FLAVOURS, sizeGuard } from "../../../src/ooxml.mjs";
 import { docParaRef, docTableRef } from "../../../src/docx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { sheetCellRef, usedSheetRange } from "../../../src/formats-xlsx.mjs";
 import { slideShapeRef } from "../../../src/pptx.mjs";
 import { buildZip, members, pkg, withCd, TYPES, contentXml, enc, prng, sha256Hex, OVER_BOUND, metaXml } from "./pkg.mjs";
@@ -333,10 +334,10 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
     const huge = `<text:p>x<office:annotation><text:p><text:s text:c="2000000000"/></text:p></office:annotation></text:p>`;
     const repeatBody = {
       odt: huge + `<text:p><text:s text:c="2000000000"/></text:p>`,   // structure() reads the comment, text() the paragraph
-      ods: `<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string" table:number-columns-repeated="262145"><text:p>v</text:p></table:table-cell></table:table-row></table:table>`,
+      ods: `<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string" table:number-columns-repeated="${M.ODF_REPEAT_EXPANSION_MAX + 1}"><text:p>v</text:p></table:table-cell></table:table-row></table:table>`,
       odp: `<draw:page><presentation:notes><draw:frame><draw:text-box>${huge}</draw:text-box></draw:frame></presentation:notes></draw:page>`,
     }[f];
-    const marker = { text: "undetermined", why: "over_repeat_bound", units: 262145, bound: 262144,
+    const marker = { text: "undetermined", why: "over_repeat_bound", units: M.ODF_REPEAT_EXPANSION_MAX + 1, bound: M.ODF_REPEAT_EXPANSION_MAX,
       boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units", final: true };
     const sr = await e.structure(pkg(f, { body: repeatBody }));
     const tr = await e.text(pkg(f, { body: repeatBody }));
@@ -353,7 +354,7 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
     const plain = await e.structure(pkg(f));
     assert.ok(plain.evidentiary.undetermined.some((u) => u.part === "meta.xml" && u.why === "part_absent"));
     assert.equal(plain.counts.intra, 0);
-    assert.ok(plain.notes.some((n) => /no intra link/.test(n)));
+    assert.ok(plain.notes.includes(word("odf-reader.odf.no_intra_link_odf_manifest_2", { ODF_MANIFEST_PART: "META-INF/manifest.xml" })));
   }
 });
 
@@ -361,7 +362,7 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
 
 test("R43 the module owns no check: it exports readers and constants only, and every element reference it emits is office-readers' own", async () => {
   assert.deepEqual(Object.keys(M).sort(), [
-    "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS", "ODF_REPEAT_EXPANSION_MAX",
+    "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_NORMALISE", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS", "ODF_REPEAT_EXPANSION_MAX",
     "ODP_CONTENT_TYPE", "ODP_ROW", "ODS_CONTENT_TYPE", "ODS_ROW", "ODT_CONTENT_TYPE", "ODT_ROW",
     "isOdfTextPart", "odfEvidentiaryDigest", "odpEntry", "odsEntry", "odtEntry", "odtNormalisedContentXml",
   ]);

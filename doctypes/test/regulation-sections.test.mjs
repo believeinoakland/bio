@@ -15,6 +15,7 @@ import { combine, list } from "../../jurisdictions/index.mjs";
 import { PORT_ALDER, LAKEMONT, view, HELD, PA_BYLAW, PA_CODE, withCodeSections, PA_SECTIONS } from "./fixtures.mjs";
 import { servedDocuments, textOf, CODIFIER } from "./codifier.mjs";
 import { word } from "../../bio-plane/src/setup-words/index.mjs";
+import { codeHeadingsIn } from "../sections.mjs";
 
 const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/codifier-answers.json", import.meta.url), "utf8")).documents;
 const FW18 = JSON.parse(fs.readFileSync(new URL("./fixtures/fw18-doctypes.json", import.meta.url), "utf8")).documents;
@@ -42,11 +43,12 @@ test("R9 form is instrument or code; a code section is CERTAIN only on a heading
     assert.equal(c.parsed.form, "code", c.doc.Title);
     assert.equal(c.detect.match, true, c.doc.Title);
     assert.equal(c.detect.confidence, "certain", c.doc.Title);
-    assert.ok(c.detect.signals.some((s) => /section heading/.test(s)), c.doc.Title);
+    const heads = codeHeadingsIn(c.text, { view: CODE_VIEW });
+    assert.ok(c.detect.signals.includes(word("doctypes.regulation.code_headings", { count: String(heads.count), label: String(heads.label) })), c.doc.Title);
     // the same document under a view naming no section form: not a code section, not a regulation
     const bare = read(textOf(c.doc), NO_FORMS);
     assert.equal(bare.parsed.form === "code", false, `${c.doc.Title}: no form, no code`);
-    assert.ok(!(bare.detect.signals || []).some((x) => /section heading/.test(x)), `${c.doc.Title}: no heading without the code's forms`);
+    assert.equal(codeHeadingsIn(bare.text, { view: NO_FORMS }).count, 0, `${c.doc.Title}: no heading without the code's forms`);
   }
   // an instrument stays an instrument, as before
   assert.equal(regulation.parse({ text: PA_BYLAW, view: PA }).form, "instrument");
@@ -244,7 +246,7 @@ test("R16 a section whose heading, text, definitions or exceptions moved, or pre
   assert.ok(e4.some((e) => e.section.join(".") === "2.20.030" && e.moved.includes("heading")));
   // a subsection gone, and one new: each named, which side
   const e5 = evs(reread(c.text.replace(/\nJ\.\n[^\n]*/, "")));
-  assert.ok(e5.some((e) => e.section.join(".") === "2.20.030.J" && e.now === null && /not read now/.test(e.why)));
+  assert.ok(e5.some((e) => e.section.join(".") === "2.20.030.J" && e.now === null && e.why === word("doctypes.regulation.section_gone", { number: String(e.was) })));
   const e6 = regulation.assess(reread(c.text.replace(/\nJ\.\n[^\n]*/, "")), a, { view: CODE_VIEW }).events.filter((e) => e.key === "section");
   assert.ok(e6.some((e) => e.section.join(".") === "2.20.030.J" && e.was === null && e.why === word("doctypes.regulation.section_added", { number: e.now })));
   for (const e of [...e1, ...e2, ...e3, ...e4, ...e5, ...e6]) assert.equal(e.type, "instrument_changed");
@@ -348,5 +350,5 @@ test("R19 sections, definitions and exceptions each carry a stated count, and an
   assert.deepEqual(u.sections, []);
   assert.equal(u.definitions.length, 1);
   assert.equal(u.exceptions.length, 1);
-  for (const x of [...u.definitions, ...u.exceptions]) { assert.equal(x.section, null); assert.match(x.why, /not divided into sections/); }
+  for (const x of [...u.definitions, ...u.exceptions]) { assert.equal(x.section, null); assert.equal(x.why, word("doctypes.sections.not_divided")); }
 });

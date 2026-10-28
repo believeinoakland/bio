@@ -8919,6 +8919,13 @@
       "line": 241
     },
     {
+      "id": "calc-grammar.no_resolver_space",
+      "en": "no resolver for the space \"{space}\"",
+      "module": "calc-grammar",
+      "file": "bio-plane/src/calc-grammar/recipe.mjs",
+      "line": 535
+    },
+    {
       "id": "calc-grammar.recipe.field_shape",
       "en": "each field states its name and its type, the type one of {types}",
       "module": "calc-grammar",
@@ -8938,6 +8945,13 @@
       "module": "calc-grammar",
       "file": "bio-plane/src/calc-grammar/recipe.mjs",
       "line": 475
+    },
+    {
+      "id": "calc-grammar.rows_first_pass",
+      "en": "it answered {size} rows on its first pass and {n} on a later one",
+      "module": "calc-grammar",
+      "file": "bio-plane/src/calc-grammar/tables.mjs",
+      "line": 84
     },
     {
       "id": "calc-grammar.tables.the_input_name_why",
@@ -21446,175 +21460,217 @@
       "en": "a compound file (a legacy office document), not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 87
+      "line": 98
     },
     {
       "id": "doc-clean.index.a_data_image_uri_at",
       "en": "a data:image URI at character {index}",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 100
+      "line": 111
+    },
+    {
+      "id": "doc-clean.index.a_mailbox_of_messages_not_a",
+      "en": "a mailbox of messages, not a format this module cleans",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 58
     },
     {
       "id": "doc-clean.index.a_mime_message_not_a",
       "en": "a MIME message, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 94
+      "line": 105
     },
     {
       "id": "doc-clean.index.a_postscript_document_not",
       "en": "a PostScript document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 93
+      "line": 104
     },
     {
       "id": "doc-clean.index.a_zip_archive_that_is_neither",
       "en": "a ZIP archive that is neither an OOXML nor an ODF package",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 74
+      "line": 85
     },
     {
       "id": "doc-clean.index.a_zip_package_of_no",
       "en": "a ZIP package of no office format this module cleans ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 77
+      "line": 88
     },
     {
       "id": "doc-clean.index.an_embedded_image_is_of_a_kind",
       "en": "an embedded image is of a kind whose metadata cannot be stripped",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 28
+      "line": 30
     },
     {
       "id": "doc-clean.index.an_encrypted_office_document_an",
       "en": "an encrypted office document (an EncryptedPackage compound file)",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 86
+      "line": 97
     },
     {
       "id": "doc-clean.index.an_rtf_document_not_a_format",
       "en": "an RTF document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 92
+      "line": 103
     },
     {
       "id": "doc-clean.index.an_xml_or_svg_document",
       "en": "an XML or SVG document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 96
+      "line": 107
     },
     {
       "id": "doc-clean.index.the_document_carries_a_video_audio",
       "en": "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 30
+      "line": 32
     },
     {
       "id": "doc-clean.index.the_document_carries_an_embedded",
       "en": "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 27
+      "line": 29
     },
     {
       "id": "doc-clean.index.the_document_could_not_be",
       "en": "the document could not be read whole ({String})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 64
+      "line": 75
     },
     {
       "id": "doc-clean.index.the_document_is_encrypted",
       "en": "the document is encrypted",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 26
+      "line": 28
     },
     {
       "id": "doc-clean.index.the_document_is_length_bytes",
       "en": "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 49
+      "line": 55
     },
     {
       "id": "doc-clean.index.the_document_or_one_of",
       "en": "the document, or one of its parts, is larger than this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 33
+      "line": 35
     },
     {
       "id": "doc-clean.index.the_document_s_bytes_are_not",
       "en": "the document's bytes are not a byte array",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 47
+      "line": 53
     },
     {
       "id": "doc-clean.index.the_document_s_structure_cannot",
       "en": "the document's structure cannot be read whole",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 34
+      "line": 36
     },
     {
       "id": "doc-clean.index.the_file_is_a_zip_archive",
       "en": "the file is a ZIP archive, not an office package; a member-supplied archive is never carried",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 31
+      "line": 33
     },
     {
       "id": "doc-clean.index.the_file_is_neither_a_pdf",
       "en": "the file is neither a PDF, an office package nor text",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 90
+      "line": 101
     },
     {
       "id": "doc-clean.index.the_file_is_of_no_format",
       "en": "the file is of no format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 32
+      "line": 34
     },
     {
       "id": "doc-clean.index.the_html_document_embeds_an",
       "en": "the HTML document embeds an image as a data: URI",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 29
+      "line": 31
+    },
+    {
+      "id": "doc-clean.index.the_material_names_are_not",
+      "en": "the material names are not a list of names",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 51
     },
     {
       "id": "doc-clean.index.the_package_cannot_be_read",
       "en": "the package cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 76
+      "line": 87
     },
     {
       "id": "doc-clean.index.the_package_holds_more_entries",
       "en": "the package holds more entries than this module copies",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 35
+      "line": 37
     },
     {
       "id": "doc-clean.index.the_zip_directory_cannot_be",
       "en": "the ZIP directory cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 73
+      "line": 84
+    },
+    {
+      "id": "doc-clean.mail.address_withheld",
+      "en": "[address withheld]",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 14
+    },
+    {
+      "id": "doc-clean.mail.attachment_index_cannot_be_cut",
+      "en": "attachment {index} of the message cannot be cut: {detail}",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 65
+    },
+    {
+      "id": "doc-clean.mail.attachment_index_detail",
+      "en": "attachment {index}: {detail}",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 67
+    },
+    {
+      "id": "doc-clean.mail.withheld",
+      "en": "withheld",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/mail.mjs",
+      "line": 13
     },
     {
       "id": "doc-clean.package.part_cannot_be_read_why",
@@ -29034,217 +29090,217 @@
       "en": "a compound file of a kind this list does not name",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 515
+      "line": 517
     },
     {
       "id": "format-registry.formats.container_judged_from_end",
       "en": "judged from the end record and the central directory of {size} bytes",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 201
+      "line": 203
     },
     {
       "id": "format-registry.formats.content_type_ct_matched_no",
       "en": "content type \"{ct}\" matched no registered format",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 140
+      "line": 142
     },
     {
       "id": "format-registry.formats.encrypt_in_trailer",
       "en": "/Encrypt in the trailer",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 408
+      "line": 410
     },
     {
       "id": "format-registry.formats.encrypted_office_container",
       "en": "an encrypted Office container; the kind is taken from its name or declared type",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 509
+      "line": 511
     },
     {
       "id": "format-registry.formats.encrypted_office_unknown",
       "en": "an encrypted Office container whose kind cannot be read",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 510
+      "line": 512
     },
     {
       "id": "format-registry.formats.epub_mimetype",
       "en": "the first member is the EPUB mimetype",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 442
+      "line": 444
     },
     {
       "id": "format-registry.formats.installer_package",
       "en": "a Windows installer package",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 503
+      "line": 505
     },
     {
       "id": "format-registry.formats.magic_doctype_root_tag",
       "en": "magic: doctype/root tag in the first 1024 bytes",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 649
+      "line": 651
     },
     {
       "id": "format-registry.formats.magic_hex_at_offset",
       "en": "magic: {hex} at offset {at}",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 251
+      "line": 253
     },
     {
       "id": "format-registry.formats.magic_hex_at_offset_0",
       "en": "magic: {hex} at offset 0",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 582
+      "line": 584
     },
     {
       "id": "format-registry.formats.member_encrypted",
       "en": "a member is encrypted",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 431
+      "line": 433
     },
     {
       "id": "format-registry.formats.name_and_delimited_head",
       "en": "name \"{name}\" and a head of delimited text",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 161
+      "line": 163
     },
     {
       "id": "format-registry.formats.name_disagrees_with_content",
       "en": "the name \"{name}\" suggests {expected}, the content is {format}",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 556
+      "line": 558
     },
     {
       "id": "format-registry.formats.native_executable",
       "en": "a program for another system: ELF or Mach-O",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 495
+      "line": 497
     },
     {
       "id": "format-registry.formats.no_bytes_to_sniff",
       "en": "no bytes were available to sniff",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 139
+      "line": 141
     },
     {
       "id": "format-registry.formats.no_content_type_declared",
       "en": "no content type was declared",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 140
+      "line": 142
     },
     {
       "id": "format-registry.formats.no_magic_byte_match",
       "en": "no registered magic-byte signature matched",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 139
+      "line": 141
     },
     {
       "id": "format-registry.formats.part_android_manifest",
       "en": "part: AndroidManifest.xml and classes.dex",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 450
+      "line": 452
     },
     {
       "id": "format-registry.formats.part_iwork_index",
       "en": "part: an Apple iWork Index",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 448
+      "line": 450
     },
     {
       "id": "format-registry.formats.part_jar_manifest",
       "en": "part: META-INF/MANIFEST.MF",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 452
+      "line": 454
     },
     {
       "id": "format-registry.formats.part_visio_document",
       "en": "part: visio/document.xml",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 445
+      "line": 447
     },
     {
       "id": "format-registry.formats.part_xl_workbook_bin",
       "en": "part: xl/workbook.bin",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 444
+      "line": 446
     },
     {
       "id": "format-registry.formats.portable_executable",
       "en": "a Windows program: MZ with a PE header",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 490
+      "line": 492
     },
     {
       "id": "format-registry.formats.script_echo_off",
       "en": "a script: it begins with @echo off",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 529
+      "line": 531
     },
     {
       "id": "format-registry.formats.script_name",
       "en": "a script file: the text is named .{ext}",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 532
+      "line": 534
     },
     {
       "id": "format-registry.formats.script_shebang",
       "en": "a script: it begins with #!",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 528
+      "line": 530
     },
     {
       "id": "format-registry.formats.template_package",
       "en": "the package is a template",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 423
+      "line": 425
     },
     {
       "id": "format-registry.formats.valid_text_no_structure",
       "en": "valid text in a known encoding with no other leading structure",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 370
+      "line": 372
     },
     {
       "id": "format-registry.formats.vba_project_present",
       "en": "a VBA project is in the package; nothing is run",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 420
+      "line": 422
     },
     {
       "id": "format-registry.formats.virtual_disk",
       "en": "a virtual disk",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 497
+      "line": 499
     },
     {
       "id": "hypotheses.checks.a_hypothesis_is_held_in",
@@ -30287,77 +30343,105 @@
       "en": "The photo is too large to cover safely, so it was refused. Nothing was changed.",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 34
+      "line": 37
     },
     {
       "id": "image-cover.index.the_image_is_length_bytes",
       "en": "the image is {length} bytes, over the {COVER_MAX_BYTES} this module reads",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 77
+      "line": 80
     },
     {
       "id": "image-cover.index.the_images_bytes_are_not_a_byte_array",
       "en": "the image's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 75
+      "line": 78
     },
     {
       "id": "image-cover.index.the_images_structure_cannot_be",
       "en": "the image's structure cannot be walked ({v1})",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 81
+      "line": 84
     },
     {
       "id": "image-cover.index.the_photo_is_length_bytes",
       "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module covers",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 47
+      "line": 50
     },
     {
       "id": "image-cover.index.the_photo_is_neither_a_jpeg_nor_a_png",
       "en": "the photo is neither a JPEG nor a PNG",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 52
+      "line": 55
     },
     {
       "id": "image-cover.index.the_photos_bytes_are_not_a_byte_array",
       "en": "the photo's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 45
+      "line": 48
     },
     {
       "id": "image-cover.jpeg.multi_scan_sequential_length_of",
       "en": "multi-scan sequential: {length} of {nc} components in the first scan",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/jpeg.mjs",
-      "line": 246
+      "line": 247
     },
     {
       "id": "image-cover.jpeg.the_jpeg_data_cannot_be",
       "en": "the JPEG data cannot be read{v1}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/jpeg.mjs",
-      "line": 37
+      "line": 38
     },
     {
       "id": "image-cover.jpeg.the_jpeg_data_ends_before",
       "en": "the JPEG data ends before the image does{v1}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/jpeg.mjs",
-      "line": 35
+      "line": 36
+    },
+    {
+      "id": "image-cover.jpeg.the_jpeg_is_past_a_bound",
+      "en": "the JPEG declares more than this module reads{v1}",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/jpeg.mjs",
+      "line": 33
     },
     {
       "id": "image-cover.jpeg.this_jpegs_coding_is_not",
       "en": "this JPEG's coding is not covered ({code}{v1}); only baseline or extended-sequential Huffman, 8-bit, one scan, grey or three components",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/jpeg.mjs",
-      "line": 38
+      "line": 39
+    },
+    {
+      "id": "image-cover.photo.the_photo_is_length_bytes",
+      "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module reads",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/photo.mjs",
+      "line": 342
+    },
+    {
+      "id": "image-cover.photo.the_photo_is_neither_a_jpeg_nor_a_png",
+      "en": "the photo is neither a JPEG nor a PNG",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/photo.mjs",
+      "line": 344
+    },
+    {
+      "id": "image-cover.photo.the_photos_bytes_are_not_a_byte_array",
+      "en": "the photo's bytes are not a byte array",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/photo.mjs",
+      "line": 340
     },
     {
       "id": "image-cover.png.png_bit_depth_depth_only",
@@ -30386,6 +30470,97 @@
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/png.mjs",
       "line": 34
+    },
+    {
+      "id": "image-cover.redraw.an_interlaced_adam7_png_is",
+      "en": "an interlaced (Adam7) PNG is not redrawn",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 34
+    },
+    {
+      "id": "image-cover.redraw.decoded_frame",
+      "en": "decoded frame",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 77
+    },
+    {
+      "id": "image-cover.redraw.not_a_png",
+      "en": "not a PNG{note}",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 31
+    },
+    {
+      "id": "image-cover.redraw.redrawn_picture",
+      "en": "redrawn picture",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 114
+    },
+    {
+      "id": "image-cover.redraw.the_images_structure_cannot_be",
+      "en": "the image's data cannot be read ({v1})",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 134
+    },
+    {
+      "id": "image-cover.redraw.the_photo_is_length_bytes",
+      "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module redraws",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 111
+    },
+    {
+      "id": "image-cover.redraw.the_photo_is_neither_a_jpeg_nor_a_png",
+      "en": "the photo is neither a JPEG nor a PNG",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 113
+    },
+    {
+      "id": "image-cover.redraw.the_photos_bytes_are_not_a_byte_array",
+      "en": "the photo's bytes are not a byte array",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 109
+    },
+    {
+      "id": "image-cover.redraw.the_png_declares_more_than",
+      "en": "the PNG declares more than this module redraws{v1}",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 33
+    },
+    {
+      "id": "image-cover.redraw.the_png_has_no_header",
+      "en": "the PNG has no readable header",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 94
+    },
+    {
+      "id": "image-cover.redraw.the_png_uses_a_feature",
+      "en": "the PNG uses a feature that is not redrawn{note}",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 35
+    },
+    {
+      "id": "image-cover.redraw.the_what_is_size_over",
+      "en": "the {what} is {size} bytes, over the {bound} this module redraws",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 25
+    },
+    {
+      "id": "image-cover.redraw.this_jpegs_coding_is_not",
+      "en": "this JPEG has {n} components; only grey or three are redrawn",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/redraw.mjs",
+      "line": 82
     },
     {
       "id": "image-cover.strip.a_box_header_runs_past_its_container",
@@ -35869,6 +36044,13 @@
       "line": 455
     },
     {
+      "id": "legistar-reader.index.the_address_is_not_a_legistar",
+      "en": "the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)",
+      "module": "legistar-reader",
+      "file": "legistar-reader/index.mjs",
+      "line": 70
+    },
+    {
       "id": "legistar-reader.index.the_address_names_a_client",
       "en": "the address names a Legistar client but no endpoint",
       "module": "legistar-reader",
@@ -35895,6 +36077,13 @@
       "module": "legistar-reader",
       "file": "legistar-reader/index.mjs",
       "line": 138
+    },
+    {
+      "id": "legistar-reader.index.the_bytes_are_json_but_not",
+      "en": "the bytes are JSON but not an object or an array of objects",
+      "module": "legistar-reader",
+      "file": "legistar-reader/index.mjs",
+      "line": 137
     },
     {
       "id": "legistar-reader.index.the_bytes_are_not_json",
@@ -36854,6 +37043,104 @@
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
       "line": 1080
+    },
+    {
+      "id": "mail-reader.refusal.attachment_no_such",
+      "en": "This message has no attachment {index}.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 46
+    },
+    {
+      "id": "mail-reader.refusal.attachment_not_cut",
+      "en": "Attachment {index} is a message kept inside this Outlook message; it is read with the message, not on its own.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 47
+    },
+    {
+      "id": "mail-reader.refusal.boundary_bad",
+      "en": "This message's parts are not separated the way it declares, so it cannot be read. Ask the sender for a fresh copy.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 39
+    },
+    {
+      "id": "mail-reader.refusal.empty",
+      "en": "This file is empty, so there is no message to read.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 41
+    },
+    {
+      "id": "mail-reader.refusal.is_mailbox",
+      "en": "This file is a mailbox of messages, not one message; it is read as a mailbox.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 43
+    },
+    {
+      "id": "mail-reader.refusal.mailbox_malformed",
+      "en": "This file does not begin like a mailbox, so its messages cannot be found.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 44
+    },
+    {
+      "id": "mail-reader.refusal.mailbox_too_large",
+      "en": "This mailbox is {size} bytes, more than the {bound} bytes a mailbox may be. Split it into smaller mailboxes and bring each in.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 38
+    },
+    {
+      "id": "mail-reader.refusal.mailbox_too_many",
+      "en": "This mailbox holds more than {bound} messages, so it is not read. Split it into smaller mailboxes and bring each in.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 37
+    },
+    {
+      "id": "mail-reader.refusal.malformed",
+      "en": "This message is damaged in a way that stops it being read. Ask the sender for a fresh copy.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 48
+    },
+    {
+      "id": "mail-reader.refusal.msg_container_bad",
+      "en": "This Outlook message is damaged or cut short, so it cannot be read. Save it again from Outlook and bring it in.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 40
+    },
+    {
+      "id": "mail-reader.refusal.not_a_message",
+      "en": "This file is not an email message, so it is not read as one.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 42
+    },
+    {
+      "id": "mail-reader.refusal.source_unreadable",
+      "en": "This message could not be read from storage. Try again in a moment.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 45
+    },
+    {
+      "id": "mail-reader.refusal.too_large",
+      "en": "This message is {size} bytes, more than the {bound} bytes a message may be. Save its attachments separately and bring them in one by one.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 35
+    },
+    {
+      "id": "mail-reader.refusal.too_nested",
+      "en": "This message is nested more than {max} levels deep (it reached {depth}); nothing deeper is opened. Open the inner message and bring it in on its own.",
+      "module": "mail-reader",
+      "file": "bio-plane/src/mail-reader/index.mjs",
+      "line": 36
     },
     {
       "id": "member-roster.declared.adminendorse",
@@ -40059,7 +40346,14 @@
       "en": "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it",
       "module": "ocr-worker",
       "file": "ocr-worker/src/tessengine.mjs",
-      "line": 64
+      "line": 63
+    },
+    {
+      "id": "ocr-worker.tessengine.the_wasm_core_did_not_arrive",
+      "en": "the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, and this member must be installed with its `assets/tesseract-core.wasm` part",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/tessengine.mjs",
+      "line": 61
     },
     {
       "id": "odf-reader.odf.content_xml_byte_identical_across",
@@ -40118,6 +40412,13 @@
       "line": 2894
     },
     {
+      "id": "odf-reader.odf.no_byte_rewritten",
+      "en": ", no byte rewritten",
+      "module": "odf-reader",
+      "file": "bio-plane/src/odf.mjs",
+      "line": 2901
+    },
+    {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
@@ -40144,6 +40445,13 @@
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
       "line": 2758
+    },
+    {
+      "id": "odf-reader.odf.normalised_by",
+      "en": ", normalised by {name}",
+      "module": "odf-reader",
+      "file": "bio-plane/src/odf.mjs",
+      "line": 2901
     },
     {
       "id": "odf-reader.odf.part_odf_mimetype_part_is",
@@ -44619,6 +44927,132 @@
       "line": 189
     },
     {
+      "id": "reader-container.note.encrypted",
+      "en": "This file is locked with a password, so it was kept but not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/reader.mjs",
+      "line": 96
+    },
+    {
+      "id": "reader-container.note.macros",
+      "en": "This document holds macros. They were not run.",
+      "module": "reader-container",
+      "file": "reader-container/src/reader.mjs",
+      "line": 94
+    },
+    {
+      "id": "reader-container.refusal.archive_over_bound",
+      "en": "This archive is {size}, over the limit of {limit} for an archive as uploaded, so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 26
+    },
+    {
+      "id": "reader-container.refusal.document_over_bound",
+      "en": "This document is {size}, over the limit of {limit} for a document, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 23
+    },
+    {
+      "id": "reader-container.refusal.member",
+      "en": "A file in this archive is {size}, over the limit of {limit} for one file, so the archive was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 51
+    },
+    {
+      "id": "reader-container.refusal.members",
+      "en": "This archive holds more than {limit} files, so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 42
+    },
+    {
+      "id": "reader-container.refusal.name",
+      "en": "A file in this archive has a name longer than {limit} characters, so the archive was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 54
+    },
+    {
+      "id": "reader-container.refusal.nested",
+      "en": "This archive is nested more than {limit} levels deep (level {depth}), so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 39
+    },
+    {
+      "id": "reader-container.refusal.not_read_here",
+      "en": "This kind of file ({kind}) is not read by the container reader.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 35
+    },
+    {
+      "id": "reader-container.refusal.pages",
+      "en": "This picture has {pages} pages, over the limit of {limit} pages, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 61
+    },
+    {
+      "id": "reader-container.refusal.picture_over_bound",
+      "en": "This picture is {size}, over the limit of {limit} for a picture, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 25
+    },
+    {
+      "id": "reader-container.refusal.pixels",
+      "en": "This picture is {pixels} pixels, over the limit of {limit} pixels, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 58
+    },
+    {
+      "id": "reader-container.refusal.rar",
+      "en": "RAR archives are not opened. Unpack it and add the files, or add it as a ZIP.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 32
+    },
+    {
+      "id": "reader-container.refusal.ratio",
+      "en": "A file in this archive unpacks to more than {limit} times its packed size, which no ordinary archive does, so the archive was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 45
+    },
+    {
+      "id": "reader-container.refusal.spreadsheet_over_bound",
+      "en": "This spreadsheet is {size}, over the limit of {limit} for a spreadsheet, so it was not read.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 24
+    },
+    {
+      "id": "reader-container.refusal.unpacked",
+      "en": "This archive unpacks to more than {limit}, so it was not opened.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 48
+    },
+    {
+      "id": "reader-container.refusal.unreachable",
+      "en": "The reader could not be reached. The file is kept; it will be read when the reader is back.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 67
+    },
+    {
+      "id": "reader-container.refusal.unreadable",
+      "en": "This file could not be read: it is damaged or not what its type says.",
+      "module": "reader-container",
+      "file": "reader-container/src/refusal.mjs",
+      "line": 64
+    },
+    {
       "id": "reading-guides.check.a_guide_holds_from_1",
       "en": "a guide holds from 1 to {ITEMS_MAX} items; {v1}. Nothing was written.",
       "module": "reading-guides",
@@ -45739,6 +46173,27 @@
       "line": 147
     },
     {
+      "id": "record-grammar.acts.no_basis.entities",
+      "en": "held identifier and grade-D testimony",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 56
+    },
+    {
+      "id": "record-grammar.acts.no_basis.progressions",
+      "en": "first declaration and revision of a declared flow",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 54
+    },
+    {
+      "id": "record-grammar.acts.no_citation.progressions",
+      "en": "revision of a declared flow and exception document",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 65
+    },
+    {
       "id": "record-grammar.bundle.adjust_the_later_record_timestamp_suffix",
       "en": "adjust the later record timestamp suffix by one second, logged",
       "module": "record-grammar",
@@ -46451,6 +46906,13 @@
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/frontmatter.mjs",
       "line": 161
+    },
+    {
+      "id": "record-grammar.labels.unknown_subject",
+      "en": "proposalLabel: '{subject}' is not a proposal subject; one of {subjects}",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/labels.mjs",
+      "line": 203
     },
     {
       "id": "reevaluation.checks.only_a_named_member_can",
@@ -52030,6 +52492,160 @@
       "module": "strength",
       "file": "bio-plane/src/strength/origins.mjs",
       "line": 158
+    },
+    {
+      "id": "structured-text.cursor_mismatch",
+      "en": "This place in the reading does not belong to this file, so the reading has to start again.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 125
+    },
+    {
+      "id": "structured-text.encoding_unsupported",
+      "en": "This {kind} file is written in a text encoding that cannot be read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 119
+    },
+    {
+      "id": "structured-text.events_over_limit",
+      "en": "This calendar holds more than {bound} events, the limit, so the whole file was refused.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 61
+    },
+    {
+      "id": "structured-text.kmz_member_corrupt",
+      "en": "The KML document inside this KMZ archive is damaged ({why}), so it was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 226
+    },
+    {
+      "id": "structured-text.kmz_no_kml",
+      "en": "This KMZ archive holds no KML document, so there is no map data in it to read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 190
+    },
+    {
+      "id": "structured-text.kmz_unreadable",
+      "en": "This KMZ archive could not be opened ({why}), so its map data was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 185
+    },
+    {
+      "id": "structured-text.nesting_over_limit",
+      "en": "This {kind} file nests values more than {bound} levels deep, the limit, so the whole file was refused (found at line {line}).",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 56
+    },
+    {
+      "id": "structured-text.signal.declared",
+      "en": "likely, not certain: a declared type is a claim, and no bytes were given to check it",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 166
+    },
+    {
+      "id": "structured-text.signal.geojson",
+      "en": "a GeoJSON object (its type, and features or a geometry)",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 76
+    },
+    {
+      "id": "structured-text.signal.ics",
+      "en": "a calendar file: its first line is BEGIN:VCALENDAR",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 138
+    },
+    {
+      "id": "structured-text.signal.json",
+      "en": "a JSON value",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 73
+    },
+    {
+      "id": "structured-text.signal.json_stops",
+      "en": "a JSON value that stops parsing at line {line}",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 74
+    },
+    {
+      "id": "structured-text.signal.kml",
+      "en": "an XML document whose root element is kml",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 114
+    },
+    {
+      "id": "structured-text.signal.kmz",
+      "en": "a ZIP archive holding the KML document {name}",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 178
+    },
+    {
+      "id": "structured-text.signal.ndjson",
+      "en": "one JSON value on each line",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 69
+    },
+    {
+      "id": "structured-text.signal.srt",
+      "en": "a caption file: a numbered cue and its times",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 141
+    },
+    {
+      "id": "structured-text.signal.svg",
+      "en": "an XML document whose root element is svg",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 113
+    },
+    {
+      "id": "structured-text.signal.vcf",
+      "en": "a contact file: its first line is BEGIN:VCARD",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 139
+    },
+    {
+      "id": "structured-text.signal.vtt",
+      "en": "a caption file: its first line is WEBVTT",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 140
+    },
+    {
+      "id": "structured-text.signal.xml",
+      "en": "an XML document whose root element is {name}",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/detect.mjs",
+      "line": 117
+    },
+    {
+      "id": "structured-text.stopped_at_line",
+      "en": "Read as far as line {line}: the {kind} file stops being valid there, and the rest of it was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 68
+    },
+    {
+      "id": "structured-text.too_large",
+      "en": "This {kind} file is {size} bytes, over the limit of {bound} bytes for this kind of file, so it was not read.",
+      "module": "structured-text-reader",
+      "file": "bio-plane/src/structured-text-reader/index.mjs",
+      "line": 48
     },
     {
       "id": "subresources.subresources.a_scheme_reference_is_not",

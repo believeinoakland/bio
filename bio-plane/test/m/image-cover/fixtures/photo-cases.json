@@ -1,0 +1,570 @@
+{
+ "reference": {
+  "pillow": "12.3.0"
+ },
+ "redraw": [
+  {
+   "file": "422-o5.jpg",
+   "width": 170,
+   "height": 90,
+   "comps": 3,
+   "pixels_sha256": "d4533e6e65acc9abe157cee6f528d007f6fbca5814ec00c942331e2db407a6a7"
+  },
+  {
+   "file": "444-o3.jpg",
+   "width": 150,
+   "height": 101,
+   "comps": 3,
+   "pixels_sha256": "93bfe4316d8ebe164ca46a606222dbb5fe6b09b7d78bd0028630ad658fe7dfc8"
+  },
+  {
+   "file": "adobe-ycc.jpg",
+   "width": 48,
+   "height": 40,
+   "comps": 3,
+   "pixels_sha256": "c9d4273fd00c3763ba58cab740f537e73d8511085d25b753d569abe3fce64df3"
+  },
+  {
+   "file": "grey-alpha.png",
+   "width": 45,
+   "height": 33,
+   "comps": 1,
+   "pixels_sha256": "7e05d85fd7ef9d4d841794972045c605d05590d0cea5d4db792f4f6f81f8b0e7"
+  },
+  {
+   "file": "grey-o8-optimised.jpg",
+   "width": 97,
+   "height": 131,
+   "comps": 1,
+   "pixels_sha256": "ff65b68a34f444ef6a8644e85b0b4deff08ae64fe9647c42981f488ffb75c8f1"
+  },
+  {
+   "file": "grey.png",
+   "width": 45,
+   "height": 33,
+   "comps": 1,
+   "pixels_sha256": "7e05d85fd7ef9d4d841794972045c605d05590d0cea5d4db792f4f6f81f8b0e7"
+  },
+  {
+   "file": "o2.jpg",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "254ae5da684657690c88594cb55e2e618b8fd73b833e4f3003184e08c0782070"
+  },
+  {
+   "file": "o2.png",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "0f9b8fbad3d1c1595519b27896d8bf678888df00b36758fd32cce7f84f234a97"
+  },
+  {
+   "file": "o3.png",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "e6eb9e3135dff914bacf6579a60f13d75b53a2f4585c7acb15fc41768826ebbd"
+  },
+  {
+   "file": "o4.jpg",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "7194e17bba74a4bd8a539f9349607c53861387513469b9e16339483a684172ce"
+  },
+  {
+   "file": "o4.png",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "adb61c0d0ec2c1a241f7b8aed33bdfe36bd0356080aa52958871791cac85510f"
+  },
+  {
+   "file": "o5.png",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "c918d57d29d1d99011619c79566cb25659a17ac2ce17e968c9b487a13afb54d9"
+  },
+  {
+   "file": "o7.jpg",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "4f6bacf5bbaeef70d7a5c9014b8e763e0edc22b05a1dd8c0f5ed04b9002da6c1"
+  },
+  {
+   "file": "o7.png",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "15920d2ccf38747216b75251519ea2f0c53103c72e9f6cce550733578fa9c67a"
+  },
+  {
+   "file": "o8.png",
+   "width": 70,
+   "height": 50,
+   "comps": 3,
+   "pixels_sha256": "b1e1063245c758968d6ab1b1858ac2d7b81f9396b4bc9649b4280712ccebd056"
+  },
+  {
+   "file": "palette-full.png",
+   "width": 64,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "8d3a78e43041dea3d1a13ddc6329444d72e6bc43bf81f1ae2cdb130c6c7806d2"
+  },
+  {
+   "file": "palette-room.png",
+   "width": 64,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "76b3257ddcb17209af5856b3d862a1fec181d1af3ac4707c5bf6ced863a17729"
+  },
+  {
+   "file": "phone-420-o6.jpg",
+   "width": 203,
+   "height": 157,
+   "comps": 3,
+   "pixels_sha256": "06a17d9c171dfaa6054573deea4ee484076ae6d768537fe0c2a7dbe6a094e7ad"
+  },
+  {
+   "file": "photo-apng.png",
+   "width": 80,
+   "height": 60,
+   "comps": 3,
+   "pixels_sha256": "8c5ffda473f97b95bb6aa85fbdc8727a5442130c665f702182dd5cf86730c37a"
+  },
+  {
+   "file": "photo-bare.jpg",
+   "width": 96,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "34184279c3eb9397bd2c4adcc12ba1f77a23bd840608901e76044bde1403549a"
+  },
+  {
+   "file": "photo-bare.png",
+   "width": 80,
+   "height": 60,
+   "comps": 3,
+   "pixels_sha256": "8c5ffda473f97b95bb6aa85fbdc8727a5442130c665f702182dd5cf86730c37a"
+  },
+  {
+   "file": "photo-flat-12mp.jpg",
+   "width": 4032,
+   "height": 3024,
+   "comps": 3,
+   "pixels_sha256": "309d417e352d4b21ede358b8b7eee76f80ef6f9b8ba03edd9f018413f65ad554"
+  },
+  {
+   "file": "photo-full.jpg",
+   "width": 96,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "082332f86fda291ece97e1e4385a4aa2ea9534f269b1b01043ee4bd18cd5fac2"
+  },
+  {
+   "file": "photo-full.png",
+   "width": 80,
+   "height": 60,
+   "comps": 3,
+   "pixels_sha256": "8c5ffda473f97b95bb6aa85fbdc8727a5442130c665f702182dd5cf86730c37a"
+  },
+  {
+   "file": "photo-grey-p3.jpg",
+   "width": 64,
+   "height": 48,
+   "comps": 1,
+   "pixels_sha256": "da524277dd36940521fd64d62340e4fecc5d5849ffd8d44baebe89615b0d6168"
+  },
+  {
+   "file": "photo-p3.jpg",
+   "width": 96,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "34184279c3eb9397bd2c4adcc12ba1f77a23bd840608901e76044bde1403549a"
+  },
+  {
+   "file": "photo-p3.png",
+   "width": 80,
+   "height": 60,
+   "comps": 3,
+   "pixels_sha256": "8c5ffda473f97b95bb6aa85fbdc8727a5442130c665f702182dd5cf86730c37a"
+  },
+  {
+   "file": "photo-xmp.jpg",
+   "width": 96,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "e8b793e6aebc4ebe758258a6d15702d89fad403f58876d4061b55d323e4a38b7"
+  },
+  {
+   "file": "q100-upright-empty.jpg",
+   "width": 64,
+   "height": 48,
+   "comps": 3,
+   "pixels_sha256": "7567027993bc3d114c61551e445e4182d9efbe0afdcc481b16c53628b6625ccd"
+  },
+  {
+   "file": "q100-upright.jpg",
+   "width": 64,
+   "height": 48,
+   "comps": 3,
+   "pixels_sha256": "7567027993bc3d114c61551e445e4182d9efbe0afdcc481b16c53628b6625ccd"
+  },
+  {
+   "file": "rgb-many-idat.png",
+   "width": 77,
+   "height": 55,
+   "comps": 3,
+   "pixels_sha256": "9bf773f1324794b6d7bf3403514ef4990344676e601b9b49d49045a8616ad857"
+  },
+  {
+   "file": "screenshot-rgba-o6.png",
+   "width": 121,
+   "height": 87,
+   "comps": 3,
+   "pixels_sha256": "d986f5c9b93231ab0beb8cb5025ec3ed8f1a1184045bc3d4614ba5bc2641d2bb"
+  },
+  {
+   "file": "strip-4032x64.jpg",
+   "width": 4032,
+   "height": 64,
+   "comps": 3,
+   "pixels_sha256": "e9de7fbef9dbf32b145d454fa0363f00aa5d3d03f38f99bb0d1742bd9fe4a5ab"
+  },
+  {
+   "file": "strip-baseline-o6.jpg",
+   "width": 203,
+   "height": 157,
+   "comps": 3,
+   "pixels_sha256": "25b03ba2c1ae4b0da97aba3dae6979a628b50b9f2de00530cf5600594d9cd84a"
+  },
+  {
+   "file": "strip-clean.png",
+   "width": 20,
+   "height": 10,
+   "comps": 3,
+   "pixels_sha256": "40b95d3360074f941115f61caced5dad3144dd70ef4ba56292d43d97bef089c0"
+  },
+  {
+   "file": "strip-grey-jfif-thumb.jpg",
+   "width": 97,
+   "height": 131,
+   "comps": 1,
+   "pixels_sha256": "0dacd15c47a6ec944f731eb00156de54f34f583d2613e026172b3e0ee50631bf"
+  },
+  {
+   "file": "strip-palette-o8.png",
+   "width": 40,
+   "height": 30,
+   "comps": 3,
+   "pixels_sha256": "caf6348bfd6431df91b3d83916e646887f488f0b2c0a1aa03e067f48600af96b"
+  }
+ ],
+ "facts": [
+  {
+   "file": "photo-full.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "orientation": 6,
+    "make": "TestCam",
+    "model": "Phone One",
+    "software": "PhoneOS 1.0",
+    "time_modified": "2026-10-08T07:05:09",
+    "artist": "A. Photographer",
+    "copyright": "(c) 2026 A. Photographer",
+    "description": "The corner at dusk",
+    "exposure_time": 0.004,
+    "f_number": 2.8,
+    "iso": 200,
+    "time_taken": "2026-10-08T07:00:00",
+    "flash": 16,
+    "focal_length": 5.2,
+    "comments": "hello there",
+    "image_unique_id": "abc123def456",
+    "owner_name": "Pat Owner",
+    "body_serial": "SN-0042",
+    "lens": "Phone One lens",
+    "lens_serial": "LS-77",
+    "gps_latitude": 37.8083333,
+    "gps_longitude": -122.27,
+    "gps_altitude": 12.5,
+    "gps_direction": 90,
+    "gps_datum": "WGS-84",
+    "gps_time": "2026-10-08T07:00:00Z",
+    "byline": "A. Byline",
+    "credit": "Test Credit",
+    "keywords": [
+     "oak",
+     "tree"
+    ],
+    "place_name": "Oakland, USA",
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3"
+   },
+   "left_out": {
+    "thumbnail": {
+     "count": 2,
+     "bytes": 755
+    },
+    "maker_note": {
+     "count": 1,
+     "bytes": 600
+    },
+    "xmp": {
+     "count": 1,
+     "bytes": 705
+    },
+    "other_metadata": {
+     "count": 2,
+     "bytes": 28
+    },
+    "after_end": {
+     "count": 1,
+     "bytes": 13
+    }
+   },
+   "profile_bytes_sha256": "91f451e4e9d70ac5cedb56380d2aa88c8ea87bbe9e2d62a81310aba38577dfc3"
+  },
+  {
+   "file": "photo-xmp.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "description": "The XMP caption",
+    "artist": "XMP Creator",
+    "copyright": "XMP Rights",
+    "credit": "Agency & Co",
+    "keywords": [
+     "oak",
+     "tree"
+    ],
+    "place_name": "Oakland"
+   },
+   "left_out": {
+    "xmp": {
+     "count": 1,
+     "bytes": 705
+    }
+   }
+  },
+  {
+   "file": "photo-full.png",
+   "width": 80,
+   "height": 60,
+   "facts": {
+    "orientation": 3,
+    "make": "TestCam",
+    "gps_latitude": -33.5,
+    "gps_longitude": 151,
+    "artist": "PNG Creator",
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3",
+    "png_text": [
+     {
+      "keyword": "Author",
+      "text": "member seven"
+     },
+     {
+      "keyword": "Comment",
+      "text": "compressed words"
+     },
+     {
+      "keyword": "Title",
+      "text": "Caf\u00e9 title"
+     }
+    ]
+   },
+   "left_out": {
+    "xmp": {
+     "count": 1,
+     "bytes": 249
+    },
+    "other_metadata": {
+     "count": 1,
+     "bytes": 9
+    },
+    "after_end": {
+     "count": 1,
+     "bytes": 10
+    }
+   },
+   "profile_bytes_sha256": "91f451e4e9d70ac5cedb56380d2aa88c8ea87bbe9e2d62a81310aba38577dfc3"
+  },
+  {
+   "file": "photo-apng.png",
+   "width": 80,
+   "height": 60,
+   "facts": {},
+   "left_out": {
+    "extra_picture": {
+     "count": 1,
+     "bytes": 10282
+    },
+    "after_end": {
+     "count": 1,
+     "bytes": 10
+    }
+   }
+  },
+  {
+   "file": "photo-profile-cmyk.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "profile_colour_space": "CMYK",
+    "profile_description": "CMYK"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 424
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-input.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "profile_colour_space": "RGB",
+    "profile_description": "Scanner"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 432
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-past-end.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 436
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-overlap.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 468
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-version1.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 436
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-size-lies.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 436
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-over-bound.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {},
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 1100436
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-profile-cmyk.png",
+   "width": 80,
+   "height": 60,
+   "facts": {
+    "profile_colour_space": "CMYK",
+    "profile_description": "CMYK"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 424
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-grey-p3.jpg",
+   "width": 64,
+   "height": 48,
+   "facts": {
+    "profile_colour_space": "RGB",
+    "profile_description": "Display P3"
+   },
+   "left_out": {
+    "profile": {
+     "count": 1,
+     "bytes": 436
+    }
+   },
+   "profile_refused": true
+  },
+  {
+   "file": "photo-bare.jpg",
+   "width": 96,
+   "height": 64,
+   "facts": {},
+   "left_out": {}
+  },
+  {
+   "file": "photo-bare.png",
+   "width": 80,
+   "height": 60,
+   "facts": {},
+   "left_out": {}
+  }
+ ],
+ "p3_sha256": "91f451e4e9d70ac5cedb56380d2aa88c8ea87bbe9e2d62a81310aba38577dfc3"
+}

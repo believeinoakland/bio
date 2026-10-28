@@ -136,12 +136,12 @@ test("R8 pure: the same bytes and options always answer the same way, in any ord
 test("R8 no clock, no randomness, no I/O: every decode answers the same with them all taken away", () => {
   const want = CALLS.map(([, , fn]) => summary(answer(fn)));
   const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
-  const trap = (what) => () => { throw new Reached(`the decoder reached for ${what}`); };
+  const trap = (what) => () => { throw new Reached(`reached-for:${what}`); };
   try {
-    Date.now = trap("the clock");
+    Date.now = trap("clock");
     Math.random = trap("randomness");
-    Object.defineProperty(globalThis, "performance", { value: { now: trap("the clock") }, configurable: true, writable: true });
-    globalThis.fetch = trap("the network");
+    Object.defineProperty(globalThis, "performance", { value: { now: trap("clock") }, configurable: true, writable: true });
+    globalThis.fetch = trap("network");
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
     const got = CALLS.map(([, , fn]) => answer(fn));
     for (const a of got) if (a instanceof Error) assert.ok(!(a instanceof Reached), a.message);
@@ -184,13 +184,13 @@ test("R8 R11 pure, the strip-wise JPEG decoder too: the same answers in any orde
   const first = rowsAnswers().map(summary);
   assert.deepEqual([...DCT.variants].reverse().map((v) => summary(rowsAnswer(v))).reverse(), first, "in reverse order, the same answers");
   const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
-  const trap = (what) => () => { throw new Reached(`the decoder reached for ${what}`); };
+  const trap = (what) => () => { throw new Reached(`reached-for:${what}`); };
   let got;
   try {
-    Date.now = trap("the clock");
+    Date.now = trap("clock");
     Math.random = trap("randomness");
-    Object.defineProperty(globalThis, "performance", { value: { now: trap("the clock") }, configurable: true, writable: true });
-    globalThis.fetch = trap("the network");
+    Object.defineProperty(globalThis, "performance", { value: { now: trap("clock") }, configurable: true, writable: true });
+    globalThis.fetch = trap("network");
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
     got = rowsAnswers();
   } finally {
@@ -221,13 +221,13 @@ test("R8 pure, the PNG decoder too: the same bytes always answer the same way, i
 test("R8 the PNG decoder reaches for no clock, no randomness and no I/O, and changes no input", async () => {
   const want = (await pngAnswers()).map(pngSummary);
   const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
-  const trap = (what) => () => { throw new Reached(`the decoder reached for ${what}`); };
+  const trap = (what) => () => { throw new Reached(`reached-for:${what}`); };
   let got;
   try {
-    Date.now = trap("the clock");
+    Date.now = trap("clock");
     Math.random = trap("randomness");
-    Object.defineProperty(globalThis, "performance", { value: { now: trap("the clock") }, configurable: true, writable: true });
-    globalThis.fetch = trap("the network");
+    Object.defineProperty(globalThis, "performance", { value: { now: trap("clock") }, configurable: true, writable: true });
+    globalThis.fetch = trap("network");
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
     got = await pngAnswers();
   } finally {
