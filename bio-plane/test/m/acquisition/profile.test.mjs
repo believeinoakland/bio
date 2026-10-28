@@ -333,7 +333,7 @@ test("R17: profileOf and substanceDigests trust a digest only over bytes that ha
   /* bytes read back that do not hash to the identity: no digest is trusted */
   const liar = await profileOf({ ev: evOf(ods), sha: sha("something else"), ct: ODF_CT.ods, total: ods.length, view, retrieved: at, locator: "https://city.example/a.ods" });
   assert.deepEqual([liar.digests.determined, liar.digests.evidentiary], [false, null]);
-  assert.match(liar.digests.basis, /did not hash/);
+  assert.equal(liar.digests.basis, word("acquisition.basis.container_bytes_read"));
   /* over the bound (K659): nothing is read back; the format is the declared type with the absence stated, and no
      container digest is claimed */
   const ev = evOf(ods);
@@ -349,7 +349,7 @@ test("R17: profileOf and substanceDigests trust a digest only over bytes that ha
   /* substanceDigests directly: the container arm's identity check, and no container bytes means nothing claimed */
   const sd = await substanceDigests(null, { handler: { key: "conservative", textual: false }, confidence: "none" }, {}, sha("x"), false, ods);
   assert.deepEqual([sd.determined, sd.evidentiary], [false, null]);
-  assert.match(sd.basis, /container bytes read back from the store did not hash/);
+  assert.equal(sd.basis, word("acquisition.basis.container_bytes_read"));
   const sdOk = await substanceDigests(null, { handler: { key: "conservative", textual: false }, confidence: "none" }, {}, sha(ods), false, ods);
   assert.deepEqual([sdOk.determined, sdOk.container], [true, "ods"]);
   const none = await substanceDigests(null, { handler: { key: "conservative", textual: false }, confidence: "none" }, {}, sha(ods), false, null);

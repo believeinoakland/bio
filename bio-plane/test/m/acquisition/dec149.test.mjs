@@ -42,14 +42,14 @@ test("R29 (DEC-149, index.mjs:569): acquire without evidence storage says \"your
 
 test("R1 (DEC-149, index.mjs:577): the capture-request arm's refusal says \"your group's Civicsmith fetches a requested document only from inside its own drain\"", async () => {
   const r = await run(world(), {}, { via: "capture-request", locator: "https://a.example/x" });
-  assert.match(r.body.detail, /^your team's Civicsmith fetches a requested document only from inside its own drain/);
+  assert.equal(r.body.detail, word("acquisition.index.your_teams_civicsmith_fetches_a"), "T53-101: the sentence is the word table's");
   assert.doesNotMatch(r.body.detail, /this instance fetches a requested document/);
 });
 
 test("R4 (DEC-149, index.mjs:658): a supplied hop fact's refusal says the facts are \"DERIVED by your group's Civicsmith\"", async () => {
   const r = await run(world(), {}, { locator: "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit", export_address: "https://x.example/" });
   assert.equal(r.body.reason, "DRIVE_HOP_FACT_SUPPLIED");
-  assert.match(r.body.detail, /the producer are DERIVED by your team's Civicsmith from the file id/);
+  assert.equal(r.body.detail, word("acquisition.index.this_request_carried_map_the", { map: r.body.supplied.map((k) => `\`${k}\``).join(", ") }), "the facts are derived by your team's Civicsmith, in the word table's sentence");
   assert.doesNotMatch(r.body.detail, /DERIVED by this instance/);
 });
 
@@ -74,6 +74,6 @@ test("R4 (DEC-149, index.mjs:878): an unreachable Drive export says the export a
 test("R36 (DEC-149, keyed.mjs:65): an unknown keyed service's refusal says \"the keyed services your group's Civicsmith speaks to are\"", async () => {
   const r = await keyedFetch({}, { service: "nowhere" });
   assert.equal(r.reason, "UNKNOWN_KEYED_SERVICE");
-  assert.match(r.detail, /^the keyed services your team's Civicsmith speaks to are courtlistener; nothing was fetched$/);
+  assert.match(r.detail, /^the keyed services your team's Civicsmith speaks to are courtlistener, ca-officers; nothing was fetched$/);
   assert.doesNotMatch(r.detail, /this copy/);
 });

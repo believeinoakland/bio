@@ -43,7 +43,8 @@ import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE
 import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS, CAPTURE_KEEP_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
-import { detectFormat } from "../formats.mjs";
+import { detectFormat, formatNameFor } from "../formats.mjs";
+import { challengeOf, recogniseChallenge, personRefusal, personChecksFor } from "./challenge.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
 import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -60,7 +61,7 @@ import { decodeText } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
-import { unpack, coArchiveStateOf } from "./unpack.mjs";
+import { unpack, coArchiveStateOf, ledgerOf } from "./unpack.mjs";
 import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
@@ -71,7 +72,10 @@ import { boundOf, statement } from "../read-bounds.mjs";
 export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS,
          DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 /* R36, R37 (T33-21, K1449): the keyed-service fetch path and its first client. */
-export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
+export { limitsByKind } from "./limits.mjs";
+export { fileMember, memberRow, MEMBER_KIND, CONTAINER_KINDS } from "./member.mjs";
+export { streamRegister, probeRegister, sourceChanged, REGISTER_STREAM_MAX, REGISTER_SEGMENT_MAX, REGISTER_PURPOSE, REGISTER_HOPS_MAX } from "./register.mjs";
+export { keyedFetch, keyedCapture, keyedServiceUsage, citationLookup, KEYED_PURPOSES, POLL_SHARE_DEFAULT, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
@@ -370,6 +374,36 @@ export function stageTimes(t, at = undefined) {
 
 /* R47: the longest `for` (a question's id) a member may name. */
 export const FOR_MAX = 200;
+
+/* T53-526 (format-registry R38, R39, R35): what `detectFormat` answers is read by its KIND, never by the one word `undetermined`. `refused` is a
+   type this copy does not keep (R139) and is never a detection; `unlisted` is held and named (R138), and `unlisted` with `named: null` names nothing;
+   `text` is valid text with no other leading structure, a text capture. An answer is a DETECTION OF THE BYTES (and so stands over a declared type)
+   when it is neither `undetermined`, a refusal, an unnamed `unlisted`, nor the bare `text` fallback. */
+const isRefusedKind = (d) => !!d && d.format === "refused";
+const isNamedKind = (d) => !!d && d.format !== "undetermined" && d.format !== "refused" && !(d.format === "unlisted" && (d.named === null || d.named === undefined));
+const isSignature = (d) => isNamedKind(d) && d.format !== "text";
+
+/* R139 (T53; N1266, RF11): the head of a body that is read to recognise a refused kind before anything is stored: the longest signature a
+   refused kind has in its head (an ISO's, at 37 KiB) is within it. */
+export const REFUSE_HEAD_BYTES = 40960;
+/* R139: the member words for a refused kind: its plain name and the reason it is not kept, `file.kind.*` and `file.refused.reason.*`, never a
+   type name built from an extension. */
+export function refusedFacts(d) {
+  const n = formatNameFor(d);
+  let reason = null;
+  try { reason = n.reason_key ? word(n.reason_key) : null; } catch { reason = null; }
+  const kind = n.text || word("file.kind.other");
+  return { kind: n.name, kind_key: n.kind_key, kind_text: kind, reason_key: n.reason_key ?? null, reason_text: reason,
+           detail: localize("acquisition.index.file_type_refused", "A {kind} is not kept{reason}. Nothing was saved.", { kind: String(kind), reason: reason ? `: ${reason}` : "" }) };
+}
+/* R138 (T53; N1266, RF10): a file `format-registry` answers `unlisted` is filed whole and its reading is stated "held, not read: {name}"; the
+   owed reading is the job table's `held-unread` verdict, re-run when the roster gains the type (reading-pipeline, GAP-1.4). */
+export function heldUnreadOf(d) {
+  const n = formatNameFor(d);
+  const name = n.text || word("file.kind.other");
+  return { state: "held-unread", named: d.named ?? null, kind_key: n.kind_key,
+           text: localize("acquisition.profile.held_not_read", "held, not read: {name}", { name: String(name) }) };
+}
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
@@ -957,6 +991,7 @@ export function evidenceStorageAbsent(op, error, { code = true } = {}) {
 /* R42 (F16, K1881): the group's own hosts this act refuses, handed in by its caller (`opts.ownHosts`, else the store's
    `ownHosts`), capture-sources' one rule (its R65) deciding each. With none given, nothing is refused on this ground. */
 const ownHostsOf = (cap, given) => (Array.isArray(given) ? given : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null);
+export { personChecksFor };
 const hostnameOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return null; } };
 const onOwnHost = (u, ownHosts) => !!ownHosts && isOwnHost(hostnameOf(u), ownHosts);
 /* R42, C-139.18: the refusal, naming the host; nothing was fetched or filed. */
@@ -1347,6 +1382,20 @@ async function acquireRun(cap, body0, opts0, t) {
     }
   }
   /* END DEC-49 REGION is-drive-export */
+  /* DEC-49 REGION is-challenge-page
+     R140 (T53; K5574, K3656): a challenge or CAPTCHA page in place of the document is recognised from what the fetch received, never filed as the document
+     and never worked around; the refusal is counted for the host. A header the service sets to say it challenged settles it; an error answer that is
+     a bot-protection page is read for the page's own text, a bounded prefix of it. */
+  const challengeRefusal = async (chal, status) => answer(403, { ...personRefusal(cap, { address: resolvedUrl || locator, status, chal }), op, locator });
+  if (!driveCapture) {
+    const chal = await recogniseChallenge(res);
+    if (chal) {
+      await noteOutcome("source_refused", res.status);
+      try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
+      return await challengeRefusal(chal, res.status);
+    }
+  }
+  /* END DEC-49 REGION is-challenge-page */
   if (!res.ok) {
     await noteOutcome("source_refused", res.status);
     /* R9 (fix round 4, N-slow-refuse): a source that says wait is relayed at once, with how long it said (`Retry-After`) */
@@ -1463,6 +1512,28 @@ async function acquireRun(cap, body0, opts0, t) {
   /* CAP-8: the first KiB of a DRIVE export, kept so the shell can be recognised from the BYTES. */
   const driveHead = driveCapture ? new Uint8Array(1024) : null;
   let driveHeadBytes = 0;
+  /* DEC-49 REGION is-refused-kind
+     R139 (T53; N1266, RF11; CC6): the head of the body is read for a REFUSED kind (a program, an installer, a script meant to run, a disk image, a RAR)
+     and for a challenge page served as a success, before anything is stored: the stream is cancelled and nothing is filed or recorded. The head is
+     the first `REFUSE_HEAD_BYTES`, or the whole body when it is shorter. */
+  const sniffHead = new Uint8Array(REFUSE_HEAD_BYTES);
+  let sniffBytes = 0, sniffed = false;
+  const sniffRefusal = async () => {
+    sniffed = true;
+    const head = sniffHead.subarray(0, sniffBytes);
+    const d = detectFormat(head, null, fetchedName(documentAddress));
+    if (isRefusedKind(d)) {
+      try { await reader.cancel(); } catch { /* the source may already be gone */ }
+      const f = refusedFacts(d);
+      const row = ARCHIVE_CHECKS.FILE_TYPE_REFUSED;
+      return answer(415, { ok: false, reason: "FILE_TYPE_REFUSED", code: "FILE_TYPE_REFUSED", check: row.check, translation: row.translation, op, locator,
+        refused: { format: d.format, kind: d.kind ?? null, reason: d.reason ?? null, signals: d.signals ?? [] }, kind: f.kind, kind_text: f.kind_text, reason_text: f.reason_text, detail: f.detail });
+    }
+    const chal = driveCapture ? null : challengeOf({ status: res.status, headers: res.headers, bytes: head, total: declared ?? (sniffBytes < sniffHead.length ? sniffBytes : null) });
+    if (chal) { try { await reader.cancel(); } catch { /* the source may already be gone */ } return await challengeRefusal(chal, res.status); }
+    return null;
+  };
+  /* END DEC-49 REGION is-refused-kind */
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
   stageBegin(t, "read");
@@ -1498,8 +1569,15 @@ async function acquireRun(cap, body0, opts0, t) {
       driveHeadBytes += take;
     }
     held.push(value); heldBytes += value.length; ledger.hold(value.length, "chunk");
+    if (sniffBytes < sniffHead.length) {
+      const take = Math.min(value.length, sniffHead.length - sniffBytes);
+      sniffHead.set(value.subarray(0, take), sniffBytes);
+      sniffBytes += take;
+      if (sniffBytes === sniffHead.length && !sniffed) { const early = await sniffRefusal(); if (early) return early; }
+    }
     if (heldBytes >= PART) await flush(false);
   }
+  if (!sniffed && !oversize) { const early = await sniffRefusal(); if (early) return early; }
   /* DEC-49 REGION is-drive-bytes — C-48.7: Google said it was a document and it was a web page. Detection is
      bytes-first and certain; a non-HTML export of another flavour is FILED with the disagreement on the hop. */
   if (driveCapture && driveHeadBytes > 0) {
@@ -1561,7 +1639,7 @@ async function acquireRun(cap, body0, opts0, t) {
   for (const [k, v] of res.headers) responseHeaders.push([k, v]);
   const transport = { requested: locator, resolved: resolvedUrl || locator, redirected: !!(resolvedUrl && resolvedUrl !== locator),
     status: res.status, http_headers: responseHeaders, peer_address: null,
-    peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch" };
+    peer_address_unavailable: localize("acquisition.index.the_workers_runtime_does_not", "the Workers runtime does not expose the peer address of an outbound fetch") };
   const name = (body.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
 
   /* R6, D-64 — THE RENDER ARM, THE PAIR. From here on `sha`, `total` and `ct` name the RENDERED document, the
@@ -1670,7 +1748,10 @@ async function acquireRun(cap, body0, opts0, t) {
      render, else the single part of a page; none for a capture of several parts (past what a title is read from) or one that is
      not HTML. A fact read from the bytes, not a reading (R8): nothing is invented from a file name, a heading elsewhere or the host. */
   const titleBytes = renderRecorded ? renderedBytes : !multipart && keptParts && keptParts.length === 1 ? keptParts[0] : null;
-  const htmlTitle = titleBytes && detectFormat(titleBytes, ct || null).format === "html"
+  /* T53-526: a page the source serves as HTML whose bytes read as well-formed XML (a fragment, XHTML) is still a page whose title is read; the answer's
+     KIND decides, never the one word `html` */
+  const titleKind = titleBytes ? detectFormat(titleBytes, ct || null) : null;
+  const htmlTitle = titleKind && (titleKind.format === "html" || (titleKind.format === "xml" && /html/i.test(ct || "")))
     ? titleOfBytes(titleBytes, renderRecorded ? null : res.headers.get("content-type")) : null;
   /* R98 (fix round 4, C25; pdf-reader R40): a PDF's title is `pdfTitle`'s (its Info `Title`, else its XMP `dc:title`), read from the bytes this
      call holds without reading any page, cleaned as a page's is; a PDF with neither, or one past what is held in memory, answers null. */
@@ -1810,7 +1891,7 @@ async function acquireRun(cap, body0, opts0, t) {
     if (!multipart && total > 0 && total <= ODF_DIGEST_MAX) {
       try {
         const o = await ev.get(sha);
-        if (o) { const d = detectFormat(new Uint8Array(await o.arrayBuffer()), null); if (d && d.format !== "undetermined") detected = d; }
+        if (o) { const d = detectFormat(new Uint8Array(await o.arrayBuffer()), null); if (isNamedKind(d)) detected = d; }
       } catch { detected = null; }
     }
     driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
@@ -1911,6 +1992,7 @@ async function acquireRun(cap, body0, opts0, t) {
     { const owe = oweOf(cap, opts); if (owe) await owe({ kind: "unpack", sha }); else noteJob(opts, "unpack", "NO_REGISTRAR"); }
     try {
       unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
+        ...(registrarOf(cap, opts) ? { registerJob: registrarOf(cap, opts) } : {}), ...(armerOf(cap, opts) ? { armJobs: armerOf(cap, opts) } : {}),
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
         ...(oweOf(cap, opts) ? { owedLater: oweOf(cap, opts) } : {}),
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
@@ -2145,17 +2227,20 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     } };
     let byBytes = null;
     try { byBytes = await detectFormat(src, null, fileName); } catch { byBytes = null; }
-    if (byBytes && byBytes.format !== "undetermined") profile.format = byBytes;
+    /* a bare `text` from the bytes says only that they are valid text, so a declared type that names a format stands over it, as it does for a buffer read whole */
+    if (isSignature(byBytes) || (isNamedKind(byBytes) && !declared0)) profile.format = byBytes;
     else {
       /* no signature in the bytes: the declared type, as before, from the head that was read (a ZIP is never made by a declared type) */
       let declared = null;
       try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, declared0, fileName); } catch { declared = null; }
       profile.format = declared && declared.format === "zip"
         ? { format: "undetermined", confidence: "none",
-            signals: [...(declared.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] }
+            signals: [...(declared.signals || []), localize("acquisition.index.the_stored_bytes_were_not", "the stored bytes were not read as a ZIP archive, so the declared type does not make one")] }
         : declared || profile.format;
     }
   }
+  /* R138: an unlisted type is held and named, its reading owed */
+  if (profile.format && profile.format.format === "unlisted") profile.held_unread = heldUnreadOf(profile.format);
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
   if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) containerBytes = readWhole;
@@ -2218,8 +2303,7 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
       reuse: subs.manifest.reuse, part_fetch_spread: subs.manifest.part_fetch_spread, compute: subs.manifest.compute,
       ...(subs.resumeState ? { continuation: {
         session: sessionId, outstanding: subs.manifest.outstanding, ticks: subs.session ? subs.session.ticks : 1,
-        how: "call op=acquire again with {continue: \"<session>\"} to pick up the outstanding parts; "
-           + "the primary is already complete and is never re-fetched" } } : {}),
+        how: localize("acquisition.index.call_op_acquire_again_with", "call op=acquire again with {how} to pick up the outstanding parts; the primary is already complete and is never re-fetched", { how: '{continue: "<session>"}' }) } } : {}),
       ...(subs.siteRecord ? { site: subs.siteRecord } : {}),
       ...(subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}),
     },

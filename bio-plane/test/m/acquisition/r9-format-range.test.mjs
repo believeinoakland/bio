@@ -62,10 +62,10 @@ test("R101 (G130c): a picture and a PDF with no declared type are themselves; ea
   assert.deepEqual(w.b.calls.filter((c) => c[0] === "get" && !(c[2] && c[2].range)), [], "no part read whole");
 });
 
-test("R101 control: bytes of no known format stay undetermined; a declared ZIP type whose bytes are not a ZIP does not make one; a declared type names a format the bytes do not contradict", async () => {
+test("R101 control: bytes with no signature are read by the kind format-registry answers; a declared ZIP type whose bytes are not a ZIP does not make one; a declared type names a format the bytes do not contradict", async () => {
   const w = world();
   const junk = await held(w, new Uint8Array(10 * MIB).fill(0x41));
-  assert.equal((await profile(w, junk)).format.format, "undetermined");
+  assert.equal((await profile(w, junk)).format.format, "text", "T53-526: valid text is `text`; read by the kind, never by the word undetermined");
   const lie = await profile(w, junk, { ct: "application/zip" });
   assert.equal(lie.format.format, "undetermined", "a declared type never makes a ZIP");
   const typed = await profile(w, junk, { ct: "application/pdf" });
