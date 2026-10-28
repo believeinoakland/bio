@@ -1,0 +1,75 @@
+{
+ "when": "2026-10-28T21:12:33.577Z",
+ "label": "LOCAL, not platform",
+ "set": "start",
+ "command": "node proto-mem/1f/local/run-local.mjs --set=start --out=../results/pm17-start-local.json",
+ "host": {
+  "cpus": "4",
+  "node": "v26.10.0"
+ },
+ "tools": {
+  "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+  "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+  "exiftool": "12.76",
+  "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20",
+  "node": "v26.10.0"
+ },
+ "note": "server = vendored verbatim copy of lane/platform reader-container/container/server.mjs; tools are this machine's, not the image's pinned ones",
+ "results": [
+  {
+   "run": 1,
+   "node_listen_ms": 111,
+   "version_ms": 184,
+   "tools": {
+    "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+    "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+    "exiftool": "12.76",
+    "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20"
+   }
+  },
+  {
+   "run": 2,
+   "node_listen_ms": 119,
+   "version_ms": 192,
+   "tools": {
+    "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+    "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+    "exiftool": "12.76",
+    "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20"
+   }
+  },
+  {
+   "run": 3,
+   "node_listen_ms": 84,
+   "version_ms": 203,
+   "tools": {
+    "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+    "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+    "exiftool": "12.76",
+    "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20"
+   }
+  },
+  {
+   "run": 4,
+   "node_listen_ms": 85,
+   "version_ms": 206,
+   "tools": {
+    "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+    "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+    "exiftool": "12.76",
+    "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20"
+   }
+  },
+  {
+   "run": 5,
+   "node_listen_ms": 93,
+   "version_ms": 203,
+   "tools": {
+    "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+    "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+    "exiftool": "12.76",
+    "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20"
+   }
+  }
+ ]
+}

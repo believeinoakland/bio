@@ -1,0 +1,703 @@
+{
+ "when": "2026-10-28T21:15:11.622Z",
+ "label": "LOCAL, not platform",
+ "set": "l3",
+ "command": "node proto-mem/1f/local/run-local.mjs --set=l3 --out=../results/l3-local.json",
+ "host": {
+  "cpus": "4",
+  "node": "v26.10.0"
+ },
+ "tools": {
+  "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+  "imagemagick": "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+  "exiftool": "12.76",
+  "sevenzip": "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20",
+  "node": "v26.10.0"
+ },
+ "note": "server = vendored verbatim copy of lane/platform reader-container/container/server.mjs; tools are this machine's, not the image's pinned ones",
+ "results": [
+  {
+   "case": "avif-12mp.avif",
+   "route": "frames",
+   "kind": "avif",
+   "file_bytes": 4148254,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 86,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 4409,
+   "request_sent_to_first_response_byte_ms": 4363,
+   "first_record_ms": 4407,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 12018755,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": null,
+    "place": null,
+    "orientation": null,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 3000,
+     "h": 4000,
+     "png_bytes": 12018755
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 4.49,
+   "peak_tree_rss_mb": 294,
+   "peak_single_process_rss_mb": 221,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 187,
+   "sample_ms": 25
+  },
+  {
+   "case": "heic-12mp.heic",
+   "route": "frames",
+   "kind": "heic",
+   "file_bytes": 6708055,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 76,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 5066,
+   "request_sent_to_first_response_byte_ms": 5032,
+   "first_record_ms": 5066,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 12019383,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": "2026-01-02T03:04:05",
+    "place": {
+     "latitude": 37.8044,
+     "longitude": -122.2712
+    },
+    "orientation": 6,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 3000,
+     "h": 4000,
+     "png_bytes": 12019383
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 5.15,
+   "peak_tree_rss_mb": 278,
+   "peak_single_process_rss_mb": 198,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 214,
+   "sample_ms": 25
+  },
+  {
+   "case": "heic-24mp.heic",
+   "route": "frames",
+   "kind": "heic",
+   "file_bytes": 13363406,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 88,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 10385,
+   "request_sent_to_first_response_byte_ms": 10324,
+   "first_record_ms": 10385,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 24027639,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": "2026-01-02T03:04:05",
+    "place": {
+     "latitude": 37.8044,
+     "longitude": -122.2712
+    },
+    "orientation": 6,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 4000,
+     "h": 6000,
+     "png_bytes": 24027639
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 10.45,
+   "peak_tree_rss_mb": 505,
+   "peak_single_process_rss_mb": 416,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 421,
+   "sample_ms": 25
+  },
+  {
+   "case": "heic-48mp.heic",
+   "route": "frames",
+   "kind": "heic",
+   "file_bytes": 26732328,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 97,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 20471,
+   "request_sent_to_first_response_byte_ms": 20346,
+   "first_record_ms": 20470,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 48042075,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": "2026-01-02T03:04:05",
+    "place": {
+     "latitude": 37.8044,
+     "longitude": -122.2712
+    },
+    "orientation": 6,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 6000,
+     "h": 8000,
+     "png_bytes": 48042075
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 20.44,
+   "peak_tree_rss_mb": 901,
+   "peak_single_process_rss_mb": 786,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 818,
+   "sample_ms": 25
+  },
+  {
+   "case": "jpeg-12mp.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 7546240,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 123,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 4310,
+   "request_sent_to_first_response_byte_ms": 4286,
+   "first_record_ms": 4309,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 12019278,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": "2026-01-02T03:04:05",
+    "place": {
+     "latitude": 37.8044,
+     "longitude": -122.2712
+    },
+    "orientation": 6,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 3000,
+     "h": 4000,
+     "png_bytes": 12019278
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 4.59,
+   "peak_tree_rss_mb": 323,
+   "peak_single_process_rss_mb": 239,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 184,
+   "sample_ms": 25
+  },
+  {
+   "case": "jpeg-24mp.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 15092730,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 84,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 8403,
+   "request_sent_to_first_response_byte_ms": 8356,
+   "first_record_ms": 8403,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 24027361,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": "2026-01-02T03:04:05",
+    "place": {
+     "latitude": 37.8044,
+     "longitude": -122.2712
+    },
+    "orientation": 6,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 4000,
+     "h": 6000,
+     "png_bytes": 24027361
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 8.75,
+   "peak_tree_rss_mb": 557,
+   "peak_single_process_rss_mb": 465,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 343,
+   "sample_ms": 25
+  },
+  {
+   "case": "jpeg-48mp.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 30185406,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 88,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 17184,
+   "request_sent_to_first_response_byte_ms": 17066,
+   "first_record_ms": 17182,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 48041717,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": "2026-01-02T03:04:05",
+    "place": {
+     "latitude": 37.8044,
+     "longitude": -122.2712
+    },
+    "orientation": 6,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 6000,
+     "h": 8000,
+     "png_bytes": 48041717
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 17.72,
+   "peak_tree_rss_mb": 1047,
+   "peak_single_process_rss_mb": 926,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 690,
+   "sample_ms": 25
+  },
+  {
+   "case": "jpeg-solid-12000x10000.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 469234,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 89,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 1088,
+   "request_sent_to_first_response_byte_ms": 1088,
+   "first_record_ms": 1088,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "refusal": {
+    "code": "UNREADABLE",
+    "why": "convert-im6.q16: cache resources exhausted `/tmp/rc-frames-5irorV/in.jpg' @ error/cache.c/OpenPixelCache/4119.\nconvert-i"
+   },
+   "end": null,
+   "facts": null,
+   "frames_sample": [],
+   "members_sample": [],
+   "error": null,
+   "outcome": "refused:UNREADABLE",
+   "cpu_s_tree": 2.25,
+   "peak_tree_rss_mb": 1218,
+   "peak_single_process_rss_mb": 1156,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 56,
+   "sample_ms": 25
+  },
+  {
+   "case": "jpeg-solid-12001x10000.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 469547,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 89,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 29,
+   "request_sent_to_first_response_byte_ms": 29,
+   "first_record_ms": 29,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "refusal": {
+    "code": "PIXELS_OVER",
+    "pixels": 120010000,
+    "limit": 120000000
+   },
+   "end": null,
+   "facts": null,
+   "frames_sample": [],
+   "members_sample": [],
+   "error": null,
+   "outcome": "refused:PIXELS_OVER",
+   "cpu_s_tree": 0.09,
+   "peak_tree_rss_mb": 62,
+   "peak_single_process_rss_mb": 62,
+   "peak_single_process": "node-MainThread",
+   "max_processes": 1,
+   "samples": 15,
+   "sample_ms": 25
+  },
+  {
+   "case": "png-12mp.png",
+   "route": "frames",
+   "kind": "png",
+   "file_bytes": 24024676,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 111,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 1391,
+   "request_sent_to_first_response_byte_ms": 1353,
+   "first_record_ms": 1390,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 24024676,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": null,
+    "place": null,
+    "orientation": null,
+    "pages": 1,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 4000,
+     "h": 3000,
+     "png_bytes": 24024676
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 1.46,
+   "peak_tree_rss_mb": 231,
+   "peak_single_process_rss_mb": 155,
+   "peak_single_process": "node-MainThread",
+   "max_processes": 2,
+   "samples": 68,
+   "sample_ms": 25
+  },
+  {
+   "case": "tiff-10p.tif",
+   "route": "frames",
+   "kind": "tiff",
+   "file_bytes": 6238672,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 95,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 3397,
+   "request_sent_to_first_response_byte_ms": 3396,
+   "first_record_ms": 3396,
+   "records": {
+    "frame": 10,
+    "facts": 1
+   },
+   "payload_bytes_out": 699869,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": null,
+    "place": null,
+    "orientation": 1,
+    "pages": 10,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 2480,
+     "h": 3508,
+     "png_bytes": 69988
+    },
+    {
+     "page": 1,
+     "w": 2480,
+     "h": 3508,
+     "png_bytes": 69986
+    },
+    {
+     "page": 2,
+     "w": 2480,
+     "h": 3508,
+     "png_bytes": 69986
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 4.54,
+   "peak_tree_rss_mb": 924,
+   "peak_single_process_rss_mb": 844,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 145,
+   "sample_ms": 25
+  },
+  {
+   "case": "tiff-20p.tif",
+   "route": "frames",
+   "kind": "tiff",
+   "file_bytes": 12477336,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 87,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 6630,
+   "request_sent_to_first_response_byte_ms": 6627,
+   "first_record_ms": 6627,
+   "records": {
+    "frame": 20,
+    "facts": 1
+   },
+   "payload_bytes_out": 1399738,
+   "refusal": null,
+   "end": null,
+   "facts": {
+    "type": "facts",
+    "time": null,
+    "place": null,
+    "orientation": 1,
+    "pages": 20,
+    "bytes": 0
+   },
+   "frames_sample": [
+    {
+     "page": 0,
+     "w": 2480,
+     "h": 3508,
+     "png_bytes": 69988
+    },
+    {
+     "page": 1,
+     "w": 2480,
+     "h": 3508,
+     "png_bytes": 69986
+    },
+    {
+     "page": 2,
+     "w": 2480,
+     "h": 3508,
+     "png_bytes": 69986
+    }
+   ],
+   "members_sample": [],
+   "error": null,
+   "outcome": "completed",
+   "cpu_s_tree": 8.91,
+   "peak_tree_rss_mb": 1765,
+   "peak_single_process_rss_mb": 1678,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 270,
+   "sample_ms": 25
+  },
+  {
+   "case": "tiff-40p.tif",
+   "route": "frames",
+   "kind": "tiff",
+   "file_bytes": 24954664,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "server_listen_ms": 73,
+   "server_idle_tree_rss_mb": 60,
+   "http_status": 200,
+   "wall_ms": 13537,
+   "request_sent_to_first_response_byte_ms": 13537,
+   "first_record_ms": 13537,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "refusal": {
+    "code": "UNREADABLE",
+    "why": "convert-im6.q16: cache resources exhausted `/tmp/rc-frames-85LjRd/f-%05d.png' @ error/cache.c/OpenPixelCache/4119.\nconve"
+   },
+   "end": null,
+   "facts": null,
+   "frames_sample": [],
+   "members_sample": [],
+   "error": null,
+   "outcome": "refused:UNREADABLE",
+   "cpu_s_tree": 16.74,
+   "peak_tree_rss_mb": 3086,
+   "peak_single_process_rss_mb": 2974,
+   "peak_single_process": "convert",
+   "max_processes": 2,
+   "samples": 542,
+   "sample_ms": 25
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "__NAME__",
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+  "main": "src/probe.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "limits": { "cpu_ms": 300000 },
+  "vars": { "PROBE_NAME": "__NAME__", "PROBE_SLEEP_AFTER": "__SLEEP__" },
+  "r2_buckets": [{ "binding": "PROBE_R2", "bucket_name": "__BUCKET__" }],
+  "containers": [
+    { "class_name": "MinProbe", "image": "./image-min/Dockerfile", "image_build_context": "./image-min", "instance_type": "__ITYPE__", "max_instances": 3 },
+    { "class_name": "ReaderProbe", "image": "../vendor/reader-container/Dockerfile", "image_build_context": "../vendor/reader-container", "instance_type": "__ITYPE__", "max_instances": 3 }
+  ],
+  "durable_objects": { "bindings": [{ "name": "MIN_PROBE", "class_name": "MinProbe" }, { "name": "READER_PROBE", "class_name": "ReaderProbe" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MinProbe", "ReaderProbe"] }],
+  "observability": { "enabled": true }
+}

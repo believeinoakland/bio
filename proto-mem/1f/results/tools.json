@@ -1,0 +1,49 @@
+{
+ "rows": [
+  [
+   "LibreOffice (soffice)",
+   "LibreOffice 24.2.7.2 420(Build:2)",
+   "libreoffice-core 4:7.4.7-1+deb12u14 (Dockerfile)"
+  ],
+  [
+   "ImageMagick (convert, identify)",
+   "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org",
+   "imagemagick 8:6.9.11.60+dfsg-1.6+deb12u13 (Dockerfile)"
+  ],
+  [
+   "libheif / HEIC decode",
+   "1.17.6 + libheif-plugin-libde265 (apt, installed by me)",
+   "libheif1 1.15.1-1+deb12u1 (Dockerfile); whether that image can decode HEVC HEIC is UNKNOWN (no libde265 package is listed in packages.json)"
+  ],
+  [
+   "exiftool",
+   "12.76",
+   "libimage-exiftool-perl 12.57+dfsg-1"
+  ],
+  [
+   "7-Zip",
+   "7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20",
+   "p7zip-full 16.02+really26.02 = 7-Zip 26.02 (packages.json note)"
+  ],
+  [
+   "bzip2 / xz / gzip",
+   "system versions",
+   "bzip2 1.0.8-5+b1, xz-utils 5.4.1-1+deb12u2; node zlib for gz"
+  ],
+  [
+   "node",
+   "v26.10.0",
+   "node:22-bookworm-slim (Dockerfile)"
+  ],
+  [
+   "OS / CPU",
+   "Linux 6.18, 4 cores, 16 GB, shared; local disk",
+   "Cloudflare standard-1: 4 GiB, 1/2 vCPU, 8 GB disk (PLATFORM.md section 6.4 row; file-scanner comment in section 3); standard-4: 12 GiB, 4 vCPU, 20 GB"
+  ],
+  [
+   "ImageMagick resource policy (/etc/ImageMagick-6/policy.xml)",
+   "memory 1GiB, map 2GiB, area 256MP, disk 2GiB, width/height 32KP (convert -list resource)",
+   "the image's own policy.xml was NOT read: UNKNOWN"
+  ]
+ ]
+}

@@ -1,0 +1,537 @@
+{
+ "when": "2026-10-28T22:59:51.638Z",
+ "label": "LOCAL, not platform",
+ "command": "node proto-mem/1f/local/run-caller-local.mjs --lp=/tmp/claude-0/-home-user/59f38d1e-7059-58bf-b787-4365a1d33ffd/scratchpad/lp2 --only=^(zip|blob|tar|7z|bz2|jpeg-48mp|heic-48mp|tiff-40p|rtf-100mib-plus1|sheet-65535x100) --out=../results/caller-local.json",
+ "note": "caller = Node, not a Worker isolate; process HWM is cumulative across cases in this one process (a fresh process per case is NOT used here), so read `caller_hwm_mb` as a running maximum",
+ "results": [
+  {
+   "file": "7z-200mib-50m.7z",
+   "set": "l5",
+   "kind": "7z",
+   "file_bytes": 33225,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "RATIO_OVER",
+     "limit": 1100,
+     "detail": "A file in this archive unpacks to more than 1,100 times its packed size, which no ordinary archive does, so the archive was not opened.",
+     "ms": 358
+    }
+   ],
+   "total_ms": 358,
+   "caller_hwm_mb": 118
+  },
+  {
+   "file": "7z-w-200mib-50m.7z",
+   "set": "l5",
+   "kind": "7z",
+   "file_bytes": 67282318,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 50,
+     "member_bytes_total": 209715200,
+     "max_member_bytes": 4194304,
+     "refusal_mid_stream": null,
+     "ms": 29254
+    }
+   ],
+   "total_ms": 29254,
+   "caller_hwm_mb": 199
+  },
+  {
+   "file": "blob-524288000.bin",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 524288000,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "UNREADABLE",
+     "detail": "This file could not be read: it is damaged or not what its type says.",
+     "ms": 1
+    }
+   ],
+   "total_ms": 1,
+   "caller_hwm_mb": 199
+  },
+  {
+   "file": "blob-524288001.bin",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 524288001,
+   "plan": {
+    "ok": false,
+    "code": "OVER_BOUND",
+    "size": 524288001,
+    "limit": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "OVER_BOUND",
+     "limit": 524288000,
+     "size": 524288001,
+     "detail": "This archive is 500 MB, over the limit of 500 MB for an archive as uploaded, so it was not opened.",
+     "ms": 0
+    }
+   ],
+   "total_ms": 0,
+   "caller_hwm_mb": 199
+  },
+  {
+   "file": "bz2-zeros-3gib.bz2",
+   "set": "l5",
+   "kind": "bz2",
+   "file_bytes": 2289,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "RATIO_OVER",
+     "limit": 1100,
+     "detail": "A file in this archive unpacks to more than 1,100 times its packed size, which no ordinary archive does, so the archive was not opened.",
+     "ms": 29
+    }
+   ],
+   "total_ms": 29,
+   "caller_hwm_mb": 199
+  },
+  {
+   "file": "heic-48mp.heic",
+   "set": "l3",
+   "kind": "heic",
+   "file_bytes": 26732328,
+   "plan": {
+    "ok": true,
+    "route": "frames",
+    "bound": 52428800
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "frames": 1,
+     "facts": {
+      "time": "2026-01-02T03:04:05",
+      "place": {
+       "latitude": 37.8044,
+       "longitude": -122.2712
+      },
+      "orientation": 6
+     },
+     "ms": 20188
+    }
+   ],
+   "total_ms": 20188,
+   "caller_hwm_mb": 271
+  },
+  {
+   "file": "jpeg-48mp.jpg",
+   "set": "l3",
+   "kind": "jpeg",
+   "file_bytes": 30185406,
+   "plan": {
+    "ok": true,
+    "route": "frames",
+    "bound": 52428800
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "frames": 1,
+     "facts": {
+      "time": "2026-01-02T03:04:05",
+      "place": {
+       "latitude": 37.8044,
+       "longitude": -122.2712
+      },
+      "orientation": 6
+     },
+     "ms": 16449
+    }
+   ],
+   "total_ms": 16450,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "rtf-100mib-plus1.rtf",
+   "set": "l4",
+   "kind": "rtf",
+   "file_bytes": 104857601,
+   "plan": {
+    "ok": false,
+    "code": "OVER_BOUND",
+    "size": 104857601,
+    "limit": 104857600
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "OVER_BOUND",
+     "limit": 104857600,
+     "size": 104857601,
+     "detail": "This document is 100 MB, over the limit of 100 MB for a document, so it was not read.",
+     "ms": 0
+    }
+   ],
+   "total_ms": 0,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "sheet-65535x100.xls",
+   "set": "l4",
+   "kind": "xls",
+   "file_bytes": 84882944,
+   "plan": {
+    "ok": false,
+    "code": "OVER_BOUND",
+    "size": 84882944,
+    "limit": 52428800
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "OVER_BOUND",
+     "limit": 52428800,
+     "size": 84882944,
+     "detail": "This spreadsheet is 81 MB, over the limit of 50 MB for a spreadsheet, so it was not read.",
+     "ms": 0
+    }
+   ],
+   "total_ms": 0,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tar-bz2-200mib-50m.tar.bz2",
+   "set": "l5",
+   "kind": "bz2",
+   "file_bytes": 67523,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "RATIO_OVER",
+     "limit": 1100,
+     "detail": "A file in this archive unpacks to more than 1,100 times its packed size, which no ordinary archive does, so the archive was not opened.",
+     "ms": 727
+    }
+   ],
+   "total_ms": 727,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tar-bz2-w-200mib-50m.tar.bz2",
+   "set": "l5",
+   "kind": "bz2",
+   "file_bytes": 44265732,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 50,
+     "member_bytes_total": 209715200,
+     "max_member_bytes": 4194304,
+     "refusal_mid_stream": null,
+     "ms": 17956
+    }
+   ],
+   "total_ms": 17956,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tar-gz-200mib-50m.tar.gz",
+   "set": "l5",
+   "kind": "gz",
+   "file_bytes": 714880,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 50,
+     "member_bytes_total": 209715200,
+     "max_member_bytes": 4194304,
+     "refusal_mid_stream": null,
+     "ms": 1329
+    }
+   ],
+   "total_ms": 1329,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tar-gz-w-200mib-50m.tar.gz",
+   "set": "l5",
+   "kind": "gz",
+   "file_bytes": 68370233,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 50,
+     "member_bytes_total": 209715200,
+     "max_member_bytes": 4194304,
+     "refusal_mid_stream": null,
+     "ms": 2698
+    }
+   ],
+   "total_ms": 2698,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tar-xz-200mib-50m.tar.xz",
+   "set": "l5",
+   "kind": "xz",
+   "file_bytes": 31348,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "RATIO_OVER",
+     "limit": 1100,
+     "detail": "A file in this archive unpacks to more than 1,100 times its packed size, which no ordinary archive does, so the archive was not opened.",
+     "ms": 95
+    }
+   ],
+   "total_ms": 95,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tar-xz-w-200mib-50m.tar.xz",
+   "set": "l5",
+   "kind": "xz",
+   "file_bytes": 52178692,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 50,
+     "member_bytes_total": 209715200,
+     "max_member_bytes": 4194304,
+     "refusal_mid_stream": null,
+     "ms": 4785
+    }
+   ],
+   "total_ms": 4785,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "tiff-40p.tif",
+   "set": "l3",
+   "kind": "tiff",
+   "file_bytes": 24954664,
+   "plan": {
+    "ok": true,
+    "route": "frames",
+    "bound": 52428800
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": false,
+     "code": "UNREADABLE",
+     "detail": "This file could not be read: it is damaged or not what its type says.",
+     "ms": 12687
+    }
+   ],
+   "total_ms": 12687,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "zip-many-10000m-1900mib.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 8638768,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 10000,
+     "member_bytes_total": 1992290000,
+     "max_member_bytes": 199229,
+     "refusal_mid_stream": null,
+     "ms": 123264
+    }
+   ],
+   "total_ms": 123265,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "zip-nest-3.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 350,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "recursive_walk": {
+      "opened_to_depth": 3
+     },
+     "ms": 45
+    }
+   ],
+   "total_ms": 46,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "zip-nest-4.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 460,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "recursive_walk": {
+      "opened_to_depth": 3,
+      "refused": "NESTED_TOO_DEEP",
+      "limit": 3
+     },
+     "ms": 43
+    }
+   ],
+   "total_ms": 43,
+   "caller_hwm_mb": 360
+  },
+  {
+   "file": "zip-random-400mib-1m.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 419430518,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 1,
+     "member_bytes_total": 419430400,
+     "max_member_bytes": 419430400,
+     "refusal_mid_stream": null,
+     "ms": 2570
+    }
+   ],
+   "total_ms": 2570,
+   "caller_hwm_mb": 939
+  },
+  {
+   "file": "zip-random-480mib-20m.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 503318422,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 20,
+     "member_bytes_total": 503316480,
+     "max_member_bytes": 25165824,
+     "refusal_mid_stream": null,
+     "ms": 2624
+    }
+   ],
+   "total_ms": 2624,
+   "caller_hwm_mb": 963
+  },
+  {
+   "file": "zip-zeros-1900mib.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 1933588,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 1,
+     "member_bytes_total": 1992294400,
+     "max_member_bytes": 1992294400,
+     "refusal_mid_stream": null,
+     "ms": 28758
+    }
+   ],
+   "total_ms": 28758,
+   "caller_hwm_mb": 3996
+  }
+ ]
+}

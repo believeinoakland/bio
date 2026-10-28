@@ -1,0 +1,4 @@
+Verbatim copies (cp, no edit) of reader-container/Dockerfile, reader-container/container/*.mjs and reader-container/src/records.mjs
+from origin/lane/platform at commit bcd195bc61594c044ed7f29a7085a4c65ce268f7, taken 2026-10-28 so that a probe can build and run THE SAME IMAGE SOURCE from this branch.
+The Dockerfile COPYs exactly src/records.mjs and container/ (build context = this directory). The authoritative copy is on lane/platform; if it moved, re-copy.
+The Dockerfile pins its base by digest and installs Debian packages from snapshot.debian.org (needs network at build time: BOB's machine, never this session).

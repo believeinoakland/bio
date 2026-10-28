@@ -1,0 +1,9 @@
+{
+  "name": "plat-s1-probe",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "THROWAWAY P-M17 / L1-L6 probe Worker for the scratch copy plat-s1 (proto-mem/1f). Not product code.",
+  "scripts": { "deploy": "node deploy.mjs" },
+  "devDependencies": { "@cloudflare/containers": "0.3.7", "wrangler": "4.114.0" }
+}

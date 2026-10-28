@@ -1,0 +1,1022 @@
+{
+ "when": "2026-10-28T23:39:27.949Z",
+ "label": "LOCAL, not platform",
+ "command": "node proto-mem/1f/local/run-l1-plane.mjs --type=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet --files=/home/user/fix1f/xlsx-250k-cells.xlsx,/home/user/fix1f/xlsx-1m-cells.xlsx,/home/user/fix1f/xlsx-10mb.xlsx,/home/user/fix1f/xlsx-wide-16384.xlsx,/home/user/fix1f/xlsx-1000-sheets.xlsx,/home/user/fix1f/xlsx-50mb-1m-rows.xlsx,/home/user/fix1f/xlsx-max-rows.xlsx,/home/user/fix1f/xlsx-over-max-rows.xlsx --out=/tmp/claude-0/-home-user/59f38d1e-7059-58bf-b787-4365a1d33ffd/scratchpad/l2x.json  ;  node proto-mem/1f/local/run-l1-plane.mjs --type=application/vnd.oasis.opendocument.spreadsheet --files=/home/user/fix1f/ods-10mb.ods,/home/user/fix1f/ods-20mb.ods,/home/user/fix1f/ods-50mb.ods,/home/user/fix1f/ods-ratio-bomb.ods --out=/tmp/claude-0/-home-user/59f38d1e-7059-58bf-b787-4365a1d33ffd/scratchpad/l2o.json",
+ "plane": "alpha plane, proto-mem/build-meas.mjs bundle of this branch (base 17cf5848)",
+ "results": [
+  {
+   "file": "xlsx-250k-cells.xlsx",
+   "file_bytes": 1794486,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 1131,
+     "peak_rss_above_start": 45,
+     "heap_used_peak": 78,
+     "units_written": 15,
+     "state": "partial",
+     "last_why": null
+    },
+    {
+     "step": 2,
+     "ms": 722,
+     "peak_rss_above_start": 23.6,
+     "heap_used_peak": 89.1,
+     "units_written": 2,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 260.5,
+    "anon": 208.5,
+    "file": 51.9,
+    "hwm": 260.5,
+    "heap": {
+     "used": 57.1,
+     "total": 68.5,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 216,
+    "samples": 20,
+    "start_rss": 260.9,
+    "end_rss": 266.6,
+    "peak_rss": 266.6,
+    "peak_above_start": 5.6,
+    "end_above_start": 5.6,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.1,
+    "heap_used_end": 55,
+    "heap_total_start": 68.5,
+    "heap_total_peak_seen": 69.8,
+    "heap_total_end": 69.8,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 78,
+    "samples": 7,
+    "start_rss": 266.6,
+    "end_rss": 267.3,
+    "peak_rss": 267.3,
+    "peak_above_start": 0.7,
+    "end_above_start": 0.7,
+    "hwm_reset_ok": true,
+    "heap_used_start": 55,
+    "heap_used_peak_seen": 55,
+    "heap_used_end": 54,
+    "heap_total_start": 69.8,
+    "heap_total_peak_seen": 70.3,
+    "heap_total_end": 70.3,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": "{\"read_through\":1965790,\"total\":2130443}",
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 687
+   },
+   "units_total": 17,
+   "steps_taken": 2,
+   "reading_wall_ms": 1886,
+   "outcome": "read whole",
+   "peak_rss_above_baseline_mb": 45,
+   "max_step_ms": 1131,
+   "heap_used_peak_mb": 89.1,
+   "db_bytes": {
+    "b": 2130443,
+    "n": 17
+   }
+  },
+  {
+   "file": "xlsx-1m-cells.xlsx",
+   "file_bytes": 6729011,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 57,
+     "peak_rss_above_start": 13.6,
+     "heap_used_peak": 62.4,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 262.4,
+    "anon": 208.3,
+    "file": 54.1,
+    "hwm": 262.4,
+    "heap": {
+     "used": 57.1,
+     "total": 69,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 413,
+    "samples": 40,
+    "start_rss": 262.7,
+    "end_rss": 272.6,
+    "peak_rss": 273,
+    "peak_above_start": 10.3,
+    "end_above_start": 9.9,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.1,
+    "heap_used_end": 56.7,
+    "heap_total_start": 69,
+    "heap_total_peak_seen": 70,
+    "heap_total_end": 70,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 60,
+    "samples": 5,
+    "start_rss": 272.6,
+    "end_rss": 273.6,
+    "peak_rss": 273.6,
+    "peak_above_start": 1,
+    "end_above_start": 1,
+    "hwm_reset_ok": true,
+    "heap_used_start": 56.7,
+    "heap_used_peak_seen": 61.6,
+    "heap_used_end": 61.6,
+    "heap_total_start": 70,
+    "heap_total_peak_seen": 70.8,
+    "heap_total_end": 70.8,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 34
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 78,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 13.6,
+   "max_step_ms": 57,
+   "heap_used_peak_mb": 62.4,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "xlsx-10mb.xlsx",
+   "file_bytes": 9788303,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 47,
+     "peak_rss_above_start": 25.9,
+     "heap_used_peak": 63.9,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 263.7,
+    "anon": 210.3,
+    "file": 53.4,
+    "hwm": 263.7,
+    "heap": {
+     "used": 57.1,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 718,
+    "samples": 69,
+    "start_rss": 264,
+    "end_rss": 302.8,
+    "peak_rss": 302.8,
+    "peak_above_start": 38.8,
+    "end_above_start": 38.8,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 58.2,
+    "heap_used_end": 58.2,
+    "heap_total_start": 68.7,
+    "heap_total_peak_seen": 70.5,
+    "heap_total_end": 70.5,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 64,
+    "samples": 6,
+    "start_rss": 302.8,
+    "end_rss": 303.4,
+    "peak_rss": 303.4,
+    "peak_above_start": 0.6,
+    "end_above_start": 0.6,
+    "hwm_reset_ok": true,
+    "heap_used_start": 58.2,
+    "heap_used_peak_seen": 63.2,
+    "heap_used_end": 63.2,
+    "heap_total_start": 70.5,
+    "heap_total_peak_seen": 72.3,
+    "heap_total_end": 72.3,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 40
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 73,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 38.8,
+   "max_step_ms": 47,
+   "heap_used_peak_mb": 63.9,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "xlsx-wide-16384.xlsx",
+   "file_bytes": 2088116,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 1122,
+     "peak_rss_above_start": 79.5,
+     "heap_used_peak": 90.7,
+     "units_written": 16,
+     "state": "partial",
+     "last_why": null
+    },
+    {
+     "step": 2,
+     "ms": 644,
+     "peak_rss_above_start": 30.5,
+     "heap_used_peak": 112.6,
+     "units_written": 4,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 259.4,
+    "anon": 205.8,
+    "file": 53.7,
+    "hwm": 259.4,
+    "heap": {
+     "used": 57.1,
+     "total": 69,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 255,
+    "samples": 24,
+    "start_rss": 259.7,
+    "end_rss": 265.7,
+    "peak_rss": 265.7,
+    "peak_above_start": 6,
+    "end_above_start": 6,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.1,
+    "heap_used_end": 55.1,
+    "heap_total_start": 69,
+    "heap_total_peak_seen": 69.8,
+    "heap_total_end": 69.8,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 70,
+    "samples": 6,
+    "start_rss": 265.7,
+    "end_rss": 266.4,
+    "peak_rss": 266.4,
+    "peak_above_start": 0.7,
+    "end_above_start": 0.7,
+    "hwm_reset_ok": true,
+    "heap_used_start": 55.1,
+    "heap_used_peak_seen": 55.1,
+    "heap_used_end": 54,
+    "heap_total_start": 69.8,
+    "heap_total_peak_seen": 70,
+    "heap_total_end": 70,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": "{\"read_through\":2092797,\"total\":2617085}",
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 622
+   },
+   "units_total": 20,
+   "steps_taken": 2,
+   "reading_wall_ms": 1797,
+   "outcome": "read whole",
+   "peak_rss_above_baseline_mb": 79.5,
+   "max_step_ms": 1122,
+   "heap_used_peak_mb": 112.6,
+   "db_bytes": {
+    "b": 2617085,
+    "n": 20
+   }
+  },
+  {
+   "file": "xlsx-1000-sheets.xlsx",
+   "file_bytes": 751572,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 540,
+     "peak_rss_above_start": 30.7,
+     "heap_used_peak": 96.3,
+     "units_written": 41,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 260.4,
+    "anon": 206.2,
+    "file": 54.2,
+    "hwm": 260.4,
+    "heap": {
+     "used": 57.1,
+     "total": 69,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 674,
+    "samples": 65,
+    "start_rss": 260.7,
+    "end_rss": 296.9,
+    "peak_rss": 296.9,
+    "peak_above_start": 36.2,
+    "end_above_start": 36.2,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 68.1,
+    "heap_used_end": 68.1,
+    "heap_total_start": 69,
+    "heap_total_peak_seen": 99.1,
+    "heap_total_end": 99.1,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 218,
+    "samples": 21,
+    "start_rss": 296.9,
+    "end_rss": 308.5,
+    "peak_rss": 308.5,
+    "peak_above_start": 11.7,
+    "end_above_start": 11.7,
+    "hwm_reset_ok": true,
+    "heap_used_start": 68.1,
+    "heap_used_peak_seen": 70.2,
+    "heap_used_end": 67.4,
+    "heap_total_start": 99.1,
+    "heap_total_peak_seen": 100,
+    "heap_total_end": 100,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 514
+   },
+   "units_total": 1000,
+   "steps_taken": 1,
+   "reading_wall_ms": 562,
+   "outcome": "read whole",
+   "peak_rss_above_baseline_mb": 36.2,
+   "max_step_ms": 540,
+   "heap_used_peak_mb": 96.3,
+   "db_bytes": {
+    "b": 418674,
+    "n": 1000
+   }
+  },
+  {
+   "file": "xlsx-50mb-1m-rows.xlsx",
+   "file_bytes": 48826535,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 951,
+     "peak_rss_above_start": 44.9,
+     "heap_used_peak": 66.2,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 257.4,
+    "anon": 203.1,
+    "file": 54.3,
+    "hwm": 257.4,
+    "heap": {
+     "used": 57.1,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 2337,
+    "samples": 223,
+    "start_rss": 257.6,
+    "end_rss": 407.6,
+    "peak_rss": 451.1,
+    "peak_above_start": 193.5,
+    "end_above_start": 149.9,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 61.7,
+    "heap_used_end": 61.7,
+    "heap_total_start": 68.7,
+    "heap_total_peak_seen": 71,
+    "heap_total_end": 71,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 60,
+    "samples": 5,
+    "start_rss": 407.6,
+    "end_rss": 408.4,
+    "peak_rss": 408.4,
+    "peak_above_start": 0.8,
+    "end_above_start": 0.8,
+    "hwm_reset_ok": true,
+    "heap_used_start": 61.7,
+    "heap_used_peak_seen": 66.2,
+    "heap_used_end": 66.2,
+    "heap_total_start": 71,
+    "heap_total_peak_seen": 75.5,
+    "heap_total_end": 75.5,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 3
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 971,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 193.5,
+   "max_step_ms": 951,
+   "heap_used_peak_mb": 66.2,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "xlsx-max-rows.xlsx",
+   "file_bytes": 8408526,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 45,
+     "peak_rss_above_start": 22.6,
+     "heap_used_peak": 63.2,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 263.7,
+    "anon": 210.2,
+    "file": 53.5,
+    "hwm": 263.7,
+    "heap": {
+     "used": 57.1,
+     "total": 69,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 592,
+    "samples": 57,
+    "start_rss": 264,
+    "end_rss": 298.4,
+    "peak_rss": 298.4,
+    "peak_above_start": 34.4,
+    "end_above_start": 34.4,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.5,
+    "heap_used_end": 57.5,
+    "heap_total_start": 69,
+    "heap_total_peak_seen": 70,
+    "heap_total_end": 70,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 57,
+    "samples": 5,
+    "start_rss": 298.4,
+    "end_rss": 300.2,
+    "peak_rss": 300.2,
+    "peak_above_start": 1.7,
+    "end_above_start": 1.7,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.5,
+    "heap_used_peak_seen": 62.5,
+    "heap_used_end": 62.5,
+    "heap_total_start": 70,
+    "heap_total_peak_seen": 71.5,
+    "heap_total_end": 71.5,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 39
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 63,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 34.4,
+   "max_step_ms": 45,
+   "heap_used_peak_mb": 63.2,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "xlsx-over-max-rows.xlsx",
+   "file_bytes": 8408535,
+   "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 46,
+     "peak_rss_above_start": 23,
+     "heap_used_peak": 63.2,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 257.4,
+    "anon": 203.1,
+    "file": 54.3,
+    "hwm": 257.4,
+    "heap": {
+     "used": 57.1,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 607,
+    "samples": 59,
+    "start_rss": 257.6,
+    "end_rss": 298.6,
+    "peak_rss": 298.6,
+    "peak_above_start": 40.9,
+    "end_above_start": 40.9,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.5,
+    "heap_used_end": 57.5,
+    "heap_total_start": 68.7,
+    "heap_total_peak_seen": 70,
+    "heap_total_end": 70,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 73,
+    "samples": 7,
+    "start_rss": 298.6,
+    "end_rss": 300.3,
+    "peak_rss": 300.3,
+    "peak_above_start": 1.7,
+    "end_above_start": 1.7,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.5,
+    "heap_used_peak_seen": 62.5,
+    "heap_used_end": 62.5,
+    "heap_total_start": 70,
+    "heap_total_peak_seen": 71.5,
+    "heap_total_end": 71.5,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 37
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 68,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 40.9,
+   "max_step_ms": 46,
+   "heap_used_peak_mb": 63.2,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "ods-10mb.ods",
+   "file_bytes": 5286583,
+   "type": "application/vnd.oasis.opendocument.spreadsheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 35,
+     "peak_rss_above_start": 2.2,
+     "heap_used_peak": 62.1,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 262.2,
+    "anon": 208.5,
+    "file": 53.7,
+    "hwm": 262.2,
+    "heap": {
+     "used": 57.1,
+     "total": 68.5,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 358,
+    "samples": 34,
+    "start_rss": 262.4,
+    "end_rss": 273.1,
+    "peak_rss": 273.6,
+    "peak_above_start": 11.2,
+    "end_above_start": 10.7,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.1,
+    "heap_used_end": 56.4,
+    "heap_total_start": 68.5,
+    "heap_total_peak_seen": 70,
+    "heap_total_end": 70,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 64,
+    "samples": 6,
+    "start_rss": 273.1,
+    "end_rss": 274,
+    "peak_rss": 274,
+    "peak_above_start": 0.9,
+    "end_above_start": 0.9,
+    "hwm_reset_ok": true,
+    "heap_used_start": 56.4,
+    "heap_used_peak_seen": 61.4,
+    "heap_used_end": 61.4,
+    "heap_total_start": 70,
+    "heap_total_peak_seen": 70.8,
+    "heap_total_end": 70.8,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 27
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 54,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 11.2,
+   "max_step_ms": 35,
+   "heap_used_peak_mb": 62.1,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "ods-20mb.ods",
+   "file_bytes": 7927367,
+   "type": "application/vnd.oasis.opendocument.spreadsheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 39,
+     "peak_rss_above_start": 9.1,
+     "heap_used_peak": 63,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 258.2,
+    "anon": 204,
+    "file": 54.2,
+    "hwm": 258.2,
+    "heap": {
+     "used": 57.1,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 475,
+    "samples": 46,
+    "start_rss": 258.5,
+    "end_rss": 273.9,
+    "peak_rss": 275.2,
+    "peak_above_start": 16.7,
+    "end_above_start": 15.4,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.4,
+    "heap_used_end": 57.4,
+    "heap_total_start": 68.7,
+    "heap_total_peak_seen": 70,
+    "heap_total_end": 70,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 61,
+    "samples": 5,
+    "start_rss": 273.9,
+    "end_rss": 275.4,
+    "peak_rss": 275.4,
+    "peak_above_start": 1.5,
+    "end_above_start": 1.5,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.4,
+    "heap_used_peak_seen": 62.4,
+    "heap_used_end": 62.4,
+    "heap_total_start": 70,
+    "heap_total_peak_seen": 71.3,
+    "heap_total_end": 71.3,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 31
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 62,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 16.7,
+   "max_step_ms": 39,
+   "heap_used_peak_mb": 63,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "ods-50mb.ods",
+   "file_bytes": 21132810,
+   "type": "application/vnd.oasis.opendocument.spreadsheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 83,
+     "peak_rss_above_start": 22.3,
+     "heap_used_peak": 59.8,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 262.3,
+    "anon": 207.9,
+    "file": 54.4,
+    "hwm": 262.3,
+    "heap": {
+     "used": 57.1,
+     "total": 68.7,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 1386,
+    "samples": 134,
+    "start_rss": 262.5,
+    "end_rss": 333.6,
+    "peak_rss": 354,
+    "peak_above_start": 91.5,
+    "end_above_start": 71.1,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 57.2,
+    "heap_used_end": 52,
+    "heap_total_start": 68.7,
+    "heap_total_peak_seen": 71,
+    "heap_total_end": 71,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 75,
+    "samples": 7,
+    "start_rss": 333.6,
+    "end_rss": 334,
+    "peak_rss": 334,
+    "peak_above_start": 0.4,
+    "end_above_start": 0.4,
+    "hwm_reset_ok": true,
+    "heap_used_start": 52,
+    "heap_used_peak_seen": 59,
+    "heap_used_end": 59,
+    "heap_total_start": 71,
+    "heap_total_peak_seen": 71.5,
+    "heap_total_end": 71.5,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 59
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 105,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 91.5,
+   "max_step_ms": 83,
+   "heap_used_peak_mb": 59.8,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  },
+  {
+   "file": "ods-ratio-bomb.ods",
+   "file_bytes": 298742,
+   "type": "application/vnd.oasis.opendocument.spreadsheet",
+   "steps": [
+    {
+     "step": 1,
+     "ms": 34,
+     "peak_rss_above_start": 0.5,
+     "heap_used_peak": 59.3,
+     "units_written": 0,
+     "state": "finished",
+     "last_why": null
+    }
+   ],
+   "baseline": {
+    "rss": 257.3,
+    "anon": 203.2,
+    "file": 54.1,
+    "hwm": 257.3,
+    "heap": {
+     "used": 57.1,
+     "total": 69,
+     "backing": 0.9
+    }
+   },
+   "upload": {
+    "label": "upload",
+    "ms": 113,
+    "samples": 11,
+    "start_rss": 257.7,
+    "end_rss": 262.2,
+    "peak_rss": 262.2,
+    "peak_above_start": 4.6,
+    "end_above_start": 4.6,
+    "hwm_reset_ok": true,
+    "heap_used_start": 57.1,
+    "heap_used_peak_seen": 60,
+    "heap_used_end": 60,
+    "heap_total_start": 69,
+    "heap_total_peak_seen": 71.4,
+    "heap_total_end": 71.4,
+    "http": 200,
+    "ok": true
+   },
+   "promote": {
+    "label": "promote",
+    "ms": 71,
+    "samples": 6,
+    "start_rss": 262.2,
+    "end_rss": 263.7,
+    "peak_rss": 263.7,
+    "peak_above_start": 1.5,
+    "end_above_start": 1.5,
+    "hwm_reset_ok": true,
+    "heap_used_start": 60,
+    "heap_used_peak_seen": 60,
+    "heap_used_end": 58.6,
+    "heap_total_start": 71.4,
+    "heap_total_peak_seen": 72.9,
+    "heap_total_end": 72.9,
+    "ok": true
+   },
+   "final_job": {
+    "state": "finished",
+    "cursor": null,
+    "written": 0,
+    "attempts": 1,
+    "last_why": null,
+    "last_ms": 21
+   },
+   "units_total": 0,
+   "steps_taken": 1,
+   "reading_wall_ms": 56,
+   "outcome": "job finished but 0 units landed: NOT read (reason not determined here; the harness stubs the sheet/pdf/ocr workers)",
+   "peak_rss_above_baseline_mb": 4.6,
+   "max_step_ms": 34,
+   "heap_used_peak_mb": 60,
+   "db_bytes": {
+    "b": null,
+    "n": 0
+   }
+  }
+ ]
+}
