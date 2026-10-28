@@ -94,7 +94,7 @@ test("R43 an embedded part's identity is taken as it streams; a member over MEMB
   assert.equal(refused["word/embeddings/ratio.bin"].detail, "ARCHIVE_RATIO_MAX");
   assert.equal(refused["word/embeddings/ratio.bin"].limit, 1100);
   /* a member declaring more than the member cap makes the archive's declared total pass its cap too: the file is refused by that name */
-  const huge = await docxEntry.parts(F.docx({ extra: [{ name: "word/embeddings/huge.bin", data: "zzzz", cd: { usize: 300 * 1048576 } }] }));
+  const huge = await docxEntry.parts(F.docx({ extra: [{ name: "word/embeddings/huge.bin", data: "zzzz", cd: { usize: boundOf("archive", "member_bytes") + 1 } }] }));
   assert.equal(huge.ok, false);
   assert.match(String(huge.why), /ARCHIVE_TOTAL_MAX|MEMBER_MAX/);
   /* pptx and xlsx take the same path */
