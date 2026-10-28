@@ -2,11 +2,9 @@
 
 **Status** · DRAFT. Drafted by a worker for BOB on 2026-10-28 from T53's "Left out of T53 (P19)" list and the old next.md (T51's, now `archive/next-T51.md`), each id searched in `current.md`, `T53-completion.md`, `carried-T52-R1.md` and `T53-R1/*.md`. Groups: Placed in T53 27 · Hard-reason entries from T53's Left-out list 24 · Hard-reason entries from the old next.md 9 · NO HARD REASON 3 (BOB places these in T53 now).
 
-## NO HARD REASON: belongs in T53 (BOB will place)
+## NO HARD REASON
 
-- N1200 · provenance, connections · each registers its reader of a project's reach (its captures; the records it cites) through `membership.registerProjectReach`, so a run fenced to its project (N1186) also reads the captures and cited records · NO HARD REASON: belongs in T53 (old reason "Bob's (K3717, N1220)" is gone: N1220 is T53's; AI-DESIGN's `NEXT-ENTRIES.md` says carry, `FOLD-AI.md` says "into their modules", yet no T53-R1 row of provenance, connections or membership names it)
-- N1261 · acquisition, file-safety · read DEC-412's rows instead of their stand-ins: acquisition `checks.mjs` `refusal.CAPTURE_NOT_KEPT` (R29 R31), file-safety `checks.mjs` `SIGNATURES_RUN_RECENT` by `rowWord` (R24) · NO HARD REASON: belongs in T53 (the wording waited for the design; `words.json` now holds `CAPTURE_NOT_KEPT` and `setup-words/rows.mjs` holds `refusal.SIGNATURES_RUN_RECENT`; T52-103 dropped only `SIGNATURES_RUN_UNDER_WAY`)
-- (workflow) · deploy-test (`deploy-test.yml`; no module, BOB places) · cannot start a fresh copy (members deploy before the plane; a script copy holds no store or secrets), and on the shared test account a copy's member run re-points the one `agent-worker` (K5350): a fresh copy goes through the installer, or the workflow refuses a copy without a store · NO HARD REASON: belongs in T53 (named in no T53 row; load-check's `seedCopy` is the nearest owner)
+None: the three found (N1200, N1261, deploy-test) were placed in T53 by K5747 (T53-587 to T53-590).
 
 ## Placed in T53 (old next.md and T53 entries; where)
 

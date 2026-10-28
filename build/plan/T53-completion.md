@@ -21,9 +21,13 @@
 - T53-574 · K5705, FILE-SAFETY's finding · `purge` removes rows only, so derived objects of a purged capture (safe views, copies, pictures) stay in the store unreferenced: purge removes them too (whether record-core finds them or their owners register them for purge, settled at START)
 
 ## Layer 3
+**provenance**
+- T53-588 · N1200 (K5747) · registers its reader of a project's reach (its captures) through `membership.registerProjectReach` (N1186)
 **acquisition**
 - T53-583 · K5715, R126, R127 · met once T53-580 and T53-581 land
+- T53-589 · N1261 (K5747) · `checks.mjs` reads DEC-412's `refusal.CAPTURE_NOT_KEPT` row (R29, R31) instead of its stand-in
 **file-safety**
+- T53-589 · N1261 (K5747) · `checks.mjs` reads `refusal.SIGNATURES_RUN_RECENT` by `rowWord` (R24) instead of its stand-in
 - T53-571 · K5705, R66 · the container's other picture kinds: uses reader-container (the edge entered at START) and image-cover's redraw (T53-570)
 
 ## Carried from the handoff
