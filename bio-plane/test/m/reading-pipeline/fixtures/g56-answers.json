@@ -1,5 +1,5 @@
 {
- "recorded_on": "a4d51953ff (a4d51953ff)",
+ "recorded_on": "the tip before G56",
  "range_pages_asked": 200,
  "cases": {
   "light": {
@@ -967,7 +967,7 @@
    "cursor_n": 450,
    "first_cursor": {
     "v": 1,
-    "s": "2fa2637147881d0e5a5dc31300bca314ed9f77fe37330e6e394fe8e3a33e067d",
+    "s": "23db2baf04652d70c50ab0c541391e3b2b601ca608b7c6990a6bb9d897343061",
     "k": "p",
     "n": 450,
     "i": 130

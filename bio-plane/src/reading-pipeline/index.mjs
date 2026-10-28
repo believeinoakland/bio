@@ -14,13 +14,13 @@
    read in page ranges is kept open between its pieces (pdf-reader's `openPdfRange`, R44; G82: with the turn given back, R45). */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
-import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
+import { getFormat, readingDialect, detectFormat, formatNameFor } from "../formats.mjs";
 import { identify, doctypeFor, doctypeForYielding, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
 import { extractPdfRange, openPdfRange } from "../pdfstructure.mjs";
 import { readingProvenance, describePages, yieldNow } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
-import { boundOf, statement } from "../read-bounds.mjs";
+import { boundOf, statement, READ_BOUNDS } from "../read-bounds.mjs";
 import { decodeText } from "../ooxml.mjs";
 import { decodeReferences, visibleTextOfHtml, visibleTextOfHtmlYielding, visibleTextOfHtmlStream } from "./html.mjs";
 
@@ -57,6 +57,9 @@ export const MULTIPART_READ_MAX = boundOf("office", "text_bytes");
    round 9): quoted from `READ_BOUNDS`, the PDF byte row (its alpha, today's 24 MiB, K4831 (3)); a refusal states it with the size
    (`statement`). */
 export const WHOLE_READ_MAX = boundOf("pdf", "bytes");
+/* R66 (T53-124): a text kind is refused above the text bound (100 MB, the active figure), but it is read whole only up to the measured whole-read figure, the text row's alpha
+   (24 MiB, quoted from `READ_BOUNDS`); a text between the two is read in byte windows with a carry (R50, R51), never held whole. */
+export const TEXT_WINDOW_FROM = READ_BOUNDS.text.bytes.alpha;
 const WHOLE_READ_ROW = ["pdf", "bytes"];
 /* R37 (D4): why a reading failed, as `reading.failure`. `transient`: the cause is outside the document (the store did not
    answer, a member was down or answered 5xx, an entry threw), so a later read can succeed; `final`: the document's own
@@ -1642,6 +1645,11 @@ const MODE_OF = { pdf: "pages", jpeg: "pages", png: "pages", csv: "rows", tsv: "
                   text: "windows", json: "windows", xml: "windows", html: "windows" };
 const BOUND_ROW_OF = { text: ["text", "bytes"], html: ["text", "bytes"], undetermined: ["text", "bytes"], csv: ["csv", "bytes"],
                        tsv: ["tsv", "bytes"], json: ["json", "bytes"], xml: ["xml", "bytes"] };
+/* T53-528 (format-registry R38, R39): the kind a reading goes by, from `detectFormat`'s answer. `text` is valid text no entry claimed and `json`, `xml` and `html` are read as text here; `unlisted` with a name is a file
+   held and named (R67: `held_unread`); `unlisted` with no name is bytes no signature claimed (what was `undetermined`: UTF-16 with no BOM is such, R49), so they stay `undetermined` and the reading decides by its own decode. */
+const kindOfDetected = (found) => (found && typeof found.format === "string"
+  ? (found.format === "unlisted" && !found.named && !found.encrypted ? "undetermined" : found.format) : "undetermined");
+
 /* R45: `plan(source, {declared, name})` reads a head range and a tail range and the declared size, no body: `kind` detected from
    them (`format-registry.detectFormat` over the two ranges: an image asked before a PDF or a page, an office or OpenDocument file
    recognised by its tail directory), `pages` or `rows` the declared count when the ranges state it (null here: no body is read),
@@ -1661,7 +1669,9 @@ export async function plan(source, { declared = null, name = null } = {}) {
     return source.readRange(o, n);
   } };
   const found = await detectFormat(cached, declared, name);
-  const kind = found && typeof found.format === "string" ? found.format : "undetermined";
+  const kind = kindOfDetected(found);
+  /* R67: a file held and named has no bound to judge and no grain: it is stated held, whatever its size (no TOO_LARGE) */
+  if (kind === "unlisted") return { kind, pages: null, rows: null, verdict: { ok: true, size, limit: null, bound_key: null }, mode: "held" };
   const row = BOUND_ROW_OF[kind] || WHOLE_READ_ROW;
   const st = statement(row[0], row[1], size);
   const mode = MODE_OF[kind] || "whole";
@@ -2128,13 +2138,13 @@ async function csvRangedHead(evidence, doc, { recorded, declared }) {
   return { src: cached, size: src.size, he: bounds[i], hr: i + 1, dl, head: probe.subarray(0, bounds[i]) };
 }
 
-/* R50 (fix round 9, G131i; K4834): a text, JSON or XML larger than a whole read holds (`WHOLE_READ_MAX`) and within the text bound (`READ_BOUNDS` text, the standard's
-   50 MB) is read from its first piece by range, as a CSV is: the head (the first window) gives the reading's facts and the grain, and each piece is a byte window with
+/* R50 (fix round 9, G131i; K4834): a text, JSON or XML larger than a whole text read holds (`TEXT_WINDOW_FROM`) and within the text bound (`READ_BOUNDS` text, the standard's
+   100 MB, R66) is read from its first piece by range, as a CSV is: the head (the first window) gives the reading's facts and the grain, and each piece is a byte window with
    a carry (`textWindowTick`), so neither the object nor its text is held whole. UTF-8 and US-ASCII only; another encoding of such a size is stated against the whole-read
    ceiling. `null` when the capture is not one: it is read, or refused, as before. */
 async function textRangedHead(evidence, doc, { recorded, declared, textual, charset, htmlOnly = false }) {
   const src = rangeSource(evidence, doc);
-  if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("text", "bytes"))) return null;
+  if (!(Number.isInteger(src.size) && src.size > TEXT_WINDOW_FROM && src.size <= boundOf("text", "bytes"))) return null;
   if (!textual || !(recorded === null || recorded === "undetermined" || recorded === "text" || recorded === "json" || recorded === "xml" || recorded === "html")) return null;
   const want = Math.min(src.size, WINDOW_BYTES + 4);
   const probe = await src.readRange(0, want);
@@ -2150,7 +2160,7 @@ async function textRangedHead(evidence, doc, { recorded, declared, textual, char
   if (!d.ok || d.replaced_ratio > REPLACED_TOLERANCE || !windowEncodable(d.encoding)) return null;
   const en = d.encoding === "us-ascii" ? "utf-8" : d.encoding;
   if (!/^utf-16/.test(en) && probe.includes(0)) return null;
-  if (!isHtml && !/^utf-16/.test(en) && detectFormat(probe, declared).format !== "undetermined") return null;
+  if (!isHtml && !/^utf-16/.test(en) && !TEXT_FORMATS.has(kindOfDetected(detectFormat(probe, declared)))) return null;
   const bm = en === "utf-8" ? (probe.length >= 3 && probe[0] === 0xef && probe[1] === 0xbb && probe[2] === 0xbf ? 3 : 0) : /^utf-16/.test(en) ? (bom16 ? 2 : 0) : 0;
   return { src, size: src.size, head: probe, bm, text: d.text, decoded: d, en: en === "utf-8" ? undefined : en, grain: grainOf(d.text, isHtml), ...(isHtml ? { html: true } : {}) };
 }
@@ -2796,21 +2806,23 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
     /* a text, JSON or XML over its own bound is stated against that row (R50), a CSV against its (K4868), every other kind against the whole-load ceiling's */
     const row = kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"]
       : textual && size > boundOf("text", "bytes") ? ["text", "bytes"] : WHOLE_READ_ROW;
-    const st = statement(...row, size);
+    const st = row[0] === "pdf" && ceiling === TEXT_WINDOW_FROM ? { ...statement("text", "bytes", size), bound: TEXT_WINDOW_FROM } : statement(...row, size);
     return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st, metric: "bytes" },
              why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound, parts: parts ? parts.length : 1 }) };
   };
-  if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
+  /* R66: a text kind is held whole only to the text row's whole-read figure (`TEXT_WINDOW_FROM`); a text above it that the windows could not take (an encoding they do not carry) is stated, not loaded */
+  const ceiling = textual && (kind === null || kind === "undetermined" || kind === "text" || kind === "json" || kind === "xml" || kind === "html") ? TEXT_WINDOW_FROM : WHOLE_READ_MAX;
+  if (total !== null && total > ceiling) return tooBig(total);
   /* the store is asked only when the document states no size */
   const held = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
-  if (held !== null && held > WHOLE_READ_MAX) return tooBig(held);
+  if (held !== null && held > ceiling) return tooBig(held);
   if (!parts) { const b = await whole(doc.capture.sha256); return b ? { bytes: b, whole: true } : { bytes: b }; }
   /* R2 (T51 fix round 2, C5): the whole object held under the document's fingerprint is read first; parts are
      assembled, and bounded, only when none is held. */
   const got = wholeSha ? await whole(wholeSha).catch(() => null) : null;
   if (got) return { bytes: got, whole: true };
   /* R1: a textual capture is assembled as a single object of it is read, up to the whole-read ceiling; every other kind to the office entries' text bound */
-  const assembleMax = textual ? WHOLE_READ_MAX : MULTIPART_READ_MAX;
+  const assembleMax = textual ? ceiling : MULTIPART_READ_MAX;
   if (total > assembleMax)
     return { bytes: null, failure: FAILURE_TRANSIENT,
              why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length), multipart_read_max: String(assembleMax) }) };
@@ -2830,7 +2842,12 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
 const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
 /* R1: the formats a text declared as text can be detected as with no entry to read them (`html` is detected and read here, as text); every other detected format is read
    by its entry or is no text, whatever type the sender declared */
-const TEXT_FORMATS = new Set([null, "undetermined", "text", "html", "json", "xml"]);
+const READ_AS_TEXT = new Set(["json", "ndjson", "xml", "svg", "kml", "geojson", "ics", "vcf", "srt", "vtt"]);
+const TEXT_FORMATS = new Set([null, "undetermined", "text", "html", ...READ_AS_TEXT]);
+/* T53-528 (`structured-text-reader` R8): these formats now have registry entries, but their answer is the reader's own shape (a `text` string, units by path) and not the
+   `document` and `pages` the stages below read, so the pipeline reads their bytes as text, as it did when no entry existed (a JSON or XML file is still named `json` or `xml`
+   in the reading's container); `getFormat` is asked for no other. Reported to BOB: wiring the reader's units is not in T53's entries for this module. */
+const entryFor = (fmt) => (fmt && fmt !== "undetermined" && !READ_AS_TEXT.has(fmt) ? getFormat(fmt) : null);
 /* R49 (fix round 9, G131g; X9): every text read here is decoded by one rule, `ooxml.decodeText` (UTF-8 with or without a BOM, UTF-16
    with or without one, the declared or detected legacy charset), handed the charset the capture's type declares. Its answer, or
    `{ok: false, why: "ENCODING_UNSUPPORTED", name}`. A replacement over `REPLACED_TOLERANCE` of the characters makes the reading
@@ -2933,9 +2950,10 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const rangedTxt = !rangedCsv && (!piecesOn || pieceAsk.cursor === null || laterOfText) && !held
     ? await textRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null, textual, htmlOnly: laterOfText,
         charset: charsetOf([headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || "") }).catch(() => null) : null;
-  if (rangedTxt && rangedTxt.html) fmt = "html";
+  /* R66: a text, JSON or XML past the whole-read figure is read here as text in windows (its head stands for the bytes, so no entry is handed the head as if it were the file) */
+  if (rangedTxt) fmt = rangedTxt.html ? "html" : "text";
   if (rangedTxt && !piecesOn)
-    return early(failed(doc, null, localize("reading-pipeline.index.text_in_pieces", "this file is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedTxt.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
+    return early(failed(doc, null, localize("reading-pipeline.index.text_in_pieces", "this file is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedTxt.size), limit: String(TEXT_WINDOW_FROM) }), { failure: FAILURE_TRANSIENT }));
   const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : rangedTxt ? { bytes: rangedTxt.head } : await bytesOf(evidence, doc, { kind: fmt, textual }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   const objLen = bytes ? bytes.length : 0;
@@ -2944,8 +2962,20 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
      parts is profiled from no byte, so an upload's recorded format is `undetermined` (or none): it is detected again from
      the held bytes, the declared type only where they say nothing. Bytes still undetermined are text when the profile's
      declared type is a text type and they are UTF-8 without a NUL, even in parts (R32). */
-  if (bytes && !held && (fmt === null || fmt === "undetermined"))
-    fmt = detectFormat(bytes, profile.source_content_type || ct || null).format;
+  let foundAnswer = null;
+  if (bytes && !held && (fmt === null || fmt === "undetermined" || fmt === "unlisted")) {
+    foundAnswer = detectFormat(bytes, profile.source_content_type || ct || null);
+    fmt = kindOfDetected(foundAnswer);
+  }
+  /* R67 (T53-124; format-registry R38): a file held and named has no reader yet: its reading is stated, not failed. It is detected afresh from the stored bytes each read, so the
+     reader's arrival (`registerFormat`) reads it by the next `read`, with no second upload and nothing stored here. `unlisted` with no name is bytes no signature claimed; those go on
+     (as text where they decode as text, R49). */
+  if (foundAnswer && foundAnswer.format === "unlisted" && foundAnswer.named && !foundAnswer.encrypted) {
+    const nm = formatNameFor(foundAnswer);
+    const said = nm.text || nm.name;
+    return early({ ...failed(doc, null, localize("reading-pipeline.index.held_unread", "held, not read: {name}", { name: said }), {}),
+                   held_unread: { name: nm.name, kind_key: nm.kind_key, text: nm.text } });
+  }
   let textRead = !multipart && profile.profiled_from_text === true && bytes;
   /* the charset declared by the transport first (the header wins over the markup's own, H5), then the capture's and the profile's type */
   const declaredType = [headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || null;
@@ -2972,7 +3002,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* R40: a later piece of a text is its units alone, drawn from the bytes now held. It runs before any recogniser: the
      reading is the first piece's, and the text is not classified again for each piece. */
   if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
-    const e0 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
+    const e0 = entryFor(fmt);
     if (!(e0 && (typeof e0.text === "function" || typeof e0.structure === "function"))) {
       const visible = rangedTxt && rangedTxt.html ? await htmlVisibleByWindows(rangedTxt, pieceAsk.windowBytes, null) : await visibleOfYielding(text, fmt === "html", true);
       if (visible === null) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
@@ -3015,7 +3045,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     return early(failed(doc, classify().docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"),
                         { failure: got.failure || FAILURE_TRANSIENT, ...(got.stated || {}) }));
 
-  const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
+  const entry = entryFor(fmt);
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   /* R54 (G135a, G135e): a kind with no reader is named, final, and offers nothing to repair (no "Read it") */
   if (!wireable && bytes && !held) {

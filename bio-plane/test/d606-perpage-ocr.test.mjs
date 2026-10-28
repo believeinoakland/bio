@@ -42,6 +42,7 @@ import { deflateSync } from "node:zlib";
 import { ocrWorkerDef } from "../../ocr-worker/test/memberworker.mjs";
 import { memberWorker } from "../../ocr-worker/test/fixtures.mjs";
 import { read } from "../src/reading-pipeline/index.mjs";
+import { said } from "./m/reading-pipeline/said.mjs";
 
 const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 const FIX = (n) => new Uint8Array(readFileSync(fileURLToPath(new URL(`./fixtures/d460/${n}`, import.meta.url))));
@@ -171,13 +172,13 @@ try {
     /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5, "the note says which"): the loop's note now NAMES
        the pages it did not merge, numbered from 1 (`describePages`): the tail of 0-based pages 24..29 is "pages 25-30",
        where the old sentence gave only its first page, 0-based ("from page 24"). */
-    t("the basis says the tail was NOT ASKED, from which page, and whose limit", /6 of them \(pages 25-30\) were not asked for in this request.*32 Worker invocations per request — their claim/.test(rd.basis || ""), true);
+    t("the basis says the tail was NOT ASKED, from which page, and whose limit", said("reading-pipeline.index.pages_not_asked_request", { count: 6, pages: "pages 25-30" }).test(rd.basis || ""), true);
     t("and the capture stays a tier-3 candidate", rd.tier3_candidate, true);
   }
   {
     const { rd, log } = await viaMember("chunk", "/scan6.pdf");
     t("under the budget every page is read: 6 calls, 6 transcribed, 0 unread", [log.length, filledOf(rd), unreadOf(rd)], [6, 6, 0]);
-    t("and nothing is said about a budget it did not meet", /not asked for/.test(rd.basis || ""), false);
+    t("and nothing is said about a budget it did not meet", said("reading-pipeline.index.pages_not_asked_request").test(rd.basis || ""), false);
     t("a fully read scan no longer wants OCR", rd.tier3_candidate ?? false, false);
   }
 
@@ -189,7 +190,7 @@ try {
     t("the loop stopped at the throw", log.length, 4);
     /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5): the call for 0-based page 3 is "page 4", numbered from
        1, and the pages from it on are now named ("pages 4-6"). */
-    t("the basis names the page whose call failed", /the call for page 4 failed, so 3 page\(s\) from it on \(pages 4-6\) were not transcribed/.test(rd.basis || ""), true);
+    t("the basis names the page whose call failed", said("reading-pipeline.call_failed_page", { at: "page 4", rest: 3, rest_2: "pages 4-6" }).test(rd.basis || ""), true);
   }
   {
     const { rd, log } = await viaMember("refuse", "/scan6.pdf");
@@ -201,14 +202,14 @@ try {
     const { rd, doc } = await viaMember("version", "/scan6.pdf");
     t("a page answered by a different engine build is not merged", [filledOf(rd), unreadOf(rd)], [5, 1]);
     /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5): the page is now named (0-based 4 = "page 5"). */
-    t("and the basis says why", /1 page\(s\) \(page 5\) were answered under a different engine build/.test(rd.basis || ""), true);
+    t("and the basis says why", said("reading-pipeline.page_answered_different", { mismatched: 1, mismatched_2: "page 5" }).test(rd.basis || ""), true);
     t("the chain names the ONE build the merged pages came from",
       (Array.isArray(doc?.text_source) ? doc.text_source : rd.text_source || []).filter((s) => s.step === "ocr").map((s) => s.version), ["0.11.0"]);
   }
   {
     const { rd } = await viaMember("stray", "/scan6.pdf");
     t("a page answered to the wrong call is dropped, and the asked page stays unread", [filledOf(rd), unreadOf(rd)], [5, 1]);
-    t("and the basis counts it", /1 page\(s\) the OCR member returned were not the page that call asked for/.test(rd.basis || ""), true);
+    t("and the basis counts it", said("reading-pipeline.page_ocr_member_returned", { strays: 1 }).test(rd.basis || ""), true);
   }
   footReached = true;
 } catch (e) {

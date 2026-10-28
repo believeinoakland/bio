@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { fresh, hold, doc, evidenceStore, sha } from "./fixture.mjs";
 import { read, cellsInRange, rangeSource, WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
+import { said } from "./said.mjs";
 
 const CHILD = fileURLToPath(new URL("./csv-range-child.mjs", import.meta.url));
 const MIB = 48;
@@ -62,7 +63,7 @@ for (const [shape, what] of [["parts", "held in 8 MiB parts with no whole object
       assert.ok(r.peakMB < 120, `the heap peaked ${r.peakMB} MB`);
       /* a read that is not in pieces holds nothing and says the sheet is read in pieces, to be tried again (R37) */
       assert.equal(r.notInPieces.failure, "transient");
-      assert.match(r.notInPieces.basis, /read in pieces/);
+      assert.match(r.notInPieces.basis, said("reading-pipeline.index.csv_in_pieces"));
       assert.equal(r.notInPieces.units, 0);
     });
 }

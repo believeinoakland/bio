@@ -20,6 +20,7 @@ import { archiveHop } from "../../../src/cdx.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { said } from "./said.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -193,7 +194,7 @@ test("R10 R11 (drive-convert): a Drive export (odt, ods, odp) read through its r
     assert.equal(head.calibration, null);
     /* R10's refusal is not what happened: the step was stated, and the reading is determined over the export's text */
     assert.equal((r.basis.match(/C-35\.\d+ [A-Z_]+/) || [null])[0], null, `${fmt}: no chain refusal named`);
-    assert.doesNotMatch(r.basis, /could not be stated honestly/);
+    assert.doesNotMatch(r.basis, said("reading-pipeline.why.text_chain_google"));
     assert.deepEqual([r.read_from_text, r.text_tier, r.text_container], [true, 1, fmt], `${fmt}: R11 determined`);
     /* R14: the reading's provenance is over the chain the reading carries */
     assert.equal(r.provenance.text_tier, 1);
@@ -326,7 +327,7 @@ test("R2 R10 R11 (reading-wire): the real Legistar packet read through the real 
   assert.match(r.basis, /read over a full decode \(51105 characters\)/);
   assert.doesNotMatch(r.basis, /PARTIAL/);
   assert.deepEqual([r.text_chars, r.text_undetermined], [60842, 0], "R17: the counts agree with the statement");
-  assert.match(r.basis, /every reference carries where it was read \(41 of 41\)/, "where references were read");
+  assert.match(r.basis, said("reading-pipeline.reference_carries_read", { positioned: 41, entities: 41 }), "where references were read");
   const partial = (await readPdf(w, PARTIAL, LEGISTAR("partial.pdf"))).r;
   assert.deepEqual([partial.read_from_text, partial.found, partial.text_tier], [true, true, 1]);
   assert.match(partial.basis, /read over a PARTIAL decode, stated: 1 undetermined region\(s\)\/code point\(s\): no_tounicode beside \d+ decoded characters/);

@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME } from "../../../src/reading-pipeline/index.mjs";
 import { mergedChain, layerChain } from "../../../src/textchain.mjs";
 import { flattenText } from "../../../../docprofile/registry.mjs";
+import { said } from "./said.mjs";
 
 const hex = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -27,7 +28,7 @@ test("R18: readingProvenance digests docprofile's flattened text, credits pages 
   assert.ok(none.why);
   const flat = await readingProvenance({ text: "a bare string", tier: null, member: "plane" });
   assert.equal(flat.producers[0].member, "plane");
-  assert.match(flat.pages_why, /no per-page grain/);
+  assert.match(flat.pages_why, said("reading-pipeline.text_carries_per"));
   const empty = await readingProvenance({ text: "" });
   assert.equal(empty.text_sha256, null);
 });

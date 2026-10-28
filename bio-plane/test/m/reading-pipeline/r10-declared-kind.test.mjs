@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { read } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc } from "./fixture.mjs";
+import { said } from "./said.mjs";
 
 const TEXT = "legacy word text walk ".repeat(7);
 const OLE = Uint8Array.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, ...new Array(56).fill(0)]);
@@ -28,7 +29,7 @@ for (const fromText of [false, true]) {
     assert.equal(r.reason, "UNSUPPORTED_FORMAT");
     assert.equal(r.kind, "legacy_word");
     assert.match(r.basis, /Word/);
-    assert.match(r.basis, /do not look like one/, "the sentence says the contents are not a Word file");
+    assert.match(r.basis, said("reading-pipeline.index.unsupported_legacy_word_not_word"), "the sentence says the contents are not a Word file");
     assert.doesNotMatch(r.basis, NOT_THIS, "extraction offers 'Read it' for exactly that sentence");
   });
 
@@ -53,7 +54,7 @@ test("R61 (cause 3): control: the OLE file is stated as before, legacy_word", as
   assert.equal(r.reason, "UNSUPPORTED_FORMAT");
   assert.equal(r.kind, "legacy_word");
   assert.equal(r.failure, "final");
-  assert.doesNotMatch(r.basis, /do not look like/, "an OLE file is a Word file: no such clause");
+  assert.doesNotMatch(r.basis, said("reading-pipeline.index.unsupported_legacy_word_not_word"), "an OLE file is a Word file: no such clause");
 });
 
 test("R61 (cause 3): controls: a .docx name is not legacy Word, and a declared type that is not text is not overridden by a name", async () => {

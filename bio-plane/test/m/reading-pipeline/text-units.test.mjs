@@ -13,6 +13,7 @@ import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 import { accountsServing } from "../ai-accounts/fixtures.mjs";
 import { world as accountsWorld } from "../ai-accounts/fixture.mjs";
+import { said } from "./said.mjs";
 
 registerDoctypes(registerDoctype);
 
@@ -98,10 +99,10 @@ test("R32 (control) R1: a capture not read as text answers no text_units: a mult
   const multi = await w.read(doc({ digest: d, bytes: words.length, ct: "application/octet-stream", format: "undetermined", fromText: false, headers: [],
     parts: [{ index: 0, sha256: d, bytes: words.length }] }));
   assert.equal("text_units" in multi, false);
-  assert.match(multi.reading.basis, /not read as text/);
+  assert.match(multi.reading.basis, said("reading-pipeline.index.document_not_read_text"));
   const over = await w.read(doc({ digest: d, bytes: words.length, ct: "text/plain", format: "undetermined", fromText: false, headers: [] }));
   assert.equal("text_units" in over, false);
-  assert.match(over.reading.basis, /not read as text/);
+  assert.match(over.reading.basis, said("reading-pipeline.index.document_not_read_text"));
   const absent = await w.read(doc({ digest: "e".repeat(64), ct: "text/plain", format: "undetermined", fromText: true, headers: [] }));
   assert.equal("text_units" in absent, false);
   const none = await fresh({ evidence: null }).read(doc({ digest: d, ct: "text/html", format: "html", fromText: true }));

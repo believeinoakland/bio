@@ -12,6 +12,7 @@ import { word } from "../../../src/setup-words/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP, tier2Escalate, tier3Extend } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { said } from "./said.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -42,13 +43,13 @@ test("R24 R21: the bytes come from the evidence store handed in, under the diges
   const noStore = fresh({ evidence: null });
   const a = await noStore.read(doc({ digest: "a".repeat(64), fromText: true }));
   assert.equal(a.reading.found, false);
-  assert.match(a.reading.basis, /no evidence store/);
+  assert.match(a.reading.basis, said("reading-pipeline.no_evidence_store"));
   const w = fresh();
   const absent = await w.read(doc({ digest: "b".repeat(64), fromText: true }));
   assert.equal(absent.reading.found, false);
-  assert.match(absent.reading.basis, /not held in the evidence store/);
+  assert.match(absent.reading.basis, said("reading-pipeline.index.bytes_not_held"));
   const none = await w.read({ ...doc({ digest: "c".repeat(64) }), capture: {} });
-  assert.match(none.reading.basis, /names no capture digest/);
+  assert.match(none.reading.basis, said("reading-pipeline.index.no_capture_digest"));
   /* a caller's text and reading on the document are ignored: the stored bytes are read */
   const html = CAL(ROW("2101", "City Council", "7/15/2026"));
   const d = await hold(w.evidence, html);
@@ -178,13 +179,13 @@ test("R4 R16: tier 3 selects pages with a routing marker and no encryption; each
   assert.deepEqual(ocr.calls[0].body.pages, pages.map((p) => p.page));
   assert.deepEqual(ocr.calls.slice(1).map((c) => c.body.pages), Array.from({ length: 23 }, (_, i) => [i + 1]));
   for (const c of ocr.calls) assert.deepEqual(Object.keys(c.body).sort(), ["capture_sha", "pages", "store"]);
-  assert.match(r.basis, /6 of them \(pages 25-30\) were not asked for in this request/);
+  assert.match(r.basis, said("reading-pipeline.index.pages_not_asked_request", { count: 6, pages: "pages 25-30" }));
   assert.equal(r.tier3_candidate, true);
   const enc = member(() => { throw new Error("never"); });
   await readPdf(w, i2([{ page: 0, text: "", undetermined: [noText(0), { page: null, reason: "encrypted", count: 1 }] }]), { env: { OCR_WORKER: enc } });
   assert.equal(enc.calls.length, 0, "an encrypted document is not a candidate");
   const none = (await readPdf(w, i2([{ page: 0, text: "", undetermined: [noText(0)] }]))).reading;
-  assert.match(none.basis, /no OCR engine is installed/);
+  assert.match(none.basis, said("reading-pipeline.document_text_layer"));
   assert.equal(none.tier3_candidate, true);
 });
 
@@ -200,9 +201,9 @@ test("R4: a page after a call that throws, a declined page, one under another en
     return new Error("gone");                                                   // page 4's call throws
   });
   const r = (await readPdf(w, i2(pages), { env: { OCR_WORKER: ocr } })).reading;
-  assert.match(r.basis, /declined 1 page\(s\) it was asked for one at a time \(page 2\)/);
-  assert.match(r.basis, /1 page\(s\) \(page 3\) were answered under a different engine build/);
-  assert.match(r.basis, /were not the page that call asked for, and were dropped/);
+  assert.match(r.basis, said("reading-pipeline.ocr_member_declined", { refused: 1, refused_2: "page 2" }));
+  assert.match(r.basis, said("reading-pipeline.page_answered_different", { mismatched: 1, mismatched_2: "page 3" }));
+  assert.match(r.basis, said("reading-pipeline.page_ocr_member_returned"));
   assert.match(r.basis, /the call for page 5 failed/);
   assert.equal(r.provenance.pages.filter((p) => p.tier === 3 && p.text_sha256).map((p) => p.page).join(), "0");
 });
@@ -228,7 +229,7 @@ test("R5: a member answer is taken only with engine, version, a measured cap and
   assert.deepEqual(r.text_source.map((s) => s.step), ["pixels", "ocr"]);
   assert.ok(r.text_source.every((s) => s.calibration === "CAL-7" && s.cap === "C"));
   assert.deepEqual(cal.asked, [{ engine: "tess", version: "5.3" }]);
-  assert.match(r.basis, /1 region\(s\) the OCR member returned carried no checkable image region/);
+  assert.match(r.basis, said("reading-pipeline.region_ocr_member", { anchorless: 1 }));
   const thrown = (await readPdf(fresh({ cal: calibration({ throws: true }) }), i2(pages), { env: { OCR_WORKER: member(() => ocrAnswer([0])) } })).reading;
   assert.ok(thrown.text_source.every((s) => s.calibration === null), "a calibration that cannot be read is none");
 });
@@ -239,28 +240,29 @@ test("R6 R9: the merge fills only asked-for pages holding no glyph; other pages 
   const ans = ocrAnswer([0, 1, 2, 7]);
   const r = (await readPdf(w, i2(pages), { env: { OCR_WORKER: member(() => ans) } })).reading;
   assert.equal(r.text_tier, 3);
-  assert.match(r.basis, /1 scanned page\(s\) were transcribed .* the page that already had text kept it/);
-  assert.match(r.basis, /page 1 \(the OCR member was not asked for it\)/);
-  assert.match(r.basis, /page 3 \(the OCR member was not asked for it\)/);
-  assert.match(r.basis, /page 8 \(the document has no such page\)/);
+  assert.match(r.basis, said("reading-pipeline.scanned_page_transcribed", { filled: 1 }));
+  assert.match(r.basis, said("reading-pipeline.already_text_kept"));
+  assert.match(r.basis, new RegExp(`page 1 \\(${said("reading-pipeline.ocr_member_asked").source}\\)`));
+  assert.match(r.basis, new RegExp(`page 3 \\(${said("reading-pipeline.ocr_member_asked").source}\\)`));
+  assert.match(r.basis, new RegExp(`page 8 \\(${said("reading-pipeline.document_page").source}\\)`));
   const p1 = r.provenance.pages.find((p) => p.page === 1);
   assert.equal(p1.tier, 3);
   assert.equal(r.tier3_candidate, undefined, "selected and filled: not a candidate");
   /* a page carrying glyphs that is selected but not routed as a folio page is refused as carrying text */
   const g = (await readPdf(fresh(), i2([{ page: 0, text: "has text", undetermined: [noText(0)] }]), { env: { OCR_WORKER: member(() => ocrAnswer([0])) } })).reading;
-  assert.match(g.basis, /page 1 \(it already carries text of its own/);
+  assert.match(g.basis, new RegExp(`page 1 \\(${said("reading-pipeline.already_carries_text").source}`));
   assert.equal(g.tier3_candidate, true);
   /* wholly scanned: the kept-text clause is not said */
   const s = (await readPdf(fresh(), i2([{ page: 0, text: "", undetermined: [noText(0)] }, { page: 1, text: "", undetermined: [noText(1)] }]),
                            { env: { OCR_WORKER: member(() => ocrAnswer([0, 1])) } })).reading;
-  assert.doesNotMatch(s.basis, /already had text kept it/);
+  assert.doesNotMatch(s.basis, said("reading-pipeline.already_text_kept"));
 });
 
 test("R6: a base with no per-page text refuses OCR when it holds a glyph and takes it whole when it holds none", async () => {
   const w = fresh();
   const flat = { document: "some glyphs", undetermined: [noText(0)], counts: { chars: 11, undetermined: 1 } };
   const r = (await readPdf(w, flat, { env: { OCR_WORKER: member(() => ocrAnswer([0])) } })).reading;
-  assert.match(r.basis, /could not be merged page by page .* so an OCR pass was refused/);
+  assert.match(r.basis, said("reading-pipeline.why.document_text_merged"));
   const empty = { document: "   ", undetermined: [noText(0)], counts: { chars: 3, undetermined: 1 } };
   const e = (await readPdf(fresh(), empty, { env: { OCR_WORKER: member(() => ocrAnswer([0])) } })).reading;
   assert.equal(e.text_tier, 3);
@@ -274,7 +276,7 @@ test("R7 R8: a folio page keeps its text, gains the transcription appended and i
   assert.ok(p1.producers && p1.producers.length === 2, "credited to the layer and the engine");
   const parts = r.text_source.filter((s) => s.extent && s.extent.pages.includes(1));
   assert.ok(new Set(parts.map((s) => s.extent.part)).size === 2, "listed in both parts");
-  assert.match(r.basis, /appended after it/);
+  assert.match(r.basis, said("reading-pipeline.page_already_held"));
   const out = await readPdf(fresh(), i2(pages), { env: { OCR_WORKER: member(() => ocrAnswer([1], { text: () => "chart words" })) } });
   const u1 = out.text_units.find((u) => u.extent.page === 1);
   assert.equal(u1.text, "12\nchart words");
@@ -337,7 +339,7 @@ test("R11: a determined reading carries text_source, text_tier, text_container a
   const r = (await readPdf(w, i2([{ page: 0, text: "Hello world" }]))).reading;
   for (const k of ["text_source", "text_tier", "text_container"]) assert.ok(k in r, k);
   assert.equal(r.text_container, "pdf");
-  assert.match(r.basis, /(reader|found no entities)/);
+  assert.match(r.basis, said("reading-pipeline.why.reader_found_entities"));
   assert.match(r.basis, /tier 1/);
   const bad = { page: 0, reason: "no_tounicode", count: 1 };
   const u = (await readPdf(w, i2([{ page: 0, text: "", undetermined: [bad, bad] }]))).reading;
@@ -504,7 +506,7 @@ test("R3 R11 (N253): image_unread markers count no undecoded character: a photo 
   assert.equal(pdf.calls.length, 0);
   assert.equal(out.reading.text_tier, 1);
   assert.equal(out.reading.read_from_text, true, "readText is handed the decode view");
-  assert.doesNotMatch(out.reading.basis, /tier 1 read essentially nothing/);
+  assert.doesNotMatch(out.reading.basis, said("reading-pipeline.tier_read_essentially_nothing"));
   /* control: the same page with undecoded glyph markers in their place escalates */
   const garbled = i2([{ page: 0, text: "Photo caption", undetermined: images.map(() => ({ page: 0, reason: "no_tounicode", count: 1 })) }]);
   const asked = member(() => ({ ok: true, text: i2([{ page: 0, text: "" }]) }));

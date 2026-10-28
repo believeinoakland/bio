@@ -1,5 +1,5 @@
 {
- "recorded_on": "job/T51/reading-pipeline 63d73af2a8 (tranche/T51 tip)",
+ "recorded_on": "the tip before G48",
  "whole_bound": 2097152,
  "cases": {
   "csv-100k": {
@@ -188,7 +188,7 @@
        }
       },
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjN9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MzkzMDkxLCJydyI6Nzg2MSwibGkiOjc4NjAsInNrIjowLCJiaSI6MywicnQiOjM5MzE0MCwidHQiOjIwOTc1NTEsImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImRsIjo0NCwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YifQ",
       "read_through": 393140,
       "total": 2097551,
       "piece": {
@@ -203,10 +203,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjN9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MzkzMDkxLCJydyI6Nzg2MSwibGkiOjc4NjAsInNrIjowLCJiaSI6MywicnQiOjM5MzE0MCwidHQiOjIwOTc1NTEsImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImRsIjo0NCwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YifQ",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjZ9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6Nzg2MTQyLCJydyI6MTU0NTgsImxpIjoxNTQ1Nywic2siOjAsImJpIjo2LCJydCI6Nzg2MjY2LCJ0dCI6MjA5NzU1MSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 786266,
       "total": 2097551,
       "piece": {
@@ -220,10 +220,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjZ9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6Nzg2MTQyLCJydyI6MTU0NTgsImxpIjoxNTQ1Nywic2siOjAsImJpIjo2LCJydCI6Nzg2MjY2LCJ0dCI6MjA5NzU1MSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjl9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MTE3OTIyNSwicnciOjIyOTc0LCJsaSI6MjI5NzMsInNrIjowLCJiaSI6OSwicnQiOjExNzk0MjQsInR0IjoyMDk3NTUxLCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENDA1MjMiLCJzaCI6ImNzdiIsImRsIjo0NH0",
       "read_through": 1179424,
       "total": 2097551,
       "piece": {
@@ -237,10 +237,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjl9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MTE3OTIyNSwicnciOjIyOTc0LCJsaSI6MjI5NzMsInNrIjowLCJiaSI6OSwicnQiOjExNzk0MjQsInR0IjoyMDk3NTUxLCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENDA1MjMiLCJzaCI6ImNzdiIsImRsIjo0NH0",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjEyfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MTU3MjMxMiwicnciOjMwNDkwLCJsaSI6MzA0ODksInNrIjowLCJiaSI6MTIsInJ0IjoxNTcyNTg2LCJ0dCI6MjA5NzU1MSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1572586,
       "total": 2097551,
       "piece": {
@@ -254,10 +254,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjEyfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MTU3MjMxMiwicnciOjMwNDkwLCJsaSI6MzA0ODksInNrIjowLCJiaSI6MTIsInJ0IjoxNTcyNTg2LCJ0dCI6MjA5NzU1MSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjE1fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MTk2NTM3OCwicnciOjM4MDA1LCJsaSI6MzgwMDQsInNrIjowLCJiaSI6MTUsInJ0IjoxOTY1NzI3LCJ0dCI6MjA5NzU1MSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1965727,
       "total": 2097551,
       "piece": {
@@ -271,7 +271,7 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjE1fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiI1NGQ1MWFhNjhmZTBkOGM5MDFjMTQ1NWE1Njg2YWI4ZTlkYjJhYzI3MTQ5MjVkMTBkY2M4ZGNjYTc2N2FlNzQ1IiwibSI6ImMiLCJuIjoyMDk3MTUyLCJvYiI6MTk2NTM3OCwicnciOjM4MDA1LCJsaSI6MzgwMDQsInNrIjowLCJiaSI6MTUsInJ0IjoxOTY1NzI3LCJ0dCI6MjA5NzU1MSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDQwNTIzIiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": false,
       "cursor": null,
@@ -315,7 +315,64 @@
        ],
        "text_tier": 1,
        "text_container": "csv",
-       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities — What kind of document this is was judged from a sample of its text: 1441435 of its 2999999 characters, taken from its opening, 12 stretches spread through it, and its end. The whole text is still read, in pieces.",
+       "classified_over": {
+        "chars": 1441435,
+        "of": 2999999,
+        "head_chars": 262170,
+        "windows": [
+         {
+          "from": 262171,
+          "to": 360463
+         },
+         {
+          "from": 502142,
+          "to": 600415
+         },
+         {
+          "from": 742099,
+          "to": 840370
+         },
+         {
+          "from": 982054,
+          "to": 1080327
+         },
+         {
+          "from": 1222008,
+          "to": 1320283
+         },
+         {
+          "from": 1461966,
+          "to": 1560234
+         },
+         {
+          "from": 1701919,
+          "to": 1800191
+         },
+         {
+          "from": 1941878,
+          "to": 2040144
+         },
+         {
+          "from": 2181832,
+          "to": 2280100
+         },
+         {
+          "from": 2421785,
+          "to": 2520058
+         },
+         {
+          "from": 2661740,
+          "to": 2760010
+         },
+         {
+          "from": 2901747,
+          "to": 2999999
+         }
+        ],
+        "sheet_heads": [],
+        "heads_used": true
+       },
        "position_parts": 0,
        "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
        "words_total": 577845,
@@ -374,7 +431,7 @@
        }
       },
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MzkzMDkxLCJydyI6Nzg2MSwibGkiOjc4NjAsInNrIjowLCJiaSI6MywicnQiOjM5MzE0MCwidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImRsIjo0NCwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YifQ",
       "read_through": 393140,
       "total": 3000549,
       "piece": {
@@ -389,10 +446,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MzkzMDkxLCJydyI6Nzg2MSwibGkiOjc4NjAsInNrIjowLCJiaSI6MywicnQiOjM5MzE0MCwidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImRsIjo0NCwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YifQ",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Nzg2MTQyLCJydyI6MTU0NTgsImxpIjoxNTQ1Nywic2siOjAsImJpIjo2LCJydCI6Nzg2MjY2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 786266,
       "total": 3000549,
       "piece": {
@@ -406,10 +463,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Nzg2MTQyLCJydyI6MTU0NTgsImxpIjoxNTQ1Nywic2siOjAsImJpIjo2LCJydCI6Nzg2MjY2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTE3OTIyNSwicnciOjIyOTc0LCJsaSI6MjI5NzMsInNrIjowLCJiaSI6OSwicnQiOjExNzk0MjQsInR0IjozMDAwNTQ5LCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENTc3ODYiLCJzaCI6ImNzdiIsImRsIjo0NH0",
       "read_through": 1179424,
       "total": 3000549,
       "piece": {
@@ -423,10 +480,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTE3OTIyNSwicnciOjIyOTc0LCJsaSI6MjI5NzMsInNrIjowLCJiaSI6OSwicnQiOjExNzk0MjQsInR0IjozMDAwNTQ5LCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENTc3ODYiLCJzaCI6ImNzdiIsImRsIjo0NH0",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTU3MjMxMiwicnciOjMwNDkwLCJsaSI6MzA0ODksInNrIjowLCJiaSI6MTIsInJ0IjoxNTcyNTg2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1572586,
       "total": 3000549,
       "piece": {
@@ -440,10 +497,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTU3MjMxMiwicnciOjMwNDkwLCJsaSI6MzA0ODksInNrIjowLCJiaSI6MTIsInJ0IjoxNTcyNTg2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTk2NTM3OCwicnciOjM4MDA1LCJsaSI6MzgwMDQsInNrIjowLCJiaSI6MTUsInJ0IjoxOTY1NzI3LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1965727,
       "total": 3000549,
       "piece": {
@@ -457,10 +514,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTk2NTM3OCwicnciOjM4MDA1LCJsaSI6MzgwMDQsInNrIjowLCJiaSI6MTUsInJ0IjoxOTY1NzI3LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjM1ODQ2NCwicnciOjQ1NTIxLCJsaSI6NDU1MjAsInNrIjowLCJiaSI6MTgsInJ0IjoyMzU4ODg4LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2358888,
       "total": 3000549,
       "piece": {
@@ -474,10 +531,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjM1ODQ2NCwicnciOjQ1NTIxLCJsaSI6NDU1MjAsInNrIjowLCJiaSI6MTgsInJ0IjoyMzU4ODg4LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Mjc1MTQ5NiwicnciOjUzMDM2LCJsaSI6NTMwMzUsInNrIjowLCJiaSI6MjEsInJ0IjoyNzUxOTk1LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2751995,
       "total": 3000549,
       "piece": {
@@ -491,7 +548,7 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Mjc1MTQ5NiwicnciOjUzMDM2LCJsaSI6NTMwMzUsInNrIjowLCJiaSI6MjEsInJ0IjoyNzUxOTk1LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": false,
       "cursor": null,
@@ -536,7 +593,64 @@
        ],
        "text_tier": 1,
        "text_container": "csv",
-       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities — What kind of document this is was judged from a sample of its text: 1441435 of its 2999999 characters, taken from its opening, 12 stretches spread through it, and its end. The whole text is still read, in pieces.",
+       "classified_over": {
+        "chars": 1441435,
+        "of": 2999999,
+        "head_chars": 262170,
+        "windows": [
+         {
+          "from": 262171,
+          "to": 360463
+         },
+         {
+          "from": 502142,
+          "to": 600415
+         },
+         {
+          "from": 742099,
+          "to": 840370
+         },
+         {
+          "from": 982054,
+          "to": 1080327
+         },
+         {
+          "from": 1222008,
+          "to": 1320283
+         },
+         {
+          "from": 1461966,
+          "to": 1560234
+         },
+         {
+          "from": 1701919,
+          "to": 1800191
+         },
+         {
+          "from": 1941878,
+          "to": 2040144
+         },
+         {
+          "from": 2181832,
+          "to": 2280100
+         },
+         {
+          "from": 2421785,
+          "to": 2520058
+         },
+         {
+          "from": 2661740,
+          "to": 2760010
+         },
+         {
+          "from": 2901747,
+          "to": 2999999
+         }
+        ],
+        "sheet_heads": [],
+        "heads_used": true
+       },
        "position_parts": 0,
        "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
        "words_total": 577845,
@@ -595,7 +709,7 @@
        }
       },
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjF9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTMxMDQ0LCJydyI6MjY1MSwibGkiOjI2NTAsInNrIjowLCJiaSI6MSwicnQiOjEzMTA0MywidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImRsIjo0NCwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YifQ",
       "read_through": 131043,
       "total": 3000549,
       "piece": {
@@ -610,10 +724,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjF9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTMxMDQ0LCJydyI6MjY1MSwibGkiOjI2NTAsInNrIjowLCJiaSI6MSwicnQiOjEzMTA0MywidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImRsIjo0NCwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YifQ",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjJ9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjYyMDcxLCJydyI6NTI1NiwibGkiOjUyNTUsInNrIjowLCJiaSI6MiwicnQiOjI2MjA5NSwidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImxyIjowLCJsYyI6IkQiLCJyZyI6IkExOkQ1Nzc4NiIsInNoIjoiY3N2IiwiZGwiOjQ0fQ",
       "read_through": 262095,
       "total": 3000549,
       "piece": {
@@ -627,10 +741,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjJ9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjYyMDcxLCJydyI6NTI1NiwibGkiOjUyNTUsInNrIjowLCJiaSI6MiwicnQiOjI2MjA5NSwidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImxyIjowLCJsYyI6IkQiLCJyZyI6IkExOkQ1Nzc4NiIsInNoIjoiY3N2IiwiZGwiOjQ0fQ",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MzkzMDkxLCJydyI6Nzg2MSwibGkiOjc4NjAsInNrIjowLCJiaSI6MywicnQiOjM5MzE0MCwidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImxyIjowLCJsYyI6IkQiLCJyZyI6IkExOkQ1Nzc4NiIsInNoIjoiY3N2IiwiZGwiOjQ0fQ",
       "read_through": 393140,
       "total": 3000549,
       "piece": {
@@ -644,10 +758,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MzkzMDkxLCJydyI6Nzg2MSwibGkiOjc4NjAsInNrIjowLCJiaSI6MywicnQiOjM5MzE0MCwidHQiOjMwMDA1NDksImhlIjoxMDQ4NjAwLCJociI6MjA0NzUsImxyIjowLCJsYyI6IkQiLCJyZyI6IkExOkQ1Nzc4NiIsInNoIjoiY3N2IiwiZGwiOjQ0fQ",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjR9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6NTI0MTI0LCJydyI6MTA0NDgsImxpIjoxMDQ0Nywic2siOjAsImJpIjo0LCJydCI6NTI0MTk4LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 524198,
       "total": 3000549,
       "piece": {
@@ -661,10 +775,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjR9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6NTI0MTI0LCJydyI6MTA0NDgsImxpIjoxMDQ0Nywic2siOjAsImJpIjo0LCJydCI6NTI0MTk4LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjV9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6NjU1MTMxLCJydyI6MTI5NTMsImxpIjoxMjk1Miwic2siOjAsImJpIjo1LCJydCI6NjU1MjMwLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 655230,
       "total": 3000549,
       "piece": {
@@ -678,10 +792,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjV9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6NjU1MTMxLCJydyI6MTI5NTMsImxpIjoxMjk1Miwic2siOjAsImJpIjo1LCJydCI6NjU1MjMwLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Nzg2MTQyLCJydyI6MTU0NTgsImxpIjoxNTQ1Nywic2siOjAsImJpIjo2LCJydCI6Nzg2MjY2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 786266,
       "total": 3000549,
       "piece": {
@@ -695,10 +809,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Nzg2MTQyLCJydyI6MTU0NTgsImxpIjoxNTQ1Nywic2siOjAsImJpIjo2LCJydCI6Nzg2MjY2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjd9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6OTE3MTYxLCJydyI6MTc5NjMsImxpIjoxNzk2Miwic2siOjAsImJpIjo3LCJydCI6OTE3MzEwLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 917310,
       "total": 3000549,
       "piece": {
@@ -712,10 +826,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjd9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6OTE3MTYxLCJydyI6MTc5NjMsImxpIjoxNzk2Miwic2siOjAsImJpIjo3LCJydCI6OTE3MzEwLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjh9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTA0ODE4MiwicnciOjIwNDY4LCJsaSI6MjA0NjcsInNrIjowLCJiaSI6OCwicnQiOjEwNDgzNTYsInR0IjozMDAwNTQ5LCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENTc3ODYiLCJzaCI6ImNzdiIsImRsIjo0NH0",
       "read_through": 1048356,
       "total": 3000549,
       "piece": {
@@ -729,10 +843,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjh9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTA0ODE4MiwicnciOjIwNDY4LCJsaSI6MjA0NjcsInNrIjowLCJiaSI6OCwicnQiOjEwNDgzNTYsInR0IjozMDAwNTQ5LCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENTc3ODYiLCJzaCI6ImNzdiIsImRsIjo0NH0",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTE3OTIyNSwicnciOjIyOTc0LCJsaSI6MjI5NzMsInNrIjowLCJiaSI6OSwicnQiOjExNzk0MjQsInR0IjozMDAwNTQ5LCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENTc3ODYiLCJzaCI6ImNzdiIsImRsIjo0NH0",
       "read_through": 1179424,
       "total": 3000549,
       "piece": {
@@ -746,10 +860,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTE3OTIyNSwicnciOjIyOTc0LCJsaSI6MjI5NzMsInNrIjowLCJiaSI6OSwicnQiOjExNzk0MjQsInR0IjozMDAwNTQ5LCJoZSI6MTA0ODYwMCwiaHIiOjIwNDc1LCJsciI6MCwibGMiOiJEIiwicmciOiJBMTpENTc3ODYiLCJzaCI6ImNzdiIsImRsIjo0NH0",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEwfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTMxMDI0OCwicnciOjI1NDc5LCJsaSI6MjU0NzgsInNrIjowLCJiaSI6MTAsInJ0IjoxMzEwNDcyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1310472,
       "total": 3000549,
       "piece": {
@@ -763,10 +877,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEwfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTMxMDI0OCwicnciOjI1NDc5LCJsaSI6MjU0NzgsInNrIjowLCJiaSI6MTAsInJ0IjoxMzEwNDcyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjExfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTQ0MTI3MywicnciOjI3OTg0LCJsaSI6Mjc5ODMsInNrIjowLCJiaSI6MTEsInJ0IjoxNDQxNTIyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1441522,
       "total": 3000549,
       "piece": {
@@ -780,10 +894,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjExfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTQ0MTI3MywicnciOjI3OTg0LCJsaSI6Mjc5ODMsInNrIjowLCJiaSI6MTEsInJ0IjoxNDQxNTIyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTU3MjMxMiwicnciOjMwNDkwLCJsaSI6MzA0ODksInNrIjowLCJiaSI6MTIsInJ0IjoxNTcyNTg2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1572586,
       "total": 3000549,
       "piece": {
@@ -797,10 +911,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTU3MjMxMiwicnciOjMwNDkwLCJsaSI6MzA0ODksInNrIjowLCJiaSI6MTIsInJ0IjoxNTcyNTg2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEzfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTcwMzMzMywicnciOjMyOTk1LCJsaSI6MzI5OTQsInNrIjowLCJiaSI6MTMsInJ0IjoxNzAzNjMyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1703632,
       "total": 3000549,
       "piece": {
@@ -814,10 +928,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEzfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTcwMzMzMywicnciOjMyOTk1LCJsaSI6MzI5OTQsInNrIjowLCJiaSI6MTMsInJ0IjoxNzAzNjMyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE0fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTgzNDM1OSwicnciOjM1NTAwLCJsaSI6MzU0OTksInNrIjowLCJiaSI6MTQsInJ0IjoxODM0NjgzLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1834683,
       "total": 3000549,
       "piece": {
@@ -831,10 +945,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE0fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTgzNDM1OSwicnciOjM1NTAwLCJsaSI6MzU0OTksInNrIjowLCJiaSI6MTQsInJ0IjoxODM0NjgzLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTk2NTM3OCwicnciOjM4MDA1LCJsaSI6MzgwMDQsInNrIjowLCJiaSI6MTUsInJ0IjoxOTY1NzI3LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 1965727,
       "total": 3000549,
       "piece": {
@@ -848,10 +962,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MTk2NTM3OCwicnciOjM4MDA1LCJsaSI6MzgwMDQsInNrIjowLCJiaSI6MTUsInJ0IjoxOTY1NzI3LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE2fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjA5NjQyMiwicnciOjQwNTExLCJsaSI6NDA1MTAsInNrIjowLCJiaSI6MTYsInJ0IjoyMDk2Nzk2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2096796,
       "total": 3000549,
       "piece": {
@@ -865,10 +979,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE2fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjA5NjQyMiwicnciOjQwNTExLCJsaSI6NDA1MTAsInNrIjowLCJiaSI6MTYsInJ0IjoyMDk2Nzk2LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE3fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjIyNzQ0MiwicnciOjQzMDE2LCJsaSI6NDMwMTUsInNrIjowLCJiaSI6MTcsInJ0IjoyMjI3ODQxLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2227841,
       "total": 3000549,
       "piece": {
@@ -882,10 +996,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE3fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjIyNzQ0MiwicnciOjQzMDE2LCJsaSI6NDMwMTUsInNrIjowLCJiaSI6MTcsInJ0IjoyMjI3ODQxLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjM1ODQ2NCwicnciOjQ1NTIxLCJsaSI6NDU1MjAsInNrIjowLCJiaSI6MTgsInJ0IjoyMzU4ODg4LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2358888,
       "total": 3000549,
       "piece": {
@@ -899,10 +1013,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjM1ODQ2NCwicnciOjQ1NTIxLCJsaSI6NDU1MjAsInNrIjowLCJiaSI6MTgsInJ0IjoyMzU4ODg4LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE5fQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjQ4OTQ2MCwicnciOjQ4MDI2LCJsaSI6NDgwMjUsInNrIjowLCJiaSI6MTksInJ0IjoyNDg5OTA5LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2489909,
       "total": 3000549,
       "piece": {
@@ -916,10 +1030,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE5fQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjQ4OTQ2MCwicnciOjQ4MDI2LCJsaSI6NDgwMjUsInNrIjowLCJiaSI6MTksInJ0IjoyNDg5OTA5LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIwfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjYyMDQ3NywicnciOjUwNTMxLCJsaSI6NTA1MzAsInNrIjowLCJiaSI6MjAsInJ0IjoyNjIwOTUxLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2620951,
       "total": 3000549,
       "piece": {
@@ -933,10 +1047,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIwfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6MjYyMDQ3NywicnciOjUwNTMxLCJsaSI6NTA1MzAsInNrIjowLCJiaSI6MjAsInJ0IjoyNjIwOTUxLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Mjc1MTQ5NiwicnciOjUzMDM2LCJsaSI6NTMwMzUsInNrIjowLCJiaSI6MjEsInJ0IjoyNzUxOTk1LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2751995,
       "total": 3000549,
       "piece": {
@@ -950,10 +1064,10 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Mjc1MTQ5NiwicnciOjUzMDM2LCJsaSI6NTMwMzUsInNrIjowLCJiaSI6MjEsInJ0IjoyNzUxOTk1LCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": true,
-      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIyfQ",
+      "cursor": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Mjg4MjUwOCwicnciOjU1NTQxLCJsaSI6NTU1NDAsInNrIjowLCJiaSI6MjIsInJ0IjoyODgzMDMyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
       "read_through": 2883032,
       "total": 3000549,
       "piece": {
@@ -967,7 +1081,7 @@
      }
     },
     {
-     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIyfQ",
+     "ask": "eyJ2IjoxLCJrIjoidyIsInMiOiJlMDM1OWI0MjMzMTBmZTMyMGY5MjE3ZWExYTY5NTRiNTY5YTIwOGQyMjU0YTc4ZTZhZDkxMWYzMzQ2ODg1OTVmIiwibSI6ImMiLCJuIjozMDAwMDAwLCJvYiI6Mjg4MjUwOCwicnciOjU1NTQxLCJsaSI6NTU1NDAsInNrIjowLCJiaSI6MjIsInJ0IjoyODgzMDMyLCJ0dCI6MzAwMDU0OSwiaGUiOjEwNDg2MDAsImhyIjoyMDQ3NSwibHIiOjAsImxjIjoiRCIsInJnIjoiQTE6RDU3Nzg2Iiwic2giOiJjc3YiLCJkbCI6NDR9",
      "answer": {
       "more": false,
       "cursor": null,
@@ -1184,6 +1298,15 @@
         }
        ],
        "text_container": "text",
+       "container_extent": {
+        "container": "text",
+        "levels": [
+         "paragraphs"
+        ],
+        "sheets": null,
+        "paragraphs": 400,
+        "slides": null
+       },
        "words_total": 4400,
        "words_read": 4400,
        "text_chars": 26578,
@@ -2608,6 +2731,5 @@
     }
    ]
   }
- },
- "rerecorded": "fix round 9 (K4872, K4877): reading.dialect, page_boxes and container_extent as the merged providers answer them"
+ }
 }

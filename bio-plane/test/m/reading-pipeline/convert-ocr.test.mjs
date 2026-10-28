@@ -16,6 +16,7 @@ import { ocrWorkerDef } from "../../../../ocr-worker/test/memberworker.mjs";
 import { pageNotRenderable } from "../../../../ocr-worker/test/fixtures.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { said } from "./said.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -165,7 +166,7 @@ test("R4 (d606 §2): under the budget every deferred page is asked, one per call
   const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.deepEqual(ocr.calls.map((c) => c.body.pages), [[0, 1, 2, 3, 4, 5], [1], [2], [3], [4], [5]]);
   assert.deepEqual(counts(rd), [6, 0]);
-  assert.doesNotMatch(rd.basis, /not asked for/);
+  assert.doesNotMatch(rd.basis, said("reading-pipeline.index.pages_not_asked_request"));
   assert.equal(rd.tier3_candidate, undefined);
   assert.equal(rd.text_tier, 3);
 });
@@ -176,7 +177,7 @@ test("R4 R9 (d606 §2): over the budget, 24 calls on a 30-page scan: 24 transcri
   assert.equal(ocr.calls.length, 24);
   assert.equal(ocr.calls[0].body.pages.length, 30);
   assert.deepEqual(counts(rd), [24, 6]);
-  assert.match(rd.basis, /6 of them \(pages 25-30\) were not asked for in this request.*32 Worker invocations per request — their claim/);
+  assert.match(rd.basis, said("reading-pipeline.index.pages_not_asked_request", { count: 6, pages: "pages 25-30" }));
   assert.equal(rd.tier3_candidate, true);
 });
 
@@ -185,7 +186,7 @@ test("R4 (d606 §3): a call that throws stops the loop: the pages before it kept
   const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 4, "no call after the throw");
   assert.deepEqual(counts(rd), [3, 3]);
-  assert.match(rd.basis, /the call for page 4 failed, so 3 page\(s\) from it on \(pages 4-6\) were not transcribed/);
+  assert.match(rd.basis, said("reading-pipeline.call_failed_page", { at: "page 4", rest: 3, rest_2: "pages 4-6" }));
   assert.equal(rd.text_tier, 3);
   assert.equal(rd.tier3_candidate, true);
   assert.deepEqual(rd.provenance.pages.filter((p) => p.tier === 3 && p.text_sha256).map((p) => p.page), [0, 1, 2]);
@@ -197,7 +198,7 @@ test("R4 (d606 §3): a refused FIRST page does not end the document: its deferre
   const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 6);
   assert.deepEqual(counts(rd), [4, 2]);
-  assert.match(rd.basis, /the OCR member declined 2 page\(s\) it was asked for one at a time \(pages 1, 3\)/);
+  assert.match(rd.basis, said("reading-pipeline.ocr_member_declined", { refused: 2, refused_2: "pages 1, 3" }));
   assert.equal(rd.tier3_candidate, true);
 });
 
@@ -206,7 +207,7 @@ test("R4 R5 R10 (d606 §3): a page answered under another engine build is not me
     ? { ...ENV0, version: "0.12.0", pages: [{ page: 4, regions: [region(4)] }], deferred, notes: [] } : null));
   const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.deepEqual(counts(rd), [5, 1]);
-  assert.match(rd.basis, /1 page\(s\) \(page 5\) were answered under a different engine build/);
+  assert.match(rd.basis, said("reading-pipeline.page_answered_different", { mismatched: 1, mismatched_2: "page 5" }));
   assert.deepEqual(rd.text_source.map((s) => [s.step, s.engine ?? null, s.version ?? null]),
                    [["pixels", null, null], ["ocr", "tesseract-wasm", "0.11.0"]]);
 });
@@ -216,7 +217,7 @@ test("R4 (d606 §3): a page answered to the wrong call is dropped and counted, a
     ? { ...ENV0, pages: [{ page: 5, regions: [region(5)] }], deferred, notes: [] } : null));
   const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.deepEqual(counts(rd), [5, 1]);
-  assert.match(rd.basis, /1 page\(s\) the OCR member returned were not the page that call asked for, and were dropped/);
+  assert.match(rd.basis, said("reading-pipeline.page_ocr_member_returned", { strays: 1 }));
 });
 
 /* ===================================================================== *
@@ -227,7 +228,7 @@ test("R4 R10 R11 (textchain): with no OCR member bound a scan is a failed readin
   const rd = await readReal(viewed(), dctScan(2));
   assert.equal(rd.found, false);
   assert.equal(rd.tier3_candidate, true);
-  assert.match(rd.basis, /no OCR engine is installed/);
+  assert.match(rd.basis, said("reading-pipeline.document_text_layer"));
   assert.deepEqual(steps(rd), ["layer"]);
 });
 
@@ -235,7 +236,7 @@ test("R4 R10 (textchain, D-252): a mixed document with no OCR member still reads
   const rd = await readReal(viewed(), MIXED);
   assert.equal(rd.found, true);
   assert.equal(rd.tier3_candidate, true);
-  assert.match(rd.basis, /no OCR engine is installed/);
+  assert.match(rd.basis, said("reading-pipeline.document_text_layer"));
   assert.deepEqual(rd.text_source.map((s) => [s.step, s.extent]), [["layer", undefined]]);
 });
 
@@ -274,7 +275,7 @@ test("R5 R6 (textchain, D-252): an OCR answer with no anchored page is refused w
   const rd = await readReal(viewed(), MIXED, { OCR_WORKER: ocr });
   assert.deepEqual(ocr.calls.map((c) => c.body.pages), [[1]]);
   assert.equal(rd.found, true);
-  assert.match(rd.basis, /the OCR member returned no page this record could anchor/);
+  assert.match(rd.basis, said("reading-pipeline.why.ocr_member_returned"));
   assert.deepEqual(steps(rd), ["layer"]);
   assert.equal(rd.tier3_candidate, true);
 });

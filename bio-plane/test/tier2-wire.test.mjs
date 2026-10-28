@@ -69,6 +69,8 @@ import { createHash } from "node:crypto";
 import { tier2Answer } from "../../pdf-worker/test/fixtures.mjs";
 import { extractPdfStructure } from "../src/pdfstructure.mjs";
 import { mergeTier2Text, perPageTierWinner } from "../src/textchain.mjs";
+import { said } from "./m/reading-pipeline/said.mjs";
+import { word } from "../src/setup-words/index.mjs";
 
 const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 const BUNDLE = fileURLToPath(new URL("../../pdf-worker/dist/pdf-worker.bundled.mjs", import.meta.url));
@@ -234,9 +236,9 @@ console.log("\n--- op=pdfstructure over the MIXED document: the merge is per PAG
   t("page 0 is the member's decode, and it is the recovery the escalation is FOR",
     (out.text.pages[0]?.text?.length ?? 0) > 1000 && TIER1.mixed.pages[0].text.length < 50, true);
   t("the document says in its own notes that its text layer is a merge of two decodes",
-    out.notes.some((n) => /merge of two decodes/.test(n)), true);
+    out.notes.some((n) => said("textchain.say.push.document_text_layer").test(n)), true);
   t("and the note counts both parts rather than reporting only the win",
-    out.notes.some((n) => /6 page\(s\) were re-read/.test(n) && /other 1 page\(s\) kept tier 1/.test(n)), true);
+    out.notes.some((n) => said("textchain.say.push.page_re_read", { replaced: 6, kept: 1 }).test(n)), true);
   await mf.dispose();
 }
 
@@ -257,7 +259,7 @@ console.log("\n--- op=acquire over the MIXED document: the CHAIN names the tier 
     + "(nothing is OVERCLAIMED by the swap — what was unbounded is text LOSS)",
     [...new Set(chain.map((s) => `${s.step}:${s.cap}`))], ["layer:null"]);
   t("the basis the record keeps SAYS the text layer is a merge",
-    /merge of two decodes/.test(doc.reading.basis), true);
+    said("textchain.say.push.document_text_layer").test(doc.reading.basis), true);
   await mf.dispose();
 }
 
@@ -272,7 +274,7 @@ console.log("\n--- OVER-STRICTNESS: one tier throughout, and the answer is uncha
   const out = await structure(mf, "clean");
   t("the fully-decodable document is not escalated at all: tier 1", out.tier, 1);
   t("and no tier-2 sentence is attached to a document no tier 2 touched",
-    out.notes.some((n) => /tier-2 decoder|merge of two decodes/.test(n)), false);
+    out.notes.some((n) => said("textchain.say.push.page_re_read").test(n) || said("textchain.say.push.document_text_layer").test(n)), false);
 
   const clean = (await acquire(mf, "clean")).document;
   t("acquire: tier 1, and the chain is UNSCOPED — a document with one provenance "
@@ -285,7 +287,7 @@ console.log("\n--- OVER-STRICTNESS: one tier throughout, and the answer is uncha
   t("a document tier 2 won WHOLLY records tier 2 on an UNSCOPED chain, exactly as before",
     [rec.reading.text_tier, extentsOf(rec.reading.text_source)], [2, [null]]);
   t("and it is not withheld — the rule leaves nothing behind (all three pages moved)",
-    /3 page\(s\) were re-read/.test(rec.reading.basis), true);
+    said("textchain.say.push.page_re_read", { replaced: 3 }).test(rec.reading.basis), true);
   await mf.dispose();
 }
 
@@ -389,7 +391,7 @@ console.log("\n--- legistar-73618 page 1: THE page CPDF-20 measured as degraded 
   await put(mf, "degrades");
   const out = await structure(mf, "degrades");
   t("through the op this document does NOT escalate — the routing half declines it",
-    [out.tier, out.notes.some((n) => /tier-2 decoder|merge of two decodes|tier2_/.test(n))], [1, false]);
+    [out.tier, out.notes.some((n) => said("textchain.say.push.page_re_read").test(n) || said("textchain.say.push.document_text_layer").test(n) || /tier2_/.test(n))], [1, false]);
   t("so both its pages carry tier 1 and its 1,815 characters are untouched",
     [out.text.counts.chars, out.text.pages.map((p) => p.text.length)], [1815, [1167, 647]]);
   await mf.dispose();
@@ -414,7 +416,7 @@ console.log("\n--- the member's notes are CARRIED, not dropped, now that the pla
   t("and tier 1 stands, stated as tier 1 rather than as a tier 2 no page has",
     out.tier, 1);
   t("no page moved, so no merge sentence is invented",
-    out.notes.some((n) => /merge of two decodes/.test(n)), false);
+    out.notes.some((n) => said("textchain.say.push.document_text_layer").test(n)), false);
   t("tier 1's own seven pages come back intact",
     out.text.pages.map((p) => p.text.length),
     TIER1.mixed.pages.map((p) => p.text.length));
@@ -555,7 +557,7 @@ console.log("\n--- the merge's refusal: driven, and its reach through the op sta
      above, unchanged, because the raw counter is still the raw counter (D-501's
      interface note) — what moved is which of the two this JUDGMENT reads. */
   t("and the refusal says what it is protecting, in the record's own words",
-    /no per-page grain/.test(m.why) && /27 decoded glyph/.test(m.why), true);
+    said("textchain.why.document_tier_reading", { held: word("reading-pipeline.index.decoded_glyphs", { glyphs: 27 }) }).test(m.why), true);
   t("and it counts the string's GLYPHS, never its raw length (D-514: 32 characters, 27 glyphs)",
     /32 decoded/.test(m.why), false);
 }
