@@ -1,6 +1,6 @@
 # mail-reader (T53)
 
-**Status** · session_018Bhcefa3SdZX44kR48Ukpf · depth 2 · WORKING
+**Status** · session_018Bhcefa3SdZX44kR48Ukpf · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-28)
@@ -30,3 +30,23 @@
 
 Tests: 46/46. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018Bhcefa3SdZX44kR48Ukpf): test runs 1, module lines 1194
+
+## Completion (2026-10-28)
+
+### CHANGE applied (T53-525; K5641)
+
+- MSG is now read through `ooxml`'s exported MS-CFB reader (`readCfb`, `hasCfbMagic`; ooxml R39, K5640), imported in `msg.mjs` and `index.mjs`. This module's own `bio-plane/src/mail-reader/cfb.mjs` is deleted, leaving one compound-file parser in the product. `ooxml` was already in `uses`.
+- The MSG fixtures read exactly as before: all 46 tests pass unchanged, MSG's R2 and R11 tests included.
+
+### Not done, and why
+
+- Nothing left from this entry. The points standing from the first completion are unchanged: R6's one record is `capture` R116's, and EML text is decoded here until `structured-text-reader`'s CHANGE.
+
+### Found in other modules
+
+- None.
+
+**Met** · R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15
+
+Tests: 46/46. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018Bhcefa3SdZX44kR48Ukpf): test runs 2, module lines 1073
