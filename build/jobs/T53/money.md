@@ -1,6 +1,6 @@
 # money (T53)
 
-**Status** · session_018Bhcedpyp5s6ggLLpKC8dX · depth 2 · WORKING
+**Status** · session_018Bhcedpyp5s6ggLLpKC8dX · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-28)
@@ -28,3 +28,22 @@
 
 Tests: 147/150. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018Bhcedpyp5s6ggLLpKC8dX): test runs 1, module lines 1851
+
+## Completion (2026-10-28)
+
+# money · T53 · report (CHANGE, K5786)
+
+**Entries applied**
+- R39–R41 now run on local-facts' real `teamLayer({})` and `factStatus({path})` (default `localFactsOf`; no viewer, the internal call). The three `test.todo` are real tests over the real module: B refused before a statement (sentence names B, no `*`), recorded after (2026-07-01 to 2027-06-30), never used for C or for a key with no body; `fiscalYears` answers B as stated (`stated.says` = local-facts' "stated by <member>, <date>", `stated.how`, status `confirmed`); a lapsed year answers `unconfirmed` and still maps; a disputed one answers `disputed` with `dispute` naming it and still maps; a records' year carries no stated fields. The stated row reads `governs.says` and `how` (not `latest`, which can be a confirm).
+- `neighbours` with no date (`at` null/undefined): a fact is no longer marked with the thrown `validAt` message. The registry's own contract judges a null date undetermined (it calls `validAt`, which throws), so answering "in" is refused `OWNER_NONCONFORMING` ("is undetermined at the date asked and is not marked undetermined"); I answer each fact as an edge marked `undetermined: {why: {key: "money.neighbours.no_date_asked", vars: {}}}`, the keyed reason the contract accepts. Test through `registry.neighbours` with `at: null`: no refusal, 3 items; control: a date asked judges in/out as before.
+- R42 unchanged (R11's dimensions).
+
+**Not done / notes**
+- A "government a Civicsmith layer covers keeps the records' year" test is not written: the test profile is a whole-place profile with no `layer`, so local-facts accepts a statement for it and the team entry then governs; that case needs a layered fixture and is local-facts' R31/R135 to prove.
+- Fixture: the money world now builds the real local-facts on its host with a test clock (`lfClock`).
+- Still for other modules: calculations `application.mjs:40`, affordances/wizard-scripts/design keys naming `money_flow`, rows for the new ops `moneyby` and `moneyfiscalyears` (op-declarations, op-grades, affordances t33 R12 R24); rows.mjs and bundles regenerate at merge (new `localize` ids).
+
+**Met** · R34, R36, R37, R38, R39, R40, R41, R42
+
+Tests: 151/151. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018Bhcedpyp5s6ggLLpKC8dX): test runs 2, module lines 1857
