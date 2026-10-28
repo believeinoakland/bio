@@ -1,6 +1,6 @@
 # reader-container (T53)
 
-**Status** · session_018BhcedfcFpkDwfqT6uTLcn · depth 2 · WORKING
+**Status** · session_018BhcedfcFpkDwfqT6uTLcn · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -68,3 +68,18 @@ Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 2, module lines 2144
 
 Tests: 73/73. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 3, module lines 2545
+
+## Completion (2026-10-28)
+
+**CHANGE applied** · the image digest (BOB #328; container-images.yml run 40620372145 on job/T53/reader-container @ 87667e02): `node bio-plane/scripts/bundles.mjs --record-image reader-container ReaderContainer sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b` recorded it without refusal. `fleet-member.json` image `digest` is that digest with `source_sha256` a6dc1cb8…; `wrangler.jsonc` names `docker.io/civicsmith/reader-container@sha256:c1422b26…`, replacing the placeholder. `containerImageStates`: `ReaderContainer current`. The placeholder comments in both files are now accurate. The bundle is rebuilt because it imports the marker, and fleetbundles' byte-identity arm passes for it.
+- `test/member.test.mjs` now also checks that both files name the one published image and that its state is `current`.
+- Found and fixed in my tests: with the beta figures now active (`archive.unpacked_bytes` and `member_bytes` 2 GiB), the R5 over-bound member test built a 2 GiB buffer in memory and failed once under the parallel run. It now streams the zeros through gzip to a file. Two full runs since then: 73/73, none cancelled. The large-ZIP test is now at the full 500 MiB uploaded bound, which my earlier note foresaw.
+
+**Still BOB's** · bundler's fleetbundles pinned lists (the joint merge with BUNDLER).
+
+**Tests** · 73 pass, 0 fail, 0 skip. Checks for the module: architecture 0, coverage 8 of 8, words 0, fixtures 0, ownership 0.
+
+**Met** · R1, R2, R3, R4, R5, R6, R7, R8
+
+Tests: 73/73. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedfcFpkDwfqT6uTLcn): test runs 4, module lines 2562
