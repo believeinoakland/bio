@@ -7,6 +7,7 @@ export const EXPECT = {
   KNOCKER_SECRET_WEAK: word("refusal.KNOCKER_SECRET_WEAK"),
   KNOCK_DISCARDED: word("refusal.KNOCK_DISCARDED"),
   RESOLVE_NO_REASON: localize("doorbell.checks.changing_a_knocks_status_records", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."),
+  KNOCK_BYTES_CHANGED: word("screen.inbox.view.changed"),
   RATE_IP: localize("doorbell.checks.your_material_was_not_received", "Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly — the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The team can see how often its doorbell turns people away."),
   RATE_GLOBAL: word("refusal.RATE_GLOBAL"),
   KNOCK_ENVELOPE_TOO_LARGE: word("refusal.KNOCK_ENVELOPE_TOO_LARGE"),

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7958 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7961 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23330,6 +23330,7 @@ export const WORD_ROWS = Object.freeze([
   ["doorbell.declared.inboxlist","read: the knocks in the inbox, newest first, bounded and paged, sortable by received time, status, secret or project; never a contact in a pulled document; writes nothing",null,null,false,"code"],
   ["doorbell.declared.inboxpull","knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle",null,null,false,"code"],
   ["doorbell.declared.inboxresolve","inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)",null,null,false,"code"],
+  ["doorbell.declared.inboxview","read: a safe view of one knock before it is moved into the record, keyed by knock id, for a member session only: the knock's bytes checked against its fingerprint, scanned by file-safety and shown as pages or figures only; writes nothing and moves nothing into the record",null,null,false,"code"],
   ["doorbell.declared.knock","an unauthenticated request to be let in",null,null,false,"code"],
   ["doorbell.declared.knocksof","read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing",null,null,false,"code"],
   ["doorbell.declared.pulledknocks","read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing",null,null,false,"code"],
@@ -23338,6 +23339,7 @@ export const WORD_ROWS = Object.freeze([
   ["doorbell.index.bytes_not_held_digest","the knock's bytes could not be held under their own digest, so nothing was written",null,null,false,"code"],
   ["doorbell.index.capture_method_label","doorbell knock, received, hashed at receipt",null,null,false,"code"],
   ["doorbell.index.content_did_not_decode","the content did not decode",null,null,false,"code"],
+  ["doorbell.index.knock_bytes_gone","the knock's bytes are no longer held, so nothing was shown",null,null,false,"code"],
   ["doorbell.index.knock_bytes_no_longer_held","the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written",null,null,false,"code"],
   ["doorbell.index.knock_receipt_evidence","the knock's receipt: its digest, taken as the bytes arrived, and its instant",null,null,false,"code"],
   ["doorbell.index.knocks_of_names_pseudonym","knocksOf names the pseudonym whose knocks it lists",null,null,false,"code"],
@@ -23349,6 +23351,7 @@ export const WORD_ROWS = Object.freeze([
   ["doorbell.index.receipt_not_written","the acquisition receipt could not be written, so the knock stays as it was and nothing was filed",null,null,false,"code"],
   ["doorbell.index.tally_member_only","the doorbell's tally is read by a signed-in member; nothing was read",null,null,false,"code"],
   ["doorbell.index.these_bytes_were_received_at","these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address",null,null,false,"code"],
+  ["doorbell.index.view_member_only","a knock is looked at by a signed-in member; nothing was read",null,null,false,"code"],
   ["duties.checks.a_promises_date_is_read","A promise's date is read from the body's own words, and those words must state one whole calendar date. These do not (such as \"by spring\", a month without its day, or more than one date): they are kept as written and never completed. Nothing was written.",null,null,false,"code"],
   ["duties.checks.an_obligation_names_who_owes","An obligation names who owes it: a registered office or body, an organisation acting for a public body, or a person a law binds. None was named. Nothing was written.",null,null,false,"code"],
   ["duties.checks.an_obligation_owed_by_an","An obligation owed by an organisation outside government names the office that enforces it, which is where a concern about it is addressed. None was named. Nothing was written.",null,null,false,"code"],

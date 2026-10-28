@@ -12,13 +12,13 @@ import { EXPECT } from "./expect.mjs";
 
 /* C-118's four rows and C-85's five, each translation as the product's row reads it (expect.mjs, K3810) */
 const CHECK = { NO_SUCH_KNOCK: "C-118.2", KNOCKER_SECRET_WEAK: "C-118.3", KNOCK_DISCARDED: "C-118.4", RESOLVE_NO_REASON: "C-118.7",
-  RATE_IP: "C-85.1", RATE_GLOBAL: "C-85.2", KNOCK_ENVELOPE_TOO_LARGE: "C-85.3", KNOCK_PAYLOAD_TOO_LARGE: "C-85.4", KNOCK_EMPTY: "C-85.5" };
+  KNOCK_BYTES_CHANGED: "C-85.6", RATE_IP: "C-85.1", RATE_GLOBAL: "C-85.2", KNOCK_ENVELOPE_TOO_LARGE: "C-85.3", KNOCK_PAYLOAD_TOO_LARGE: "C-85.4", KNOCK_EMPTY: "C-85.5" };
 const C118 = Object.fromEntries(["NO_SUCH_KNOCK", "KNOCKER_SECRET_WEAK", "KNOCK_DISCARDED", "RESOLVE_NO_REASON"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
-const C85 = Object.fromEntries(["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
+const C85 = Object.fromEntries(["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY", "KNOCK_BYTES_CHANGED"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
 
-test("R21 (K2609, N851): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and nothing else, each code, number and translation as capture held them, defined in this module's file alone", () => {
+test("R21 (K2609, N851): the table holds C-85.1–.6 and C-118.2, .3, .4, .7 and nothing else, each code, number and translation as capture held them, defined in this module's file alone", () => {
   assert.deepEqual(Object.keys(DOORBELL_CHECKS).sort(), Object.keys(C118).sort(), "the four C-118 rows, no other");
-  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(C85).sort(), "the five C-85 rows, no other");
+  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(C85).sort(), "the six C-85 rows, no other");
   for (const [table, want] of [[DOORBELL_CHECKS, C118], [KNOCK_CHECKS, C85]])
     for (const [code, [check, translation]] of Object.entries(want))
       assert.deepEqual([table[code].check, table[code].translation], [check, translation], `${code}: its number and translation`);
@@ -34,7 +34,7 @@ test("R21 (K2609, N851): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and
     assert.equal(DOORBELL_CHECKS[code], undefined, `${code} stays capture's`);
   /* every check id once across this module's table */
   const ids = [...Object.values(DOORBELL_CHECKS), ...Object.values(KNOCK_CHECKS)].map((r) => r.check);
-  assert.equal(new Set(ids).size, 9);
+  assert.equal(new Set(ids).size, 10);
 });
 
 test("R21 (K2627, K2629): each row's where names this module's code that raises it, the function and DEC-49 region the map's §2 names", () => {
@@ -44,6 +44,7 @@ test("R21 (K2627, K2629): each row's where names this module's code that raises 
     KNOCKER_SECRET_WEAK: "src/doorbell/door.mjs knockerSecretWeak > is-knocker-secret-strong",
     KNOCK_DISCARDED: "src/doorbell/index.mjs pullKnock > is-knock-pullable",
     RESOLVE_NO_REASON: "src/doorbell/index.mjs inboxResolve > is-resolve-reasoned",
+    KNOCK_BYTES_CHANGED: "src/doorbell/index.mjs #bytesChanged > is-knock-unchanged",
     RATE_IP: "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate",
     RATE_GLOBAL: "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate",
     KNOCK_ENVELOPE_TOO_LARGE: "src/doorbell/door.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",

@@ -24379,56 +24379,63 @@
       "en": "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 831
+      "line": 980
     },
     {
       "id": "doorbell.declared.inboxget",
       "en": "read: one knock in the inbox, keyed by knock id; writes nothing",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 829
+      "line": 978
     },
     {
       "id": "doorbell.declared.inboxlist",
       "en": "read: the knocks in the inbox, newest first, bounded and paged, sortable by received time, status, secret or project; never a contact in a pulled document; writes nothing",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 827
+      "line": 976
     },
     {
       "id": "doorbell.declared.inboxpull",
       "en": "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 837
+      "line": 986
     },
     {
       "id": "doorbell.declared.inboxresolve",
       "en": "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 839
+      "line": 990
+    },
+    {
+      "id": "doorbell.declared.inboxview",
+      "en": "read: a safe view of one knock before it is moved into the record, keyed by knock id, for a member session only: the knock's bytes checked against its fingerprint, scanned by file-safety and shown as pages or figures only; writes nothing and moves nothing into the record",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 988
     },
     {
       "id": "doorbell.declared.knock",
       "en": "an unauthenticated request to be let in",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 825
+      "line": 974
     },
     {
       "id": "doorbell.declared.knocksof",
       "en": "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 835
+      "line": 984
     },
     {
       "id": "doorbell.declared.pulledknocks",
       "en": "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 833
+      "line": 982
     },
     {
       "id": "doorbell.door.inline_storage_needs_evidence",
@@ -24442,105 +24449,119 @@
       "en": "{argument} must be one of {shape}; {stringify} is not",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 519
+      "line": 532
     },
     {
       "id": "doorbell.index.bytes_not_held_digest",
       "en": "the knock's bytes could not be held under their own digest, so nothing was written",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 645
+      "line": 719
     },
     {
       "id": "doorbell.index.capture_method_label",
       "en": "doorbell knock, received, hashed at receipt",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 756
+      "line": 830
     },
     {
       "id": "doorbell.index.content_did_not_decode",
       "en": "the content did not decode",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 428
+      "line": 441
+    },
+    {
+      "id": "doorbell.index.knock_bytes_gone",
+      "en": "the knock's bytes are no longer held, so nothing was shown",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 581
     },
     {
       "id": "doorbell.index.knock_bytes_no_longer_held",
       "en": "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 639
+      "line": 713
     },
     {
       "id": "doorbell.index.knock_receipt_evidence",
       "en": "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 752
+      "line": 826
     },
     {
       "id": "doorbell.index.knocks_of_names_pseudonym",
       "en": "knocksOf names the pseudonym whose knocks it lists",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 773
+      "line": 849
     },
     {
       "id": "doorbell.index.material_not_stored",
       "en": "the material could not be stored, so nothing was received and no inbox row was written",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 444
+      "line": 457
     },
     {
       "id": "doorbell.index.no_evidence_storage_knock",
       "en": "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 621
+      "line": 695
     },
     {
       "id": "doorbell.index.no_puller_named",
       "en": "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 587
+      "line": 661
     },
     {
       "id": "doorbell.index.no_secret_recognised",
       "en": "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 272
+      "line": 285
     },
     {
       "id": "doorbell.index.op_op_needs_argument_in",
       "en": "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 520
+      "line": 533
     },
     {
       "id": "doorbell.index.receipt_not_written",
       "en": "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 683
+      "line": 757
     },
     {
       "id": "doorbell.index.tally_member_only",
       "en": "the doorbell's tally is read by a signed-in member; nothing was read",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 368
+      "line": 381
     },
     {
       "id": "doorbell.index.these_bytes_were_received_at",
       "en": "these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 751
+      "line": 825
+    },
+    {
+      "id": "doorbell.index.view_member_only",
+      "en": "a knock is looked at by a signed-in member; nothing was read",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 563
     },
     {
       "id": "duties.checks.a_promises_date_is_read",
