@@ -148,3 +148,24 @@ By phase for the later piece (base, both): canonical extent key 2.75, 0.38; exis
 **Chain script, two cold runs each (RSS peak above baseline, base / both):** 1.9 MB 51.4, 49.6 / 47.8, 49.6; 8 MB 140.3, 138.9 / 80.7, 104.6 (a 24 MB spread between the two runs); 3 x 8 MB 190.7, 188.7 / 187.3, 189.0 (heap-used peak 120-122 against 136). **Lower allocation did not reliably give a lower peak or floor locally** (as for `PROTO_LEAN`); the 8 MB case alone looks lower and is not established. Forced-GC probe, one run each: RSS peak 142.1 (base) against 130.3 (both).
 
 **Reading.** The code-local changes remove 45 % of a later piece's garbage and 35 % of a 1.9 MB file's first piece, with identical results. Whether that reduces resets depends on the platform collecting later than its limit, which only the live arm can show. Not done: decode only the used part of a window; cache the parsed provenance document across a chain's ticks; the other per-line sites (2-5 MB each).
+
+## The chain build against the piece build: uploads and the ramp (PLATFORM #3, 2026-10-28) (`proto/levels-2-3-chain` 9a0e6075 live on `plat-s1` from 19:53:20Z, BOB #333; vars `PROTO_WINDOW_BYTES=auto`, `PROTO_CHAIN_BYTES=16777216`, `PROTO_CHAIN_REST_MS=20000`, `PROTO_PIECE_UNITS=512`, `PROTO_READOUT=0`, C on)
+
+**Commands.** Uploads: `run-control.sh ctlA` (19:30:11-19:40:47Z, piece build e13b0ba7) and `run-control.sh chainB` plus two repeat batches (19:55:55-20:10:46Z, chain build): 72 uploads each through the Add door at C=3, administrator; analysed with `python3 armres.py <label> <start> <end>` (failures from the page's own calls; resets from the Worker telemetry, memory-limit events within 2 s merged into one reset). Ramp: `run-ramp.sh chainramp` (`ramp3.cjs`, 5/10/15/25 members, +1 administrator walker per ten, one upload a minute, 3 minutes a step), 20:12:50-20:30:28Z.
+
+| arm | uploads failed | resets (alarm / request) | per minute | requests killed |
+|---|---|---|---|---|
+| piece build (control) | 0 of 72 | 38 (35 / 3) in 10.6 min | **3.58** | 48 |
+| chain build | 6 of 72 (5 `promote` 502 after a good upload, 1 `captureupload` 500) | 33 (19 / 14) in 14.8 min | **2.22** | 50 |
+
+| ramp (members) | errors, piece build run 1 / run 2 | errors, chain build | resets in the step (alarm / request), piece run 1 / run 2 | chain build |
+|---|---|---|---|---|
+| 5 | 0 % / 0 % | 0 % | 0 / 4 | 2 (1 / 1) |
+| 10 | 0.1 % / 0 % | 0 % | 2 / 2 | 1 (1 / 0) |
+| 15 | 10.5 % / 3.1 % | 0.78 % (16 of 2,046, all 502) | 8 / 1 | 4 (3 / 1) |
+| 25 | 14.3 % / 0.03 % | 1.08 % (38 of 3,526, all 502) | 9 / 5 | 12 (6 / 6) |
+| whole ramp | 17 and 12 resets in 15.7 and 19.2 min: 1.2 and 0.63 a minute | | | **19 in 17.6 min: 1.08 a minute**, no "overloaded" line |
+
+Chain-build member frames (p50 / p90 ms, raw): at 15 members Home 1,615 / 4,169, Project 1,735 / 3,358; at 25 members Home 1,854 / 6,404, Project 2,528 / 6,109, Projects 2,121 / 6,511, Held 1,078 / 2,188; administrator frames 2.0-6.6 s at every step.
+
+**Reading.** (1) **No difference that the data can carry.** The upload arm shows fewer resets a minute (2.22 against 3.58) but more failed uploads (6 against 0), and the ramp's 1.08 resets a minute lies between the piece build's two runs (1.2 and 0.63); the spread between two runs of the same build is as large as any gap between builds. These are single runs; the rooms differ (1.72 to 2.58 million units across them). (2) **Resets still happen at every step of the chain build's ramp**, and rise at the top step (12 at 25 members against 1 to 4 below), as they did in both earlier runs; the bound did not remove them. (3) **The alarm's share fell in the upload arm** (35 to 19) while the request side rose (3 to 14); not explained. (4) **In the chain arm 17 rests began and 3 ended** in the window (`proto_chain` lines; the chain count reached 16.8-18.4 MB against the 16.78 MB bound); the prototype's `isolate_age_ms` logs the event time, so whether the isolate was replaced during a rest cannot be read. (5) **Nothing here shows the chain bound or the window sizing reducing resets or failures on the platform, nor shows them harmful.** To tell builds apart at this noise, the same arms must be repeated several times alternately (the flags can be switched with `--set-var` to an empty value on one bundle, no redeploy of code).
