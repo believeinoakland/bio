@@ -27,3 +27,64 @@
 
 Tests: 201/201. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018Bhcefr6qakyreu8WK9cuR): test runs 1, module lines 5766
+
+## Completion (2026-10-28)
+
+# pdf-reader · T53 · report (CHANGE, BOB #327)
+
+## Cause
+
+A page tree whose `/Kids` array holds about 270,000 references is refused by doc-clean with "object 4 0 is referred to and cannot be read". The file is well formed. The cause is the direct-object bound (`pdf.direct_object`, 4 MiB, R47): the array's text passes 4,194,304 bytes, so `objects()` leaves object 4 absent (`unresolved: [{num:4, gen:0}]`) and the reader states `over_bound:direct_object:4194305:4194304`. The count alone is not the bound: 270,000 references at about 9 bytes each are about 2.4 MB, under it. Such a file passes only when its array text is under 4 MiB, so the file must carry about 16 bytes per reference.
+
+Not the cause: the object bound (2,000,000) and the operands bound (65,536), neither reached.
+
+## What changed
+
+- `bio-plane/test/m/pdf-reader/bounds.test.mjs`: new R47 test. A 270,000-reference page-tree array with indentation, text past the bound. It checks that openPdf states `over_bound:direct_object:4194305:4194304`, that `resolve` answers null for object 4, and that `objects()` names `{num:4, gen:0}` as unresolved. 9/9 in the file pass.
+- No code change. The reader already complies with R47 ("absent and stated"). The refusal names no bound, because the stated reason sits in `doc.notes` and `unresolved` carries only `{num, gen}`.
+
+## Found in other modules
+
+- `doc-clean/pdf.mjs` (lines 42-44 and 61): its refusal reads only `read.unresolved`, so the user sees "cannot be read" and not the bound. Its owner must read `doc.notes` for the `over_bound:` reason, or the reader must carry it.
+- `pdfstructure.mjs` `extractPdfStructure`: a 270,000-page file (21 MB) answers `TOO_LARGE_TO_READ`, need 1,665 MB against `pdf.need_mb` 100. Not a defect of this change, but the same file shape also trips the estimate, so a BOB decision is needed on it too.
+
+## Decisions for Bob
+
+1. **Refuse (current behaviour, stated).** Keep the 4 MiB direct-object bound. Option: an R37 wording change so `unresolved` entries carry the bound. Proposed R47 wording (additive): "A reference that cannot be read because of the direct-object bound is listed in `unresolved` with `over: "direct_object"` and the figure `4194304`."
+2. **Read it.** Raise `pdf.direct_object` (BOB's figure) so arrays of this size are read. Costs: a bigger parse window per direct object, memory to be measured.
+
+Recommendation: option 1 now (the reason reaches the user through doc-clean's job), with option 2 decided on the measured memory.
+
+**Met** · none
+
+Tests: 202/202. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018Bhcefr6qakyreu8WK9cuR): test runs 2, module lines 5766
+
+## Completion (2026-10-28)
+
+# pdf-reader · T53 · report (ANSWER K5641, R51)
+
+## Entries applied
+
+- **R51 (new, K5641).** A reference the `pdf.direct_object` bound stopped is listed in `objects().unresolved` with `over: "direct_object"` and `figure` (the bound, 4194304). Any other unresolved reference stays `{num, gen}`.
+  - `bio-plane/src/pdfstructure.mjs`: the object scan records a bound stop by object number (`ObjectTable.stopped`); `parse` records and clears it; `put` clears it for a definition that parses; `objects()` reads it into `unresolved`.
+  - Why the scan record was needed: the scan never put object 4 in the table, so the first version (recording only in `parse`) named nothing. Found by test, fixed.
+  - `bio-plane/test/m/pdf-reader/bounds.test.mjs`: the 270,000-reference test asserts `{num:4, gen:0, over:"direct_object", figure:4194304}`; a second assertion checks that a dangling reference keeps the plain `{num, gen}` form.
+
+## Results
+
+- pdf-reader suite (`bio-plane/test/m/pdf-reader/*.test.mjs`, `bio-plane/test/pdfstructure.test.mjs`): 202/202.
+- doc-clean suite: 76 pass, 0 fail (78 total, 2 not run).
+
+## Found in other modules
+
+- `doc-clean/pdf.mjs` (lines 42-44): still refuses with "object {num} {gen} is referred to and cannot be read" and does not read `over` or `figure`. It must use `unresolved[0].over` to name the bound. Its job's change, not this module's.
+
+## Not done
+
+- The figure is not raised (K5641: option 1).
+
+**Met** · R51
+
+Tests: 202/202. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018Bhcefr6qakyreu8WK9cuR): test runs 3, module lines 5783
