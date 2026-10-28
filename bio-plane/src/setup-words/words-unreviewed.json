@@ -10116,6 +10116,34 @@
       "line": 881
     },
     {
+      "id": "capture-sources.browserrender.binding_acquired_no_session_id",
+      "en": "the Browser Rendering binding acquired a session with no sessionId",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 183
+    },
+    {
+      "id": "capture-sources.browserrender.binding_did_not_upgrade",
+      "en": "the Browser Rendering binding did not upgrade session {sessionId} to a websocket (HTTP {status})",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 187
+    },
+    {
+      "id": "capture-sources.browserrender.binding_gave_no_session",
+      "en": "the Browser Rendering binding gave no session within the {ms} ms navigation bound",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 294
+    },
+    {
+      "id": "capture-sources.browserrender.binding_refused_a_session",
+      "en": "the Browser Rendering binding refused a session: HTTP {status} {text}",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 178
+    },
+    {
       "id": "capture-sources.browserrender.it_is_not_a_public",
       "en": "it is not a public https address",
       "module": "capture-sources",
@@ -10130,11 +10158,39 @@
       "line": 150
     },
     {
+      "id": "capture-sources.browserrender.no_serialised_document",
+      "en": "the browser returned no serialised document after the render",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 671
+    },
+    {
+      "id": "capture-sources.browserrender.phase_bound_spent",
+      "en": "the render's {phase} bound was spent before it finished",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 405
+    },
+    {
       "id": "capture-sources.browserrender.the_browser_could_not_navigate",
       "en": "the browser could not navigate to {String}: {refusedSentence}",
       "module": "capture-sources",
       "file": "bio-plane/src/browserrender.mjs",
       "line": 395
+    },
+    {
+      "id": "capture-sources.browserrender.would_not_hold_interception",
+      "en": "the browser would not hold this render's requests (request interception could not be enabled: {err}), so nothing was rendered",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 600
+    },
+    {
+      "id": "capture-sources.browserrender.would_not_hold_network_domain",
+      "en": "the browser would not hold this render's requests (its network domain would not enable: {err}), so nothing was rendered",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 471
     },
     {
       "id": "capture-sources.cdx.cdx_record_timestamp_timestamp_digest",
@@ -10347,6 +10403,13 @@
       "line": 256
     },
     {
+      "id": "capture-sources.drive.convert_source",
+      "en": "unmeasured: Google's export is a conversion made at fetch time of a stored original nobody outside Google has seen, and its text stability and fidelity across fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the byte instability is D-351's)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/drive.mjs",
+      "line": 304
+    },
+    {
       "id": "capture-sources.drive.export_format_format_mimetype",
       "en": "export format {format} ({mimetype})",
       "module": "capture-sources",
@@ -10414,7 +10477,7 @@
       "en": "your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}",
       "module": "capture-sources",
       "file": "bio-plane/src/drive.mjs",
-      "line": 428
+      "line": 425
     },
     {
       "id": "capture-sources.memento.datetime_stringify_is_not_an",
@@ -10422,6 +10485,13 @@
       "module": "capture-sources",
       "file": "bio-plane/src/capture-sources/memento.mjs",
       "line": 149
+    },
+    {
+      "id": "capture-sources.memento.entry_does_not_begin",
+      "en": "entry {n} does not begin with \"<\" at character {i}",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 91
     },
     {
       "id": "capture-sources.memento.memento_datetime_stringify_is_not",
@@ -10631,119 +10701,119 @@
       "en": "substrate: the fetch layer (M2')",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4227
+      "line": 4232
     },
     {
       "id": "capture.declared.archivelist",
       "en": "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4200
+      "line": 4205
     },
     {
       "id": "capture.declared.captureaccount",
       "en": "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4249
+      "line": 4254
     },
     {
       "id": "capture.declared.captureaccounts",
       "en": "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4222
+      "line": 4227
     },
     {
       "id": "capture.declared.capturegrade",
       "en": "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4215
+      "line": 4220
     },
     {
       "id": "capture.declared.captureseenin",
       "en": "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4233
+      "line": 4238
     },
     {
       "id": "capture.declared.captureuploadabort",
       "en": "upload-directed: a member abandons a file begun in parts; what was sent is discarded and nothing is held (capture R113)",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4244
+      "line": 4249
     },
     {
       "id": "capture.declared.captureuploadbegin",
       "en": "upload-directed: a member begins sending a file too large for one request in parts, naming its digest, its size and where it came from; nothing is held until its parts arrive (capture R113)",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4238
+      "line": 4243
     },
     {
       "id": "capture.declared.captureuploadcomplete",
       "en": "upload-directed: a member completes a file sent in parts, naming the parts' digests in order; the file is then held under its own digest as an upload is (capture R113)",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4242
+      "line": 4247
     },
     {
       "id": "capture.declared.captureuploadpart",
       "en": "upload-directed: a member sends one part of a file begun in parts, in order, its raw bytes the request's body (capture R113)",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4240
+      "line": 4245
     },
     {
       "id": "capture.declared.gradenote",
       "en": "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4198
+      "line": 4203
     },
     {
       "id": "capture.declared.heldat",
       "en": "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4212
+      "line": 4217
     },
     {
       "id": "capture.declared.heldcaptures",
       "en": "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4202
+      "line": 4207
     },
     {
       "id": "capture.declared.heldrestore",
       "en": "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4208
+      "line": 4213
     },
     {
       "id": "capture.declared.heldsetaside",
       "en": "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4204
+      "line": 4209
     },
     {
       "id": "capture.declared.previewmore",
       "en": "read: the next rows of a spreadsheet or CSV whose preview was cut, from the preview's next row, keyed by capture sha (`capture` R121); writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4218
+      "line": 4223
     },
     {
       "id": "capture.declared.reattest",
       "en": "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4206
+      "line": 4211
     },
     {
       "id": "capture.grammar.field_v1_is_not_one",
@@ -10778,497 +10848,497 @@
       "en": "{argument} must be one of {shape}; {stringify} is not",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 697
+      "line": 699
     },
     {
       "id": "capture.index.argument_must_be_shape_stringify",
       "en": "{argument} must be {shape}; {stringify} is not",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 704
+      "line": 706
     },
     {
       "id": "capture.index.argument_must_be_shape_stringify_2",
       "en": "{argument} must be {shape}; {stringify} is not",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2087
+      "line": 2092
     },
     {
       "id": "capture.index.at_most_per_item_max",
       "en": "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2972
+      "line": 2977
     },
     {
       "id": "capture.index.bracketing_captures_differ",
       "en": "bracketing captures differ: {before} last seen {before_at}, {after} first seen {after_at}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3346
+      "line": 3351
     },
     {
       "id": "capture.index.bundle_ids_shape",
       "en": "a list of at most {max} document ids",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2390
+      "line": 2395
     },
     {
       "id": "capture.index.contained_in_a_chrome_region",
       "en": "contained in a chrome region and recurred on {n} distinct pages of {host}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3478
+      "line": 3483
     },
     {
       "id": "capture.index.contained_in_a_chrome_region_2",
       "en": "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3479
+      "line": 3484
     },
     {
       "id": "capture.index.email_asserts",
       "en": "{by} brought this message in on {at}, and says where it came from; the message is held as it was received",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1635
+      "line": 1638
     },
     {
       "id": "capture.index.email_receipt_evidence",
       "en": "the message's receipt: its digest, taken as the bytes arrived, and its instant",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1636
+      "line": 1639
     },
     {
       "id": "capture.index.file_kind_refused",
       "en": "This is a {kind}, which Civicsmith does not keep{why}. Nothing was written.",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 892
+      "line": 895
     },
     {
       "id": "capture.index.file_no_bytes",
       "en": "the file has no bytes; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1019
+      "line": 1022
     },
     {
       "id": "capture.index.file_too_large_kind",
       "en": "this kind of file may be at most {bound} bytes, and this one is {size}; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 899
+      "line": 902
     },
     {
       "id": "capture.index.held_acts_unreadable",
       "en": "the set-asides recorded with this question could not be read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3090
+      "line": 3095
     },
     {
       "id": "capture.index.held_not_read",
       "en": "held, not read: {name}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1141
+      "line": 1144
     },
     {
       "id": "capture.index.heldat_baseline_no_digest",
       "en": "the bytes the site gives differ from this copy's, but this copy recorded no determined digest of its substance, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2227
+      "line": 2232
     },
     {
       "id": "capture.index.heldat_capture_unknown",
       "en": "the record cannot say how this copy was captured, so a plain look at the site is not compared with it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2165
+      "line": 2170
     },
     {
       "id": "capture.index.heldat_changed_document",
       "en": "the site now gives a different document from this copy",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2187
+      "line": 2192
     },
     {
       "id": "capture.index.heldat_changed_substance",
       "en": "the substance of what the site now gives differs from this copy's",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2242
+      "line": 2247
     },
     {
       "id": "capture.index.heldat_export",
       "en": "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2166
+      "line": 2171
     },
     {
       "id": "capture.index.heldat_host_paced",
       "en": "the host is being given time between requests, so the source was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2182
+      "line": 2187
     },
     {
       "id": "capture.index.heldat_member_act",
       "en": "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2141
+      "line": 2146
     },
     {
       "id": "capture.index.heldat_no_address",
       "en": "this copy has no address to look at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2161
+      "line": 2166
     },
     {
       "id": "capture.index.heldat_no_copy_seen",
       "en": "the record holds no copy of this that you may see, so there is nothing to compare",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2152
+      "line": 2157
     },
     {
       "id": "capture.index.heldat_no_public_address",
       "en": "this copy has no public address to look at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2168
+      "line": 2173
     },
     {
       "id": "capture.index.heldat_not_plain_fetch",
       "en": "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2163
+      "line": 2168
     },
     {
       "id": "capture.index.heldat_not_whole",
       "en": "the document did not arrive whole, so the source was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2216
+      "line": 2221
     },
     {
       "id": "capture.index.heldat_other_handler",
       "en": "the bytes the site gives differ from this copy's and are read as another kind of page than this copy was, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2237
+      "line": 2242
     },
     {
       "id": "capture.index.heldat_over_check_bound",
       "en": "the document at the address is larger than this look reads, so whether it has changed was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2198
+      "line": 2203
     },
     {
       "id": "capture.index.heldat_record_unreadable",
       "en": "the record could not be read, so whether it holds this, and whether the source has changed, is not known",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2148
+      "line": 2153
     },
     {
       "id": "capture.index.heldat_rendered",
       "en": "this copy is a rendered capture, which a plain look at the site cannot be compared with",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2164
+      "line": 2169
     },
     {
       "id": "capture.index.heldat_request_incomplete",
       "en": "the request for the address did not complete, so the source was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2179
+      "line": 2184
     },
     {
       "id": "capture.index.heldat_same_document",
       "en": "the site still gives the same document as this copy",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2187
+      "line": 2192
     },
     {
       "id": "capture.index.heldat_same_substance",
       "en": "the site gives different bytes from this copy, but their substance is the same: only what the page rebuilds on every visit differs",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2241
+      "line": 2246
     },
     {
       "id": "capture.index.heldat_served_no_digest",
       "en": "the bytes the site gives differ from this copy's and earn no determined digest of their substance, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2239
+      "line": 2244
     },
     {
       "id": "capture.index.heldat_served_too_large",
       "en": "the bytes the site gives differ from this copy's, and are larger than this surface takes a digest of the substance within, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2228
+      "line": 2233
     },
     {
       "id": "capture.index.kind_must_be_one_of",
       "en": "kind must be one of: {TASK_KINDS}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3888
+      "line": 3893
     },
     {
       "id": "capture.index.mail_within_failed",
       "en": "the act run with the message did not complete, so the message was rolled back and nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 165
+      "line": 167
     },
     {
       "id": "capture.index.message_too_large",
       "en": "this message is larger than the {bound} bytes a message may be, so it was refused whole; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 843
+      "line": 845
     },
     {
       "id": "capture.index.names_no_document",
       "en": "name at least one document; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2969
+      "line": 2974
     },
     {
       "id": "capture.index.no_such_capture",
       "en": "your team's Civicsmith holds no captured document like that, or you cannot see it; nothing was read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2040
+      "line": 2043
     },
     {
       "id": "capture.index.not_set_aside",
       "en": "these documents are not set aside; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3050
+      "line": 3055
     },
     {
       "id": "capture.index.op_op_needs_argument_in",
       "en": "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 698
+      "line": 700
     },
     {
       "id": "capture.index.op_op_needs_argument_in_2",
       "en": "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was written.",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 705
+      "line": 707
     },
     {
       "id": "capture.index.outcome_must_be_one_of",
       "en": "outcome must be one of: {SOURCE_OUTCOMES}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 4017
+      "line": 4022
     },
     {
       "id": "capture.index.preview_bytes_not_held",
       "en": "the record holds no whole copy of this file to read more rows from; nothing was read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2047
+      "line": 2050
     },
     {
       "id": "capture.index.preview_cells_not_interpretable",
       "en": "this file has no rows to show; nothing was read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2049
+      "line": 2052
     },
     {
       "id": "capture.index.preview_too_large",
       "en": "this file is larger than a preview reads rows from; nothing was read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2048
+      "line": 2051
     },
     {
       "id": "capture.index.reattest_needs_sha",
       "en": "reattest takes the sha256 of a capture the record holds",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1862
+      "line": 1865
     },
     {
       "id": "capture.index.receipt_not_written",
       "en": "the acquisition receipt could not be written, so nothing was filed",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1206
+      "line": 1209
     },
     {
       "id": "capture.index.refusal_member_brings_file",
       "en": "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 767
+      "line": 769
     },
     {
       "id": "capture.index.reuse_posthoc_unverified",
       "en": "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3714
+      "line": 3719
     },
     {
       "id": "capture.index.say_so_the_file_cannot",
       "en": "{say}, so the file cannot be held under its own digest; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 803
+      "line": 805
     },
     {
       "id": "capture.index.seenin_member_act",
       "en": "filing a document where it is seen is a signed-in member's act, whose stamp names them; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1758
+      "line": 1761
     },
     {
       "id": "capture.index.seenin_not_held",
       "en": "the record holds no such document that you may see; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1772
+      "line": 1775
     },
     {
       "id": "capture.index.seenin_not_recorded",
       "en": "the record could not be written, so nothing was filed",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1783
+      "line": 1786
     },
     {
       "id": "capture.index.sha_identifies_event",
       "en": "a capture sha256 identifies the event; a record does not exist yet at capture time",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3890
+      "line": 3895
     },
     {
       "id": "capture.index.shape_bytes",
       "en": "the file's size in bytes, a whole number from 1",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1349
+      "line": 1352
     },
     {
       "id": "capture.index.shape_part_index",
       "en": "a whole number from 0, the part's place in the file",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1421
+      "line": 1424
     },
     {
       "id": "capture.index.shape_part_index_last",
       "en": "a whole number from 0 to {last}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1433
+      "line": 1436
     },
     {
       "id": "capture.index.shape_parts_digests",
       "en": "the list of the parts' digests, in order, each 64 lowercase hex characters",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1509
+      "line": 1512
     },
     {
       "id": "capture.index.shape_row_from",
       "en": "the row to continue from, a whole number from 1",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2036
+      "line": 2039
     },
     {
       "id": "capture.index.shape_sha256_part",
       "en": "64 lowercase hex characters, the digest of this part",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1423
+      "line": 1426
     },
     {
       "id": "capture.index.shape_sha256_whole",
       "en": "64 lowercase hex characters, the digest of the whole file",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1347
+      "line": 1350
     },
     {
       "id": "capture.index.shape_string_max",
       "en": "a string of at most {max} characters",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 776
+      "line": 778
     },
     {
       "id": "capture.index.shape_upload_name",
       "en": "the upload's name, as the begin answered it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1419
+      "line": 1422
     },
     {
       "id": "capture.index.signature_not_verified",
       "en": "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1824
+      "line": 1827
     },
     {
       "id": "capture.index.the_record_holds_this_copy",
       "en": "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2159
+      "line": 2164
     },
     {
       "id": "capture.index.the_site_answered_status_so",
       "en": "the site answered {status}, so it did not give the document to compare",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2192
+      "line": 2197
     },
     {
       "id": "capture.index.upload_no_bytes",
       "en": "the upload carried no bytes; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 911
+      "line": 914
     },
     {
       "id": "capture.index.upload_receipt_evidence",
       "en": "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1606
+      "line": 1609
     },
     {
       "id": "capture.ops.body_hash_mismatch",
@@ -43436,6 +43506,13 @@
       "line": 671
     },
     {
+      "id": "provenance.brought_by_email",
+      "en": "a message a member brought in by email",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1316
+    },
+    {
       "id": "provenance.checks.deciding_who_issued_a",
       "en": "Deciding who issued a document is a named member's judgment, so nothing was recorded. A machine, an assistant or a call that carries nobody may suggest an issuer and never decides one. Sign in as a member.",
       "module": "provenance",
@@ -43475,98 +43552,273 @@
       "en": "document-directed: states, for each captured file of a document, who issued it as the record now stands, with the dated basis and whether a member reviewed it and could not tell; a decision made by a member is stated here and nothing is changed",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 102
+      "line": 103
     },
     {
       "id": "provenance.declared.declareorigin",
       "en": "document-directed: a member states, with their name and the date, the system a document came from, keyed by bundleId; a second declaration is added beside the first and never replaces it, and the document itself does not change",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 99
+      "line": 100
     },
     {
       "id": "provenance.declared.origins",
       "en": "document-directed: lists, oldest first, every system members have declared a document came from, with who declared it and when; the latest is the standing one, and nothing is changed",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 105
+      "line": 106
     },
     {
       "id": "provenance.declared.testify",
       "en": "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 96
+      "line": 97
     },
     {
       "id": "provenance.index.a_members_firsthand_observation_their",
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1965
+      "line": 2023
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 2041
+      "line": 2096
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1504
+      "line": 1558
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1467
+      "line": 1521
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1488
+      "line": 1542
     },
     {
       "id": "provenance.index.register_part_bytes",
       "en": "register[{index}] part {part} ({sha}) {said}: a part states its size as a whole number of bytes at least 0. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 629
+      "line": 645
     },
     {
       "id": "provenance.index.register_part_digest",
       "en": "register[{index}] part {part} names {digest}: a part is named by its SHA-256, 64 lowercase hex characters. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 635
+      "line": 651
     },
     {
       "id": "provenance.index.register_part_without_whole",
       "en": "register[{index}] ({sha}, path {path}) is a part of a capture whose whole the list does not name: a part is registered under its whole, which the list names. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 639
+      "line": 655
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1486
+      "line": 1540
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1465
+      "line": 1519
+    },
+    {
+      "id": "provenance.register.attachment_no_container",
+      "en": "provenance documents[{i}] was an attachment of a message (capture.method '{method}') and carries no container block naming the message and the attachment it came from",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 83
+    },
+    {
+      "id": "provenance.register.chain_absent",
+      "en": "provenance documents[{i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 266
+    },
+    {
+      "id": "provenance.register.chain_empty",
+      "en": "provenance documents[{i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 279
+    },
+    {
+      "id": "provenance.register.determined_no_issuer",
+      "en": "provenance documents[{i}] declares authority_state 'determined' with no authority named, and this record is at or past verified",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 311
+    },
+    {
+      "id": "provenance.register.email_basis_wrong",
+      "en": "provenance documents[{i}] was brought in by email and its capture.grade_basis is '{stated}', not '{basis}': why it carries no letter is stated, never left to be inferred",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 387
+    },
+    {
+      "id": "provenance.register.email_has_letter",
+      "en": "provenance documents[{i}] was brought in by email and carries capture.grade '{grade}': a message a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 386
+    },
+    {
+      "id": "provenance.register.email_no_message",
+      "en": "provenance documents[{i}] was brought in by email and carries no message block of the message's headers",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 194
+    },
+    {
+      "id": "provenance.register.email_no_statement",
+      "en": "provenance documents[{i}] was brought in by email and carries no origin_statement: a message brought in records where it came from, in the member's own words",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 185
+    },
+    {
+      "id": "provenance.register.email_wrong_method",
+      "en": "provenance documents[{i}] was brought in by email and its capture.method is '{stated}', not '{method}'",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 182
+    },
+    {
+      "id": "provenance.register.emailed_wrong_origin",
+      "en": "provenance documents[{i}] states capture.method '{method}' but its origin.kind is not '{origin}': only a message a member brought in by email was emailed",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 178
+    },
+    {
+      "id": "provenance.register.grade_not_one_of",
+      "en": "provenance documents[{i}].capture.grade '{grade}' is not one of: {grades}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 109
+    },
+    {
+      "id": "provenance.register.hop_no_attestor",
+      "en": "provenance documents[{i}].provenance_chain[{h}] names no attestor: an unattributed hop cannot support the claim a published hash makes",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 286
+    },
+    {
+      "id": "provenance.register.message_malformed",
+      "en": "provenance documents[{i}].message is malformed: {fields}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 199
+    },
+    {
+      "id": "provenance.register.message_wrong_origin",
+      "en": "provenance documents[{i}] carries a message block but its origin.kind is not '{origin}': only a message brought in by email records its headers",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 179
+    },
+    {
+      "id": "provenance.register.origin_kind_one_of",
+      "en": "provenance documents[{i}].origin.kind must be one of: {kinds}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 409
+    },
+    {
+      "id": "provenance.register.release_by_machine",
+      "en": "collected -> verified transition authored by '{author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 455
+    },
+    {
+      "id": "provenance.register.sweep_fence",
+      "en": "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 470
+    },
+    {
+      "id": "provenance.register.undetermined_no_basis",
+      "en": "provenance documents[{i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 306
+    },
+    {
+      "id": "provenance.register.unpacked_archive_unread",
+      "en": "provenance documents[{i}] was cut out of archive {archive}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 132
+    },
+    {
+      "id": "provenance.register.unpacked_no_basis",
+      "en": "provenance documents[{i}] was cut out of an archive and carries no capture.grade and no grade_basis: why it carries no letter is stated, never left to be inferred",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 110
+    },
+    {
+      "id": "provenance.register.unpacked_no_container",
+      "en": "provenance documents[{i}] was cut out of an archive (capture.method '{method}') and carries no container block naming the archive and the entry it came from",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 91
+    },
+    {
+      "id": "provenance.register.upload_basis_wrong",
+      "en": "provenance documents[{i}] was brought in by a member's upload and its capture.grade_basis is '{stated}', not '{basis}': why it carries no letter is stated, never left to be inferred",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 381
+    },
+    {
+      "id": "provenance.register.upload_has_letter",
+      "en": "provenance documents[{i}] was brought in by a member's upload and carries capture.grade '{grade}': a file a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 380
+    },
+    {
+      "id": "provenance.register.upload_no_statement",
+      "en": "provenance documents[{i}] was brought in by a member's upload and carries no origin_statement: a file brought in records where it came from, in the member's own words",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 156
+    },
+    {
+      "id": "provenance.register.upload_wrong_method",
+      "en": "provenance documents[{i}] was brought in by a member's upload and its capture.method is '{stated}', not '{method}'",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 153
     },
     {
       "id": "provenance.releasable.no_chain",
@@ -43595,6 +43847,41 @@
       "module": "provenance",
       "file": "bio-plane/src/provenance/releasable.mjs",
       "line": 54
+    },
+    {
+      "id": "provenance.testify.authority_basis",
+      "en": "the author of these bytes is the signed-in member taken from the session at op=testify, {recorded}; the request could not name it",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 2039
+    },
+    {
+      "id": "provenance.testify.provenance_notes",
+      "en": "Authored through op=testify. Observed {obs}, in the member's own statement; recorded {recorded}, by this record's clock. The author is taken from the signed-in session, not from the request. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 2025
+    },
+    {
+      "id": "provenance.why.attachment_depth",
+      "en": "these bytes sit inside more than {archive_depth_max} containers, so the message that decides what they earn cannot be read and their capture grade is UNDETERMINED",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1392
+    },
+    {
+      "id": "provenance.why.attachment_locator_bad",
+      "en": "these bytes were recorded as an attachment of a message, but the receipt names the message as {locator}, not as email:<the message's 64-hex digest>!<the attachment's number>, so the message cannot be read and what they earn on the capture axis is UNDETERMINED",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1388
+    },
+    {
+      "id": "provenance.why.attachment_of_message",
+      "en": "an attachment of the message {message_sha}: it earns exactly what that message earns. {why}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1401
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",
