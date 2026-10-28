@@ -15,67 +15,8 @@
 **Before R1 (BOB's acts).** (1), (2), (7), (8), (9) done (K5572, K5573). (3) Requirement lines from the READY drafts, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures to layer 11's START. (5) Design rows each entry names folded from `main` (K945). (6) CAPABILITIES' acts: M1 the `email()` probe on `20b5…7f72` only; M-R9 a member's own free CourtListener token by `request_credential`, never printed; record-core's two read-only checks on biosmoke8; N1265 rehearsal shapes on `CS_TEST_CF_ACCOUNT_ID` alone (K4942). (8) DEC-473 to DEC-478 merged; done. (10) U512-U518 (DEC-479 to DEC-485) merge with layer 3's first job, file-safety before doorbell. After K5576: BOB moves agent-runner after ai-gate when agent-worker's first entry merges.
 
 ## Layer 1
-Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer1-merged.md` (mechanics §17): setup-words, record-grammar, civil-time, calc-grammar, connection-grammar, test-support, signatures, court-citations, id-spaces, subresources, structured-text-reader, csv-reader, odf-reader, format-registry, text-chain, docprofile, doctypes, legistar-reader, roster-reader, court-doctypes, register-readers, budget-doctypes, image-codecs, pdf-pixels, image-cover, pdf-worker, ocr-worker, sheet-worker, ooxml.
+Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-merged.md`.
 
-**jurisdictions**
-- T53-4 · N1257 (DEC-404) · four defects first
-- T53-5 · N1257 (K5452, K5458) · layer model, forest check, `governs`
-- T53-6 · N1257 · shipped layers, footprint check, test forest
-- T53-7 · N1257 (K5451) · team layers, one placeless team-rules layer
-- T53-8 · N1256 (DEC-401 B) · federal offices snapshot `[waits: F4, makers' key]`
-- T53-9 · K5497 · US places only; others named by the team
-- T53-10 · A2 (DEC-458) · `fiscal_year` in the team layer
-- T53-11 · K5527 (4), (5) · N858's text record in the profile
-- T53-12 · N1257, K5458, K5462 · CAPABILITIES rows
-- T53-13 · K5471 (6) · JOURNEYS's defects: its rows
-- T53-14 · K5565 · English in tests: its entry
-- T53-502 · K5577 (2) · the federal layer's `street_types` (USPS suffixes) as data for register-readers
-- rows: `build/plan/T53-R1/jurisdictions.md`
-**runtime-limits**
-- T53-22 · N1267 (K4628, K5427) · per-kind bounds as one table; PL20, PL21, PL45
-- T53-23 · K4354, K5438 · `TIME_BUDGETS`, `budgetOf`
-- T53-24 · N1273 (K5440) · `STORE_JURISDICTIONS`, room and R2 jurisdiction
-- T53-25 · K4746, K5569 · three levels as rows of the bounds table
-- T53-26 · N824, K5527, N1259 · CAPABILITIES rows
-- T53-27 · K5565 · English in tests: its entry
-- T53-511 · R37, K5624 · after office-readers, odf-reader, doc-clean and ooxml merge T53-510 (BOB's CHANGE says when): every reader row's active figure becomes its `standard` (`pdf.worker_bytes`, `document.clean_bytes`, `file_safety.grade_read`, `office.text_bytes`, `office.streamed_text_bytes`, `xlsx.declared_text`, `ods.content_xml`, `sheet_worker.bytes`, `image.cover_bytes`, `archive.unpacked_bytes`, `archive.member_bytes`, `scan.max_bytes`), save a figure a reader reported it cannot hold, kept with that report cited
-- T53-540 · K5648 · `xlsx.declared_text` standard 25 MB
-- rows: `build/plan/T53-R1/runtime-limits.md`
-**bundler**
-- T53-30 · K5457 · agent Worker `HEALTH` object; `deleted_classes` `RemoteSession`
-- T53-31 · K5565 · English in tests: its entry
-- T53-523 · reader-container's report (K5448 (4)) · enrol `reader-container` as a fleet member
-- rows: `build/plan/T53-R1/bundler.md`
-**mail-reader**
-- T53-36 · N1266 (K5435, K5437) · EML, MSG, MBOX; attachments as members
-- T53-37 · CAPABILITIES · CAPABILITIES rows
-- T53-525 · the other side of T53-524 · `mail-reader` drops its `cfb.mjs` for ooxml's exported reader
-- rows: `build/plan/T53-R1/mail-reader.md`
-**office-readers**
-- T53-39 · K5565 · English in tests: its entry
-- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
-- T53-537 · K5637 · fixtures reach the over-bound path at whatever figure is active (from `boundOf`, or a bound seam)
-- T53-541 · K5648 · R46 probe sized from `boundOf`, after T53-540
-- rows: `build/plan/T53-R1/office-readers.md`
-**pdf-reader**
-- T53-41 · K5565 · English in tests: its entry
-- rows: `build/plan/T53-R1/pdf-reader.md`
-**doc-clean**
-- T53-59 · N824, K2334, K1485 · CAPABILITIES rows
-- T53-60 · K5565 · English in tests: its entry
-- T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
-- T53-539 · K5641 · a PDF refusal names pdf-reader's `over` bound (`doc.notes`), never only "cannot be read"
-- rows: `build/plan/T53-R1/doc-clean.md`
-**file-scanner**
-- C T52-100
-- T53-64 · K5565 · English in tests: its entry
-- T53-520 · K5629, R37; reader-container's finding · the renderer's profile blocks linked pictures (a render fetches nothing)
-- T53-521 · req-ahead-T52, FILE-SAFETY #1 (K5384) · R36 into `build/requirements/file-scanner.md`
-- rows: `build/plan/T53-R1/file-scanner.md`
-**reader-container**
-- T53-65 · N1266, N1267 · conversion readers, archives as streams
-- T53-538 · K5637, T53-523 · fleet member files: fleet-member.json, Worker front exporting `ReaderContainer`, wrangler.jsonc, build script, packages.json with every version read
-- rows: `build/plan/T53-R1/reader-container.md`
 ## Layer 2
 
 **member-roster**
