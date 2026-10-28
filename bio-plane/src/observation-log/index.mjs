@@ -90,6 +90,18 @@ const AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-ru
 /* R37: the states a later `PRESENT` answers, and the one that answers them. */
 const UNANSWERED_STATES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE"]);
 
+/* R40: a `read` or `disagree` is stored as JSON text with its keys in the order R40 states them (so what is read back is
+   what was judged and nothing else), NULL when the entry carries none; a row read back gives the object or null. */
+const READ_KEYS = Object.freeze(["record", "n", "total", "outcome"]);
+const DISAGREE_KEYS = Object.freeze(["record", "levels"]);
+const fieldText = (v, keys) => (v == null ? null : JSON.stringify(Object.fromEntries(keys.map((k) => [k, v[k]]))));
+function fieldsOf(row) {
+  if (!row) return row;
+  const out = { ...row };
+  for (const k of ["read", "disagree"]) if (k in out) out[k] = out[k] == null ? null : JSON.parse(out[k]);
+  return out;
+}
+
 /** The name this module registers its listeners under (provenance R47, extraction R24), which is how a caller finds
  *  this module's outcome among a notice's listeners. */
 export const OBSERVATION_LOG_MODULE = "observation-log";
@@ -183,6 +195,7 @@ export class ObservationLog {
       condition: pick("condition", "condition"), bound: pick("bound", "bound"),
       result_kind: pick("result_kind", "resultKind"), result_ref: pick("result_ref", "resultRef"),
       detail: pick("detail", "detail"), bundle: pick("bundle", "bundle"), terminal: !!terminal,
+      read: pick("read", "read"), disagree: pick("disagree", "disagree"),
     };
     const bad = checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));
     if (bad) return bad;
@@ -202,8 +215,8 @@ export class ObservationLog {
     this.sql.exec(
       `INSERT INTO observation_log
          (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
-          state, governed, condition, bound, terminal, result_kind, result_ref, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          state, governed, condition, bound, terminal, result_kind, result_ref, detail, read, disagree)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       when,
       String(row.actor_class),
       row.actor == null ? null : String(row.actor),
@@ -219,7 +232,8 @@ export class ObservationLog {
       terminal ? 1 : 0,
       row.result_kind == null || row.result_kind === "" ? null : String(row.result_kind),
       row.result_ref == null || row.result_ref === "" ? null : String(row.result_ref),
-      row.detail == null ? null : String(row.detail));
+      row.detail == null ? null : String(row.detail),
+      fieldText(row.read, READ_KEYS), fieldText(row.disagree, DISAGREE_KEYS));
   }
 
   /** R37 (H39): the row just appended is `PRESENT`; each earlier row at the same level and subject (`subject_kind`,
@@ -228,7 +242,7 @@ export class ObservationLog {
    *  here changes either row (R22). One index walk on `observation_log_frontier`. */
   #tellAnswered(row) {
     const cols = `seq, at, actor_class, actor, authority_kind, authority, level, subject_kind, subject, state, governed,
-                  condition, bound, terminal, result_kind, result_ref, detail`;
+                  condition, bound, terminal, result_kind, result_ref, detail, read, disagree`;
     const key = [String(row.level || "document"), String(row.subject_kind || "unstated"), String(row.subject)];
     const observation = this.#one(
       `SELECT ${cols} FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? ORDER BY seq DESC LIMIT 1`,
@@ -241,7 +255,7 @@ export class ObservationLog {
           AND state IN (${UNANSWERED_STATES.map(() => "?").join(", ")}) ORDER BY seq`,
       ...key, answered && answered.s != null ? Number(answered.s) : 0, observation.seq, ...UNANSWERED_STATES);
     for (const e of earlier)
-      for (const l of this.answeredListeners) l.fn({ earlier: { ...e }, observation: { ...observation } });
+      for (const l of this.answeredListeners) l.fn({ earlier: fieldsOf(e), observation: fieldsOf(observation) });
   }
 
   /** R37 (H39): `onLookAnswered(module, fn)` registers `fn` once per module, through membership's `listenerRefusal`
@@ -566,14 +580,14 @@ export class ObservationLog {
     return this.#rows(
       `SELECT o.level, o.subject_kind, o.subject, o.state, o.governed, o.condition,
               o.authority_kind, o.authority, o.actor_class, o.result_kind, o.result_ref,
-              o.detail, o.at, o.seq
+              o.detail, o.read, o.disagree, o.at, o.seq
          FROM observation_log o
          WHERE ${where}
            AND o.seq = (SELECT MAX(i.seq) FROM observation_log i
                          WHERE i.level = o.level AND i.subject_kind = o.subject_kind
                            AND i.subject IS o.subject)
          ORDER BY o.seq DESC
-         LIMIT ?`, ...args, n);
+         LIMIT ?`, ...args, n).map(fieldsOf);
   }
 
   /** R9 — one authority's rows in `seq` order, at most `limit` (the run read-through, a lead's looks). */
@@ -581,9 +595,9 @@ export class ObservationLog {
     const n = Math.max(0, Math.floor(Number(limit)) || 0);
     return this.#rows(
       `SELECT seq, at, actor_class, actor, authority_kind, authority, level, subject_kind, subject, state, governed,
-              condition, bound, terminal, result_kind, result_ref, detail
+              condition, bound, terminal, result_kind, result_ref, detail, read, disagree
          FROM observation_log WHERE authority_kind = ? AND authority IS ? ORDER BY seq LIMIT ?`,
-      String(kind), authority == null ? null : String(authority), n);
+      String(kind), authority == null ? null : String(authority), n).map(fieldsOf);
   }
 
   /** R9 — the earliest `at` at a level (the watermark §5.1's causes are read against), or null when the level has no
@@ -614,11 +628,11 @@ export class ObservationLog {
 
   /** R12 — the latest `extract` and `derive` rows of one capture at the content level, the two axes apart. */
   contentRows(captureSha) {
-    const q = (kind) => this.#one(
-      `SELECT state, condition, bound, detail, authority_kind, authority, actor_class, actor, at, seq
+    const q = (kind) => fieldsOf(this.#one(
+      `SELECT state, condition, bound, detail, read, disagree, authority_kind, authority, actor_class, actor, at, seq
          FROM observation_log
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ? AND authority_kind = ?
-        ORDER BY seq DESC LIMIT 1`, captureSha, kind);
+        ORDER BY seq DESC LIMIT 1`, captureSha, kind));
     return { extraction: q("extract"), index: q("derive") };
   }
 

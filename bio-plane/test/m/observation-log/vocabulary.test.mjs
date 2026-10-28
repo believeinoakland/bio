@@ -139,14 +139,15 @@ test("R12 contentAxisFor: the two axes never merged; no row is not_extracted onl
 test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586), numbers and codes as allocated, each `where` naming this module's site, each translation a sentence a member can read, each refusal the append answers carrying its row; C-54.2–C-54.12 are this module's rows, C-54.11 (LEAD_LOOK_NO_DETAIL) and C-54.12 (LEAD_SHARE_NO_REASON) DEC-88's, each answered at its site", () => {
   const want = { AI_LOG_STATE_UNKNOWN: "C-22.1", AI_LOG_GOVERNED_ABSENCE: "C-22.2", AI_LOG_SHELL_PRESENT: "C-22.3",
                  AI_RUN_CONDITION_UNKNOWN: "C-22.4", AI_LOG_NOT_A_BUNDLE: "C-22.6", OBS_AUTHORITY_UNNAMED: "C-22.9",
-                 OBS_PRESENT_NO_REFERENT: "C-22.10", AI_LOG_NEVER_LOOKED_STORED: "C-22.17" };
+                 OBS_PRESENT_NO_REFERENT: "C-22.10", AI_LOG_NEVER_LOOKED_STORED: "C-22.17",
+                 OBSERVATION_FIELD_MALFORMED: "C-22.32", OBSERVATION_FIELD_NOT_ALLOWED: "C-22.33" };
   assert.deepEqual(Object.fromEntries(Object.entries(ol.AI_RUN_CHECKS).map(([k, r]) => [k, r.check])), want);
   assert.equal(ol.OBSERVATION_CHECKS, ol.AI_RUN_CHECKS, "one object under both names");
   assert.deepEqual([...ol.OBSERVATION_CHECK_KEYS].sort(), Object.keys(want).sort());
   for (const [k, r] of Object.entries(ol.AI_RUN_CHECKS)) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], k);
     assert.ok(r.translation.trim().length >= 40, `${k}'s translation is a sentence, not a label`);
-    assert.match(r.where, /^src\/observation-log\/vocabulary\.mjs (checkObservation|checkCondition)\b/, `${k} names its site in this module`);
+    assert.match(r.where, /^src\/observation-log\/vocabulary\.mjs (checkObservation|checkCondition|checkObservationFields)\b/, `${k} names its site in this module`);
   }
   // every C-22 refusal the append answers carries the row's own number and translation, read from here
   const cases = {
@@ -154,6 +155,8 @@ test("R26 every C-22 row is this module's: AI_RUN_CHECKS held here whole (K586),
     AI_LOG_STATE_UNKNOWN: { state: "MAYBE" }, AI_LOG_NEVER_LOOKED_STORED: { state: "NEVER_LOOKED" },
     AI_LOG_GOVERNED_ABSENCE: { governed: true }, AI_LOG_SHELL_PRESENT: { state: "PRESENT", condition: "client-rendered-shell", result_ref: "c" },
     OBS_PRESENT_NO_REFERENT: { state: "PRESENT" }, AI_RUN_CONDITION_UNKNOWN: { state: "LOOKED_INDETERMINATE", condition: "no-such" },
+    OBSERVATION_FIELD_MALFORMED: { authority_kind: "run", read: { record: "r1", n: 4, total: 3, outcome: "answered" } },
+    OBSERVATION_FIELD_NOT_ALLOWED: { read: { record: "r1", n: 1, total: 3, outcome: "answered" } },
   };
   assert.deepEqual(Object.keys(cases).sort(), Object.keys(want).sort());
   for (const [k, over] of Object.entries(cases)) {
