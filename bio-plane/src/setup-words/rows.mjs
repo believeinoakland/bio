@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7538 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7560 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -27194,6 +27194,28 @@ export const WORD_ROWS = Object.freeze([
   ["strength.method.that_team","that team",null,null,false,"code"],
   ["strength.method.this_grading_method_version_is_not","this grading method version is not one that has been published, so the grade cannot be recomputed by it",null,null,false,"code"],
   ["strength.origins.no_date_settles_the_lines_between_them","no date settles the lines between them",null,null,false,"code"],
+  ["structured-text.cursor_mismatch","This place in the reading does not belong to this file, so the reading has to start again.",null,null,false,"code"],
+  ["structured-text.encoding_unsupported","This {kind} file is written in a text encoding that cannot be read.",null,null,false,"code"],
+  ["structured-text.events_over_limit","This calendar holds more than {bound} events, the limit, so the whole file was refused.",null,null,false,"code"],
+  ["structured-text.kmz_member_corrupt","The KML document inside this KMZ archive is damaged ({why}), so it was not read.",null,null,false,"code"],
+  ["structured-text.kmz_no_kml","This KMZ archive holds no KML document, so there is no map data in it to read.",null,null,false,"code"],
+  ["structured-text.kmz_unreadable","This KMZ archive could not be opened ({why}), so its map data was not read.",null,null,false,"code"],
+  ["structured-text.nesting_over_limit","This {kind} file nests values more than {bound} levels deep, the limit, so the whole file was refused (found at line {line}).",null,null,false,"code"],
+  ["structured-text.signal.declared","likely, not certain: a declared type is a claim, and no bytes were given to check it",null,null,false,"code"],
+  ["structured-text.signal.geojson","a GeoJSON object (its type, and features or a geometry)",null,null,false,"code"],
+  ["structured-text.signal.ics","a calendar file: its first line is BEGIN:VCALENDAR",null,null,false,"code"],
+  ["structured-text.signal.json","a JSON value",null,null,false,"code"],
+  ["structured-text.signal.json_stops","a JSON value that stops parsing at line {line}",null,null,false,"code"],
+  ["structured-text.signal.kml","an XML document whose root element is kml",null,null,false,"code"],
+  ["structured-text.signal.kmz","a ZIP archive holding the KML document {name}",null,null,false,"code"],
+  ["structured-text.signal.ndjson","one JSON value on each line",null,null,false,"code"],
+  ["structured-text.signal.srt","a caption file: a numbered cue and its times",null,null,false,"code"],
+  ["structured-text.signal.svg","an XML document whose root element is svg",null,null,false,"code"],
+  ["structured-text.signal.vcf","a contact file: its first line is BEGIN:VCARD",null,null,false,"code"],
+  ["structured-text.signal.vtt","a caption file: its first line is WEBVTT",null,null,false,"code"],
+  ["structured-text.signal.xml","an XML document whose root element is {name}",null,null,false,"code"],
+  ["structured-text.stopped_at_line","Read as far as line {line}: the {kind} file stops being valid there, and the rest of it was not read.",null,null,false,"code"],
+  ["structured-text.too_large","This {kind} file is {size} bytes, over the limit of {bound} bytes for this kind of file, so it was not read.",null,null,false,"code"],
   ["subresources.subresources.a_scheme_reference_is_not","a {scheme} reference is not something this surface fetches",null,null,false,"code"],
   ["subresources.subresources.a_viewer_must_be_able","a viewer must be able to verify every byte it substitutes against the record before showing it",null,null,false,"code"],
   ["subresources.subresources.and_earlier_capture_undetermined"," (and {count} earlier capture whose page the record does not name, counted as undetermined)",null,null,false,"code"],
