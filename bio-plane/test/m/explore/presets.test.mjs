@@ -1,7 +1,8 @@
 /* explore at its interface: the presets as kind sets of the one walk (R10, R15) and overlaps between two persons (R11). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { exploreOf, OVERLAP_SENTENCE, HUB_WORDS } from "../../../src/explore/index.mjs";
+import { exploreOf, OVERLAP_SENTENCE, HUB_WORDS, PRESET_RULES } from "../../../src/explore/index.mjs";
+import { exploreOps } from "../../../src/explore/ops.mjs";
 import { othersWords } from "../../../src/explore/presets.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
@@ -14,7 +15,7 @@ const strip = (r) => { const { preset, preset_note, elapsed_ms, owner_calls, ...
 
 test("R10 presets() answers each preset by name with its kind set as registered; a kind registered later joins with no change here", () => {
   const { x, registry } = make([]);
-  const p = Object.fromEntries(x.presets().map((e) => [e.name, e]));
+  const p = Object.fromEntries(x.presets().map((e) => [e.preset, e]));
   assert.deepEqual(Object.keys(p), ["chain", "flowsFrom", "relationsOf", "pathBetween", "overlaps"]);
   assert.deepEqual(p.chain.kinds, ["line:part_of", "line:reports_to", "line:oversees", "line:appoints", "line:funds", "holds_power"]);
   assert.deepEqual(p.flowsFrom.kinds, ["contribution", "payment"]);
@@ -25,7 +26,7 @@ test("R10 presets() answers each preset by name with its kind set as registered;
   const late = createRegistry();
   late.registerOwner({ owner: "money", kinds: [{ kind: "transfer", word: "moved money to", class: "evidentiary" }], neighbours: () => ({ items: [] }) });
   const lx = exploreOf(null, { registry: late });
-  assert.deepEqual(lx.presets().find((e) => e.name === "flowsFrom").kinds, ["transfer"]);
+  assert.deepEqual(lx.presets().find((e) => e.preset === "flowsFrom").kinds, ["transfer"]);
   assert.deepEqual(exploreOf(null, { registry: createRegistry() }).presets().map((e) => e.kinds), [[], [], [], [], []]);
   assert.ok(registry.owners().length);
 });
@@ -38,7 +39,7 @@ test("R10 R15 each preset is the one walk over its set: chain, flowsFrom (payer 
     conn("event_authorises", E1, E2, { id: "auth" }), conn("event_voted", A, E1, { id: "vote" }),
   ];
   const { x } = make(conns);
-  const kindsOf = (name) => x.presets().find((p) => p.name === name).kinds;
+  const kindsOf = (name) => x.presets().find((p) => p.preset === name).kinds;
   const c = x.chain({ from: A, at: AT, viewer: V });
   assert.equal(c.preset, "chain");
   assert.deepEqual(c.paths.map(ids), ["org", "org>power"]);
@@ -131,4 +132,25 @@ test("R11 R7 an overlap through a step the viewer may not see is not answered or
   // alice reaching the board from P alone counts only what she may see.
   const alice = x.overlaps({ a: P, b: ent(4), at: AT, viewer: V });
   assert.equal(alice.overlaps[0].others.held, 0);
+});
+
+test("R37 presets() answers each preset's plain-word name by key beside its kinds, and a preset runs by its id or by that name", () => {
+  const { x } = make([conn("line:part_of", ent(1), ent(2), { id: "org" })]);
+  const rows = x.presets();
+  assert.equal(rows.length, 5);
+  for (const row of rows) {
+    assert.equal(row.name, PRESET_RULES[row.preset].words, "the name is the words the key holds");
+    assert.ok(row.name.trim() !== "" && row.name !== row.preset, "a name a member can read, not the id");
+    assert.ok(row.kinds.length > 0);
+  }
+  assert.equal(new Set(rows.map((r) => r.name)).size, rows.length);
+  // control: running a preset by its name walks the same kind set as by its id
+  const run = (preset) => exploreOps(x, new URL("https://instance.example/?viewer=" + V), { preset, from: ent(1), at: AT }).explorepreset();
+  for (const row of rows.filter((r) => r.preset === "chain")) {
+    const { elapsed_ms: a, owner_calls: ac, ...byId } = run(row.preset);
+    const { elapsed_ms: b, owner_calls: bc, ...byName } = run(row.name);
+    assert.deepEqual(byName, byId);
+    assert.deepEqual(byId.paths.map(ids), ["org"]);
+  }
+  assert.equal(run("no such preset").refused, "UNKNOWN_PRESET");
 });

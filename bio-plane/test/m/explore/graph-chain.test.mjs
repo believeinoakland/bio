@@ -380,7 +380,7 @@ test("R14 exploreOps gains exploregraph, and exploreverify reads chain from the 
   const { x, d, ev } = chainWorld();
   const url = new URL(`https://instance.example/?viewer=${V}`);
   const ops = exploreOps(x, url, { centre: A, at: AT, viewer: "mallory" });
-  assert.deepEqual(Object.keys(ops).sort(), ["explore", "exploregraph", "explorepreset", "exploretimeline", "exploreverify"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["explore", "exploreall", "explorecontinue", "exploregraph", "explorepath", "explorepreset", "exploreshorter", "exploretimeline", "exploreverify"]);
   assert.deepEqual(strip(ops.exploregraph()), strip(x.neighbourhood({ centre: A, at: AT, viewer: V })));
   assert.equal(exploreOps(x, new URL("https://instance.example/"), { centre: A, at: AT, viewer: V }).exploregraph().refused, "VIEWER_MISSING");
   const v = exploreOps(x, url, { chain: [params(d), cited(ev)] }).exploreverify();

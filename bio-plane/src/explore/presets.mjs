@@ -14,16 +14,16 @@ export const othersWords = (held, settled) => localize('explore.presets.others_h
 
 /** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
 export const PRESET_RULES = Object.freeze({
-  chain: Object.freeze({ words: 'organisation chains', rules: [
+  chain: Object.freeze({ words: localize('explore.preset.chain', 'organisation chains'), rules: [
     { owner: 'lines', kinds: ['line:part_of', 'line:reports_to', 'line:oversees', 'line:appoints', 'line:funds'] },
     { owner: 'duties', kinds: ['holds_power'] },
   ] }),
-  flowsFrom: Object.freeze({ words: 'money trails', rules: [{ owner: 'money' }] }),
-  relationsOf: Object.freeze({ words: 'event links', rules: [
+  flowsFrom: Object.freeze({ words: localize('explore.preset.flows_from', 'money trails'), rules: [{ owner: 'money' }] }),
+  relationsOf: Object.freeze({ words: localize('explore.preset.relations_of', 'event links'), rules: [
     { owner: 'events', kinds: ['event_authorises', 'event_answers', 'event_amends', 'event_reverses', 'event_stated_cause', 'event_within'] },
   ] }),
   pathBetween: Object.freeze({ words: word('explore.words.path_between_two'), rules: [{ every: true }] }),
-  overlaps: Object.freeze({ words: 'overlaps', rules: [{ every: true }] }),
+  overlaps: Object.freeze({ words: localize('explore.preset.overlaps', 'overlaps between two people'), rules: [{ every: true }] }),
 });
 
 /** The kinds a preset names now, in registration order. @param {any} registry @param {string} name */
@@ -39,9 +39,23 @@ export function presetKinds(registry, name) {
   return out;
 }
 
-/** Each preset by name with its kind set as registered now (R10). @param {any} registry */
+/**
+ * Each preset with its kind set as registered now (R10), and the plain-word name a screen draws (R37): `name` the words
+ * by key, `preset` the id a caller sends back to run it (`words` is `name` as it was first answered).
+ * @param {any} registry
+ */
 export function presets(registry) {
-  return Object.keys(PRESET_RULES).map((name) => ({ name, words: /** @type {any} */ (PRESET_RULES)[name].words, kinds: presetKinds(registry, name) }));
+  return Object.keys(PRESET_RULES).map((preset) => {
+    const words = /** @type {any} */ (PRESET_RULES)[preset].words;
+    return { preset, name: words, words, kinds: presetKinds(registry, preset) };
+  });
+}
+
+/** The id of the preset a caller names by its id or by the plain-word name `presets()` answered (R37); null when it names none. @param {unknown} named */
+export function presetIdOf(named) {
+  const ids = Object.keys(PRESET_RULES);
+  if (typeof named !== 'string') return null;
+  return ids.find((id) => id === named) ?? ids.find((id) => /** @type {any} */ (PRESET_RULES)[id].words === named) ?? null;
 }
 
 /** The one walk over a preset's set. */

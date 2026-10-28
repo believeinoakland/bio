@@ -65,7 +65,7 @@ export const AT_DEPTH_MAX = 500;
  * never shown as a lead; one the viewer may not see is never answered by its owner, so the declared hop stands (R6, R7).
  * @param {any} registry @param {any} r a reader @param {string} node @param {any[]} items @param {string[]} kinds
  */
-function sourcedSteps(registry, r, node, items, kinds) {
+export function sourcedSteps(registry, r, node, items, kinds) {
   const sk = registry.kindOf(STEP_SOURCE);
   if (!sk) return items;
   const declared = new Set(items.filter((h) => registry.kindOf(h.kind)?.class === 'declared').map((h) => h.id));
@@ -226,7 +226,7 @@ export function describePath(registry, hops, by) {
 }
 
 /** An answer with no path states its level and what it could not read (R8, D59). */
-function absence(w, complete, unread) {
+export function absence(w, complete, unread) {
   const state = complete ? 'LOOKED_ABSENT' : 'LOOKED_INDETERMINATE';
   return {
     level: 'meaning', state, meaning: OBSERVATION_STATES[state],

@@ -29,7 +29,8 @@ export function kindsByOwner(registry, kinds) {
 /**
  * A reader for one exploration: as of `at`, for `viewer`, within `scope`, against the time budget.
  * @param {{registry: any, now: () => number, budget_ms: number, host?: any}} ctx
- * @param {{at: any, viewer: any, scope: string|null}} q
+ * @param {{at: any, viewer: any, scope: string|null, replay?: Set<string>}} q `replay`: the nodes a continued walk read in an earlier
+ *   slice (R33): read again as the record then stands, and the time they take is not charged to this slice's budget
  */
 export function makeReader(ctx, q) {
   const { registry, now, budget_ms } = ctx;
@@ -37,6 +38,7 @@ export function makeReader(ctx, q) {
   const s = { hubs: [], fanout: [], refusals: [], unread: [], calls: 0, stop: /** @type {string|null} */ (null), stop_node: /** @type {string|null} */ (null) };
   const elapsed = () => Math.max(0, Math.round(now() - t0));
 
+  let replayed = 0; // time spent on nodes read again, not charged against the budget (R33)
   const unreadSeen = new Set();
   const hub = (node, owner, kind, h) => ({ node, owner, kind, bound: hubBoundOf(kind), set_size: h.set_size, why: h.why, words: HUB_WORDS });
 
@@ -52,9 +54,11 @@ export function makeReader(ctx, q) {
     const most = kinds.reduce((n, k) => n + hubBoundOf(k), 0);
     let page;
     for (;;) {
-      if (now() - t0 > budget_ms) { s.stop = 'time'; s.stop_node = node; return null; }
+      if (now() - t0 - replayed > budget_ms) { s.stop = 'time'; s.stop_node = node; return null; }
       s.calls++;
+      const before = q.replay?.has(node) ? now() : null;
       const a = registry.neighbours({ owner, node, kinds, at, page, viewer: q.viewer, scope: q.scope, host: ctx.host });
+      if (before !== null) replayed += now() - before;
       if (isRefusal(a)) { s.refusals.push({ owner, node, refused: a.refused, why: a.why }); return null; }
       if (Array.isArray(a.unread)) for (const u of a.unread) {
         if (!isObj(u)) continue;
@@ -112,5 +116,7 @@ export function makeReader(ctx, q) {
     return withinBounds(owner, node, items);
   }
 
-  return { read, s, elapsed, complete: () => !s.stop && !s.hubs.length && !s.fanout.length && !s.refusals.length };
+  /** The time this reader has used against its budget: the time since it began, less what nodes read again took (R33). */
+  const spent = () => Math.max(0, now() - t0 - replayed);
+  return { read, s, elapsed, spent, complete: () => !s.stop && !s.hubs.length && !s.fanout.length && !s.refusals.length };
 }
