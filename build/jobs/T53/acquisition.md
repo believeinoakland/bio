@@ -1,6 +1,6 @@
 # acquisition (T53)
 
-**Status** · session_018BhcefbymZskaMPXAgDmRQ · depth 2 · WORKING
+**Status** · session_018BhcefbymZskaMPXAgDmRQ · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-28)
@@ -37,3 +37,40 @@
 
 Tests: 402/402. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcefbymZskaMPXAgDmRQ): test runs 1, module lines 5850
+
+## Completion (2026-10-28)
+
+# acquisition · T53 · R1 · report
+
+**Entries applied**
+
+- T53-526 · format-registry's finding (T53-42, R38, R39): "known" is read by the answer's kind, never by `format !== "undetermined"`. `index.mjs` re-states the Drive hop's detection (`isNamedKind`: an unlisted answer with no name, `refused` and `undetermined` say nothing; `text` is a text capture) and the past-the-read profile (a bare `text` from the bytes does not override a declared type that names a format, as it does not for a buffer read whole). The R98 title read also accepts a page served as HTML whose bytes read as well-formed XML. The four tests changed (`acquire` R17, `fix5` R101, `r9-format-range` R101, `unpack` R17 R10) read the answer's `format` by kind.
+- T53-527 · `CAPTURE_MAX` is 500 MB: `acquire.test.mjs` (R10, twice) and `budgets.test.mjs` read `boundOf` (`archive.uploaded_bytes`, `archive.depth`, `archive.unpacked_bytes`, `archive.members`), never a number.
+- T53-97 · K5513 (C22) · R36, R130, R131, R134: `keyedFetch` takes a `purpose` from `KEYED_PURPOSES` (`citation-lookup`, `docket-entries`, `officers-lookup`); a machine viewer is `NOT_PERMITTED` unless it is the daily check of a followed case (`docket-entries`, `courtlistener`, `standing: {follow}`, the store's `followStanding({follow, service})` answering that a member still follows it), once a UTC day for each case (`ALREADY_CHECKED_TODAY`), within `POLL_SHARE_DEFAULT` (0.8) of the day's stated limit and only for a service with a stated daily limit. Every call sent is counted in the durable table `keyed_calls`; a call that would pass a stated minute, hour or day limit is `RATE_HELD` with `retry_in_ms` and sends nothing; `keyedServiceUsage(store, {service})` states the counts and limits. `keyedCapture` files the answer (R137): one capture, a `direct` receipt, one hop, the follow as authority, `existed` on identical bytes.
+- T53-547 · K5666 · the officers lookup's service id is `ca-officers` (credentials R84): its host is the one the active profile's officers register states (the `company` query template's register, its system's hosts), its limits that system's `rate_limits`; the key rides the `ocp-apim-subscription-key` header.
+- T53-98 · N1266, N1267 · R138, R139: a file `format-registry` answers `refused` is not filed, as a fetch (the head of the body is read, 40 KiB, before anything is stored; the stream is cancelled; 415 `FILE_TYPE_REFUSED`, C-139.22) or as an archive's entry or a message's attachment (`not_filed`, same code, no receipt, no document); the type and the reason are the word table's (`file.kind.*`, `file.refused.reason.*`). An `unlisted` file is filed whole; its profile carries `held_unread {state: "held-unread", named, kind_key, text}`.
+- T53-99 · K5574 · R140: a challenge or CAPTCHA in place of the document is recognised at the fetch (`challenge.mjs`: the `cf-mitigated: challenge` header, or the page's own text: Cloudflare's, DataDome's, PerimeterX's, Incapsula's; a CAPTCHA widget only on an error answer or a small page that asks for the person), refused 403 `SITE_ASKS_FOR_PERSON` (C-139.23) naming the address, never filed, never worked around (one request), and counted for the host (`personChecksFor(store, {host})` answers `{host, count, last_at}`). It holds for `acquire` (the capture-request arm included), `streamRegister`, `probeRegister` (the header: it makes no body request) and `keyedFetch`/`keyedCapture`. A page that merely carries a protection script or a form widget is filed.
+- T53-100 · N1259, K4403, K1485 · CAPABILITIES rows: R125, R128, R129, R132, R133 (`register.mjs`: `streamRegister`, `probeRegister`, `sourceChanged`); R130, R131, R134 (above); R135 `limitsByKind`; R136 `fileMember` and the `member` job row (`member.mjs`; R38 registers each entry's row inside the function that records its outcome and arms the plane after); R137 `keyedCapture`. R126 and R127: built and tested, but with two limits stated below.
+- T53-101 · K5565 · English in tests: the 24 sites in 10 files (acquire, checks, dec149, grades, keyed, memento, origin, profile, subresources-walk, unpack) read the key the product reads (`word(id, vars)`); B sites got keys in the module (`acquisition.index.the_workers_runtime_does_not`, `call_op_acquire_again_with`, `the_stored_bytes_were_not`); the banned-voice phrases and the made-up recogniser's marker are test input data. The words check with this module's files out of `build/tests-english-baseline.json` is clean for acquisition, so BOB removes the ten files from the baseline at merge (outside this module's paths).
+
+- P9 · FILE-SAFETY's finding (K5706): `archiveList` of an archive no unpack has opened loaded the whole object. Cause: `partsSource` read each stored part whole, and an archive held whole is one part (a 104 MiB ZIP: one 104 MiB read, about 313 MiB above idle with its copies). A part past `MULTIPART_KEEP_MAX` (32 MiB) is now read by range, only the window asked for. Measured on a 104 MiB ZIP held whole: before, one unranged read of 109,052,105 bytes; after, none (reads of at most 1 MiB, 12 in all). A part within 32 MiB is read whole as before (R48's read count unchanged). Test: `t53-list-unopened.test.mjs`.
+
+**Not done, and why**
+
+- **R127** is not met. A slice stops at a segment boundary and a resumed run gives the digests, counts and original fingerprint of an uninterrupted one, each segment stored once, a deflate member answering `member_start`. But `register-readers`' `createReducer` cannot hand back its carry (the unfinished row, the row number, the hashes), so a resume reads the piece again from its start and stores nothing twice (`checkpoint` is always `member_start`; never `offset`). The repeated work is the reading of the stored prefix, not at most the segment in progress.
+- **R126** is not met as written: `READ_BOUNDS` has no `register` rows (`runtime-limits` R47 waits on M-R7). `REGISTER_STREAM_MAX` and `REGISTER_SEGMENT_MAX` quote them when they exist and are `null` until then; with `null` and no figure handed in (`opts.bounds`, the tests' seam) `streamRegister` fetches nothing (`REGISTER_LIMITS_NOT_RECORDED`).
+- **R138** is half: acquisition files an unlisted file whole and states "held, not read: {name}" (`profile.held_unread`); the owed state that resolves when the roster gains the type (the job table's `held-unread` verdict, re-run) is `reading-pipeline`'s and the job table's, not proved here.
+- **R130:** the docket address is composed by the caller (`following`, from the profile's template, `queryAddress`); `keyedFetch` fences it to the service's host. `poll_share` is the constant `POLL_SHARE_DEFAULT`: `jurisdictions` R132's `rate_limits` has no such field.
+- The tests' pins in `store-assembly` (`JOB_KINDS`, R102) already hold `member` in this tranche; nothing of theirs changed here.
+
+**Found in other modules**
+
+- `register-readers` R9: `createReducer` offers no `snapshot()`/resume, so R127's offset checkpoint cannot be built; and `createRowParser` reads a separate header file in the DATA piece's delimiter, not its own piece's (a comma header file for a pipe-separated data file fails `column_missing`): worked around in `register.mjs` (`headerInDelimiter`), the module should read it in the header piece's delimiter.
+- `runtime-limits` R47: the two `register` rows are not in `READ_BOUNDS` (M-R7 not recorded).
+- `plane`/`following` seams to wire: `store.followStanding({follow, service})` (keyed daily check), `store.registerJob` and `armJobs` already read by R116; a tick for a `member` row calls `fileMember(store, row.detail)`; `capture` R117's `emailCapture` registers its attachments' rows with `memberRow(...)`.
+- Numbers BOB confirms: C-139.22 (`FILE_TYPE_REFUSED`), C-139.23 (`SITE_ASKS_FOR_PERSON`, R140's), C-139.24 (`MEMBER_NOT_CUT`); the new codes `ALREADY_CHECKED_TODAY`, `RATE_HELD`, `UNKNOWN_KEYED_PURPOSE`, `REGISTER_LIMITS_NOT_RECORDED`, `RESUME_MISMATCH`, `RESUME_DIVERGED`, `RANGE_UNSUPPORTED`, `REFRESH_UNCHANGED`; the `ca-officers` key header (`ocp-apim-subscription-key`, the state's gateway; not verified against the state's documentation).
+
+**Met** · R36, R38, R125, R128, R129, R130, R131, R132, R133, R134, R135, R136, R137, R139, R140
+
+Tests: 403/403. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcefbymZskaMPXAgDmRQ): test runs 2, module lines 5861
