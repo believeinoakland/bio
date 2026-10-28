@@ -13,6 +13,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0 } from "./fixture.mjs";
 import { PROJECTION_RELATION } from "../../../src/retrieval/index.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { MEANING, cachedNotes, compile } from "../../../src/query.mjs";
 
 /* The old suite's corpus: two documents, five inquiries (two carrying hunch debt, one of them twice, one argued the
@@ -174,10 +175,7 @@ test("R16: the syntax sentences name the meaning arms a member would type — le
   const f = world().retrieval.searchFields();
   const s = f.syntax.find((x) => x.includes("leg:hunch"));
   assert.ok(s, "a sentence names leg:hunch");
-  assert.match(s, /hunch debt/);
-  assert.match(s, /resolves:/);
-  assert.match(s, /concerns:/);
-  assert.match(s, /RECORD grain/);
+  assert.equal(s, WORD("retrieval.syntax.leg_resolves_concerns"));
   assert.deepEqual(Object.keys(MEANING).filter((a) => a in f.fields), []);
 });
 
