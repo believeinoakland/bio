@@ -84,6 +84,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - T53-101 · K5565 · English in tests: its entry
 - T53-526 · format-registry's finding (T53-42, R38, R39) · "known" is not `format !== "undetermined"`
 - T53-527 · runtime-limits, `archive.uploaded_bytes` · CAPTURE_MAX is 500 MB
+- T53-547 · K5666 · the officers lookup's `keyedFetch` service id is `ca-officers` (credentials R84)
 - rows: `build/plan/T53-R1/acquisition.md`
 **capture**
 - T53-102 · K5513 (C22) · daemon fetch only for a followed case
@@ -312,6 +313,7 @@ Closed (K5663); its entries moved whole to `build/plan/archive/T53-R1-layer1-mer
 - rows: `build/plan/T53-R1/question-explorer.md`
 **answers**
 - T53-217 · K5565 · English in tests: its entry
+- T53-548 · K5666 · `ASK_SCOPE` gains `aicredential`, as credentials' `AI_GRANT_OPS` (scope.test.mjs R1)
 - rows: `build/plan/T53-R1/answers.md`
 **agent-steps**
 - T53-218 · K5457 · entry by need, Gate 1 per part, `idem`
