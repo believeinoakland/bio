@@ -72,6 +72,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **bundler**
 - T53-30 · K5457 · agent Worker `HEALTH` object; `deleted_classes` `RemoteSession`
 - T53-31 · K5565 · English in tests: its entry
+- T53-523 · reader-container's report (K5448 (4)) · enrol `reader-container` as a fleet member
 - rows: `build/plan/T53-R1/bundler.md`
 **court-citations**
 - T53-32 · K5565 · English in tests: its entry
@@ -88,6 +89,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **mail-reader**
 - T53-36 · N1266 (K5435, K5437) · EML, MSG, MBOX; attachments as members
 - T53-37 · CAPABILITIES · CAPABILITIES rows
+- T53-525 · the other side of T53-524 · `mail-reader` drops its `cfb.mjs` for ooxml's exported reader
 - rows: `build/plan/T53-R1/mail-reader.md`
 **csv-reader**
 - T53-505 · K5530 F4, K5571 · the record walk promoted to a service (R28) for register-readers
@@ -163,12 +165,15 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 **file-scanner**
 - C T52-100
 - T53-64 · K5565 · English in tests: its entry
+- T53-520 · K5629, R37; reader-container's finding · the renderer's profile blocks linked pictures (a render fetches nothing)
+- T53-521 · req-ahead-T52, FILE-SAFETY #1 (K5384) · R36 into `build/requirements/file-scanner.md`
 - rows: `build/plan/T53-R1/file-scanner.md`
 **reader-container**
 - T53-65 · N1266, N1267 · conversion readers, archives as streams
 - rows: `build/plan/T53-R1/reader-container.md`
 **ooxml**
 - T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
+- T53-524 · mail-reader's report (improvement) · export the MS-CFB reader
 ## Layer 2
 
 **member-roster**
@@ -234,6 +239,8 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-99 · K5574 · same recognition if it fetches directly
 - T53-100 · N1259, K4403, K1485 · CAPABILITIES rows
 - T53-101 · K5565 · English in tests: its entry
+- T53-526 · format-registry's finding (T53-42, R38, R39) · "known" is not `format !== "undetermined"`
+- T53-527 · runtime-limits, `archive.uploaded_bytes` · CAPTURE_MAX is 500 MB
 - rows: `build/plan/T53-R1/acquisition.md`
 **capture**
 - T53-102 · K5513 (C22) · daemon fetch only for a followed case
@@ -277,6 +284,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-125 · N1272 · CAPABILITIES rows
 - T53-126 · DEC-479 (51) · count of words below the reader's own clarity
 - T53-127 · K5565 · English in tests: its entry
+- T53-528 · format-registry's finding · the 14 tests and their five sites
 - rows: `build/plan/T53-R1/reading-pipeline.md`
 **extraction**
 - T53-128 · N1272 (K5445) · interpretation, own proposals (no AI)
@@ -290,6 +298,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-134 · DEC-454 · `content.extent` part key in words
 - T53-135 · N1259, K4403 · CAPABILITIES rows
 - T53-136 · K5565 · English in tests: its entry
+- T53-529 · text-chain's finding (R107, DEC-464) · seven tests pin the old typed grading `[owed: BOB writes its requirement line before START]`
 - rows: `build/plan/T53-R1/content.md`
 ## Layer 5
 
@@ -303,6 +312,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-141 · N1259 · CAPABILITIES rows
 - T53-142 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-143 · K5565 · English in tests: its entry
+- T53-530 · court-doctypes' finding (N1259-c R38, R29) · `followedRegister` takes only three keys and keys an event by content type `[owed: BOB confirms N1259-c R38's keys before START]`
 - rows: `build/plan/T53-R1/events.md`
 **local-facts**
 - T53-144 · N1257 (K5451) · a team writes its own layers
@@ -448,6 +458,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-212 · N1257 · guides side by side per layer
 - T53-213 · N1257, N858, K5508 · CAPABILITIES rows
 - T53-214 · K5565 · English in tests: its entry
+- T53-531 · jurisdictions R126 (N858) · check that the guide offer calls `attributionLacks` `[owed: BOB writes its requirement line before START]`
 - rows: `build/plan/T53-R1/reading-guides.md`
 **skills**
 - T53-215 · K5565 · English in tests: its entry
@@ -627,6 +638,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-301 · K5528 · `attributionLacks`, `second_approval` `[owed: BOB writes]`
 - T53-302 · K5528 · CAPABILITIES rows
 - T53-303 · K5565 · English in tests: its entry
+- T53-532 · jurisdictions R126 · R15 and R35 against R126 `[owed: BOB rewords R15 and R35 to cite R126 before START]`
 - rows: `build/plan/T53-R1/filing-templates.md`
 **filings**
 - T53-304 · K5527 (4) · R29 template `sha` equals counted review
@@ -771,6 +783,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-372 · N1259, N824 · CAPABILITIES rows
 - T53-373 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-374 · K5565 · English in tests: its entry
+- T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
@@ -924,6 +937,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-458 · N1257, N858 · CAPABILITIES rows
 - T53-459 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-460 · K5565 · English in tests: its entry
+- T53-533 · jurisdictions R105 (N1257, DEC-404) · `help-records.mjs` picks the chosen law's block
 - rows: `build/plan/T53-R1/screens-action.md`
 **control-plane**
 - T53-461 · N1264, K4599 · routes `screenread`, folded admission
@@ -936,6 +950,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - T53-464 · K5006 · reds: first settle, then fix
 - T53-465 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-466 · K5565 · English in tests: its entry
+- T53-536 · reader-container's report · the routing of `reader-container` as a fleet member
 - rows: `build/plan/T53-R1/control-plane.md`
 **plane**
 - T53-467 · N1264, K4599 · routes `screenread`, folded admission
@@ -970,6 +985,7 @@ T53 is the beta's build. By Bob's direction (K5417) nothing is built until the b
 - C T52-95
 - T53-486 · N1265, K5449, DEC-416 · CAPABILITIES rows
 - T53-487 · K5565 · English in tests: its entry
+- T53-535 · runtime-limits R38, PL25 · the copy declares `{design_stage, cf_plan}` in the shape `levelOf` reads
 - rows: `build/plan/T53-R1/installer.md`
 **site**
 - C T52-96
