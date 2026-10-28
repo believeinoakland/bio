@@ -3,9 +3,8 @@
    R44), driven over the test's host. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, REASON, codeOf } from "./fixture.mjs";
+import { seeded, V, MACHINE, REASON, codeOf, wordRx, wordTextRx } from "./fixture.mjs";
 import { COURT_LINKS, TREATMENTS, LINK_TARGET_KINDS, CONNECTION_KINDS, LAW_RELATIONS_CHECKS } from "../../../src/law-relations/index.mjs";
-import { wordRx, wordTextRx } from "../../word-rx.mjs";
 
 const rowOf = (r, code) => assert.deepEqual([r.check, r.translation], [LAW_RELATIONS_CHECKS[code].check,
                                                                        LAW_RELATIONS_CHECKS[code].translation], code);

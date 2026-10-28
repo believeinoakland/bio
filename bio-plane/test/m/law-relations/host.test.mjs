@@ -2,9 +2,8 @@
    Driven over the test's host, with no `standards` table held. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, seeded, V, MACHINE, REASON, codeOf } from "./fixture.mjs";
+import { world, seeded, V, MACHINE, REASON, codeOf, wordTextRx } from "./fixture.mjs";
 import { LawRecords, HOST_READS, LAW_TABLES, LAW_RELATIONS_CHECKS, LAW_CODES, MODULE } from "../../../src/law-relations/index.mjs";
-import { wordTextRx } from "../../word-rx.mjs";
 
 const NAMES = ["law_relations", "court_links", "court_treatments", "law_withdrawals", "law_proposals"];
 

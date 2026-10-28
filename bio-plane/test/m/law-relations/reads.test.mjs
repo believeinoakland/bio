@@ -3,13 +3,12 @@
    the test's host. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, REASON, codeOf } from "./fixture.mjs";
+import { seeded, V, REASON, codeOf, wordRx, wordTextRx } from "./fixture.mjs";
 import { LawRecords, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD, LAW_RELATIONS, COURT_LINKS, weakestCeiling }
   from "../../../src/law-relations/index.mjs";
 import { ownerConformance, createRegistry, derivedId, BOUNDS, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { wordTextRx } from "../../word-rx.mjs";
 
 const rel = (w, type, from, to, citation, effective, by = "bob") => {
   const r = w.law.lawRelate({ type, from, to, citation, ...(effective ? { effective } : {}), reason: REASON, author: V(by), viewer: V(by) });
