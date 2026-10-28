@@ -8,6 +8,7 @@ public and was fetched without an account. Provenance, not a place in code (`bui
 | --- | --- | --- |
 | `courtlistener-4214664-p2.html` | `https://www.courtlistener.com/docket/4214664/national-veterans-legal-services-program-v-united-states/?page=2` | docket 4214664, page 2 of 4: 100 rows, 49 unnumbered (minute) entries, a sealed and two unsealed rows |
 | `courtlistener-4214664-p4.html` | the same, `?page=4` | page 4 of 4: 27 rows |
+| `courtlistener-api-4214664-ASSUMED.json` | none | **ASSUMED**, not captured: CourtListener's docket-entries answer in the shape assumed from its published description, carrying the 27 entries of docket 4214664 page 4 as the HTML fixture states them (8 unnumbered); to be replaced by a member's own authenticated call (M-R9; R18) |
 | `courtlistener-404.html` | `https://www.courtlistener.com/docket/4214664/` (no slug) | CourtListener's error page (HTTP 404) at a docket address |
 | `courtlistener-sign-in.html` | `https://www.courtlistener.com/sign-in/` | CourtListener's sign-in page |
 | `cpuc-A2106021-card.html` | `https://apps.cpuc.ca.gov/apex/f?p=401:56:0::NO:RP,57,RIR:P5_PROCEEDING_SELECT:A2106021` | the proceeding card of A2106021 |
@@ -17,4 +18,4 @@ public and was fetched without an account. Provenance, not a place in code (`bui
 | `ecourt-search.html` | `https://eportal.alameda.courts.ca.gov/?q=node/388` | the portal's search page |
 | `ecourt-roa-FICTIONAL.html` | none | **FICTIONAL**, built from the portal's stated fields; to be replaced by a member's own capture (K1492; R7, R16) |
 
-Rows, keys and numbers as a member reads them are asserted in `../readers.test.mjs`.
+Rows, keys and numbers as a member reads them are asserted in `../readers.test.mjs`, and the assumed answer's in `../api.test.mjs`.
