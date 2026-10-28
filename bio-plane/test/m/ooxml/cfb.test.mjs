@@ -1,4 +1,4 @@
-/* ooxml's MS-CFB reader as a service (T53-524; K5629): `readCfb`, `hasCfbMagic` and `CFB_MAGIC`, the one reader of a compound file for the
+/* ooxml's MS-CFB reader as a service (R39; T53-524; K5629): `readCfb`, `hasCfbMagic` and `CFB_MAGIC`, the one reader of a compound file for the
  * VBA project read here and for an Outlook MSG in `mail-reader`. The files are written by ./cfb.mjs from MS-CFB, independent of the module. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -8,7 +8,7 @@ import { makeCfb, makeVbaProject } from "./cfb.mjs";
 const latin1 = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
 const bytesOf = (n, seed) => new Uint8Array(n).map((_, i) => (i * 31 + seed) & 255);
 
-test("T53-524 readCfb gives the root, each storage's children in directory order and each stream's bytes, mini and regular", () => {
+test("R39 T53-524 readCfb gives the root, each storage's children in directory order and each stream's bytes, mini and regular", () => {
   const small = bytesOf(100, 1), exact = bytesOf(4095, 2), big = bytesOf(9000, 3), empty = new Uint8Array(0);
   const { bytes } = makeCfb({ Top: small, Folder: { inner: exact, deeper: { leaf: big } }, Zero: empty });
   const cfb = readCfb(bytes);
@@ -29,7 +29,7 @@ test("T53-524 readCfb gives the root, each storage's children in directory order
   assert.deepEqual(cfb.children(named(top, "Top")), []);
 });
 
-test("T53-524 readCfb refuses what is not a well-formed compound file with null, and never throws", () => {
+test("R39 T53-524 readCfb refuses what is not a well-formed compound file with null, and never throws", () => {
   const good = makeVbaProject({ modules: [{ name: "M", source: "Sub AutoOpen()\r\nEnd Sub" }] });
   for (const bad of [undefined, null, "text", [1, 2, 3], new Uint8Array(0), latin1("not a compound file"), new Uint8Array(4096), good.bytes.subarray(0, 511)]) {
     assert.equal(readCfb(bad), null, String(bad));
@@ -52,7 +52,7 @@ test("T53-524 readCfb refuses what is not a well-formed compound file with null,
   assert.ok(readCfb(good.bytes));
 });
 
-test("T53-524 hasCfbMagic is true iff the first eight bytes are the compound-file signature; CFB_MAGIC is that signature, frozen", () => {
+test("R39 T53-524 hasCfbMagic is true iff the first eight bytes are the compound-file signature; CFB_MAGIC is that signature, frozen", () => {
   assert.deepEqual([...CFB_MAGIC], [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
   assert.ok(Object.isFrozen(CFB_MAGIC));
   const file = makeCfb({ a: bytesOf(10, 4) }).bytes;
@@ -62,10 +62,40 @@ test("T53-524 hasCfbMagic is true iff the first eight bytes are the compound-fil
   for (const bad of [null, undefined, "x", [0xd0, 0xcf], new Uint8Array(8), Uint8Array.of(...CFB_MAGIC.slice(0, 7), 0)]) assert.equal(hasCfbMagic(bad), false, String(bad));
 });
 
-test("T53-524 readCfb is pure: the same bytes give the same answer, and the bytes are not changed", () => {
+test("R39 T53-524 readCfb is pure: the same bytes give the same answer, and the bytes are not changed", () => {
   const { bytes } = makeCfb({ s: bytesOf(5000, 5), t: bytesOf(60, 6) });
   const before = bytes.slice();
   const one = readCfb(bytes), two = readCfb(bytes);
   assert.deepEqual(one.children(one.root).map((e) => [e.name, one.stream(e).length]), two.children(two.root).map((e) => [e.name, two.stream(e).length]));
   assert.deepEqual(bytes, before);
+});
+
+test("R39 T53-524 readCfb answers null for a stream cut short, a stream whose chain loops, a size the chain cannot hold, and a loop in any storage", () => {
+  const dirEntry = (n) => 512 * (dirSector + 1) + 128 * n;
+  const { bytes: good, dirSector, fatOffset } = makeCfb({ F: { x: bytesOf(10, 7), y: bytesOf(10, 8) }, big: bytesOf(9000, 9) });
+  const names = makeCfb({ F: { x: bytesOf(10, 7), y: bytesOf(10, 8) }, big: bytesOf(9000, 9) }).entries;
+  assert.ok(readCfb(good));
+  const patch = (at, value) => { const b = good.slice(); new DataView(b.buffer).setUint32(at, value, true); return b; };
+  const big = names.indexOf("big"), x = names.indexOf("x");
+  const start = new DataView(good.buffer, good.byteOffset).getUint32(dirEntry(big) + 0x74, true);
+  // a regular stream whose chain ends before its stated size, and a stated size far past anything the chain holds (never allocated)
+  assert.equal(readCfb(patch(dirEntry(big) + 0x78, 9000 + 512 * 40)), null);
+  assert.equal(readCfb(patch(dirEntry(big) + 0x78, 0x7fffffff)), null);
+  // a stream chain that loops on itself, and one cut by the file ending (the stream's first sector past the last)
+  assert.equal(readCfb(patch(fatOffset + 4 * start, start)), null);
+  assert.equal(readCfb(patch(dirEntry(big) + 0x74, 9999)), null);
+  // a storage below the root whose own tree loops: the whole file is refused, not only the storage
+  assert.equal(readCfb(patch(dirEntry(x) + 0x48, x)), null);
+  assert.equal(readCfb(patch(dirEntry(x) + 0x44, x)), null);
+});
+
+test("R39 T53-524 readCfb gives the shapes a caller keeps: entry fields, a stream for no storage, a storage's [] for no children", () => {
+  const { bytes } = makeCfb({ Empty: {}, S: bytesOf(70, 10) });
+  const cfb = readCfb(bytes);
+  const [empty, stream] = ["Empty", "S"].map((n) => cfb.children(cfb.root).find((e) => e.name === n));
+  assert.deepEqual(Object.keys(stream).sort(), ["child", "id", "left", "name", "right", "size", "start", "type"]);
+  assert.deepEqual([empty.type, stream.type, stream.size], [1, 2, 70]);
+  assert.deepEqual(cfb.children(empty), []);
+  assert.deepEqual(cfb.children(stream), []);
+  assert.equal(cfb.stream(empty), null);
 });
