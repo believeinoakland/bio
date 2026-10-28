@@ -98,6 +98,9 @@ Rows (T45), C-124's next numbers at the job's stamp, translations BOB's drafts a
 **noSuchPlan(planId, extra?) → refusal**
 - **R22** The one answer to "no plan the caller may read answers to this id", in `standards` R17's form, its catalogue row this module's.
 
+**A retried proposal: optionPropose with `idem`** (T53)
+- **R55** (T53; AIR28, BR27; K5571 (6); `agent-steps` R54; amends R11) *(not yet met: T53)* **A retried `optionPropose` of a run stores one proposal.** `optionPropose` accepts an `idem` (`<run>:<pass>:<step>:<n>`), identical when the agent's step re-runs after a stop. A call carrying an `idem` this principal has already sent answers the first call's answer verbatim with `repeated: true` and stores no second proposal; a call whose candidate changed carries a new `idem` and stores its own. A call with no `idem` is R11's as today. Test: propose with an `idem`, repeat it: one stored proposal, the second answer `repeated: true`. Control: a changed candidate with a new `idem` stores a second proposal; a member's `optionpropose` still records her own proposal and opens no run.
+
 ## Private
 
 ### Uses

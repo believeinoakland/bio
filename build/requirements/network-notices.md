@@ -10,7 +10,7 @@
 
 This module lets a project's owner tell the network that the group is working on something, and it keeps that notice honest. A notice is prepared from a real project and signed in the browser by one of the project's owners, as a published case is signed. It is published at the group's own public address.
 
-The copy computes what the owner cannot honestly assert alone, and signs those facts with its own instance key: the activity level, re-signed monthly, the cases the project has published, the seals opened, and the closing or lapse of the notice. The module seals each week of a project's work under an independent timestamp, and opens the seals that relate to a case when the case is published. It serves the group's public signing keys without names. It sends nothing anywhere. Directories read what it publishes.
+The copy computes what the owner cannot honestly assert alone, and signs those facts with its own instance key: the activity level, re-signed monthly, the cases the project has published, the seals opened, and the closing or lapse of the notice. The module seals each week of a project's work under an independent timestamp, and opens the seals that relate to a case when the case is published. It serves the group's public signing keys without names. It sends nothing anywhere. The network pages read what it publishes.
 
 ### Provides
 
@@ -144,7 +144,11 @@ Terms.
   - any `monthly` attestation missed for want of a key (R13);
   - its sealed weeks (week, seal, and whether timestamped), never the salts;
   - `methodVersion` (R10).
-- **R23** `directorySubmission({case, edition, viewer})` answers the fields of a directory submission after publication, prefilled: the case's public link, title and summary, and the group slug. A member copies them or opens them. It sends nothing.
+- **R23** *(not yet met: T53)* (T53; K5507, K5527; N1110; amends R23, Purpose, R30, and `site`'s Listed groups note) `directorySubmission({case, edition, viewer})` (the op name is unchanged) answers the fields of a **submission of a published case to the network pages**, prefilled: the case's public link, title and summary, and the group slug. The network pages are the pages the holder of the network domains keeps outside Civicsmith, which read groups' signed notices (Publication §5B); they are not the directory of groups, which is the stewards' hand-kept list on civicsmith.org (`site`), and nothing in this requirement lists, requests, declines or removes a listing there (a group's request to be listed is R32's `listingRequest`). A member copies the fields or opens them. It sends nothing, and the answer names no network domain. Test: the answer's keys are exactly `ok, group, case, edition, link, title, summary, sends`, with no `listed`, `request` or `contact` key; a case with no published edition is `NO_PUBLISHED_EDITION`; no network call is made; the answer holds no domain; the requirements text of R30 and Purpose contains no "directory" (a grep test on the file). Control: behaviour unchanged for every input R23 had.
+
+#### T53 additions
+
+- **R32** (T53; N1110, K5507, K5530 B2, K5532; DEC-132 (3), DEC-247; outward-act warning, principle 4.5) *(not yet met: T53)* **`listingRequest({viewer})` prefills a group's request to be listed on civicsmith.org.** For an administrator (`member-roster` R23; not "at `FULL` sight", which is a project's sight, `membership` R44), it answers the fields of the request: the group's display name, its place, its focus, and its published cases as the site's row shows them (`site` R4), each only if the group has set it public (DEC-132 (3); the focus and its `public` visibility are `member-roster` R44–R45's `groupDescription`; UNVERIFIED: no requirement read holds a group's "place" as a field of the description, so `place` is omitted from the answer when no field holds it). The display name is `instance-setup`'s (layer 11), which this module (layer 8) cannot use: the layer-11 door passes it in. An administrator copies the fields or opens the stewards' address with them. The answer also carries `contact`, an optional line the stewards may use to reply to the group by their own mail (K5530 B2, `stewards` R26, R-D2a's `contact?`). It is empty in the answer: the product does not fill it from any member's account, address or roster row (a member's email is not the group's contact); the administrator types a line of their choosing into the prefilled request, or leaves it blank, and the line goes only in the message the administrator sends the stewards (or the stewards' request door, `stewards` R-D2a), never to the site. `listingRequest` sends nothing, calls nothing and records nothing, so the product keeps no copy of it: the contact line exists only in the request the administrator sends, then in the stewards' store, erased with `stewards` R15's retention (`stewards` R-D2d). The line is never published: no field of `site` R4's row, of the listed-groups register's public output, of any status or of any answer to a visitor carries it. The act carries the outward-act warning that the people the group examines will see what it is watching (DEC-132 (3)). A group that keeps itself to its members answers `{listed: false}` and fields none, `contact` included. The prefilled request's words (setup-words key `listing.contact.note`) say, in plain words, that the line is for the stewards' reply by mail, is optional, and is never shown on the site; the group that gives none is told nothing and nothing about it is public. Test: a group with a public focus answers the four fields and `contact` as an empty string; a members-only group answers `{listed: false}` with no field and no `contact`; a sentinel in a member's account email appears nowhere in the answer; no network call is made and nothing is recorded (a table-count check before and after); the words key `listing.contact.note` resolves and names the stewards' own mail and "never on the site"; the site's row for a fixture listed group (`site` R4) built after a request with a contact sentinel holds no sentinel (that half is the `stewards` and `site` side, a control here). Control: `directorySubmission` (R23) answers as before; a request without a contact line is complete.
 
 ## Private
 
@@ -162,6 +166,7 @@ Terms.
 - `public-read`: the new public-read registration (its R18).
 - `project-stage`: `projectStage` (its R1, R2), for `closed` and its date.
 - `docket` (N520): `docketSigners` (its R5), the keys that signed a public docket entry, for R21.
+- `member-roster` (T53; N1110, K5530 B2): `isAdministrator` (its R23) and `groupDescription` (its R44–R45), for R32. A new `modules.json` edge, BOB's; `member-roster` is layer 2, earlier.
 
 ### Invariants
 - **R24** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a revision for a project they do not own. An attestation states only facts the copy computes (R12).
@@ -170,7 +175,7 @@ Terms.
 - **R27** In every revision, `since` is never earlier than the project's creation and never later than the day the revision was signed.
 - **R28** The assistant's work never counts toward activity, and volume never moves the level.
 - **R29** No place is named in this module's behaviour or outward text (`layers.md`, "No jurisdiction in the product").
-- **R30** This module makes no outbound call except to the timestamp authorities, and it pushes nothing to any directory.
+- **R30** *(not yet met: T53)* This module makes no outbound call except to the timestamp authorities, and it pushes nothing to any network page or list (T53, K5507).
 
 ### Satisfies
 - `docs/architecture/BIO_Publication_v0_1.md`:
@@ -182,6 +187,7 @@ Terms.
 - `docs/architecture/BIO_Design_Requirements_v2.md`, requirements 9 and 10.
 - `docs/development/NOTIFICATIONS.md`: the item contract (`machinery-producers` R5, was `queue-producers` R27; K1850).
 - DEC-111; DEC-49 (catalogue rows); DEC-80; K1019; K1031.
+- (T53; K5507) `docs/architecture/BIO_Publication_v0_1.md` §5B (the network pages, held by the holder of the domains outside Civicsmith) and §5E (the directory of groups, the approved listing rule, DEC-255, DEC-270); DEC-132 (3), DEC-247 (the outward-act warning, principle 4.5).
 
 ### Suggestions
 - **Tables:** `notices`, `notice_revisions`, `notice_attestations`, `week_seals` (with the leaves and salts held privately), `week_roots` (with the token) and `seal_openings`. Each is declared to purge, whole store only (R26).
