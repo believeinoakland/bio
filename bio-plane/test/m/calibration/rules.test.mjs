@@ -104,17 +104,17 @@ test("R3: nextProbeDue is at once for a never-probed engine, else never later th
   assert.equal(plain.cadence_at, L + CALIBRATION_CADENCE_MS);
   assert.equal(plain.from, "cadence");
   assert.equal(nextProbeDue({ lastAt: L, cadenceMs: 7 * DAY }).at, L + 7 * DAY);
-  assert.match(cadenceSentence(), /every 30 day/);
+  assert.equal(cadenceSentence(), word("calibration.probe_per_calibratable", { days: String(CALIBRATION_CADENCE_MS / DAY) }));
 });
 
 test("R3 R6: the cadence's sentence is composed from the constant it states", () => {
   assert.equal(cadenceSentence(),
     word("calibration.probe_per_calibratable", { days: String(CALIBRATION_CADENCE_MS / DAY) }));
   assert.equal(cadenceSentence(CALIBRATION_CADENCE_MS), cadenceSentence());
-  assert.equal(cadenceSentence(7 * DAY), "one probe per calibratable engine every 7 day(s), which your team's Civicsmith runs on its own account");
-  assert.equal(cadenceSentence(1.5 * DAY), "one probe per calibratable engine every 1.50 day(s), which your team's Civicsmith runs on its own account");
+  assert.equal(cadenceSentence(7 * DAY), word("calibration.probe_per_calibratable", { days: "7" }));
+  assert.equal(cadenceSentence(1.5 * DAY), word("calibration.probe_per_calibratable", { days: "1.50" }));
   assert.match(nextProbeDue({ lastAt: 0 }).why, new RegExp(cadenceSentence().replace(/[()]/g, "\\$&")));
-  assert.match(nextProbeDue({ lastAt: 0, cadenceMs: 7 * DAY }).why, /every 7 day\(s\)/);
+  assert.ok(nextProbeDue({ lastAt: 0, cadenceMs: 7 * DAY }).why.includes(cadenceSentence(7 * DAY)));
 });
 
 test("R3: a signal can only bring the probe forward, never push it out", () => {
