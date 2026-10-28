@@ -15,16 +15,16 @@ const withLevel = (id, level, i = 0) => {
   return validate(p);
 };
 
-test("R88 COUNTERPARTY_LEVELS is exported: state, county, city, district, in that order, frozen", async () => {
+test("R88, R107 COUNTERPARTY_LEVELS is exported: federal, state, county, city, district, in that order, frozen", async () => {
   assert.ok(Array.isArray(COUNTERPARTY_LEVELS));
-  assert.deepEqual([...COUNTERPARTY_LEVELS], ["state", "county", "city", "district"]);
+  assert.deepEqual([...COUNTERPARTY_LEVELS], ["federal", "state", "county", "city", "district"]);
   assert.ok(Object.isFrozen(COUNTERPARTY_LEVELS));
   /* frozen: no caller can change the one vocabulary (a module is strict code, so each attempt throws) */
   assert.throws(() => { COUNTERPARTY_LEVELS.push("region"); }, TypeError);
   assert.throws(() => { COUNTERPARTY_LEVELS[0] = "region"; }, TypeError);
   assert.throws(() => { COUNTERPARTY_LEVELS.length = 0; }, TypeError);
   assert.throws(() => { COUNTERPARTY_LEVELS.sort(); }, TypeError);
-  assert.deepEqual([...COUNTERPARTY_LEVELS], ["state", "county", "city", "district"], "unchanged after every attempt");
+  assert.deepEqual([...COUNTERPARTY_LEVELS], ["federal", "state", "county", "city", "district"], "unchanged after every attempt");
   /* one vocabulary: every import of the module reads the same list */
   const again = await import("../index.mjs");
   assert.equal(again.COUNTERPARTY_LEVELS, COUNTERPARTY_LEVELS);
@@ -41,7 +41,7 @@ test("R88 validate reads COUNTERPARTY_LEVELS: a counterparty level is accepted e
         assert.deepEqual(r, { ok: true, errors: [] }, `${id} counterparties[${i}] ${level}`);
       });
     /* refusals: anything outside the list, the law levels it lacks and D-149's local among them, and an absent level */
-    for (const level of ["federal", "local", "regional", "national", "municipal", "State", "CITY", " city", "city ", "",
+    for (const level of ["local", "regional", "national", "municipal", "State", "CITY", " city", "city ", "",
       "state,county", null, 0, 1, true, ["city"], { level: "city" }, undefined]) {
       const r = withLevel(id, level);
       assert.equal(r.ok, false, `${id} ${JSON.stringify(level)}`);
@@ -58,14 +58,15 @@ test("R88 validate reads COUNTERPARTY_LEVELS: a counterparty level is accepted e
     assert.ok(COUNTERPARTY_LEVELS.includes(c.level), `${id} ${c.role}`);
 });
 
-test("R88 an office's level is not a law's level (R31): district is no law level, federal no office level", () => {
+test("R88, R107 an office's level is not a law's level (R31): district is no law level; federal is both (R107), national neither", () => {
   assert.notDeepEqual([...COUNTERPARTY_LEVELS], [...LAW_LEVELS]);
   assert.ok(!LAW_LEVELS.includes("district") && COUNTERPARTY_LEVELS.includes("district"));
-  assert.ok(LAW_LEVELS.includes("federal") && !COUNTERPARTY_LEVELS.includes("federal"));
+  assert.ok(LAW_LEVELS.includes("federal") && COUNTERPARTY_LEVELS.includes("federal"));
   /* a law's level is judged by R31's list, never this one */
   const law = (level) => { const p = get(TEST); p.records_laws[0].level = level; return validate(p); };
   assert.ok(hasError(law("district"), "LEVEL_UNKNOWN", "records_laws[0].level"), "district is no law level");
   assert.ok(law("federal").ok, "control: federal is a law level");
-  assert.ok(hasError(withLevel(TEST, "federal"), "LEVEL_UNKNOWN", "counterparties[0].level"), "federal is no office level");
+  assert.equal(withLevel(TEST, "federal").ok, true, "R107: a counterparty at federal validates");
+  assert.ok(hasError(withLevel(TEST, "national"), "LEVEL_UNKNOWN", "counterparties[0].level"), "national is no office level");
   assert.ok(withLevel(TEST, "district").ok, "control: district is an office level");
 });

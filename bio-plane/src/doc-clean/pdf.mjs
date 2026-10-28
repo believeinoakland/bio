@@ -41,6 +41,8 @@ export async function cleanPdf(d, maxInflated) {
   if (read.trailer.Encrypt) throw refusal("ENCRYPTED", localize("doc-clean.pdf.the_pdf_s_trailer_names_an", "the PDF's trailer names an /Encrypt dictionary"));
   if (read.unresolved.length) {
     const u = read.unresolved[0];
+    if (u.over === "direct_object")
+      throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_gen_is_larger_than", "object {num} {gen} is a single value larger than the {figure} bytes this module reads of one", { num: String(u.num), gen: String(u.gen), figure: String(u.figure) }));
     throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_gen_is_referred", "object {num} {gen} is referred to and cannot be read", { num: String(u.num), gen: String(u.gen) }));
   }
   const table = new Map(read.objects.map((o) => [o.num, o.value]));
