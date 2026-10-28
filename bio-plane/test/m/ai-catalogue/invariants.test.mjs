@@ -140,7 +140,7 @@ test("R49 each code refuses with its row and carries no English", async () => {
   take((await pull(cat, await publish(payload({ seq: 4, entries: [entry("fake-one", { lifecycle: "retired", characterization: undefined })] })))).payload);
   const r = await cat.receive({ kind: "index", status: 200, at: AT, trigger: "manual",
     body: indexOf(null, [await advisory(adv(5, { entry_id: "fake-one" }, "watch", { reason: "bogus" }))]) });
-  take({ ok: false, reason: r.advisories[0].outcome, ...r.advisories[0] });
+  take(r.advisories[0], r.advisories[0].outcome);
   take(cat.entriesFor({ part: "sing", at: AT }));
   take(cat.entriesFor({ part: "ask", checksInForce: ["P9"], at: AT }));
   assert.deepEqual(Object.keys(seen).sort(), [...CODES].sort());
