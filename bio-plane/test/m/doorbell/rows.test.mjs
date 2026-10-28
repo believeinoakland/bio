@@ -12,13 +12,13 @@ import { EXPECT } from "./expect.mjs";
 
 /* C-118's four rows and C-85's five, each translation as the product's row reads it (expect.mjs, K3810) */
 const CHECK = { NO_SUCH_KNOCK: "C-118.2", KNOCKER_SECRET_WEAK: "C-118.3", KNOCK_DISCARDED: "C-118.4", RESOLVE_NO_REASON: "C-118.7",
-  KNOCK_BYTES_CHANGED: "C-118.13", RATE_IP: "C-85.1", RATE_GLOBAL: "C-85.2", KNOCK_ENVELOPE_TOO_LARGE: "C-85.3", KNOCK_PAYLOAD_TOO_LARGE: "C-85.4", KNOCK_EMPTY: "C-85.5" };
-const C118 = Object.fromEntries(["NO_SUCH_KNOCK", "KNOCKER_SECRET_WEAK", "KNOCK_DISCARDED", "RESOLVE_NO_REASON", "KNOCK_BYTES_CHANGED"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
-const C85 = Object.fromEntries(["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
+  KNOCK_BYTES_CHANGED: "C-85.6", RATE_IP: "C-85.1", RATE_GLOBAL: "C-85.2", KNOCK_ENVELOPE_TOO_LARGE: "C-85.3", KNOCK_PAYLOAD_TOO_LARGE: "C-85.4", KNOCK_EMPTY: "C-85.5" };
+const C118 = Object.fromEntries(["NO_SUCH_KNOCK", "KNOCKER_SECRET_WEAK", "KNOCK_DISCARDED", "RESOLVE_NO_REASON"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
+const C85 = Object.fromEntries(["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY", "KNOCK_BYTES_CHANGED"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
 
-test("R21 (K2609, N851): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and .13 (R31) and nothing else, each code, number and translation as capture held them, defined in this module's file alone", () => {
-  assert.deepEqual(Object.keys(DOORBELL_CHECKS).sort(), Object.keys(C118).sort(), "the five C-118 rows, no other");
-  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(C85).sort(), "the five C-85 rows, no other");
+test("R21 (K2609, N851): the table holds C-85.1–.6 and C-118.2, .3, .4, .7 and nothing else, each code, number and translation as capture held them, defined in this module's file alone", () => {
+  assert.deepEqual(Object.keys(DOORBELL_CHECKS).sort(), Object.keys(C118).sort(), "the four C-118 rows, no other");
+  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(C85).sort(), "the six C-85 rows, no other");
   for (const [table, want] of [[DOORBELL_CHECKS, C118], [KNOCK_CHECKS, C85]])
     for (const [code, [check, translation]] of Object.entries(want))
       assert.deepEqual([table[code].check, table[code].translation], [check, translation], `${code}: its number and translation`);

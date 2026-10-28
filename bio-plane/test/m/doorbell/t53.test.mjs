@@ -199,7 +199,7 @@ test("R31: bytes altered in storage are KNOCK_BYTES_CHANGED, in the words of scr
   b.held.set(key, new TextEncoder().encode("something else"));
   const changed = await c.inboxView({ knockId: k.knockId, viewer: MEMBER });
   assert.deepEqual([changed.ok, changed.reason, changed.code, changed.check, changed.translation],
-                   [false, "KNOCK_BYTES_CHANGED", "KNOCK_BYTES_CHANGED", "C-118.13", word("screen.inbox.view.changed")]);
+                   [false, "KNOCK_BYTES_CHANGED", "KNOCK_BYTES_CHANGED", "C-85.6", word("screen.inbox.view.changed")]);
   b.held.delete(key);
   const absent = await c.inboxView({ knockId: k.knockId, viewer: MEMBER });
   assert.deepEqual([absent.ok, absent.reason], [false, "EVIDENCE_NOT_HELD"]);

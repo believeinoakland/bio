@@ -603,10 +603,10 @@ export class Doorbell {
     return { ...why, ok: false, reason: why.reason || "SAFE_VIEW_UNAVAILABLE", knockId, status: why.status || 503 };
   }
 
-  /* R31 (C-118.13): the one site `KNOCK_BYTES_CHANGED` is minted. */
+  /* R31 (C-85.6): the one site `KNOCK_BYTES_CHANGED` is minted. */
   #bytesChanged(knockId) {
     /* DEC-49 REGION is-knock-unchanged */
-    const k = DOORBELL_CHECKS.KNOCK_BYTES_CHANGED;
+    const k = KNOCK_CHECKS.KNOCK_BYTES_CHANGED;
     return { ok: false, reason: "KNOCK_BYTES_CHANGED", code: "KNOCK_BYTES_CHANGED", check: k.check, translation: k.translation, knockId, status: 409 };
     /* END DEC-49 REGION is-knock-unchanged */
   }

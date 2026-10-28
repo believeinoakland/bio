@@ -228,13 +228,14 @@ test("R8: content that decodes to zero bytes is refused 400 KNOCK_EMPTY with its
 
 /* K2609, K2627; T43, N851: the rows are defined in this module's `checks.mjs` alone; each `where` names this module's
    raiser. */
-test("R21 R4 R5 R6 R7 R8 (K649, K2627, N851): C-85's five rows are in this module's table, each with its check, its where naming this module's one site that mints it, and a translation", () => {
+test("R21 R4 R5 R6 R7 R8 (K649, K2627, N851): C-85's six rows are in this module's table, each with its check, its where naming this module's one site that mints it, and a translation", () => {
   const want = { RATE_IP: ["C-85.1", "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate"],
                  RATE_GLOBAL: ["C-85.2", "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate"],
                  KNOCK_ENVELOPE_TOO_LARGE: ["C-85.3", "src/doorbell/door.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large"],
                  KNOCK_PAYLOAD_TOO_LARGE: ["C-85.4", "src/doorbell/door.mjs knockPayloadTooLarge > is-knock-payload-too-large"],
-                 KNOCK_EMPTY: ["C-85.5", "src/doorbell/door.mjs knockEmpty > is-knock-empty"] };
-  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(want).sort(), "the five rows, and no other");
+                 KNOCK_EMPTY: ["C-85.5", "src/doorbell/door.mjs knockEmpty > is-knock-empty"],
+                 KNOCK_BYTES_CHANGED: ["C-85.6", "src/doorbell/index.mjs #bytesChanged > is-knock-unchanged"] };
+  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(want).sort(), "the six rows, and no other");
   for (const [code, [check]] of Object.entries(want)) {
     assert.equal(KNOCK_CHECKS[code].check, check, code);
     assert.ok(typeof KNOCK_CHECKS[code].translation === "string" && KNOCK_CHECKS[code].translation.length > 40, code);
