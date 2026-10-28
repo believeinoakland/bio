@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7995 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8004 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22655,7 +22655,6 @@ export const WORD_ROWS = Object.freeze([
   ["content.extent-core.no_extent_was_supplied","no extent was supplied and none could be read from the leg",null,null,false,"code"],
   ["content.extent-core.office_container_no_image_list","this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed",null,null,false,"code"],
   ["content.extent-core.only_an_image_can_be","only an image can be cited as its bytes. A {kind} extent addresses text, and reading 'bytes' here as 'text' would silently change what the citation claims, so it is refused",null,null,false,"code"],
-  ["content.extent-core.part_ref","part {at}",null,null,false,"code"],
   ["content.extent-core.pdf_page_names_which_page","a pdf-page extent names which page, as a 0-based integer. This one names '{page}'",null,null,false,"code"],
   ["content.extent-core.pdf_page_rect_unreadable","a pdf-page extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose",null,null,false,"code"],
   ["content.extent-core.sheet_cell_names_which_cell","a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names '{cell}'",null,null,false,"code"],
@@ -22685,6 +22684,16 @@ export const WORD_ROWS = Object.freeze([
   ["content.extent.page_rotated_clause",". The page is shown rotated {rotate} degrees; a rect is measured on the unrotated page, from its MediaBox corners, not from the turned view",null,null,false,"code"],
   ["content.extent.part_human","a part of the document outside its body text (a footnote, endnote, header, footer, comment, tracked deletion, text box, speaker note, master text or cell note)",null,null,false,"code"],
   ["content.extent.part_list_not_held","this record persists no list of a capture's parts to bound one against (they arrive as text units), so whether this part exists rests on the index that found it: UNDETERMINED, admitted and stated",null,null,false,"code"],
+  ["content.extent.part_name.comment","comment",null,null,false,"code"],
+  ["content.extent.part_name.endnote","endnote",null,null,false,"code"],
+  ["content.extent.part_name.footer","page footer",null,null,false,"code"],
+  ["content.extent.part_name.footnote","footnote",null,null,false,"code"],
+  ["content.extent.part_name.header","page header",null,null,false,"code"],
+  ["content.extent.part_name.master_text","slide master",null,null,false,"code"],
+  ["content.extent.part_name.speaker_note","speaker notes",null,null,false,"code"],
+  ["content.extent.part_name.text_box","text box",null,null,false,"code"],
+  ["content.extent.part_named","{name} {n}",null,null,false,"code"],
+  ["content.extent.part_unnamed","a part of the document outside its body text",null,null,false,"code"],
   ["content.extent.this_kind_extent_states_its","this {kind} extent states its rect in space '{String}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read",null,null,false,"code"],
   ["content.extent.this_record_holds_no_extraction","this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at",null,null,false,"code"],
   ["content.extent.this_record_holds_no_row","this record holds no row and column grid for sheet '{want}' (a format that fixes no maximum table size states none)",null,null,false,"code"],

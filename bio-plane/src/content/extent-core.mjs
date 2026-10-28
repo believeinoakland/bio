@@ -568,10 +568,25 @@ export function checkContentExtent(extent, ctx = {}) {
    to bound one against (they arrive as text units), so a well-formed one is admitted and its existence rests on the index
    that found it (R8: `part_list`, in `./extent.mjs`); a capture nobody read holds no text to address (C-45.2), as for an
    envelope item. Judged here, in the core, so the leg grammar and the face answer one thing. */
-/** A `doc-part`'s human form: its element reference, else its package part (R1, R2). `./extent.mjs`' `describeExtent` reads it. */
+/** A `doc-part`'s human form, in the plain words a member reads (DEC-454): its kind named from the package part it sits in
+ *  (a footnote, an endnote, a page header or footer, a comment, speaker notes, a slide master, a text box), and its
+ *  number where the element reference ends in one ("footnote 3"); a part of no known kind is "a part of the document
+ *  outside its body text". Never the raw reference. `./extent.mjs`' `describeExtent` reads it. */
 export function describePart(e) {
-  const at = typeof e.ref === 'string' && e.ref.trim() ? e.ref.trim() : typeof e.part === 'string' && e.part.trim() ? e.part.trim() : '';
-  return localize('content.extent-core.part_ref', 'part {at}', { at: String(at.slice(0, 120)) });
+  const part = typeof e.part === 'string' ? e.part.toLowerCase() : '';
+  const ref = typeof e.ref === 'string' ? e.ref.trim() : '';
+  const name = /footnotes/.test(part) ? localize('content.extent.part_name.footnote', 'footnote')
+    : /endnotes/.test(part) ? localize('content.extent.part_name.endnote', 'endnote')
+    : /header/.test(part) ? localize('content.extent.part_name.header', 'page header')
+    : /footer/.test(part) ? localize('content.extent.part_name.footer', 'page footer')
+    : /comments/.test(part) ? localize('content.extent.part_name.comment', 'comment')
+    : /notesslide/.test(part) ? localize('content.extent.part_name.speaker_note', 'speaker notes')
+    : /slidemaster|slidelayout/.test(part) ? localize('content.extent.part_name.master_text', 'slide master')
+    : /drawing|textbox/.test(part) ? localize('content.extent.part_name.text_box', 'text box')
+    : null;
+  if (!name) return localize('content.extent.part_unnamed', 'a part of the document outside its body text');
+  const n = /(\d+)\s*$/.exec(ref);
+  return n ? localize('content.extent.part_named', '{name} {n}', { name, n: n[1] }) : name;
 }
 
 function checkPart(e, ctx) {

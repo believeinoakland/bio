@@ -19521,14 +19521,14 @@
       "en": "a part extent names the package part or the element reference of the unit as the reader emitted them, and this one names neither",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 585
+      "line": 600
     },
     {
       "id": "content.extent-core.a_part_extent_names_the",
       "en": "a part extent names the package part and the element reference of the unit as the reader emitted them, each a non-empty string. This one names '{String}' as its {k}",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 582
+      "line": 597
     },
     {
       "id": "content.extent-core.a_slide_shape_extent_names",
@@ -19556,7 +19556,7 @@
       "en": "this capture is {kind}, not an office container, so its own bytes hold no embedded media part and a part reference names bytes this document does not contain. An image served beside a page is its OWN document: acquire it at its own address and cite that document whole{pdf}",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 771
+      "line": 786
     },
     {
       "id": "content.extent-core.cited_as_says_whether_a",
@@ -19626,7 +19626,7 @@
       "en": "a {kind} extent cannot be held by a {format} document, which holds {holds}",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 650
+      "line": 665
     },
     {
       "id": "content.extent-core.image_names_both_part_and_page",
@@ -19654,14 +19654,14 @@
       "en": "this record does not hold which kind of document this capture is",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 788
+      "line": 803
     },
     {
       "id": "content.extent-core.kind_unheld_part_undetermined",
       "en": "{kind_why} — so whether this part is a member of the document's own bytes is UNDETERMINED, admitted and stated rather than guessed either way",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 788
+      "line": 803
     },
     {
       "id": "content.extent-core.no_extent_was_supplied",
@@ -19675,7 +19675,7 @@
       "en": "this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 791
+      "line": 806
     },
     {
       "id": "content.extent-core.only_an_image_can_be",
@@ -19683,13 +19683,6 @@
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
       "line": 449
-    },
-    {
-      "id": "content.extent-core.part_ref",
-      "en": "part {at}",
-      "module": "content",
-      "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 574
     },
     {
       "id": "content.extent-core.pdf_page_names_which_page",
@@ -19766,7 +19759,7 @@
       "en": "this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 588
+      "line": 603
     },
     {
       "id": "content.extent.an_envelope_extent_names_the",
@@ -19893,6 +19886,76 @@
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
       "line": 395
+    },
+    {
+      "id": "content.extent.part_name.comment",
+      "en": "comment",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 582
+    },
+    {
+      "id": "content.extent.part_name.endnote",
+      "en": "endnote",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 579
+    },
+    {
+      "id": "content.extent.part_name.footer",
+      "en": "page footer",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 581
+    },
+    {
+      "id": "content.extent.part_name.footnote",
+      "en": "footnote",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 578
+    },
+    {
+      "id": "content.extent.part_name.header",
+      "en": "page header",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 580
+    },
+    {
+      "id": "content.extent.part_name.master_text",
+      "en": "slide master",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 584
+    },
+    {
+      "id": "content.extent.part_name.speaker_note",
+      "en": "speaker notes",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 583
+    },
+    {
+      "id": "content.extent.part_name.text_box",
+      "en": "text box",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 585
+    },
+    {
+      "id": "content.extent.part_named",
+      "en": "{name} {n}",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 589
+    },
+    {
+      "id": "content.extent.part_unnamed",
+      "en": "a part of the document outside its body text",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 587
     },
     {
       "id": "content.extent.this_kind_extent_states_its",
