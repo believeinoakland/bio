@@ -99,7 +99,8 @@ const R46_CAP = capFor(128);
 const R46_RECIPE = (rows) => ({ kind: "xlsx", seed: "r46-shape", size: { rows, cols: 3 }, header: "none" });
 
 /* the declared text of a workbook: its worksheets' uncompressed sizes, from the central directory */
-function declaredSheetBytes(buf) {
+function declaredSheetBytes(bytes) {
+  const buf = Buffer.from(bytes);
   const eocd = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
   let off = buf.readUInt32LE(eocd + 16), total = 0;
   while (off + 46 <= buf.length && buf.readUInt32LE(off) === 0x02014b50) {
