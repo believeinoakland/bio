@@ -8,6 +8,7 @@ import { ROUTE_MARK_NOTE } from "../../../src/provenance-routes/index.mjs";
 import { registerChecks, PROVENANCE_ACT_CHECKS } from "../../../src/provenance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 /* An information bundle with two documents: one with a fetched route, and one whose route the record lacks. */
 function twoDocs(w, id, { secondRouted = false, state = "collected" } = {}) {
@@ -142,7 +143,7 @@ test("R2: a witnessed chain survives an applied rebuild byte for byte, and the r
   const doc = JSON.parse(w2.record.readFile(v, "data/provenance.json").text).documents[0];
   assert.equal(JSON.stringify(doc.provenance_chain).includes("web.archive.org"), false, "the co-archive did not become a hop");
   assert.equal(doc.co_archive, archive, "the co-archive is still recorded on the document, untouched");
-  assert.match(doc.provenance_chain[0].who, /^instance test-instance /);
+  assert.equal(doc.provenance_chain[0].who, word("provenance-routes.who.instance_capture_method", { instance_name: "test-instance", actor: "session ", method: "acquire" }));
   assert.equal(doc.provenance_chain[0].asserts, `these bytes were served for https://example.org/${cap.path} at 2026-09-27T00:00:00Z`);
   assert.deepEqual(findingsOf(), [], "C-18.9 is satisfied afterwards");
 });
@@ -155,7 +156,7 @@ test("R2: the rebuild's refusal and report carry the bundle's standing route mar
   w.routes.provenanceRouteAssess({ bundleId: id, author: V("riley"), viewer: V("riley") });
   const chain = w.routes.provenanceChainRebuild({ bundleId: id, author: V("riley"), viewer: V("riley") });
   assert.deepEqual([chain.reason, chain.route.marked, chain.route.note], ["EVIDENCE_INSUFFICIENT", true, ROUTE_MARK_NOTE]);
-  assert.match(chain.detail, /op=provenanceroute records a standing marker/);
+  assert.match(chain.detail, wordRx("provenance-routes.index.the_capture_record_does_not"));
 });
 
 test("R1, R2, R4 (K581): the rebuild reconstructs a chainless doorbell document from its receipt, and the route mark reads it derivable; without the receipt both say undetermined", () => {
@@ -227,7 +228,7 @@ test("R1, R2, R4 (K2457): the rebuild reconstructs a chainless upload document f
   /* Negative control: without the receipt, neither reconstructs. */
   const b = ask("INFO-2026-0002-up");
   assert.deepEqual([b.rebuild.ok, b.rebuild.reason, b.rebuild.documents[0].outcome], [false, "EVIDENCE_INSUFFICIENT", "undetermined"]);
-  assert.match(b.rebuild.documents[0].missing[0], /upload's receipt/);
+  assert.equal(b.rebuild.documents[0].missing[0], word("provenance-routes.index.the_uploads_receipt_it_was"));
   assert.deepEqual([b.mark.route.finding, b.mark.documents[0].outcome], ["LOOKED_INDETERMINATE", "undetermined"]);
 });
 
@@ -240,7 +241,7 @@ test("R3: a machine identity is refused by name before anything is read", () => 
   for (const who of ["token:member", "class:admin", "ai", "daemon", "session", "member"]) {
     const r = w.routes.provenanceChainRebuild({ bundleId: "INFO-2026-0001-x", author: who, viewer: V("x") });
     assert.equal(r.reason, "NO_AUTHOR", who);
-    assert.match(r.detail, /machine credential/, who);
+    assert.equal(r.detail, word("provenance-routes.index.who_is_a_machine_credential", { who }), who);
   }
   for (const who of ["", "   ", null, undefined]) {
     const r = w.routes.provenanceChainRebuild({ bundleId: "INFO-2026-0001-x", author: who, viewer: V("x") });

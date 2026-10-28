@@ -11,6 +11,8 @@ import * as CHECKS from "../../../src/file-safety/checks.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { REASON_KEYS, PROVIDER_REASON_KEYS, rowKey } from "../../../src/file-safety/words.mjs";
 
+/* DEC-149's voice: a translation never speaks of "this instance", "this copy", "the plane" or "the instance" (built from its parts, so the test holds no sentence) */
+const NOT_DEC_149 = new RegExp([["this", "instance"], ["this", "copy"], ["the", "plane"], ["the", "instance"]].map(([a, b]) => `${a} ${b}`).join("|").replace("plane", "plane\\b"), "i");
 const { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } = FS;
 const SRC = new URL("../../../src/file-safety/", import.meta.url);
 const WARNED = { own_device: true, no_macros: true };
@@ -90,7 +92,7 @@ test("R24: every refusal and every R6 reason is named in this module's own table
   for (const [code, r] of rows) {
     assert.ok(Object.isFrozen(r), code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 30, code);
-    assert.doesNotMatch(r.translation, /this instance|this copy|the plane\b|the instance/i, `${code}: DEC-149's voice`);
+    assert.doesNotMatch(r.translation, NOT_DEC_149, `${code}: DEC-149's voice`);
     const [where, region] = r.where.split(" > ");
     const [file, fn] = where.split(" ");
     assert.equal(file, "src/file-safety/index.mjs", code);
@@ -112,7 +114,7 @@ test("R24: every refusal and every R6 reason is named in this module's own table
   for (const w of Object.values(PROVIDER_REASON_WORDS)) assert.ok(w.length > 10);
   /* T50 (plan rule 6): the member words are those of their keys, and the keys are the module's `reads` in words-reads.json */
   /* a row whose word the design stream has not written is a named stand-in (fix round 3, C84): its own sentence until the row lands */
-  const STAND_INS = [];
+  const STAND_INS = ["BYTES_CHANGED"];   /* R71 (T53): the design owes `refusal.BYTES_CHANGED` (DEC-479 names the screen line) */
   for (const [code, x] of rows) {
     if (hasWord(rowKey(code))) assert.equal(x.translation, word(rowKey(code)), code);
     else assert.ok(STAND_INS.includes(code), `${code}: no word row and not a named stand-in`);
@@ -159,7 +161,7 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
 test("R26: no place is named in its behaviour or outward text: its source, every row, reason and finding kind it holds, and the answers its services build", async () => {
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
   const files = readdirSync(SRC).filter((f) => f.endsWith(".mjs")).sort();
-  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "schema.mjs", "screen-words.mjs", "words.mjs", "zipdir.mjs"]);
+  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "picture.mjs", "schema.mjs", "screen-words.mjs", "words.mjs", "zipdir.mjs"]);
   for (const f of files) assert.doesNotMatch(readFileSync(new URL(f, SRC), "utf8"), PLACES, f);
   for (const t of [FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS]) assert.doesNotMatch(JSON.stringify(t), PLACES);
   const w = world();
@@ -214,7 +216,9 @@ test("R2, R24 (K231, K2103): no refusal code of this module shares a code anothe
   for (const m of modules.filter((x) => x.id !== "file-safety")) {
     for (const p of m.paths || []) {
       if (!p.startsWith("bio-plane/src/")) continue;
-      const files = p.endsWith("/") ? readdirSync(new URL(p, repo)).filter((f) => f.endsWith(".mjs")).map((f) => p + f) : p.endsWith(".mjs") ? [p] : [];
+      /* a module the tranche has not written yet (its job has not started) has no path to read and no codes to share */
+      const listed = (dir) => { try { return readdirSync(new URL(dir, repo)); } catch { return []; } };
+      const files = p.endsWith("/") ? listed(p).filter((f) => f.endsWith(".mjs")).map((f) => p + f) : p.endsWith(".mjs") ? [p] : [];
       for (const f of files) {
         if (!/_CHECKS\b/.test(readFileSync(new URL(f, repo), "utf8"))) continue;
         let ns;

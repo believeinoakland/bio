@@ -37,6 +37,7 @@ export function bucket() {
       const b = r ? all.subarray(r.offset, r.offset + r.length) : all;
       return { key: k, size: all.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
     },
+    async delete(k) { calls.push(["delete", k]); held.delete(k); sums.delete(k); },
     async put(k, bytes, opts) {
       calls.push(["put", k, opts]); held.set(k, new Uint8Array(bytes));
       if (opts && /^[0-9a-f]{64}$/.test(String(opts.sha256))) sums.set(k, Uint8Array.from(String(opts.sha256).match(/../g), (h) => parseInt(h, 16)).buffer); else sums.delete(k);
@@ -194,7 +195,7 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, home
     rows: exec, row: (q, ...a) => exec(q, ...a)[0] ?? null,
     tick(ms) { clock.now += ms; },
     /** Bytes held as a capture: stored, then a receipt as acquisition writes one (R1). */
-    async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined, homed: filed = homed } = {}) {
+    async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined, homed: filed = homed, name = null, type = null } = {}) {
       const data = typeof bytes === "string" ? enc(bytes) : bytes;
       const s = sha(data);
       await b.put(`bio/captures/${s}`, data, { sha256: s }); /* as record-core's evidence store puts a capture (its R38) */
@@ -205,7 +206,20 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, home
          is filed as the screen files it, in a bundle outside every project, when the world is `homed` (file-safety's own tests;
          another module's tests that use this world keep the unfiled capture they always had) or the call says so */
       if (filed && !exec(`SELECT 1 FROM register WHERE capture_sha = ?`, s).length) w.home(s, `INFO-AUTO-${s.slice(0, 8)}`);
+      /* the name and the type the record holds for it (R69, R70): the document's own `data/provenance.json`, as a promotion leaves it */
+      if (name !== null || type !== null) w.named(s, { name, type });
       return s;
+    },
+    /** What the capture's document records about it: its file name and content type (`capture.file_name`, `capture.content_type`), in the
+     *  `data/provenance.json` of its home bundle, which this makes (a bundle outside every project) when the capture has none. */
+    named(captureSha, { name = null, type = null, path = null } = {}) {
+      if (!exec(`SELECT 1 FROM register WHERE capture_sha = ?`, captureSha).length) w.home(captureSha, `INFO-AUTO-${captureSha.slice(0, 8)}`);
+      const bundleId = exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, captureSha)[0].bundle_id;
+      const doc = { file: "snapshots/doc", capture: { sha256: captureSha, ...(name !== null ? { file_name: name } : {}), ...(type !== null ? { content_type: type } : {}) },
+                    ...(path !== null ? { container: { path } } : {}) };
+      const text = JSON.stringify({ documents: [doc] });
+      exec(`DELETE FROM files WHERE bundle_id = ? AND path = 'data/provenance.json'`, bundleId);
+      exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, 'data/provenance.json', ?, ?, ?)`, bundleId, text, Buffer.byteLength(text), sha(text));
     },
     /** Register a capture under a bundle (its home), as a promotion would: the bundle row and the register row. */
     home(captureSha, bundleId, { project = null } = {}) {

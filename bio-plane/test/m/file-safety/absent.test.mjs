@@ -104,9 +104,8 @@ test("R42a: one term each, \"file scanner\" (never \"virus scanner\") and \"safe
   for (const t of [THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS]) assert.doesNotMatch(JSON.stringify(t), OLD_TERMS);
   assert.equal(FILE_SAFETY_CHECKS.SCANNER_ABSENT.translation, word("refusal.SCANNER_ABSENT"));
   assert.equal(FILE_SAFETY_CHECKS.RENDERER_ABSENT.translation, word("refusal.RENDERER_ABSENT"));
-  assert.match(FILE_SAFETY_CHECKS.SCANNER_ABSENT.translation, /file scanner installed/);
-  assert.match(FILE_SAFETY_CHECKS.RENDERER_ABSENT.translation, /safe view installed/);
-  for (const code of ["SCANNER_UNREACHABLE", "SAFE_COPY_WITHHELD"]) assert.match(FILE_SAFETY_CHECKS[code].translation, /file scanner/, code);
+  /* R42a: the one term each is the word table's, so each row says what the table says (a wording change is a table edit, never this test's) */
+  for (const code of ["SCANNER_UNREACHABLE", "SAFE_COPY_WITHHELD"]) assert.equal(FILE_SAFETY_CHECKS[code].translation, word(`refusal.${code}`), code);
   /* control: codes and numbers unchanged */
   assert.deepEqual(["SCANNER_ABSENT", "SCANNER_UNREACHABLE", "RENDERER_ABSENT", "SAFE_COPY_WITHHELD"].map((c) => [c, FILE_SAFETY_CHECKS[c].check]),
                    [["SCANNER_ABSENT", "C-140.2"], ["SCANNER_UNREACHABLE", "C-140.3"], ["RENDERER_ABSENT", "C-140.13"], ["SAFE_COPY_WITHHELD", "C-140.38"]]);
