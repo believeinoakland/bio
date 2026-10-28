@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7720 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7724 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25249,6 +25249,8 @@ export const WORD_ROWS = Object.freeze([
   ["membership.index.name_who_holds_hosting_access","name who holds hosting access: the record keeps the team's answer as it was given, and an empty answer records nobody. Nothing was written.",null,null,false,"code"],
   ["membership.index.no_member_of_your_team","no member of your team answers to that id here. Nothing was changed.",null,null,false,"code"],
   ["membership.index.no_other_owner_of_this","no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.",null,null,false,"code"],
+  ["membership.index.not_a_participant_detail","the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 §7). Nothing was changed.",null,null,false,"code"],
+  ["membership.index.not_the_owner_detail","this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.",null,null,false,"code"],
   ["membership.index.only_a_member_whose_status","only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.",null,null,false,"code"],
   ["membership.index.only_an_invitation_that_has","only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written.",null,null,false,"code"],
   ["membership.index.only_an_owner_of_this","only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.",null,null,false,"code"],
@@ -26395,6 +26397,7 @@ export const WORD_ROWS = Object.freeze([
   ["record-core.checks.evidence_part_missing","One piece of a large document was not there when your team's Civicsmith went to put the document together, so the document was not kept whole and nothing was written. Capture it again.",null,null,false,"code"],
   ["record-core.checks.evidence_parts_malformed","A part of your team's Civicsmith asked to keep a document whole without naming it and its parts as fingerprints, so nothing was kept. {BUILD_FAULT}",null,null,false,"code"],
   ["record-core.checks.evidence_store_refused","The place where your team's Civicsmith keeps documents would not take a large document whole, so it was not kept and nothing was written. Try again; if it happens again, tell whoever hosts your team's Civicsmith.",null,null,false,"code"],
+  ["record-core.checks.setting_at_invalid","A part of your team's Civicsmith asked what a setting was at a moment it could not read, so nothing was read. {BUILD_FAULT}",null,null,false,"code"],
   ["record-core.checks.the_setting_was_not_changed","The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.",null,null,false,"code"],
   ["record-core.declared.allocid","substrate: id allocation",null,null,false,"code"],
   ["record-core.index.a_counts_registration_names_its","a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.",null,null,false,"code"],
@@ -26448,6 +26451,7 @@ export const WORD_ROWS = Object.freeze([
   ["record-core.index.the_figure_key_is_already","the figure {key} is already reported by {heldBy}; nothing was registered.",null,null,false,"code"],
   ["record-core.index.the_grammar_claims_part_of","the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.",null,null,false,"code"],
   ["record-core.index.the_instances_figures_are_already","the instance's figures are already supplied by {module}; nothing was registered.",null,null,false,"code"],
+  ["record-core.index.the_instant_given_is_not","the instant given is not one the setting can be read at; nothing was read.",null,null,false,"code"],
   ["record-core.index.the_parts_do_not_hash","The parts, read in order, do not hash to the document's fingerprint. Nothing was kept.",null,null,false,"code"],
   ["record-core.index.the_store_would_not_take","The store would not take the document whole ({why}). Nothing was kept.",null,null,false,"code"],
   ["record-core.index.your_teams_civicsmith_could_not","your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.",null,null,false,"code"],

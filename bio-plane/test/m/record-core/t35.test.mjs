@@ -104,7 +104,7 @@ test("R81 R25: the four setting refusals are this module's rows C-102.29–.32, 
   for (const code of ["SETTING_NAME_REQUIRED", "SETTING_BY_REQUIRED", "SETTING_VALUE_REQUIRED"])
     assert.ok(RECORD_CORE_CHECKS[code].translation.endsWith(BUILD_FAULT), `${code} ends with the BUILD_FAULT sentence`);
   assert.ok(!RECORD_CORE_CHECKS.SETTING_INVALID.translation.includes(BUILD_FAULT));
-  assert.match(RECORD_CORE_CHECKS.SETTING_INVALID.translation, /^The setting was not changed/);
+  assert.equal(RECORD_CORE_CHECKS.SETTING_INVALID.translation, word("record-core.checks.the_setting_was_not_changed"));
   const checks = Object.values(RECORD_CORE_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "no number is held twice");
 });
