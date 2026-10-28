@@ -1,6 +1,7 @@
 /* retrieval: one capture's content axis (R23–R27, D-672, D-724), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { world, V, MACHINE, VOCAB } from "./fixture.mjs";
 import { CAPTURE_TEXT_SKIPPED_RUNS_MAX, CAPTURE_TEXT_SKIPPED_SAYS } from "../../../src/retrieval/index.mjs";
 
@@ -13,7 +14,7 @@ test("R23: no sha answers found: false with the vocabulary and a note; a capture
   const w = world();
   const none = w.retrieval.contentAxis({ viewer: V("vera") });
   assert.deepEqual([none.found, none.vocabulary, none.undetermined_value], [false, VOCAB.CONTENT_AXIS_STATES, "undetermined"]);
-  assert.match(none.note, /one capture/);
+  assert.equal(none.note, WORD("retrieval.note.content_axis_read"));
   const hid = w.cap("hidden", "h");
   w.project("Hidden", "ann", { captures: [hid] });
   ex(w, hid, "PRESENT", { authority: "PROJ" });
@@ -78,7 +79,8 @@ test("R26: the tally and contentAxis read a capture promoted before D-672 as it 
   ix(w, xl, "LOOKED_INDETERMINATE", { detail: "a xlsx has no indexing unit arm in this build" });
   const a = w.retrieval.contentAxis({ captureSha: xl.sha, viewer: V("vera") });
   assert.deepEqual([a.indexed, a.index.state], ["indexed_none", "LOOKED_INDETERMINATE"]);
-  assert.match(a.why, /no indexing unit arm/);
+  assert.ok(a.why.startsWith(`${WORD("observation-log.indexed_none")}: `));
+  assert.ok(a.why.endsWith(WORD("observation-log.index.a_container_has_no_arm", { container: "xlsx" }).split(" (")[0]));
   assert.equal(w.retrieval.meaningRows({ q: "passage:zzqx", rows: "passage", viewer: V("vera") }).scope.indexed_none, 1);
   /* Re-promoted with sheet units, the index's new row is the one read. */
   ix(w, xl, "PRESENT");

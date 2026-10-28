@@ -691,9 +691,7 @@ export class People {
     const mine = this.#profile(entityId, viewer);
     const candidates = ids.slice(0, cap).map((id) => ({ entity_id: id, fields: People.#compareProfiles(mine, this.#profile(id, viewer)) }));
     return { ok: true, entity_id: entityId, count: candidates.length, candidates, limit: cap, truncated: ids.length > cap,
-             detail: "candidates are not claims: each shares a name or an identifier with this person, and each field is "
-               + "compared as the record holds it (agrees, differs or absent), with the rows compared. Nothing is scored, "
-               + "ranked or written; a claim is a member's act (op=identityclaim)." };
+             detail: localize("people.index.candidates_detail", "candidates are not claims: each shares a name or an identifier with this person, and each field is compared as the record holds it (agrees, differs or absent), with the rows compared. Nothing is scored, ranked or written; a claim is a member's act (op=identityclaim).") };
   }
 
   /* R7: what a person's record holds for the comparison: names, identifiers, posts and life facts. */

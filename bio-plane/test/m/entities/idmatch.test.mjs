@@ -168,7 +168,7 @@ test("R29 C-91.1–C-91.3 are this module's invariants: each refusal carries its
   for (const [code, check, r] of cases) {
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, code, code, check]);
     assert.equal(r.translation, IDSPACE_CHECKS[code].translation);
-    assert.match(IDSPACE_CHECKS[code].where, /^src\/entities\/index\.mjs idMatch > is-idspace-/);
+    assert.ok(IDSPACE_CHECKS[code].where.startsWith("src/entities/index.mjs idMatch > is-idspace-"));
   }
   /* negative control: a request that is well formed is judged, never refused */
   const ok = w.e.idMatch({ space: "fund", a: "100-01", b: "100-01", aCapture: a, bCapture: a, viewer: MACHINE, aName: "F", bName: "F" });

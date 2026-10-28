@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { themeLegFindings } from "../../../src/connections/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const LABEL = "The basis leg";
 const ID = "THEME-2026-0927-ab12cd";
@@ -13,6 +14,12 @@ const LEGS = [
   ...REFS.flatMap((ref) => [{ target: ref }, { content_id: ref }]),
   { theme: ID }, { theme: true }, { themes: [ID] }, { themes: "a" },
 ];
+/* The two sentences the module says (the word table's), whichever subject the leg names. */
+const SAYS = [
+  ...["a THEME", "membership in a THEME"].map((subject) => localize("connections.checks.leg_names_theme", "{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it", { label: LABEL, subject })),
+  localize("connections.checks.leg_claims_through_theme", "{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing", { label: LABEL }),
+];
+
 /* What a person must never read: a field name in code form, a snake_case stored name, a DEC- or C- or D- id, a `kind:`
    value, or an internal document's file name or section mark. */
 const NAMES = [
@@ -32,7 +39,7 @@ test("R73 (T51 fix round 10): over every theme leg in the corpus, no finding or 
     const [finding] = findings;
     const said = [finding.message, ...(finding.repairs || [])];
     for (const text of said) for (const re of NAMES) assert.doesNotMatch(text, re, `${JSON.stringify(leg)}: ${text}`);
-    assert.match(finding.message, /never the basis of a claim|never a reason a leg counts/, JSON.stringify(leg));
+    assert.ok(SAYS.includes(finding.message), JSON.stringify(leg));
     asked += 1;
   }
   assert.equal(asked, LEGS.length);

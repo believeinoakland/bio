@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, E, BOB, MACHINE } from "./fixture.mjs";
 import { DUTIES_CHECKS, DUTIES_WORDS } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
@@ -49,8 +50,8 @@ test("R32 C-133.43 PROMISE_DATE_UNREAD keeps its present translation, not words.
   assert.deepEqual([row.check, row.where], ["C-133.43", AT("proposeFromResponse", "is-duty-promise-date")]);
   assert.ok(!("refusal.PROMISE_DATE_UNREAD" in DUTIES_WORDS), "not taken in T46");
   assert.notEqual(row.translation, en("refusal.PROMISE_DATE_UNREAD"), "words.json's sentence and R30 do not yet agree");
-  assert.match(row.translation, /Nothing was written\.$/);
-  const kept = Object.fromEntries(Object.entries(DUTIES_CHECKS).filter(([c]) => !(c in TAKEN)));
+  assert.equal(row.translation, word("duties.checks.a_promises_date_is_read"));
+  const kept = Object.fromEntries(Object.entries(DUTIES_CHECKS).filter(([c]) => !(c in TAKEN) && c !== "NAME_AMBIGUOUS" /* T53 (R35): a row added since */));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
     "no other row's check, where or translation moved");
   for (const [code, r] of Object.entries(kept)) assert.ok(!Object.values(DUTIES_WORDS).includes(r.translation), code);

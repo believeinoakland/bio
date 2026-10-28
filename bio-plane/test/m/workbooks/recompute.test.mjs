@@ -132,7 +132,7 @@ test("R8 every answer stating a recompute calls it agreement between the two eng
   /* a refusal discloses "not recomputed here" */
   const off = await seeded();
   await off.wb.recompute({ ...off.at, by: V("bob") });
-  assert.match((await off.wb.readWorkbook({ ...off.at, viewer: V("bob") })).disclosure.text, /^not recomputed here: no engine bound; open it in any spreadsheet program$/);
+  assert.equal((await off.wb.readWorkbook({ ...off.at, viewer: V("bob") })).disclosure.text, word("workbooks.open_spreadsheet_program", { not_recomputed: word("workbooks.recomputed"), why: word("workbooks.why.engine_bound") }));
   /* a second act is a second recompute, kept beside the first */
   await w.wb.recompute({ ...w.at, by: V("carol") });
   assert.equal(w.count("workbook_recomputes"), 2);

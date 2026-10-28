@@ -21,8 +21,8 @@ test("R9 latest: the latest row per (level, subject kind, subject), newest first
   assert.deepEqual(w.obs.latest("internet").map((r) => r.seq), [5]);
   assert.deepEqual(w.obs.latest("meaning"), []);
   const r = w.obs.latest("document", { limit: 1, subjectKind: "address" })[0];
-  assert.deepEqual(Object.keys(r).sort(), ["actor_class", "at", "authority", "authority_kind", "condition", "detail", "governed",
-    "level", "result_kind", "result_ref", "seq", "state", "subject", "subject_kind"]);
+  assert.deepEqual(Object.keys(r).sort(), ["actor_class", "at", "authority", "authority_kind", "condition", "detail", "disagree", "governed",
+    "level", "read", "result_kind", "result_ref", "seq", "state", "subject", "subject_kind"]);
 });
 
 test("R9 byAuthority: one authority's rows in seq order, at most `limit`; firstRowAt: the earliest `at` at a level, or null", () => {
@@ -97,7 +97,8 @@ test("R29 the read contract: observation_log, leads and lead_shares hold the sta
   const w = world();
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
   assert.deepEqual(cols("observation_log"), ["seq", "at", "actor_class", "actor", "authority_kind", "authority", "level", "subject_kind",
-    "subject", "state", "governed", "condition", "bound", "terminal", "result_kind", "result_ref", "detail"]);
+    "subject", "state", "governed", "condition", "bound", "terminal", "result_kind", "result_ref", "detail", "read", "disagree"],
+    "read and disagree, R40's (T53)");
   assert.deepEqual(cols("leads"), ["lead_id", "author", "words", "locator", "at"]);
   assert.deepEqual(cols("lead_shares"), ["lead_id", "bundle_id", "sharer", "at", "reason"], "reason, R16's (DEC-88)");
   // meaning: a row written through the module reads back in those columns as stated

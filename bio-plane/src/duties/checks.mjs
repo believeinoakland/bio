@@ -133,6 +133,9 @@ export const DUTIES_CHECKS = Object.freeze({
     localize("duties.checks.a_promises_date_is_read", "A promise's date is read from the body's own words, and those words must state one whole calendar date. These do not (such as \"by spring\", a month without its day, or more than one date): they are kept as written and never completed. Nothing was written.")),
   DUTY_SOURCE_NOT_HELD: row(44, "adopt", "is-duty-source-held",
     DUTIES_WORDS["refusal.DUTY_SOURCE_NOT_HELD"]),
+  /* T53 (R35; N1257, K5458): a rule name two active layers give, answered with the layers. */
+  NAME_AMBIGUOUS: row(45, "ruleAmbiguous", "is-duty-rule-layer",
+    localize("duties.checks.rule_name_in_several_layers", "More than one of the places your team reads gives a rule by that name, so none was chosen. Name the place whose rule this is. Nothing was written.")),
 });
 
 /** A refusal carrying its row. Called with the code as a literal at each site, so the DEC-49 guard reads which code

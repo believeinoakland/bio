@@ -11,6 +11,7 @@ import { entitiesOf, SECTORS, ORGANISATION_KINDS, CONNECTION_KINDS, CONNECTION_D
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { reasonText } from "../../../src/civil-time/index.mjs";
 import { wordRx } from "../../word-rx.mjs";
+import { wordLike } from "./wordlike.mjs";
 import { kindOf, neighbours as registryNeighbours, ownerConformance, checkConnection, BOUNDS, DECLARED_LABEL,
          LOWEST_GRADE, isRecordId } from "../../../src/connection-grammar/index.mjs";
 
@@ -254,22 +255,24 @@ test("R9 the identifier tier: a reference or its key recognised in a scheme's sp
   assert.ok(!got.some(([, id]) => id === other), "the A suppresses the C on another entity");
   const pat = r.resolved.find((m) => m.entity_id === w.pat);
   assert.equal(pat.basis, "marlow_bar BAR12345", "the basis names the scheme");
-  assert.match(pat.method, /^scheme identifier -- /);
+  assert.match(pat.method, wordLike("entities.index.scheme_identifier_the_reference_v1"));
   assert.match(pat.method, /marlow_bar/);
   assert.equal(pat.established, true);
-  assert.match(r.resolved.find((m) => m.ref === "person:P023").method, /undetermined \(.*no end is stated/);
-  assert.match(r.resolved.find((m) => m.ref === "person:P021").method, /valid when the document was retrieved/);
+  const undetermined = r.resolved.find((m) => m.ref === "person:P023").method;
+  assert.match(undetermined, wordLike("entities.index.its_validity_then_is_undetermined"));
+  assert.match(undetermined, wordRx("civil-time.end_stated"));
+  assert.match(r.resolved.find((m) => m.ref === "person:P021").method, wordRx("entities.index.valid_when_the_document_was_retrieved"));
   assert.deepEqual(r.unresolved.map((u) => u.ref).sort(), ["person:P020", "person:P022", "person:P024", "person:P099"]);
   /* an alias fold of the reference is A as before, and both tiers' entities resolve together */
   w.e.addAlias({ entityId: other, alias: "person:bar 12345" });
   const both = w.e.resolve({ captureSha: sha("r9id"), ref: "person:bar 12345" });
   assert.deepEqual(both.resolved.map((m) => [m.entity_id, m.grade]).sort(), [[w.pat, "A"], [other, "A"]].sort());
-  assert.match(both.resolved.find((m) => m.entity_id === other).method, /composite key/);
+  assert.match(both.resolved.find((m) => m.entity_id === other).method, wordLike("entities.index.source_identifier_the_references_composite"));
   /* with no retrieval instant held, a stated validity cannot be judged out, and the method says so */
   w.read("INFO-2", sha("r9noinst"), [{ kind: "person", key: "P020", label: "x" }]);
   const ni = w.e.resolve({ captureSha: sha("r9noinst") });
   assert.deepEqual(ni.resolved.map((m) => [m.entity_id, m.grade]), [[w.lee, "A"]]);
-  assert.match(ni.resolved[0].method, /retrieval instant is not held/);
+  assert.match(ni.resolved[0].method, wordRx("entities.why.capture_retrieval_instant"));
   /* the name lookup's grade_if_resolved is the recogniser's (R17) */
   const look = w.e.namingDocuments({ entityId: w.lee, viewer: MACHINE });
   assert.ok(look.documents.every((d) => d.grade_if_resolved === null || typeof d.grade_if_resolved === "string"));

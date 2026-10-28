@@ -1537,8 +1537,7 @@ export class Retrieval {
         drift.added = Math.max(0, members.length - sel.n);
         drift.removed = Math.max(0, sel.n - members.length);
         drift.digestChanged = true;
-        drift.detail = "the criterion now answers differently; which rows moved is not recoverable "
-                     + "because a query selection stores the criterion rather than the rows";
+        drift.detail = localize("retrieval.index.drift_criterion_moved", "the criterion now answers differently; which rows moved is not recoverable because a query selection stores the criterion rather than the rows");
       }
     }
     return { members, drift };

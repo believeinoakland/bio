@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { seeded, MEMBER, ZONE, noSuchDatedFact } from "./fixture.mjs";
 import { sha as digest } from "../provenance/fixtures.mjs";
 import { PROGRESSION_CHECKS } from "../../../src/progressions/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const T = (w, placements, entityId = "ENT-1") =>
   w.p.threadInstance({ progressionKey: "proc", entityId, placements, threadedBy: "member:alice", viewer: MEMBER });
@@ -58,7 +60,7 @@ test("R37 R10: each placement's own date and its source on read: the event's whe
   assert.deepEqual(view(SC).slice(0, 2), [null, "none"]);
   assert.match(docOf(r, SC).own_date_why, /2 dated facts/);
   assert.deepEqual(view(SD).slice(0, 2), [null, "none"]);
-  assert.match(docOf(r, SD).own_date_why, /no dated fact/);
+  assert.match(docOf(r, SD).own_date_why, wordRx("progressions.events_holds_dated_fact"));
   assert.doesNotMatch(JSON.stringify(r.stages), /2026-08-0[12]/);   // no registration or reading instant is a date
   // named: the member's choice of one of several
   await T(w, [{ stage: "contract", captureSha: SC, datedFact: "DF-C2" }]);
@@ -68,7 +70,7 @@ test("R37 R10: each placement's own date and its source on read: the event's whe
   await T(w, [{ stage: "need", captureSha: SA, event: E1 }]);
   assert.equal(docOf(R(w), SA).own_date.value, "2026-02-01");
   w.ev.events.get(E1).when = null;
-  assert.match(docOf(R(w), SA).own_date_why, /placed nowhere/);
+  assert.ok(docOf(R(w), SA).own_date_why.includes(word("progressions.event_placed_nowhere", { event_id: E1 })));
   const cols = w.rows(`PRAGMA table_info(progression_instances)`).map((c) => c.name);
   for (const c of ["own_date", "when", "date", "value"]) assert.ok(!cols.includes(c), c);
 });
@@ -136,7 +138,8 @@ test("R32 R31: the amount-free junction checks: a stage dated past its term afte
   // a band across the term's end, or a date missing: undetermined with why, never a finding
   const band = await award("2026-02", { precision: "edtf" });
   assert.deepEqual(band.findings.filter((x) => x.kind === "placed_after_term"), []);
-  assert.match(band.undetermined_checks.find((x) => x.kind === "term_undetermined").why, /overlaps the term's last day/);
+  assert.equal(band.undetermined_checks.find((x) => x.kind === "term_undetermined").why,
+    word("progressions.why.overlaps_term_last", { own_date: "2026-02 (edtf, America/New_York)", value: "2026-02-09" }));
   w.ev.facts.delete("sb");
   await T(w, [{ stage: "need", captureSha: "sa" }, { stage: "award", captureSha: "sb" }]);
   const none = R(w);
@@ -145,7 +148,8 @@ test("R32 R31: the amount-free junction checks: a stage dated past its term afte
   // a predecessor with no own date: the term is undetermined too
   w.ev.facts.delete("sa");
   w.fact("sb", "2026-09-01", "DF-B");
-  assert.match(R(w).undetermined_checks.find((x) => x.kind === "term_undetermined").why, /has no own date/);
+  assert.equal(R(w).undetermined_checks.find((x) => x.kind === "term_undetermined").why,
+    word("progressions.why.document_date", { capture_sha: "sa", own_date_why: word("progressions.events_holds_dated_fact"), from: "" }));
   // one response where a stage admits one: R31's finding (no amount is read here; amounts are money-checks')
   w.fact("sa", "2026-01-10", "DF-A");
   const two = await T(w, [{ stage: "need", captureSha: "sa" }, { stage: "award", captureSha: "sb" }, { stage: "award", captureSha: "sc" }]);

@@ -15,7 +15,8 @@ const url = (q) => new URL(`https://plane.example/?${q}`);
 test("R15 localFactsOps publishes one arm per act and read, grouprules among them, so the plane spreads the map and names no entry", () => {
   const w = world();
   assert.deepEqual(Object.keys(localFactsOps(w.lf, url(""), null)).sort(),
-                   ["factconfirm", "factsdue", "factstatus", "grouprules", "ruleconfirm", "ruledraft", "rulefields", "ruleoffer", "rulewithdraw"]);
+                   ["factconfirm", "factsdue", "factstatus", "grouprules", "layerentries", "layerentryconfirm", "layerentrydraft", "layerentrywithdraw",
+                    "layerreport", "layerreportcarry", "layerreports", "ruleconfirm", "ruledraft", "rulefields", "ruleoffer", "ruleresolve", "rulewithdraw"]);
   for (const arm of Object.values(localFactsOps(w.lf, url(""), null))) assert.equal(typeof arm, "function");
 });
 
@@ -60,20 +61,23 @@ const ROWS = {
   FACT_VALUE_REFUSED: ["C-126.5", "src/local-facts/index.mjs factConfirm > is-fact-correction"],
   MACHINE_CANNOT_DRAFT_RULE: ["C-126.6", "src/local-facts/rules.mjs machineRuleRefusal > is-rule-member"],
   RULE_SECTION_UNKNOWN: ["C-126.7", "src/local-facts/rules.mjs sectionRefusal > is-rule-section"],
-  RULE_ENTRY_INVALID: ["C-126.8", "src/local-facts/rules.mjs ruleDraft > is-rule-entry"],
-  RULE_NO_SOURCE: ["C-126.9", "src/local-facts/rules.mjs ruleDraft > is-rule-source"],
+  /* T53: the codes ruleDraft and the team layer's entry draft both answer are minted at one site each (DEC-49) */
+  RULE_ENTRY_INVALID: ["C-126.8", "src/local-facts/rules.mjs entryInvalidRefusal > is-rule-entry"],
+  RULE_NO_SOURCE: ["C-126.9", "src/local-facts/rules.mjs noSourceRefusal > is-rule-source"],
   RULE_IN_PROFILE: ["C-126.10", "src/local-facts/rules.mjs ruleDraft > is-rule-new"],
   RULE_NO_REASON: ["C-126.11", "src/local-facts/rules.mjs reasonRefusal > is-rule-reason"],
   NO_SUCH_GROUP_RULE: ["C-126.12", "src/local-facts/rules.mjs noSuchRule > is-rule-named"],
-  RULE_SELF_CONFIRM: ["C-126.13", "src/local-facts/rules.mjs ruleConfirm > is-rule-other"],
-  RULE_NOT_DRAFTED: ["C-126.14", "src/local-facts/rules.mjs ruleConfirm > is-rule-drafted"],
-  RULE_NEEDS_QUALIFICATION: ["C-126.15", "src/local-facts/rules.mjs ruleConfirm > is-rule-qualified"],
+  RULE_SELF_CONFIRM: ["C-126.13", "src/local-facts/rules.mjs selfConfirmRefusal > is-rule-other"],
+  RULE_NOT_DRAFTED: ["C-126.14", "src/local-facts/rules.mjs notDraftedRefusal > is-rule-drafted"],
+  RULE_NEEDS_QUALIFICATION: ["C-126.15", "src/local-facts/rules.mjs needsQualificationRefusal > is-rule-qualified"],
   RULE_NOT_CONFIRMED: ["C-126.16", "src/local-facts/rules.mjs ruleOffer > is-rule-confirmed"],
 };
 
 test("R16 every C-126 row takes its translation from words.json's refusal.<CODE> key, verbatim; codes, numbers and wheres unmoved", () => {
   /* the list holds a key for every row (DEC-260, K3374), so every row is keyed and the words are the list's own */
-  const CODES = Object.keys(LOCAL_FACTS_CHECKS);
+  /* T53: the ten rows C-126.17 to C-126.26 are written once at their use (`localize`), the word table taking them from the build, so
+     the list's keys are these sixteen; the ten are held by `t53.test.mjs` */
+  const CODES = Object.keys(LOCAL_FACTS_CHECKS).slice(0, 16);
   assert.deepEqual(CODES.filter((c) => HAS(`refusal.${c}`)), CODES);
   assert.deepEqual(Object.keys(LOCAL_FACTS_WORDS), CODES.map((c) => `refusal.${c}`));
   assert.ok(Object.isFrozen(LOCAL_FACTS_WORDS));
@@ -91,7 +95,7 @@ test("R16 every C-126 row takes its translation from words.json's refusal.<CODE>
   assert.throws(() => WORD("refusal.NOT_A_ROW_OF_THIS_MODULE"), /words\.json holds no word refusal\.NOT_A_ROW_OF_THIS_MODULE/);
   for (const [code, [check, where]] of Object.entries(ROWS))
     assert.deepEqual([LOCAL_FACTS_CHECKS[code].check, LOCAL_FACTS_CHECKS[code].where], [check, where], code);
-  assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS), Object.keys(ROWS));
+  assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS).slice(0, 16), Object.keys(ROWS));
 });
 
 test("R16 each keyed refusal reached at the interface answers words.json's words, with its behaviour unmoved (RULE_ENTRY_INVALID's errors beside them)", () => {

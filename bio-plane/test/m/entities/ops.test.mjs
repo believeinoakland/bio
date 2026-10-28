@@ -99,6 +99,8 @@ test("R40 every arm answers what its named service answers, reading its paramete
     ["entitysimilar", () => [{ name: "Harbour Offic", kind: "office", limit: "5", viewer: MACHINE }, null],
                       (e) => e.similarSubjects({ name: "Harbour Offic", kind: "office", limit: "5", viewer: MACHINE })],
     ["entitysimilar", () => [{}, null], (e) => e.similarSubjects({ name: null, kind: null, limit: null, viewer: null })],
+    ["federaloffices", () => [{ q: "revenue", viewer: "member:ann" }, null], (e) => e.federalOfficesFind({ query: "revenue", viewer: "member:ann" })],
+    ["federaloffices", () => [{}, null], (e) => e.federalOfficesFind({ query: null, viewer: null })],
   ];
   assert.deepEqual([...new Set(cases.map(([op]) => op))].sort(), [...OPS].sort(), "every op is driven");
   for (const [op, input, direct] of cases) {
