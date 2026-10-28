@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7717 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7719 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25246,6 +25246,8 @@ export const WORD_ROWS = Object.freeze([
   ["membership.index.name_who_holds_hosting_access","name who holds hosting access: the record keeps the team's answer as it was given, and an empty answer records nobody. Nothing was written.",null,null,false,"code"],
   ["membership.index.no_member_of_your_team","no member of your team answers to that id here. Nothing was changed.",null,null,false,"code"],
   ["membership.index.no_other_owner_of_this","no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.",null,null,false,"code"],
+  ["membership.index.not_a_participant_detail","the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 §7). Nothing was changed.",null,null,false,"code"],
+  ["membership.index.not_the_owner_detail","this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.",null,null,false,"code"],
   ["membership.index.only_a_member_whose_status","only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.",null,null,false,"code"],
   ["membership.index.only_an_invitation_that_has","only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written.",null,null,false,"code"],
   ["membership.index.only_an_owner_of_this","only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.",null,null,false,"code"],

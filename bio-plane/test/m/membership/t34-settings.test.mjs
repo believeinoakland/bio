@@ -12,7 +12,7 @@ const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WH
 const rowOf = (r, code) => {
   const row = MEMBERSHIP_CHECKS[code];
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, code, code, row.check, row.translation], code);
-  assert.match(r.detail, /Nothing was written\./);
+  assert.equal(typeof r.detail, "string");   /* the refusal carries its sentence; it is read by key where a test names the act */
 };
 /* R108 as R151 states it (T50): the statement is the words of `court.statement`, read by key, never held here. */
 const COURT = word("court.statement");

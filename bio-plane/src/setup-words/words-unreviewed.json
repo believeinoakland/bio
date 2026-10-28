@@ -38239,28 +38239,28 @@
       "en": "roster act on a project, position-enforced by the store",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1423
+      "line": 1450
     },
     {
       "id": "membership.declared.projectjoin",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1425
+      "line": 1452
     },
     {
       "id": "membership.declared.projectleave",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1427
+      "line": 1454
     },
     {
       "id": "membership.declared.projectremove",
       "en": "roster act on a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1429
+      "line": 1456
     },
     {
       "id": "membership.index.a_door_makes_at_most",
@@ -38274,7 +38274,7 @@
       "en": "a member joins a project they were invited to. Being uninvited is not a refusal you can see.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1099
+      "line": 1096
     },
     {
       "id": "membership.index.a_member_row_already_holds",
@@ -38302,7 +38302,7 @@
       "en": "{act} on {String} is work inside that project, and {who} has not joined it (§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 650
+      "line": 647
     },
     {
       "id": "membership.index.adding_an_administrator_beyond_the",
@@ -38316,7 +38316,7 @@
       "en": "adding an owner to a project whose owners are all inactive (7.13)",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1188
+      "line": 1215
     },
     {
       "id": "membership.index.administrator_status_is_granted_and",
@@ -38330,7 +38330,7 @@
       "en": "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1201
+      "line": 1228
     },
     {
       "id": "membership.index.an_invitation_lasts_a_whole",
@@ -38344,7 +38344,7 @@
       "en": "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1168
+      "line": 1194
     },
     {
       "id": "membership.index.choose_a_handle_it_is",
@@ -38393,7 +38393,21 @@
       "en": "no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1131
+      "line": 1128
+    },
+    {
+      "id": "membership.index.not_a_participant_detail",
+      "en": "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 §7). Nothing was changed.",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 180
+    },
+    {
+      "id": "membership.index.not_the_owner_detail",
+      "en": "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 204
     },
     {
       "id": "membership.index.only_a_member_whose_status",
@@ -38414,14 +38428,14 @@
       "en": "only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1062
+      "line": 1059
     },
     {
       "id": "membership.index.only_an_owner_of_this_2",
       "en": "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1153
+      "line": 1179
     },
     {
       "id": "membership.index.other_was_chosen_and_the",
@@ -38442,7 +38456,7 @@
       "en": "recorded as a request to leave. An owner of this project removes participants; this does not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1138
+      "line": 1135
     },
     {
       "id": "membership.index.removal_takes_votesneeded_of_administrators",
@@ -38470,35 +38484,35 @@
       "en": "{stringify} is not a setting: a project is \"discoverable\" or \"hidden\", and nothing else. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 954
+      "line": 951
     },
     {
       "id": "membership.index.subject_is_v1_production_and",
       "en": "{subject} is {v1} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is {v2}'s, who is not an owner of it. Being a registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 693
+      "line": 690
     },
     {
       "id": "membership.index.that_handle_is_yours",
       "en": "that handle is yours; you cannot invite yourself to a project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1072
+      "line": 1069
     },
     {
       "id": "membership.index.that_member_is_already_in",
       "en": "that member is already a participant of this project",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1080
+      "line": 1077
     },
     {
       "id": "membership.index.that_member_is_already_invited",
       "en": "that member is already invited to this project and has not joined yet",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1077
+      "line": 1074
     },
     {
       "id": "membership.index.the_choice_is_tell_or",
@@ -38561,7 +38575,7 @@
       "en": "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1164
+      "line": 1190
     },
     {
       "id": "membership.index.the_password_could_not_be",
@@ -38631,21 +38645,21 @@
       "en": "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1193
+      "line": 1220
     },
     {
       "id": "membership.index.this_project_is_discoverable_and",
       "en": "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 891
+      "line": 888
     },
     {
       "id": "membership.index.this_project_is_hidden_and",
       "en": "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 890
+      "line": 887
     },
     {
       "id": "membership.index.too_many_handles_were_checked",
@@ -38673,14 +38687,14 @@
       "en": "whether {String} can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and {String_2} is not one of them. Seeing a project is not directing it. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 916
+      "line": 913
     },
     {
       "id": "membership.index.whether_this_projects_own_rules",
       "en": "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made on a guess. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 567
+      "line": 564
     },
     {
       "id": "money-checks.index.money_could_not_answer_message",
