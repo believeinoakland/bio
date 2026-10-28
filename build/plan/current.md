@@ -482,6 +482,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-317 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/link-sweep.md`
 **scheduler**
+- T53-561 · K5693, doorbell R30 · R35 calls `clearDiscarded`, `discardClearDue` and `discardClearWake`; while a hold is in place the wake instant stays past (the due read ignores holds)
 - T53-318 · K4403, N824 · CAPABILITIES rows
 - T53-319 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/scheduler.md`
@@ -494,6 +495,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-321 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/wizard-scripts.md`
 **op-grades**
+- T53-559 · K5693, doorbell R31 · `inboxview` graded (a read)
 - T53-322 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-323 · N1220 · every machine result labelled with its AI
 - T53-324 · BOB · R57 AI op grades confirmed `[owed: BOB writes]`
@@ -556,6 +558,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-354 · K4168, N824, N858 · CAPABILITIES rows
 - rows: `build/plan/T53-R1/op-capabilities.md`
 **op-declarations**
+- T53-558 · K5693, doorbell R31 · `inboxview` declared (a read, member session only)
 - T53-556 · K5678, ai-accounts R35 and the ops K5457 retired · the tests of retired ops (R19, R20, R24, R30, R34, R41, R47, R68) re-pointed to the nineteen new ops, red on the tranche until then
 - T53-355 · K4599 · `screenread`, budget class per op
 - T53-356 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
@@ -589,6 +592,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-371 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/signin-door.md`
 **store-assembly**
+- T53-557 · K5693, doorbell R31 · `t42.test.mjs`'s `DOORBELL_METHODS` gains `inboxview: "inboxView"` (ten routes)
 - T53-552 · K5677, credentials R72 retired · `ask.test.mjs` calls `aiAccountsOf(ctx)`, never credentials' R72 delegates
 - C T52-46
 - C T52-47
@@ -755,6 +759,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-545 · K5650, jurisdictions R105 · `help-records.mjs:33-35` reads `view.records_help` as a list
 - rows: `build/plan/T53-R1/screens-action.md`
 **control-plane**
+- T53-560 · K5693, doorbell R31 · routes `inboxview` to doorbell
 - T53-554 · K5677, credentials R72 retired · `r53-routes.test.mjs` as T53-553
 - T53-461 · N1264, K4599 · routes `screenread`, folded admission
 - T53-462 · K5425 (b) · fixtures-run lines 23, 29 orphans: delete or name stand-in
