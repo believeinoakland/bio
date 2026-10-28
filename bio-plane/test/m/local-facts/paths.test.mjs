@@ -76,10 +76,10 @@ test("R6 a named closure list's entry has a path of its own naming the list (lis
 test("R7 the acts, statuses and horizons are exported, frozen", () => {
   assert.deepEqual([...LOCAL_FACT_ACTS], ["confirm", "correct", "dispute"]);
   assert.deepEqual([...LOCAL_FACT_STATUSES], ["confirmed", "unconfirmed", "corrected", "disputed", "absent"]);
-  assert.deepEqual([...LOCAL_FACT_KINDS], ["holidays", "hours", "time_zone"]);
+  assert.deepEqual([...LOCAL_FACT_KINDS], ["holidays", "hours", "time_zone", "fiscal_year"]);
   assert.deepEqual(JSON.parse(JSON.stringify(LOCAL_FACT_HORIZONS)), {
     holidays: { lasts: "until_year_end", due_from: { month: 11, day: 1, years_before: 1 } },
-    hours: { lapse_days: 183 }, time_zone: { lapse_days: 183 } });
+    hours: { lapse_days: 183 }, time_zone: { lapse_days: 183 }, fiscal_year: { lapse_days: 183 } });
   for (const v of [LOCAL_FACT_ACTS, LOCAL_FACT_STATUSES, LOCAL_FACT_KINDS, LOCAL_FACT_HORIZONS,
                    LOCAL_FACT_HORIZONS.holidays, LOCAL_FACT_HORIZONS.holidays.due_from, LOCAL_FACT_HORIZONS.hours,
                    LOCAL_FACT_HORIZONS.time_zone]) assert.ok(Object.isFrozen(v));

@@ -39233,14 +39233,238 @@
       "en": "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",
       "module": "local-facts",
       "file": "bio-plane/src/local-facts/index.mjs",
-      "line": 721
+      "line": 1013
+    },
+    {
+      "id": "local-facts.declared.layerentries",
+      "en": "read: the team layer's entries with their state, source, drafter and confirmer, and each stated fiscal year with how it was checked, to a member; writes nothing",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 1007
+    },
+    {
+      "id": "local-facts.declared.layerentryconfirm",
+      "en": "layer-directed: keyed by a team-layer entry; a member other than its drafter confirms it, and it applies from then; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 999
+    },
+    {
+      "id": "local-facts.declared.layerentrydraft",
+      "en": "layer-directed: keyed by a section, an entry and the government it is about; a member drafts an entry of the team's layer from its primary source, with a reason; never a Civicsmith layer's; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 997
+    },
+    {
+      "id": "local-facts.declared.layerentrywithdraw",
+      "en": "layer-directed: keyed by a team-layer entry; a member withdraws it with a reason, kept and never deleted; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 1001
+    },
+    {
+      "id": "local-facts.declared.layerreport",
+      "en": "layer-directed: keyed by a Civicsmith layer and the path of one of its entries; a member reports a rule they believe wrong, with what they believe and where they read it; transmits nothing; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 1003
+    },
+    {
+      "id": "local-facts.declared.layerreportcarry",
+      "en": "layer-directed: keyed by a team report; a member takes its bytes and digest to carry to Civicsmith, and it reads carried; transmits nothing; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 1005
+    },
+    {
+      "id": "local-facts.declared.layerreports",
+      "en": "read: the team's reports on Civicsmith layers' rules with their state, to a member; writes nothing",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 1009
+    },
+    {
+      "id": "local-facts.declared.ruleresolve",
+      "en": "read: the team's rule a bare name stands for, or each government that gives it when two do; writes nothing",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 1011
+    },
+    {
+      "id": "local-facts.index.a_stated_year_gives_its_body",
+      "en": "a stated fiscal year gives its body, start, named_by and label in the form the places' records hold them.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 665
+    },
+    {
+      "id": "local-facts.index.a_stated_year_government",
+      "en": "a stated fiscal year is about a federal, state, county or city government, `federal` with no place.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 635
+    },
+    {
+      "id": "local-facts.index.not_a_field_of_a_stated_year",
+      "en": "{k} is not a field of a stated year",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 662
+    },
+    {
+      "id": "local-facts.index.set_aside_by_the_records",
+      "en": "the places' own records give this government's year, which governs; the team's statement is kept",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 532
+    },
+    {
+      "id": "local-facts.index.stated_by_by_when",
+      "en": "stated by {by}, {when}",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 523
+    },
+    {
+      "id": "local-facts.index.the_records_already_give_this_year",
+      "en": "the places' own records already give this government's fiscal year; there is nothing to state.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 678
     },
     {
       "id": "local-facts.index.the_team_has_not_stated",
       "en": "the team has not stated its time zone, and no installed place gives one; an administrator sets it",
       "module": "local-facts",
       "file": "bio-plane/src/local-facts/index.mjs",
-      "line": 355
+      "line": 515
+    },
+    {
+      "id": "local-facts.index.the_team_has_not_stated_year",
+      "en": "the team has not stated this government's fiscal year",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 514
+    },
+    {
+      "id": "local-facts.layer.a_report_names_the_entrys_path",
+      "en": "a report names the entry's path (`key`) and says what the layer gives (`said`).",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 398
+    },
+    {
+      "id": "local-facts.layer.layer_already_gives_this_with",
+      "en": "the layer {layer} already gives this with a different value; report the rule instead.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 87
+    },
+    {
+      "id": "local-facts.layer.no_layer_by_that_id",
+      "en": "no layer by that id is held.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 72
+    },
+    {
+      "id": "local-facts.layer.say_what_the_entry_should_say",
+      "en": "say what the entry should say, in 1 to {BELIEVES_MAX} characters.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 394
+    },
+    {
+      "id": "local-facts.layer.team_covers",
+      "en": "the team",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 182
+    },
+    {
+      "id": "local-facts.layer.team_name",
+      "en": "The team's layer",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 182
+    },
+    {
+      "id": "local-facts.layer.that_layer_is_civicsmiths_own",
+      "en": "that layer is Civicsmith's own and is not edited here: add the entry to your team's layer, or report the rule you believe is wrong.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 64
+    },
+    {
+      "id": "local-facts.layer.the_entry_is_not_valid",
+      "en": "the entry is not valid as a {section} entry of the team layer.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 228
+    },
+    {
+      "id": "local-facts.layer.the_team_holds_no_report",
+      "en": "the team holds no report by that id.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 103
+    },
+    {
+      "id": "local-facts.layer.the_team_layer_holds_no",
+      "en": "the team layer holds no entry by that id.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 95
+    },
+    {
+      "id": "local-facts.layer.the_team_layer_is_edited",
+      "en": "the team's layer is edited, not reported on.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/layer.mjs",
+      "line": 80
+    },
+    {
+      "id": "local-facts.rules.government_is_level_place",
+      "en": "government is {level, place}: level {levels}, place a name of 1 to 200 characters on one line",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/rules.mjs",
+      "line": 91
+    },
+    {
+      "id": "local-facts.rules.is_confirmed_by_another_member",
+      "en": "a {noun} is confirmed by a member other than its drafter.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/rules.mjs",
+      "line": 525
+    },
+    {
+      "id": "local-facts.rules.is_drafted_from_a_held_capture",
+      "en": "{what} is drafted from a held capture extent of its primary source ({captureSha, extent}): {why}",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/rules.mjs",
+      "line": 517
+    },
+    {
+      "id": "local-facts.rules.noun_of_tier_confirmed_by_professional",
+      "en": "a {noun} of tier {tier} is confirmed by a professional, who states her qualification in 1 to {max} characters.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/rules.mjs",
+      "line": 539
+    },
+    {
+      "id": "local-facts.rules.the_name_is_given_by",
+      "en": "the name is given by more than one place; say which.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/rules.mjs",
+      "line": 500
+    },
+    {
+      "id": "local-facts.rules.the_noun_is_state_only_drafted",
+      "en": "the {noun} is {state}; only a drafted {noun} is confirmed.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/rules.mjs",
+      "line": 532
     },
     {
       "id": "machinery-producers.index.a_status_is_a_fact",
@@ -50450,6 +50674,41 @@
       "line": 362
     },
     {
+      "id": "refusal.FISCAL_YEAR_IN_RECORDS",
+      "en": "The places' own records already give this government's fiscal year, so there is nothing to state. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 43
+    },
+    {
+      "id": "refusal.LAYER_ENTRY_IN_SHIPPED",
+      "en": "A layer Civicsmith ships already gives this with a different value, and your team's entry cannot replace it. Report the rule you believe is wrong instead. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 42
+    },
+    {
+      "id": "refusal.LAYER_NOT_SHIPPED",
+      "en": "That is your team's own layer, which you edit rather than report on. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 41
+    },
+    {
+      "id": "refusal.LAYER_READ_ONLY",
+      "en": "That layer is Civicsmith's own and cannot be edited here. Add your own entry to your team's layer, or report the rule you believe is wrong. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 39
+    },
+    {
+      "id": "refusal.LAYER_UNKNOWN",
+      "en": "No layer of that name is held. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 40
+    },
+    {
       "id": "refusal.MAIL_NO_STATEMENT",
       "en": "A message brought in records where it came from, in your own words, and none was given, or it is longer than 2,000 characters. Write it. Nothing was written.",
       "module": "capture",
@@ -50464,6 +50723,27 @@
       "line": 376
     },
     {
+      "id": "refusal.NAME_AMBIGUOUS",
+      "en": "More than one place gives that name. Say which one you mean. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 46
+    },
+    {
+      "id": "refusal.NO_SUCH_LAYER_ENTRY",
+      "en": "Your team's layer holds no entry by that id. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 47
+    },
+    {
+      "id": "refusal.NO_SUCH_LAYER_REPORT",
+      "en": "Your team holds no report by that id. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 48
+    },
+    {
       "id": "refusal.OBSERVATION_FIELD_MALFORMED",
       "en": "That entry carries a read or a disagreement that is not in the form the record keeps. A read names the record, which one it was of how many, and whether it was answered or refused; a disagreement names the record and at least two different levels, in the order they were named. Nothing was written.",
       "module": "observation-log",
@@ -50476,6 +50756,20 @@
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/checks.mjs",
       "line": 203
+    },
+    {
+      "id": "refusal.REPORT_NO_BELIEF",
+      "en": "Say what you believe the entry should say, in 1 to 1,000 characters. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 45
+    },
+    {
+      "id": "refusal.REPORT_NO_SOURCE",
+      "en": "A report names where you read it: a held document's passage, or an address with the passage. Nothing was written.",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/checks.mjs",
+      "line": 44
     },
     {
       "id": "refusal.SITE_ASKS_FOR_PERSON",

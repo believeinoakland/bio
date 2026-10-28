@@ -61,10 +61,10 @@ test("R10 a member drafts a rule from its primary source, answered {ok, rule, st
   /* RULE_IN_PROFILE against the test profile, before the reason, naming the entry it already holds */
   r = draft({ ...DL, rule: "records_answer" }, { reason: "" });
   row(r, "RULE_IN_PROFILE");
-  assert.deepEqual(r.held, { section: "deadlines", rule: "records_answer", applies_to: "records_request", profile: TP });
+  assert.deepEqual(r.held, { section: "deadlines", rule: "records_answer", applies_to: "records_request", profile: TP, layer: TP }, "R28: names the layer that holds the key");
   r = w.lf.ruleDraft({ section: "legal_facts", entry: { ...LF, key: "sitting_recordings" }, source: src, reason: "", by: V("bob") });
   row(r, "RULE_IN_PROFILE");
-  assert.deepEqual(r.held, { section: "legal_facts", key: "sitting_recordings", profile: TP });
+  assert.deepEqual(r.held, { section: "legal_facts", key: "sitting_recordings", profile: TP, layer: TP });
   /* NO_REASON: none, blank, over 500 characters */
   for (const reason of [undefined, "  ", "x".repeat(501)]) row(draft(DL, { reason }), "RULE_NO_REASON");
   assert.equal(n(), 0, "no refusal wrote anything");
@@ -205,7 +205,8 @@ test("R12 governingView: combine's view with each confirmed, unwithdrawn group r
   assert.deepEqual(gv.view.deadlines.slice(0, -1), base.view.deadlines, "the profiles' entries unchanged, the rule added last");
   const added = gv.view.deadlines.at(-1);
   const { effective_from: _from, ...DLP } = DL;
-  assert.deepEqual(added, { ...DLP, status: "researched", basis: `2026-11-01 ${r}`, profile: GROUP_PROFILE,
+  /* R24, R28: an applied rule is the team layer's: `origin: team`, its `layer` */
+  assert.deepEqual(added, { ...DLP, status: "researched", basis: `2026-11-01 ${r}`, profile: GROUP_PROFILE, layer: "team", origin: "team",
                             bases: [{ profile: GROUP_PROFILE, basis: `2026-11-01 ${r}` }] });
   assert.equal(gv.view.legal_facts.at(-1).key, LF.key);
   assert.equal(gv.view.legal_facts.at(-1).profile, "group");
