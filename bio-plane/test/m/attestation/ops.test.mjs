@@ -47,7 +47,7 @@ test("R1, R2: op=attest is a POST over the working bucket, asks the store's regi
   /* A store that does not answer is a record that could not be asked. */
   const silent = await attestOp(post({ sha256: s }), { CAPTURES: bucket }, storeAnswering(() => ({ answered: false })), helpers());
   assert.deepEqual([silent.status, silent.body.reason], [404, "NO_SUCH_CAPTURE"]);
-  assert.match(silent.body.detail, /could not be asked/);
+  assert.ok(silent.body.detail.includes(word("attestation.index.no_such_capture_unasked")));
   /* Held whole: the authorities are asked through the network, and a token is stored under the store's key (R2). */
   const real = globalThis.fetch;
   const asked = [];
