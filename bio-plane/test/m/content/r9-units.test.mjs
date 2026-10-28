@@ -2,6 +2,7 @@
    a capture cited and read by its whole digest (R59), and a partial reading said to be searched only so far (R60). Every test drives `content` at its interface; the
    units are what `extraction.unitsOf` answers (R36, R93, R107: a page and `next`, `state`, `counts`, each unit's `kind` and `lineRows`), stood in by the test. */
 import { notHeldRange } from "../acquisition/fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, bucket, V, sha, infoMd, provDoc, LAYER, onePagePdf } from "./fixture.mjs";
@@ -159,7 +160,10 @@ test("R1 (K4910): a doc-part extent is the tenth kind: canonical {kind, part, re
   assert.equal(canonicalExtent(a), canonicalExtent(PART));
   assert.deepEqual(JSON.parse(canonicalExtent(PART)), { kind: "doc-part", part: "word/footnotes.xml", ref: "fn:3" });
   assert.notEqual(canonicalExtent(PART), canonicalExtent({ ...PART, ref: "fn:4" }));
-  assert.match(describeExtent(PART), /fn:3/, "the element reference, not the caller's `ref` field read as an authored human form");
+  const named = word("content.extent.part_named", { name: word("content.extent.part_name.footnote"), n: "3" });
+  assert.equal(describeExtent(PART), named, "the part in plain words (DEC-454), never the raw reference or the caller's `ref` field");
+  assert.equal(describeExtent({ kind: "doc-part", part: "ppt/notesSlides/notesSlide2.xml", ref: "n" }), word("content.extent.part_name.speaker_note"));
+  assert.equal(describeExtent({ kind: "doc-part", ref: "zz:9" }), word("content.extent.part_unnamed"), "a part of no known kind");
   const ctx = { chain: LAYER, pageCount: 1, container: {} };
   assert.equal(checkContentExtent(PART, ctx), null);
   assert.equal(checkContentExtent({ kind: "doc-part", ref: "fn:3" }, ctx), null);
@@ -187,7 +191,7 @@ test("R58: a passage whose unit names a kind other than body is cited as that ki
   const f = s.w.content.contentRead({ id: idFoot, viewer: V("bo") });
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   assert.equal(f.part_kind, "footnote");
-  assert.ok(f.ref.includes(PART_KIND_WORDS.footnote) && f.ref.includes("fn:3"), `ref: ${f.ref}`);
+  assert.ok(f.ref.includes(PART_KIND_WORDS.footnote) && f.ref.includes(word("content.extent.part_named", { name: word("content.extent.part_name.footnote"), n: "3" })), `ref: ${f.ref}`);
   assert.equal(s.w.content.passageText(idFoot), "The fee is $4,200.", "the passage's text is the unit at the part's extent");
   /* control: a body paragraph's citation names no kind but body, and its human form is unchanged */
   const b = s.w.content.contentRead({ id: idBody, viewer: V("bo") });

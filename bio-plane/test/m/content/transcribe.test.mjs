@@ -3,6 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { TYPED_UNCHECKED_GRADE, TYPED_CHECKED_GRADE } from "../../../src/textchain.mjs";
 import { TRANSCRIPTION_MAX_BYTES, TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS, ATTEST_NOTE_MAX, contentOps }
   from "../../../src/content/index.mjs";
 
@@ -51,7 +53,7 @@ test("R23: refusals in order: C-52.1 machine or empty, C-52.2 target, C-52.3 cap
   assert.equal(w.row(`SELECT length(text) AS n FROM transcriptions`).n, TRANSCRIPTION_MAX_BYTES);
 });
 
-test("R24: success mints a row whose chain is one typed step, minted by the typist, keeping the text byte for byte; the same typing is found; undetermined until attested", () => {
+test("R24: success mints a row whose chain is one typed step, minted by the typist, keeping the text byte for byte; the same typing is found; graded as the typist's word until another member attests it", () => {
   const { w, a, tr } = setup({ chain: null });
   const text = "In the year 1921,\n  the parcel  was deeded — ¶ as-is ";
   const r = tr({ text, at: "2026-09-10T00:00:00Z" });
@@ -61,7 +63,8 @@ test("R24: success mints a row whose chain is one typed step, minted by the typi
   const row = w.row(`SELECT minted_by, at, chain_kind FROM content WHERE content_id=?`, r.content_id);
   assert.deepEqual({ ...row }, { minted_by: V("ty"), at: "2026-09-10T00:00:00Z", chain_kind: "typed" });
   assert.equal(w.row(`SELECT text FROM transcriptions WHERE content_id=?`, r.content_id).text, text);
-  assert.deepEqual([r.derivation_cap, r.transcription.ceiling], [null, null], "undetermined, stated");
+  assert.deepEqual([r.derivation_cap, r.transcription.ceiling, r.transcription.determinant], [null, TYPED_UNCHECKED_GRADE, "typist"],
+    "the typist's word, never undetermined");
   assert.ok(r.transcription.why);
   const before = w.snapshot();
   const again = tr({ text, at: "2027-01-01T00:00:00Z" });
@@ -83,8 +86,8 @@ test("R25: transcriptionAttest: C-52.8, then checkAttestation, then C-52.9; one 
   const typing = { ...w.row(`SELECT * FROM transcriptions`) };
   const ok = w.content.transcriptionAttest({ contentId: t.content_id, attestor: V("zo"), viewer: V("zo"), note: "checked", at: "2026-09-11T00:00:00Z" });
   assert.equal(ok.ok, true);
-  assert.equal(ok.ceiling_before.ceiling, null);
-  assert.deepEqual([ok.transcription.determinant, ok.transcription.by], ["attestation", [V("zo")]]);
+  assert.equal(ok.ceiling_before.ceiling, TYPED_UNCHECKED_GRADE);
+  assert.deepEqual([ok.transcription.ceiling, ok.transcription.determinant, ok.transcription.by], [TYPED_CHECKED_GRADE, "second_member", [V("zo")]]);
   assert.deepEqual(ok.extent, { kind: "page", page: 1 }, "scoped to the typed portion, never the caller's");
   const again = w.content.transcriptionAttest({ note: "compared with the page", contentId: t.content_id, attestor: V("zo"), viewer: V("zo"), at: "2026-09-12T00:00:00Z" });
   assert.equal(again.ok, true);
@@ -104,7 +107,7 @@ test("R26: transcriptionRead: C-52.8; the text, digest, chain, cap, ceiling and 
   assert.deepEqual(r.chain, [{ step: "typed", member: V("ty"), text_sha256: sha("the words") }]);
   assert.ok(typeof r.chain_says === "string" && r.chain_says.includes(V("ty")));
   assert.equal(r.derivation_cap, null);
-  assert.equal(r.transcription.determinant, "attestation");
+  assert.deepEqual([r.transcription.ceiling, r.transcription.determinant], [TYPED_CHECKED_GRADE, "second_member"]);
   assert.deepEqual(r.attestations.map((a) => [a.attestor, a.counts]).sort(), [[V("ty"), false], [V("zo"), true]]);
 });
 
@@ -137,7 +140,7 @@ test("R25: transcriptionAttest: C-52.10 (ATTEST_NO_NOTE) after C-52.9: a note ab
   assert.equal(w.count("transcription_attestations"), 0, "no refusal writes");
   assert.deepEqual(w.snapshot(), before, "nothing written anywhere");
   assert.deepEqual(w.content.transcriptionRead({ id: t.content_id, viewer: V("zo") }), read0, "the ceiling and the read unchanged");
-  assert.equal(read0.transcription.ceiling, null);
+  assert.equal(read0.transcription.ceiling, TYPED_UNCHECKED_GRADE);
   /* through the route arm: the note is the body's, and a body without one is refused the same way */
   const run = (q, body) => contentOps(w.content, new URL(`https://plane.invalid/?${new URLSearchParams(q)}`), body).transcriptionattest();
   isRow(run({ attestor: V("zo"), viewer: V("zo"), contentId: t.content_id }, null), "ATTEST_NO_NOTE");
@@ -147,7 +150,7 @@ test("R25: transcriptionAttest: C-52.10 (ATTEST_NO_NOTE) after C-52.9: a note ab
   const at2000 = "\u{1D538}".repeat(ATTEST_NOTE_MAX - 1) + "!";
   const ok = att({ note: at2000, at: "2026-09-11T00:00:00Z" });
   assert.equal(ok.ok, true);
-  assert.deepEqual([ok.ceiling_before.ceiling, ok.transcription.determinant], [null, "attestation"]);
+  assert.deepEqual([ok.ceiling_before.ceiling, ok.transcription.determinant], [TYPED_UNCHECKED_GRADE, "second_member"]);
   assert.equal(w.row(`SELECT note FROM transcription_attestations`).note, at2000);
   assert.deepEqual(w.content.transcriptionRead({ id: t.content_id, viewer: V("zo") }).attestations.map((a) => [a.attestor, a.note]),
                    [[V("zo"), at2000]], "read back with its note");
@@ -184,4 +187,73 @@ test("R38: C-52.1–C-52.10 are this module's own rows (C-52.1–.9 moved from t
   const t = tr({});
   assert.equal(t.ok, true);
   assert.equal(w.content.transcriptionAttest({ contentId: t.content_id, attestor: V("zo"), viewer: V("zo"), note: "checked" }).ok, true);
+});
+
+/* R63, R68 (T53-133, T53-529; DEC-464): one grade, at every interface, read from text-chain's two constants */
+test("R63, R68: a typing is its typist's word, a second member's check raises it one step, the same value at every interface; the typist's own and a machine text's check raise nothing", () => {
+  const { w, tr } = setup();
+  const t = tr({});
+  const at = (id) => ({
+    transcribe: tr({}).transcription, read: w.content.transcriptionRead({ id, viewer: V("ty") }).transcription,
+    standing: w.content.standings([id])[id].transcription, row: w.content.contentRead({ id, viewer: V("ty") }).transcription,
+    listed: w.content.transcriptionsOf({ bundleId: DOC, viewer: V("ty") }).transcriptions[0].transcription,
+  });
+  const grades = (id) => Object.values(at(id)).map((x) => [x.ceiling, x.determinant]);
+  for (const g of grades(t.content_id)) assert.deepEqual(g, [TYPED_UNCHECKED_GRADE, "typist"]);
+  const att = (who, o) => w.content.transcriptionAttest({ contentId: t.content_id, attestor: V(who), viewer: V(who), note: "checked", ...o });
+  const first = att("zo");
+  assert.deepEqual([first.ceiling_before.ceiling, first.transcription.ceiling], [TYPED_UNCHECKED_GRADE, TYPED_CHECKED_GRADE]);
+  for (const g of grades(t.content_id)) assert.deepEqual(g, [TYPED_CHECKED_GRADE, "second_member"]);
+  att("xi");
+  for (const g of grades(t.content_id)) assert.deepEqual(g, [TYPED_CHECKED_GRADE, "second_member"], "a third member's check raises nothing");
+  att("zo", { note: "again" });
+  assert.equal(w.content.contentRead({ id: t.content_id, viewer: V("ty") }).typed.checkers.length, 2, "a repeat replaces her own");
+  /* the typist's own check is refused and raises nothing; the check of the machine text of the page leaves a new typing unchecked */
+  const u = tr({ text: "another page", extent: { kind: "pdf-page", page: 2 } });
+  assert.equal(w.content.transcriptionAttest({ contentId: u.content_id, attestor: V("ty"), viewer: V("ty"), note: "mine" }).ok, false);
+  w.content.attestText({ captureSha: u.capture_sha, member: V("zo"), viewer: V("zo"), extent: { kind: "page", page: 2 }, note: "checked the OCR" });
+  assert.deepEqual([w.content.standings([u.content_id])[u.content_id].transcription.ceiling], [TYPED_UNCHECKED_GRADE]);
+  /* control: a machine-read row has no typed grade and no typed block */
+  const m = w.content.contentMint({ bundleId: DOC, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo"), viewer: V("bo") });
+  const mr = w.content.contentRead({ id: m.content_id, viewer: V("bo") });
+  assert.equal("typed" in mr, false);
+  assert.notEqual(mr.transcription.determinant, "typist");
+});
+
+test("R64: a typed row says who typed it and who checked it, by key, as the credit level in force allows; a hidden record answers as absent", () => {
+  const level = new Map([[V("ty"), "name"], [V("zo"), "name"], [V("xi"), "name"]]);
+  const w = world({ creditOf: ({ member }) => level.get(member) ?? null });
+  const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 3 });
+  const t = w.content.transcribe({ bundleId: DOC, extent: { kind: "pdf-page", page: 1 }, text: "In the year 1921", transcriber: V("ty"), viewer: V("ty") });
+  const typed = (id = t.content_id) => w.content.contentRead({ id, viewer: V("ty") }).typed;
+  let b = typed();
+  assert.deepEqual([b.label_key, b.checked, b.checkers, b.typist.name, b.at], ["content.typed.unchecked", false, [], V("ty"), t.at ?? b.at]);
+  assert.ok(b.label.includes(V("ty")));
+  assert.equal(w.content.transcribe({ bundleId: DOC, extent: { kind: "pdf-page", page: 1 }, text: "In the year 1921", transcriber: V("ty"), viewer: V("ty") }).typed.label_key, "content.typed.unchecked");
+  w.content.transcriptionAttest({ contentId: t.content_id, attestor: V("zo"), viewer: V("zo"), note: "n", at: "2026-09-12T00:00:00Z" });
+  w.content.transcriptionAttest({ contentId: t.content_id, attestor: V("xi"), viewer: V("xi"), note: "n", at: "2026-09-11T00:00:00Z" });
+  b = typed();
+  assert.deepEqual([b.label_key, b.checked, b.checkers.map((c) => [c.name, c.at])],
+    ["content.typed.checked", true, [[V("xi"), "2026-09-11T00:00:00Z"], [V("zo"), "2026-09-12T00:00:00Z"]]], "time order");
+  assert.ok(b.label.includes(V("zo")) && b.label.includes(V("xi")));
+  for (const read of [w.content.transcriptionRead({ id: t.content_id, viewer: V("ty") }).typed,
+                      w.content.standings([t.content_id])[t.content_id].typed,
+                      w.content.transcriptionsOf({ bundleId: DOC, viewer: V("ty") }).transcriptions[0].typed])
+    assert.deepEqual(read, b, "every read carries the same block");
+  assert.equal(b.checkers.some((c) => c.name === V("ty")), false, "only members other than the typist");
+  /* anonymous credit: the label never names her; a member credited by name is named */
+  level.set(V("zo"), "cover"); level.set(V("ty"), "group");
+  b = typed();
+  assert.deepEqual([b.typist.name, b.typist.credit, b.checkers.map((c) => c.name)], [null, "group", [V("xi"), null]]);
+  assert.equal(b.label.includes(V("ty")) || b.label.includes(V("zo")), false);
+  assert.ok(b.label.includes(V("xi")));
+  /* no level at all: never named by default */
+  level.clear();
+  b = typed();
+  assert.deepEqual([b.typist.name, b.typist.credit, b.checkers.map((c) => c.name)], [null, null, [null, null]]);
+  assert.equal(b.label.includes(V("xi")), false);
+  assert.equal(b.label, word("content.typed.checked", { typist: word("content.typed.anonymous_member"), checkers: [word("content.typed.anonymous_member"), word("content.typed.anonymous_member")].join(", ") }));
+  /* a hidden record answers as absent */
+  assert.equal(w.content.contentRead({ id: t.content_id, viewer: "nobody" }).ok, false);
+  assert.equal(w.content.transcriptionRead({ id: t.content_id, viewer: "nobody" }).ok, false);
 });

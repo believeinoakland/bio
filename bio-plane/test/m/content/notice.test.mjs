@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, LAYER } from "./fixture.mjs";
 import { canonicalExtent, VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_GRADES, VERSION_NOTICE_CHECKS } from "../../../src/content/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const DOC = "INFO-2026-0001-a", NEW = "INFO-2026-0002-b";
 const U = (page, text, truncated = false) => ({ extent: canonicalExtent({ kind: "pdf-page", page }), ref: `page ${page + 1}`, text, truncated });
@@ -35,7 +37,7 @@ test("R29: whether a newer capture exists is asked of the version chain at each 
     const { cite, notice } = setup();
     const n = notice(cite({ kind: "pdf-page", page: 0 }));
     assert.deepEqual([n.ok, n.newer, n.state, n.chain_read, n.addresses_asked], [true, true, "newer_capture_matched", true, 1]);
-    assert.match(n.visible_to, /visible to you/);
+    assert.equal(n.visible_to, word("content.index.version_chains_visible_to"));
     assert.deepEqual([n.wrote, n.proposal_only], [false, true]);
   }
   {

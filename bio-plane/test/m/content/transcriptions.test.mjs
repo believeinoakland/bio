@@ -36,14 +36,14 @@ test("R57 a typed document lists its typings with their attestations, the text l
   assert.deepEqual(r.transcriptions.map((x) => x.content_id), [t0.content_id, t1.content_id].sort());
   const row = r.transcriptions.find((x) => x.content_id === t1.content_id);
   assert.deepEqual(Object.keys(row).sort(), ["attestations", "bundle_id", "capture_sha", "content_id", "extent", "extent_kind",
-    "at", "ref", "text_sha256", "transcriber"].sort());
+    "at", "ref", "text_sha256", "transcriber", "transcription", "typed"].sort());
   assert.deepEqual([row.bundle_id, row.capture_sha, row.extent_kind, row.extent, row.ref, row.transcriber, row.at, row.text_sha256],
     [DOC, t1.capture_sha, "pdf-page", t1.extent, t1.ref, V("ty"), w.row(`SELECT at FROM transcriptions WHERE content_id=?`, t1.content_id).at, t1.text_sha256]);
   assert.deepEqual(row.attestations, [{ attestor: V("amy"), at: "2026-09-27T00:00:00Z", counts: true },
                                      { attestor: V("zed"), at: "2026-09-28T00:00:00Z", counts: true }]);
   assert.deepEqual(r.transcriptions.find((x) => x.content_id === t0.content_id).attestations, []);
   assert.deepEqual([r.truncated, r.cursor], [false, null]);
-  assert.equal(JSON.stringify(r).includes("typed"), false, "the typed text is not listed");
+  assert.equal(/page \d typed/.test(JSON.stringify(r)), false, "the typed text is not listed");
 });
 
 test("R57 a typing attested by its own typist is listed with counts false, as op=transcription reads it", () => {

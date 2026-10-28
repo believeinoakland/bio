@@ -9,6 +9,12 @@ import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { TRANSCRIBE_CHECKS } from "../../../src/content/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { TYPED_UNCHECKED_GRADE, TYPED_CHECKED_GRADE } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
+
+const UNCHECKED = (who) => [TYPED_UNCHECKED_GRADE, "typist", [V(who)]];
+const CHECKED = (who) => [TYPED_CHECKED_GRADE, "second_member", [V(who)]];
 
 const DOC = "INFO-2026-0001-a";
 const OCR = [{ step: "pixels", extent: { kind: "pages", pages: [0, 1, 2] } },
@@ -71,12 +77,9 @@ test("R28 (content-reads): the two legitimate nulls are stated as which, each wi
   const inq = w.content.resolveCitation({ target: "INQ-2026-0001-q" });
   const none = w.content.resolveCitation({ target: "INFO-2026-0002-nobytes" });
   assert.deepEqual([inq.content_id, inq.null_case], [null, "INQUIRY_TARGET"]);
-  assert.match(inq.why, /INQ-2026-0001-q is an inquiry rather than a document/);
-  assert.match(inq.why, /no capture and therefore no part to point at/);
-  assert.match(inq.why, /DEC-21/);
+  assert.equal(inq.why, word("content.index.v1_is_an_inquiry_rather", { v1: "INQ-2026-0001-q" }));
   assert.deepEqual([none.content_id, none.null_case], [null, "NO_BYTES_HELD"]);
-  assert.match(none.why, /holds no capture of INFO-2026-0002-nobytes/);
-  assert.match(none.why, /never evidence about what the document says/);
+  assert.equal(none.why, word("content.why.record_holds_capture", { target: "INFO-2026-0002-nobytes" }));
   assert.notEqual(inq.null_case, none.null_case, "never collapsed into one code");
   assert.notEqual(inq.why, none.why);
   /* negative control: a document whose capture is held resolves to a row and carries no null case at all */
@@ -101,7 +104,7 @@ test("R22, R43, R44 (content-reads): after a re-read the row is stale and still 
 
   const c = w.content.contentRead({ id: PAGE_ROW, viewer: V("bo") });
   assert.deepEqual([c.ok, c.stale, c.content_id, c.capture_sha], [true, true, PAGE_ROW, a.sha], "stale, and it still resolves where it pointed");
-  assert.match(c.says, /has since been re-read/);
+  assert.ok(wordIn(c.says, "content.text.passage_cited_stood"));
   assert.deepEqual([c.attestations.all.length, c.attestations.covering.length, c.transcription.determinant],
     [2, 2, "attestation"], "made against the row's own chain: they checked the text this citation points at");
   assert.deepEqual(c.attestations.all.map((x) => x.stale), [false, false], "not stale relative to the row");
@@ -137,14 +140,14 @@ test("R21 (transcribe): the routing case — a whole-document attestation of a C
   const tx = w.content.transcribe({ bundleId: DOC, extent: { kind: "pdf-page", page: 0 }, text: TYPED, transcriber: V("ruth"), viewer: V("ruth") });
   assert.equal(tx.ok, true, "a capture with no chain can be typed");
   const c = w.content.contentRead({ id: tx.content_id, viewer: V("ruth") });
-  assert.deepEqual([ceil(c), c.attestations.all.length, c.attestations.covering.length], [[null, "derivation", []], 0, 0]);
-  assert.deepEqual(ceil(w.content.standings([tx.content_id])[tx.content_id]), [null, "derivation", []],
+  assert.deepEqual([ceil(c), c.attestations.all.length, c.attestations.covering.length], [UNCHECKED("ruth"), 0, 0]);
+  assert.deepEqual(ceil(w.content.standings([tx.content_id])[tx.content_id]), UNCHECKED("ruth"),
     "the set-based read a leg path uses reads the capture's attestations for every row, and still routes them away");
   /* the capture's attestation does stand for the capture's own text */
   assert.equal(w.content.attestationsFor(n.sha, { page: 0 }, V("sam")).attestations.length, 1);
   /* negative control: an attestation OF the typing, by another member, raises it */
   assert.equal(w.content.transcriptionAttest({ note: "compared with the page", contentId: tx.content_id, attestor: V("sam"), viewer: V("sam") }).ok, true);
-  assert.deepEqual(ceil(w.content.standings([tx.content_id])[tx.content_id]), [EARNED_CAPTURE_CEILING, "attestation", [V("sam")]]);
+  assert.deepEqual(ceil(w.content.standings([tx.content_id])[tx.content_id]), CHECKED("sam"));
   assert.deepEqual(w.content.contentRead({ id: tx.content_id, viewer: V("ruth") }).attestations.covering.map((x) => x.attestor), [V("sam")]);
 });
 
@@ -157,7 +160,7 @@ test("R21, R22, R25 (transcribe): a region typing's attestation is scoped to tha
   assert.equal(tx.ok, true);
   assert.notEqual(tx.content_id, machine, "the chain is in the address");
   assert.equal(w.content.attestationsFor(a.sha, { page: 1 }, V("ruth")).ceiling.determinant, "attestation", "the capture's page 2 is attested");
-  assert.deepEqual(ceil(w.content.contentRead({ id: tx.content_id, viewer: V("ruth") })), [null, "derivation", []],
+  assert.deepEqual(ceil(w.content.contentRead({ id: tx.content_id, viewer: V("ruth") })), UNCHECKED("ruth"),
     "it checked the OCR, not what she typed");
 
   const sa = w.content.transcriptionAttest({ contentId: tx.content_id, attestor: V("sam"), viewer: V("sam"), note: "matches the scan" });
@@ -165,7 +168,7 @@ test("R21, R22, R25 (transcribe): a region typing's attestation is scoped to tha
   assert.deepEqual(sa.extent, { kind: "region", source: { kind: "pdf-page", ref: "p1", page: 1, rect: [10, 10, 200, 100] } },
     "exactly the typed region");
   assert.deepEqual([sa.attestor, sa.transcriber, sa.ceiling_before.ceiling, ...ceil(sa)],
-    [V("sam"), V("ruth"), null, EARNED_CAPTURE_CEILING, "attestation", [V("sam")]]);
+    [V("sam"), V("ruth"), TYPED_UNCHECKED_GRADE, ...CHECKED("sam")]);
   const c2 = w.content.contentRead({ id: tx.content_id, viewer: V("ruth") });
   assert.deepEqual(c2.attestations.covering.map((x) => [x.attestor, x.extent]), [[V("sam"), sa.extent]]);
   assert.deepEqual([c2.chain, c2.derivation_cap], [[{ step: "typed", member: V("ruth"), text_sha256: sha(TYPED) }], null], "the chain unchanged");
@@ -178,7 +181,7 @@ test("R21, R22, R25 (transcribe): a region typing's attestation is scoped to tha
   w.content.markStale(a.sha, OCR_NEW);
   assert.equal(w.content.contentRead({ id: machine, viewer: V("ruth") }).stale, true, "the machine row goes stale");
   const c3 = w.content.contentRead({ id: tx.content_id, viewer: V("ruth") });
-  assert.deepEqual([c3.stale, ...ceil(c3)], [false, EARNED_CAPTURE_CEILING, "attestation", [V("sam")]], "the typing does not, and its ceiling stands");
+  assert.deepEqual([c3.stale, ...ceil(c3)], [false, ...CHECKED("sam")], "the typing does not, and its ceiling stands");
 });
 
 test("R44 (transcribe): attestationsFor lists only the capture's text attestations, never a typing's", () => {
@@ -242,7 +245,7 @@ test("R43 (textchain): attestText takes the attestor from the member stamp, neve
   assert.deepEqual(w.rows(`SELECT attestor FROM text_attestations`).map((r) => r.attestor), [V("bob")]);
   assert.equal(JSON.stringify(w.rows(`SELECT * FROM text_attestations`)).includes("someone-else"), false, "the body's name is stored nowhere");
   assert.match(ok.why, /a region of page 0/);
-  assert.match(ok.why, /does not inherit it/);
+  assert.ok(wordIn(ok.why, "content.why.checked_text_against", { member: V("bob") }));
   const listed = w.content.attestationsFor(a.sha, null, V("bob")).attestations;
   assert.deepEqual(listed.map((x) => x.attestor), [V("bob")]);
   /* inside the attested region it covers; outside it does not */
