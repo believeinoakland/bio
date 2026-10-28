@@ -142,7 +142,7 @@ const J = [
    { s: 'install', v: 'start', act: 'bootstrap', say: 'Bob installs his team\'s Civicsmith from civicsmith.org: a short name, the Cloudflare account it runs in.' },
    { s: 'install', v: 'done', act: null, say: 'The installer\'s checks pass; the one-time password to claim it is shown once.' },
    { s: 'setup', act: 'claim', say: 'He claims the team as its founder: his handle, his own password, the one-time password already filled in.' },
-   { s: 'setup', act: 'groupkeyset', only: 'ai', say: 'He gives the team\'s Claude key, so members can ask the assistant without an account of their own.' },
+   { s: 'setup', act: 'owed:aiaccountadd DEC-420', only: 'ai', say: 'He gives the team\'s Claude key, so members can ask the assistant without an account of their own.' },
    { s: 'home', v: 'newgroup', act: null, say: 'Home says nothing is here yet, and where to begin.' },
    { s: 'security', v: 'ordinary', act: null, say: 'He looks at Security once. In one sentence it says nothing is unusual and there is nothing for him to do, and that files are checked.' },
    { s: 'projects', v: 'empty', act: 'promote', say: 'Projects has none yet. He starts one by saying what it is about, “Pothole repairs”, and becomes its owner.' },

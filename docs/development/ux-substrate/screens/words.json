@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 8084,
+  "screen": 8083,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 67,
-  "act": 1328,
+  "act": 1339,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -239,8 +239,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19835,
-  "protected": 1181
+  "total": 19845,
+  "protected": 1192
  },
  "words": [
   {
@@ -1041,8 +1041,8 @@
    "key": "ai.queue.suspended",
    "en": "Your sign-in no longer serves {project}: a second member joined, and a sign-in serves a project only while it has one member. Members' acts there now use their own accounts, or the team's key.",
    "protected": true,
-   "source": "mock-screens.js queue",
-   "note": "the project account suspended; names no member"
+   "source": "mock-screens.js queue (no longer drawn, DEC-490)",
+   "note": "the project account suspended; names no member. Retired with project sign-ins (B570, ai-accounts R62); kept while notice-producers still sends it; the drawn notice is now screen.queue.ai.signinremoved"
   },
   {
    "key": "ai.queue.exploreask",
@@ -16142,7 +16142,7 @@
   },
   {
    "key": "screen.projectai.account.suspended",
-   "en": "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the team's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
+   "en": "Your sign-in no longer serves {project}. A personal subscription never pays for a project's work. Members' acts here now use their own accounts, or the team's. Add an API key to give the project its own account.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-inquiry's own rows; DEC-259: reworded"
@@ -32968,12 +32968,6 @@
    "note": "{state} on or off"
   },
   {
-   "key": "screen.projectai.state.signin",
-   "en": "Your own Claude sign-in serves {project} while you are its only member · {state} · set by you, {date}. It is your own use of your own subscription.",
-   "protected": false,
-   "source": "DEC-259"
-  },
-  {
    "key": "screen.projectai.state.member",
    "en": "{project} pays for the assistant's work here with its own API key, {state}. Its owners set what it pays for and its limits; they see how much it is used in total, never what you ask or who asked.",
    "protected": true,
@@ -32983,12 +32977,6 @@
   {
    "key": "screen.projectai.paidby.key",
    "en": "An Anthropic API key for this project",
-   "protected": false,
-   "source": "DEC-259"
-  },
-  {
-   "key": "screen.projectai.paidby.signin",
-   "en": "My own Claude sign-in, while I am the project's only member",
    "protected": false,
    "source": "DEC-259"
   },
@@ -33032,12 +33020,6 @@
   {
    "key": "screen.projectai.meter.explore",
    "en": "Exploring this month, on top of it: {used} of the {limit} limit",
-   "protected": false,
-   "source": "DEC-259"
-  },
-  {
-   "key": "screen.projectai.limits.signin",
-   "en": "Limits on your sign-in here",
    "protected": false,
    "source": "DEC-259"
   },
@@ -85928,6 +85910,20 @@
    "note": "DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)"
   },
   {
+   "key": "screen.ai.notice.atsend",
+   "en": "You are shown this once, with the first question that goes to the provider, and nothing goes before you send it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-490: under connect's and projectai's notice: when the notice is acknowledged, by aisend's recipientNoticeSeen (ai-accounts R51)"
+  },
+  {
+   "key": "screen.queue.ai.signinremoved",
+   "en": "Your sign-in no longer serves {project}: a personal subscription never pays for a project's work. Members' acts there now use their own accounts, or the team's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-490: the owner's one notice when a project's sign-in account is removed by migration (ai-accounts R59, R62)"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -125114,6 +125110,90 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "act.groupkeyset.label.setup",
+   "en": "Hold the team's API key",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.groupkeyswitch.label.setup",
+   "en": "Switch the team's key on or off",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.groupkeynoticeseen.label.connect",
+   "en": "Read what the team's key means",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.accountreferenceset.label.connect",
+   "en": "Connect with your own API key",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.accountreferenceremove.label.connect",
+   "en": "Disconnect",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.groupkeyset.label.teamai",
+   "en": "Hold the team's API key",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.groupkeyswitch.label.teamai",
+   "en": "Switch the team's key on or off",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.groupkeyremove.label.teamai",
+   "en": "Remove the team's key",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.projectkeyset.label.queue",
+   "en": "Add an API key for a project",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.projectkeyset.label.projectai",
+   "en": "Hold the project's API key",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.projectsigninset.label.projectai",
+   "en": "Use your own sign-in for the project",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.projectaccountswitch.label.projectai",
+   "en": "Switch the project's account on or off",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.projectaccountremove.label.projectai",
+   "en": "Remove the project's account",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
+   "key": "act.projectkeynoticeseen.label.projectai",
+   "en": "Read what the project's key means",
+   "protected": true,
+   "source": "registry.json (retired, DEC-490)"
+  },
+  {
    "key": "act.bootstrap.label.install",
    "en": "Continue to Cloudflare",
    "protected": true,
@@ -125246,13 +125326,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeyset.label.setup",
+   "key": "act.owed_aiaccountadd.label.setup",
    "en": "Hold the team's API key",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeyswitch.label.setup",
+   "key": "act.owed_aiaccountswitch.label.setup",
    "en": "Switch the team's key on or off",
    "protected": true,
    "source": "registry.json"
@@ -125601,12 +125681,6 @@
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeynoticeseen.label.connect",
-   "en": "Read what the team's key means",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
    "key": "act.disclosureshown.label.connect",
    "en": "Read what connecting means",
    "protected": true,
@@ -125625,7 +125699,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.accountreferenceset.label.connect",
+   "key": "act.owed_aiownadd.label.connect",
    "en": "Connect with your own API key",
    "protected": true,
    "source": "registry.json"
@@ -125649,19 +125723,19 @@
    "source": "registry.json"
   },
   {
-   "key": "act.accountreferenceremove.label.connect",
+   "key": "act.owed_aiaccountremove.label.connect",
    "en": "Disconnect",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeyset.label.teamai",
+   "key": "act.owed_aiaccountadd.label.teamai",
    "en": "Hold the team's API key",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeyswitch.label.teamai",
+   "key": "act.owed_aiaccountswitch.label.teamai",
    "en": "Switch the team's key on or off",
    "protected": true,
    "source": "registry.json"
@@ -125679,7 +125753,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeyremove.label.teamai",
+   "key": "act.owed_aiaccountremove.label.teamai",
    "en": "Remove the team's key",
    "protected": true,
    "source": "registry.json"
@@ -126130,7 +126204,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.projectkeyset.label.queue",
+   "key": "act.owed_aiaccountadd.label.queue",
    "en": "Add an API key for a project",
    "protected": true,
    "source": "registry.json"
@@ -126959,32 +127033,20 @@
    "source": "registry.json"
   },
   {
-   "key": "act.projectkeyset.label.projectai",
+   "key": "act.owed_aiaccountadd.label.projectai",
    "en": "Hold the project's API key",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.projectsigninset.label.projectai",
-   "en": "Use your own sign-in for the project",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.projectaccountswitch.label.projectai",
+   "key": "act.owed_aiaccountswitch.label.projectai",
    "en": "Switch the project's account on or off",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.projectaccountremove.label.projectai",
+   "key": "act.owed_aiaccountremove.label.projectai",
    "en": "Remove the project's account",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.projectkeynoticeseen.label.projectai",
-   "en": "Read what the project's key means",
    "protected": true,
    "source": "registry.json"
   },
@@ -129342,18 +129404,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.groupkeyset.does",
-   "en": "Holds one Anthropic API key for the team, sealed and never shown again. It pays for a member's act when neither a project's account nor the member's own serves it.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.groupkeyswitch.does",
-   "en": "Turns the team's key on or off without removing it. Members who rely on it are told what changed.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.courtnoticeset.does",
    "en": "Chooses whether members are told, when they join and the first time they record something not public, what a court order could reach.",
    "protected": false,
@@ -129558,12 +129608,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.groupkeyremove.does",
-   "en": "Removes the team's key for good. Members without their own account use Civicsmith without the assistant.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.securitymap.does",
    "en": "Shows how hard your team's Civicsmith was tried over the period you choose, against its usual. Counts only.",
    "protected": false,
@@ -129630,12 +129674,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.groupkeynoticeseen.does",
-   "en": "Confirms you have read that your questions go to Anthropic under the team's account. Asked once, before your first question.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.disclosureshown.does",
    "en": "Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.",
    "protected": true,
@@ -129650,18 +129688,6 @@
   {
    "key": "act.subscriptiondisconnect.does",
    "en": "Disconnects your Claude subscription from your team's Civicsmith. The team's key serves you instead, if the team has one.",
-   "protected": true,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.accountreferenceset.does",
-   "en": "Connects your own Claude API key. It serves only you, before the team's key, and Anthropic bills you for each use.",
-   "protected": true,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.accountreferenceremove.does",
-   "en": "Disconnects your own API key and removes it from your team's Civicsmith. The team's key serves you instead, if the team has one.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -130340,6 +130366,72 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.groupkeyset.does",
+   "en": "Holds one Anthropic API key for the team, sealed and never shown again. It pays for a member's act when neither a project's account nor the member's own serves it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.groupkeyswitch.does",
+   "en": "Turns the team's key on or off without removing it. Members who rely on it are told what changed.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.groupkeyremove.does",
+   "en": "Removes the team's key for good. Members without their own account use Civicsmith without the assistant.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.groupkeynoticeseen.does",
+   "en": "Confirms you have read that your questions go to Anthropic under the team's account. Asked once, before your first question.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.accountreferenceset.does",
+   "en": "Connects your own Claude API key. It serves only you, before the team's key, and Anthropic bills you for each use.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.accountreferenceremove.does",
+   "en": "Disconnects your own API key and removes it from your team's Civicsmith. The team's key serves you instead, if the team has one.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectkeyset.does",
+   "en": "Holds an Anthropic API key for this project, sealed and never shown again. Switched on, it pays for members' acts in the project, before their own accounts or the team's key.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectsigninset.does",
+   "en": "Makes your own Claude sign-in the project's account, allowed only while you are its only member. If another member joins, it stops serving the project at once and you are told.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectaccountswitch.does",
+   "en": "Turns the project's account on or off without removing it. While it is off, members' own accounts, then the team's key, serve in the project.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectaccountremove.does",
+   "en": "Removes the project's account. Members' own accounts, then the team's key, serve in the project from then on.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectkeynoticeseen.does",
+   "en": "Records that you have read what the project's key means, before the first act it pays for.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.owed_aiaccountswitch.does",
    "en": "Switches this account off or on. Work stays refused on a use that is off; it is never moved to another account.",
    "protected": false,
@@ -130347,7 +130439,7 @@
   },
   {
    "key": "act.owed_aiaccountremove.does",
-   "en": "Removes this account from your team's list. Its key is deleted from Cloudflare's store, and what it cost stays in the history.",
+   "en": "Removes this account from its list, the team's, a project's or your own. Its key is deleted from Cloudflare's store, and what it cost stays in the history.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -130455,7 +130547,7 @@
   },
   {
    "key": "act.owed_aiaccountadd.does",
-   "en": "Turns the connected account on and puts it in the place you chose in the order. It cannot be turned on before its test passes.",
+   "en": "Adds an account that pays for the assistant's work, the team's or a project's, and turns it on in the place you chose in the order. It cannot be turned on before its test passes.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -130473,7 +130565,7 @@
   },
   {
    "key": "act.owed_aiownadd.does",
-   "en": "Opens the guided connection so you can add an account of your own, where your team allows it.",
+   "en": "Adds an account of your own through the guided connection, where your team allows it. It serves only your work, and its provider bills you for each use.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -130876,36 +130968,6 @@
   {
    "key": "act.ailimitset.does",
    "en": "Sets or removes one limit on this account: overall, for one use, or for each member's use, in dollars (estimated, API keys only), tokens or calls, a day or a month. It binds this account only.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.projectkeyset.does",
-   "en": "Holds an Anthropic API key for this project, sealed and never shown again. Switched on, it pays for members' acts in the project, before their own accounts or the team's key.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.projectsigninset.does",
-   "en": "Makes your own Claude sign-in the project's account, allowed only while you are its only member. If another member joins, it stops serving the project at once and you are told.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.projectaccountswitch.does",
-   "en": "Turns the project's account on or off without removing it. While it is off, members' own accounts, then the team's key, serve in the project.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.projectaccountremove.does",
-   "en": "Removes the project's account. Members' own accounts, then the team's key, serve in the project from then on.",
-   "protected": true,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.projectkeynoticeseen.does",
-   "en": "Records that you have read what the project's key means, before the first act it pays for.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

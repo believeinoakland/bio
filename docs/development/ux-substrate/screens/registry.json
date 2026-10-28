@@ -252,20 +252,14 @@
      ]
     },
     {
-     "op": "groupkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Hold the team's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "groupkeyswitch",
+     "op": "owed:aiaccountswitch DEC-420",
      "label": "Switch the team's key on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "ailimitset",
@@ -815,14 +809,6 @@
    "purpose": "The member's own API key or subscription token, or the team's key where it offers one, or none; which account pays for an act; their own account's uses and limits; their own use across every payer (K1547, K1755, DEC-188). In the first beta, Your AI takes its place (DEC-420).",
    "acts": [
     {
-     "op": "groupkeynoticeseen",
-     "label": "Read what the team's key means",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
      "op": "disclosureshown",
      "label": "Read what connecting means",
      "status": "function",
@@ -848,12 +834,9 @@
      ]
     },
     {
-     "op": "accountreferenceset",
+     "op": "owed:aiownadd DEC-420",
      "label": "Connect with your own API key",
-     "status": "declared",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "subscriptiondisconnect",
@@ -880,12 +863,9 @@
      ]
     },
     {
-     "op": "accountreferenceremove",
+     "op": "owed:aiaccountremove DEC-420",
      "label": "Disconnect",
-     "status": "declared",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -900,20 +880,14 @@
    "purpose": "Administrators: the team's API key and whether it is on; what it pays for; its limits, overall and for each member; its use, summed over members and naming none; keeping the team's material away from AI; every change (moved from Members, DEC-284; the walk's D2). In the first beta, AI providers takes its place (DEC-420).",
    "acts": [
     {
-     "op": "groupkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Hold the team's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "groupkeyswitch",
+     "op": "owed:aiaccountswitch DEC-420",
      "label": "Switch the team's key on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "accountusesset",
@@ -932,12 +906,9 @@
      ]
     },
     {
-     "op": "groupkeyremove",
+     "op": "owed:aiaccountremove DEC-420",
      "label": "Remove the team's key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "aikeepaway",
@@ -1776,12 +1747,9 @@
      ]
     },
     {
-     "op": "projectkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Add an API key for a project",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "exploreapprove",
@@ -3063,44 +3031,19 @@
    "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, and by member for its owners; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
    "acts": [
     {
-     "op": "projectkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Hold the project's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "projectsigninset",
-     "label": "Use your own sign-in for the project",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "projectaccountswitch",
+     "op": "owed:aiaccountswitch DEC-420",
      "label": "Switch the project's account on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "projectaccountremove",
+     "op": "owed:aiaccountremove DEC-420",
      "label": "Remove the project's account",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "projectkeynoticeseen",
-     "label": "Read what the project's key means",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "accountusesset",

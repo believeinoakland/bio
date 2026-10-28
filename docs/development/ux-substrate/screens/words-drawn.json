@@ -1111,12 +1111,6 @@
    "note": "DEC-259: {state} on or off"
   },
   {
-   "key": "screen.projectai.state.signin",
-   "en": "Your own Claude sign-in serves {project} while you are its only member · {state} · set by you, {date}. It is your own use of your own subscription.",
-   "protected": false,
-   "note": "DEC-259"
-  },
-  {
    "key": "screen.projectai.state.member",
    "en": "{project} pays for the assistant's work here with its own API key, {state}. Its owners set what it pays for and its limits; they see how much it is used in total, never what you ask or who asked.",
    "protected": true,
@@ -1125,12 +1119,6 @@
   {
    "key": "screen.projectai.paidby.key",
    "en": "An Anthropic API key for this project",
-   "protected": false,
-   "note": "DEC-259"
-  },
-  {
-   "key": "screen.projectai.paidby.signin",
-   "en": "My own Claude sign-in, while I am the project's only member",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1173,12 +1161,6 @@
   {
    "key": "screen.projectai.meter.explore",
    "en": "Exploring this month, on top of it: {used} of the {limit} limit",
-   "protected": false,
-   "note": "DEC-259"
-  },
-  {
-   "key": "screen.projectai.limits.signin",
-   "en": "Limits on your sign-in here",
    "protected": false,
    "note": "DEC-259"
   },
@@ -46565,6 +46547,18 @@
    "en": "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.",
    "protected": false,
    "note": "DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)"
+  },
+  {
+   "key": "screen.ai.notice.atsend",
+   "en": "You are shown this once, with the first question that goes to the provider, and nothing goes before you send it.",
+   "protected": false,
+   "note": "DEC-490: under connect's and projectai's notice: when the notice is acknowledged, by aisend's recipientNoticeSeen (ai-accounts R51)"
+  },
+  {
+   "key": "screen.queue.ai.signinremoved",
+   "en": "Your sign-in no longer serves {project}: a personal subscription never pays for a project's work. Members' acts there now use their own accounts, or the team's.",
+   "protected": false,
+   "note": "DEC-490: the owner's one notice when a project's sign-in account is removed by migration (ai-accounts R59, R62)"
   }
  ],
  "rewrite": {
@@ -46616,7 +46610,7 @@
   "screen.plan.opened": "opened {date} by {name}",
   "screen.proceeding.login.note": "The court's register needs a login, so new filings come only by a member's own capture.",
   "screen.published.meets": "meets this project's bar (copy {capture}, connection {connection})",
-  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the team's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
+  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A personal subscription never pays for a project's work. Members' acts here now use their own accounts, or the team's. Add an API key to give the project its own account.",
   "screen.projectai.notice.head": "Before your first question here",
   "screen.projectai.key.field": "The project's API key",
   "screen.recovery.held": "You hold recovery codes: {remaining} of {total} unused, issued {date}.",

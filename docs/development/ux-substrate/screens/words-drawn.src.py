@@ -306,10 +306,8 @@ REWRITE.update({'screen.published.meets': "meets this project's bar (capture {ca
 def wp(k, en, prot=False, note=''): w('screen.projectai.' + k, en, prot, note)
 wp('sub', "Optional. Who pays for the assistant's work in {project}, for which uses, and up to what limits.")
 wp('state.key', "{project} has its own Anthropic API key (ending …{last4}) · {state} · set by {name}, {date}. Members' acts in this project are paid for by it, and the project is billed by Anthropic.", False, '{state} on or off')
-wp('state.signin', 'Your own Claude sign-in serves {project} while you are its only member · {state} · set by you, {date}. It is your own use of your own subscription.')
 wp('state.member', "{project} pays for the assistant's work here with its own API key, {state}. Its owners set what it pays for and its limits; they see how much it is used in total, never what you ask or who asked.", True, 'what a member who is not an owner sees (protected: who sees what)')
 wp('paidby.key', 'An Anthropic API key for this project')
-wp('paidby.signin', "My own Claude sign-in, while I am the project's only member")
 wp('paidby.none', "No project account: members' own accounts, then the team's key, serve")
 wp('key.help', "Made at console.anthropic.com by whoever pays for the project. Sealed in your team's Civicsmith, never shown again or exported, and used only for acts in this project. It starts switched off. Each member is told once, before the first act it pays for, that their questions go to Anthropic under the project's account.", True)
 wp('owners.alone', 'Any one owner sets these alone. Every change is recorded with who and when, and every owner sees it below.')
@@ -317,7 +315,6 @@ wp('uses.heading', 'What it pays for')
 wp('limit.ontop', 'on top of it', False, 'a limit on one use that is on top of the overall limit')
 wp('meter.month', "This month on the project's account: {used} of the {limit} limit")
 wp('meter.explore', 'Exploring this month, on top of it: {used} of the {limit} limit')
-wp('limits.signin', 'Limits on your sign-in here')
 wp('keepaway.member', 'Off. If an owner turns it on, you see their reason here, and the assistant stops for the uses they chose, whoever pays.')
 wp('keepaway.which', "Keep this project's material away from AI")
 wp('keepaway.button', "Keep this project's material away", False, "projectaikeepaway's button")
@@ -326,7 +323,7 @@ wp('change.ontop', '{name} set a limit of {limit} a month on {use}, on top of th
 wp('change.explore', '{name} set exploring to {setting}')
 wp('change.held', "{name} held the project's API key and switched it on")
 REWRITE.update({
-  'screen.projectai.account.suspended': "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the team's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
+  'screen.projectai.account.suspended': "Your sign-in no longer serves {project}. A personal subscription never pays for a project's work. Members' acts here now use their own accounts, or the team's. Add an API key to give the project its own account.",
   'screen.projectai.notice.head': 'Before your first question here',
   'screen.projectai.key.field': "The project's API key",
 })
@@ -8778,6 +8775,12 @@ def w489(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-489: ' + note))
 # B571: FILE-SAFETY's BYTES_CHANGED (C-140.46, R71) and NO_SAFE_VIEW now that photographs have a safe view (R60)
 w489('refusal.BYTES_CHANGED', "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.", 'file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)')
+
+def w490(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-490: ' + note))
+# B570: the retired AI acts re-pointed to ai-accounts' R61 ops; the team's and the project's key notices fold into the provider's notice at the first send (R8, R12, R51)
+w490('screen.ai.notice.atsend', 'You are shown this once, with the first question that goes to the provider, and nothing goes before you send it.', "under connect's and projectai's notice: when the notice is acknowledged, by aisend's recipientNoticeSeen (ai-accounts R51)")
+w490('screen.queue.ai.signinremoved', "Your sign-in no longer serves {project}: a personal subscription never pays for a project's work. Members' acts there now use their own accounts, or the team's.", "the owner's one notice when a project's sign-in account is removed by migration (ai-accounts R59, R62)")
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
