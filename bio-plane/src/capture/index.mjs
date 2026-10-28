@@ -2037,7 +2037,7 @@ export class Capture {
     if (sheet != null && (typeof sheet !== "string" || [...sheet].length > PREVIEW_SHEET_MAX))
       return Capture.#missingArgument("previewmore", "sheet", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(PREVIEW_SHEET_MAX) }), sheet);
     const none = { ok: false, reason: "NO_SUCH_CAPTURE", status: 404, key: "capture.index.no_such_capture",
-                   detail: localize("capture.index.no_such_capture", "your group's Civicsmith holds no captured document like that, or you cannot see it; nothing was read") };
+                   detail: localize("capture.index.no_such_capture", "your team's Civicsmith holds no captured document like that, or you cannot see it; nothing was read") };
     try {
       if (typeof viewer !== "string" || !memberIdOf(viewer).trim() || isMachineIdentity(viewer)) return none;
       if (!this.#captureSeen(captureSha, viewer) || !(await this.#holds(captureSha))) return none;
@@ -3343,8 +3343,8 @@ export class Capture {
       } else if (before && after) {
         verdict = "undetermined"; pick = before;
         basis = say("capture.basis.target_changed_somewhere");
-        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, `
-               + `${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
+        detail = localize("capture.index.bracketing_captures_differ", "bracketing captures differ: {before} last seen {before_at}, {after} first seen {after_at}",
+                          { before: before.capture_sha.slice(0, 12), before_at: String(before.last_retrieved), after: after.capture_sha.slice(0, 12), after_at: String(after.first_retrieved) });
       } else if (!before && after) {
         verdict = "superseded"; pick = after;
         basis = say("capture.basis.capture_target_postdates");

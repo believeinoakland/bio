@@ -11,6 +11,7 @@ import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX, textTypeOf } from "../..
 import { PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { holdsWorld } from "../provenance/fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const te = new TextEncoder();
 const MiB = 1024 * 1024;
@@ -150,7 +151,7 @@ test("R86 (acquisition R16): an upload holds the bytes under their digest, write
   assert.equal(doc.provenance_chain.length, 1);
   const hop = doc.provenance_chain[0];
   assert.deepEqual([hop.who, hop.via, hop.bound], [firstHopWho("inst", "9.9.9"), "upload", false]);
-  assert.match(hop.asserts, /received from the member, not fetched/);
+  assert.equal(hop.asserts, word("capture.upload.asserts", { by: "m1", at: AT }));
   assert.equal(doc.authority_state, "undetermined");
   assert.equal(typeof doc.profile, "object");
   assert.equal(doc.profile.source_content_type, null, "profiled from the bytes, no declared type");
