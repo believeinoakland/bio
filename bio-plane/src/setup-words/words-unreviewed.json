@@ -30476,91 +30476,91 @@
       "en": "an interlaced (Adam7) PNG is not redrawn",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 33
+      "line": 34
     },
     {
       "id": "image-cover.redraw.decoded_frame",
       "en": "decoded frame",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 111
+      "line": 77
     },
     {
       "id": "image-cover.redraw.not_a_png",
       "en": "not a PNG{note}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 30
+      "line": 31
     },
     {
       "id": "image-cover.redraw.redrawn_picture",
       "en": "redrawn picture",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 80
+      "line": 114
     },
     {
       "id": "image-cover.redraw.the_images_structure_cannot_be",
       "en": "the image's data cannot be read ({v1})",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 157
+      "line": 134
     },
     {
       "id": "image-cover.redraw.the_photo_is_length_bytes",
       "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module redraws",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 137
+      "line": 111
     },
     {
       "id": "image-cover.redraw.the_photo_is_neither_a_jpeg_nor_a_png",
       "en": "the photo is neither a JPEG nor a PNG",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 139
+      "line": 113
     },
     {
       "id": "image-cover.redraw.the_photos_bytes_are_not_a_byte_array",
       "en": "the photo's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 135
+      "line": 109
     },
     {
       "id": "image-cover.redraw.the_png_declares_more_than",
       "en": "the PNG declares more than this module redraws{v1}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 32
+      "line": 33
     },
     {
       "id": "image-cover.redraw.the_png_has_no_header",
       "en": "the PNG has no readable header",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 120
+      "line": 94
     },
     {
       "id": "image-cover.redraw.the_png_uses_a_feature",
       "en": "the PNG uses a feature that is not redrawn{note}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 34
+      "line": 35
     },
     {
       "id": "image-cover.redraw.the_what_is_size_over",
       "en": "the {what} is {size} bytes, over the {bound} this module redraws",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 24
+      "line": 25
     },
     {
       "id": "image-cover.redraw.this_jpegs_coding_is_not",
       "en": "this JPEG has {n} components; only grey or three are redrawn",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 108
+      "line": 82
     },
     {
       "id": "image-cover.strip.a_box_header_runs_past_its_container",
@@ -37049,98 +37049,98 @@
       "en": "This message has no attachment {index}.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 46
+      "line": 45
     },
     {
       "id": "mail-reader.refusal.attachment_not_cut",
       "en": "Attachment {index} is a message kept inside this Outlook message; it is read with the message, not on its own.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 47
+      "line": 46
     },
     {
       "id": "mail-reader.refusal.boundary_bad",
       "en": "This message's parts are not separated the way it declares, so it cannot be read. Ask the sender for a fresh copy.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 39
+      "line": 38
     },
     {
       "id": "mail-reader.refusal.empty",
       "en": "This file is empty, so there is no message to read.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 41
+      "line": 40
     },
     {
       "id": "mail-reader.refusal.is_mailbox",
       "en": "This file is a mailbox of messages, not one message; it is read as a mailbox.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 43
+      "line": 42
     },
     {
       "id": "mail-reader.refusal.mailbox_malformed",
       "en": "This file does not begin like a mailbox, so its messages cannot be found.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 44
+      "line": 43
     },
     {
       "id": "mail-reader.refusal.mailbox_too_large",
       "en": "This mailbox is {size} bytes, more than the {bound} bytes a mailbox may be. Split it into smaller mailboxes and bring each in.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 38
+      "line": 37
     },
     {
       "id": "mail-reader.refusal.mailbox_too_many",
       "en": "This mailbox holds more than {bound} messages, so it is not read. Split it into smaller mailboxes and bring each in.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 37
+      "line": 36
     },
     {
       "id": "mail-reader.refusal.malformed",
       "en": "This message is damaged in a way that stops it being read. Ask the sender for a fresh copy.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 48
+      "line": 47
     },
     {
       "id": "mail-reader.refusal.msg_container_bad",
       "en": "This Outlook message is damaged or cut short, so it cannot be read. Save it again from Outlook and bring it in.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 40
+      "line": 39
     },
     {
       "id": "mail-reader.refusal.not_a_message",
       "en": "This file is not an email message, so it is not read as one.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 42
+      "line": 41
     },
     {
       "id": "mail-reader.refusal.source_unreadable",
       "en": "This message could not be read from storage. Try again in a moment.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 45
+      "line": 44
     },
     {
       "id": "mail-reader.refusal.too_large",
       "en": "This message is {size} bytes, more than the {bound} bytes a message may be. Save its attachments separately and bring them in one by one.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 35
+      "line": 34
     },
     {
       "id": "mail-reader.refusal.too_nested",
       "en": "This message is nested more than {max} levels deep (it reached {depth}); nothing deeper is opened. Open the inner message and bring it in on its own.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 36
+      "line": 35
     },
     {
       "id": "member-roster.declared.adminendorse",

@@ -2407,13 +2407,22 @@ function decompressOvba(buf, start) {
   return out.slice(0, n);
 }
 
-/* MS-CFB: the compound file's directory and a reader for each stream, or
- * null when it is not one: a bad header, a FAT, DIFAT, mini FAT or stream
- * chain that leaves the file, loops or ends early, or a directory tree that
- * loops. Every stream's chain is walked here, so a stream read never fails. */
-function readCfb(b) {
-  const MAGIC = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
-  if (b.length < 512 || MAGIC.some((x, i) => b[i] !== x) || u16(b, 0x1c) !== 0xfffe) return null;
+/* MS-CFB (T53-524; K5629): the compound file's directory and a reader for each stream, as one service for every reader of a
+ * compound file (the VBA project here, an Outlook MSG in `mail-reader`). `readCfb(bytes) → {root, children(storage), stream(entry)} | null`:
+ * null when `bytes` is not a well-formed compound file (a bad header, a FAT, DIFAT, mini FAT or stream chain that leaves the file, loops or
+ * ends early, or a directory tree that loops); otherwise `root` is the root storage, `children(storage)` its entries in directory order
+ * (`{id, name, type, left, right, child, start, size}`; `type` 1 a storage, 2 a stream, 5 the root), `stream(entry)` a stream's bytes
+ * (`null` for a storage). Every chain and every storage's tree is walked once here, so neither call fails later. It allocates no more than
+ * a multiple of `bytes.length` (no size a directory states is allocated unchecked), the length its caller has already bounded by the row of
+ * its own kind. Pure; never throws. */
+const CFB_END = 0xfffffffe, CFB_FREE = 0xffffffff;
+
+export const CFB_MAGIC = Object.freeze([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+
+export const hasCfbMagic = (b) => b instanceof Uint8Array && b.length >= 8 && CFB_MAGIC.every((x, i) => b[i] === x);
+
+function parseCfb(b) {
+  if (!(b instanceof Uint8Array) || b.length < 512 || !hasCfbMagic(b) || u16(b, 0x1c) !== 0xfffe) return null;
   const major = u16(b, 0x1a), shift = u16(b, 0x1e);
   if (!((major === 3 && shift === 9) || (major === 4 && shift === 12)) || u16(b, 0x20) !== 6) return null;
   const ss = 1 << shift;
@@ -2439,7 +2448,7 @@ function readCfb(b) {
   const chain = (table, start, limit) => {
     const out = [];
     const visited = new Set();
-    for (let s = start; s !== 0xfffffffe; s = table[s]) {
+    for (let s = start; s !== CFB_END; s = table[s]) {
       if (s >= limit || s >= table.length || visited.has(s)) return null;
       visited.add(s);
       out.push(s);
@@ -2447,7 +2456,7 @@ function readCfb(b) {
     return out;
   };
   const gather = (list, read, unit, size) => {
-    if (list.length * unit < size) return null;
+    if (!list || list.length * unit < size) return null;
     const out = new Uint8Array(list.length * unit);
     list.forEach((s, i) => out.set(read(s), i * unit));
     return out.subarray(0, size);
@@ -2461,11 +2470,10 @@ function readCfb(b) {
   for (let at = 0; at + 128 <= dirBytes.length; at += 128) {
     const e = dirBytes.subarray(at, at + 128);
     const nameLen = u16(e, 0x40);
-    const name = nameLen >= 2 && nameLen <= 64 && nameLen % 2 === 0
-      ? utf16.decode(e.subarray(0, nameLen - 2)) : "";
+    const name = nameLen >= 2 && nameLen <= 64 && nameLen % 2 === 0 ? utf16.decode(e.subarray(0, nameLen - 2)) : "";
     const high = u32(e, 0x7c);
     entries.push({
-      name, type: e[0x42], left: u32(e, 0x44), right: u32(e, 0x48), child: u32(e, 0x4c),
+      id: entries.length, name, type: e[0x42], left: u32(e, 0x44), right: u32(e, 0x48), child: u32(e, 0x4c),
       start: u32(e, 0x74), size: major === 3 ? u32(e, 0x78) : high >= 0x200000 ? NaN : high * 0x100000000 + u32(e, 0x78),
     });
   }
@@ -2483,36 +2491,44 @@ function readCfb(b) {
     if (e.type !== 2) continue;
     if (!Number.isFinite(e.size)) return null;
     const bytes = e.size === 0 ? new Uint8Array(0) : e.size < cutoff
-      ? gather(chain(miniFat, e.start, nMini) ?? [], (s) => miniStream.subarray(64 * s, 64 * s + 64), 64, e.size)
-      : gather(chain(fat, e.start, nSectors) ?? [], sector, ss, e.size);
+      ? gather(chain(miniFat, e.start, nMini), (s) => miniStream.subarray(64 * s, 64 * s + 64), 64, e.size)
+      : gather(chain(fat, e.start, nSectors), sector, ss, e.size);
     if (!bytes) return null;
-    data.set(e, bytes);
+    data.set(e.id, bytes);
   }
 
-  /* A storage's children: its child's red-black tree, walked by the
-   * siblings. A loop or a reference past the directory is not a tree. */
-  const children = (parent) => {
+  /* A storage's children: its child's red-black tree, walked by the siblings; a loop or a reference past the
+   * directory is not a tree, and every storage's tree is checked here so `children` never fails later. */
+  const kids = new Map();
+  for (const e of entries) {
+    if (e.type !== 1 && e.type !== 5) continue;
     const out = [];
-    const stack = [parent.child];
+    const stack = [e.child];
     const visited = new Set();
     while (stack.length) {
       const i = stack.pop();
-      if (i === 0xffffffff) continue;
+      if (i === CFB_FREE) continue;
       if (i >= entries.length || visited.has(i)) return null;
       visited.add(i);
       out.push(entries[i]);
       stack.push(entries[i].left, entries[i].right);
     }
-    return out;
+    kids.set(e.id, out.sort((x, y) => x.id - y.id));
+  }
+  return {
+    root,
+    children: (storage) => kids.get(storage.id) ?? [],
+    stream: (entry) => data.get(entry.id) ?? null,
   };
-  return { root, children, data };
+}
+
+export function readCfb(b) {
+  try { return parseCfb(b); } catch { return null; }
 }
 
 /* A storage's child of one name and type; CFB names compare case-blind. */
 function childNamed(cfb, parent, name, type) {
-  const list = cfb.children(parent);
-  if (!list) return undefined;
-  return list.find((e) => e.type === type && e.name.toUpperCase() === name.toUpperCase()) ?? null;
+  return cfb.children(parent).find((e) => e.type === type && e.name.toUpperCase() === name.toUpperCase()) ?? null;
 }
 
 /* Text in the project's code page (PROJECTCODEPAGE) where the host decodes
@@ -2572,10 +2588,9 @@ export async function readVbaProject(bytes, container, partName) {
     const cfb = readCfb(read.bytes);
     if (!cfb) return { ok: false, why: "cfb_invalid", part };
     const vba = childNamed(cfb, cfb.root, "VBA", 1);
-    const dirEntry = vba ? childNamed(cfb, vba, "dir", 2) : vba;
-    if (vba === undefined || dirEntry === undefined) return { ok: false, why: "cfb_invalid", part };
+    const dirEntry = vba ? childNamed(cfb, vba, "dir", 2) : null;
     if (!dirEntry) return { ok: false, why: "vba_dir_absent", part };
-    const dirBytes = decompressOvba(cfb.data.get(dirEntry), 0);
+    const dirBytes = decompressOvba(cfb.stream(dirEntry), 0);
     const dir = dirBytes && parseVbaDir(dirBytes);
     if (!dir) return { ok: false, why: "vba_dir_unreadable", part };
 
@@ -2583,7 +2598,7 @@ export async function readVbaProject(bytes, container, partName) {
     const undetermined = [];
     for (const m of dir.modules) {
       const entry = m.stream == null ? null : childNamed(cfb, vba, m.stream, 2);
-      const source = entry && Number.isSafeInteger(m.offset) ? decompressOvba(cfb.data.get(entry), m.offset) : null;
+      const source = entry && Number.isSafeInteger(m.offset) ? decompressOvba(cfb.stream(entry), m.offset) : null;
       if (!source) {
         const why = entry ? "module_source_undecompressable" : "module_stream_absent";
         modules.push({ name: m.name, stream: m.stream, read: false, why, autoRun: [], suspicious: [] });

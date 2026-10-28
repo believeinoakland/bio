@@ -19,3 +19,12 @@
 
 Tests: 103/114. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 1, module lines 6912
+
+## Completion (2026-10-28)
+
+**CHANGE (BOB #327; READER-CONTAINER's finding)** · applied: the renderer's conversion now runs in a private profile (`PROFILE_SETTINGS` in `container/renderer.mjs`, the settings reader-container's convert uses): `BlockUntrustedRefererLinks` true, macros and active content off, links never updated. Before this the renderer wrote no profile at all. Test at the render interface (`test/render-pages.test.mjs`): the converter stand-in reads the registry settings from the profile it is given. Suggested requirement wording for R12: "The renderer's LibreOffice runs in a fresh private profile that blocks linked pictures (BlockUntrustedRefererLinks), disables macros and active content and never updates links; a rendered file cannot fetch a linked image." Image source changed, so its digest moves at the next cut (R36 names it).
+
+**Met** · R36
+
+Tests: 104/115. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcecnyytTT3cMe1k3Zku): test runs 2, module lines 6945

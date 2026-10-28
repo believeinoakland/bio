@@ -304,6 +304,9 @@ cases["facts"].append({"file": "photo-bare.jpg", "width": 96, "height": 64, "fac
 files["photo-bare.png"] = png_bytes(rgb)
 cases["facts"].append({"file": "photo-bare.png", "width": 80, "height": 60, "facts": {}, "left_out": {}})
 
+# a flat 12 MP photograph: tiny as a file and as a picture, so any memory its redraw takes is the working set and not the answer
+files["photo-flat-12mp.jpg"] = jpeg_bytes(Image.new("RGB", (4032, 3024), (120, 160, 90)), quality=90, subsampling=2)
+
 # 6. a P3 photograph for the redraw's profile test: the profile's bytes must come out unchanged, the pixels equal
 files["photo-p3.jpg"] = with_profile(p3)
 files["photo-p3.png"] = png_with(png_bytes(rgb), [chunk(b"iCCP", b"ICC\x00\x00" + zlib.compress(p3))])

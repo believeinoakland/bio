@@ -151,6 +151,13 @@
    "pixels_sha256": "8c5ffda473f97b95bb6aa85fbdc8727a5442130c665f702182dd5cf86730c37a"
   },
   {
+   "file": "photo-flat-12mp.jpg",
+   "width": 4032,
+   "height": 3024,
+   "comps": 3,
+   "pixels_sha256": "309d417e352d4b21ede358b8b7eee76f80ef6f9b8ba03edd9f018413f65ad554"
+  },
+  {
    "file": "photo-full.jpg",
    "width": 96,
    "height": 64,
