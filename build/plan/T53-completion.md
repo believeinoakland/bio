@@ -3,6 +3,16 @@
 **Status** · The tranche's completion round, after layer 11 and before the release (P10; needs no further approval): one job per module whose layer had closed when the work was found, run concurrently, lower layers first where one uses another. BOB adds each entry as it is placed, with its ruling; the requirement lines are written just before the round's START (K5377). Opened by `proc round open` from this file once R1's last layer closes.
 
 ## Layer 1
+**civil-time**
+- T53-612 · the independent audit (K5794) · R31: the "spans two fiscal years" undetermined reason's `vars` name the body asked about (`recurrence.mjs` gives only value and labels; probe body "B", date "2026"); the R31 test asserts the body
+**register-readers**
+- T53-613 · the independent audit (K5794) · R1: memory stays bounded with `row_key_basis: content` (the `seen` Map grows one entry per distinct row; 200 MiB of distinct rows ran out of a 64 MB heap), a heap test with the content-keyed definition; R6: "all filers of X" refused `FILTER_PATTERN_REFUSED` (not built). Both disclosed by the job
+**record-grammar**
+- T53-614 · the independent audit (K5794) · what its T53 report claims and its merge (a32663ea1) lacks: the seven keys' reads and the two baseline lines (bundle.test.mjs 4, labels.test.mjs 7) were reverted before COMPLETE; settled at START against K5681 (BOB adds reads rows; wording is the design stream's)
+**connection-grammar**
+- T53-615 · the independent audit (K5794) · R23's Test: `bounds-walk.test.mjs`'s R14 case amended with the strength step (line 64 still states the old order)
+**mail-reader**
+- T53-616 · the independent audit (K5794) · R6 is claimed met while only "both routes give the same answer" is tested: R6 tested whole (one record, with capture R116) or its line re-stated at START; and R10's single nesting count applied to messages inside an MBOX (uncertain: settled by a test)
 **signatures**
 - T53-592 · K5751, signatures R58 · `CATALOGUE_KEYS` holds Bob's two catalogue keys (sitting 1) in place of the test keys; tests pass throwaway keys as `allowedKeys`; ai-catalogue's and ai-issuer's users re-run
   - its line, written into signatures.md at the round's START (K5377): **R58** (T53; K5751, the catalogue key ceremony's sitting 1, 2026-10-28; K5625, K5577 (5); amends R50) *(not yet met: T53)* **`CATALOGUE_KEYS` holds exactly Bob's two catalogue keys.** Its lines are, in this order and nothing else: `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICzjuXnpqLaVYtDu31PbDKjswFWytmmhkU2SsgdkY50J bio-ai-catalogue` (the signing key; SHA256:RpBqiKYcBfY0ZXvLJVJIazLH8TCAgUMTSwbLF6x0qLM) and `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMcDvL37Gr543+bDycYk53h83ZVfCxmIquuIlV+Ptn9c bio-ai-catalogue-recovery` (the recovery key; SHA256:34muQ7LZW9VVCrllKQqOfhHpTkTKJUSugGbQ67J3Klg). No test key is in the list; a test signs with its own throwaway key and passes it as `allowedKeys` (R53, R54, R56), never by adding it to the list. Test: the list equals these two lines (normalised as R2 reads them), each differs from every `RELEASE_KEYS` line, and a statement signed by a throwaway key fails against the default list and verifies with that key passed as `allowedKeys`. Control: a statement signed by a release key fails against `CATALOGUE_KEYS`.
@@ -24,12 +34,20 @@
 - T53-609 · local-facts' report (R29, K5786) · `validate` judges a team layer's holidays per government (R99, R115: names are unique within a government), so the same holiday list for two cities is accepted; local-facts R29's two-cities case then written
 
 ## Layer 2
+**member-roster**
+- T53-617 · the independent audit (K5794) · R84's "at four" test uses `threeAdmins()` (three administrators, fixture.mjs:72-80): run it at four; R86 needs a run at four where the two non-founders other than the target are `VOTES_SHORT` (need 3)
 **promotion**
 - T53-582 · K5715, capture's new rows · the census re-stamped for C-118.12 (`MAIL_NO_STATEMENT`), C-118.13 (`FILE_KIND_REFUSED`), C-139.22-.24 and every other check row minted in T53, last in its layer
 **record-core**
 - T53-574 · K5705, FILE-SAFETY's finding · `purge` removes rows only, so derived objects of a purged capture (safe views, copies, pictures) stay in the store unreferenced: purge removes them too (whether record-core finds them or their owners register them for purge, settled at START)
 
 ## Layer 3
+**mail-door**
+- T53-618 · the independent audit (K5794) · PRIVACY, first in the round (K5506, R6): a message sent again after it was brought in stores its private bytes again and nothing deletes them (`receiveMail` stores at index.mjs:375, returns `existed: true` at :384; `clearWaitingMail` reads only waiting rows): a resend after bring-in holds no bytes past R6's bound; test: bring in, resend, clear 30 days on, the bytes are gone
+**capture-sources**
+- T53-619 · the independent audit (K5794) · drive.test.mjs R42 again exercises a detection that carries no fields (`{format: "odt"}` alone), as its comment says
+**doorbell**
+- T53-620 · the independent audit (K5794) · R31's PDF case asserts each page as a picture (t53.test.mjs:657 asserts only `v.pages >= 0`); the stale "waits on file-safety R71" comment (:590-591) removed; R30's order (row, then bytes; the code deletes bytes first) checked against its text at START
 **mail-door**
 - T53-591 · K5748, mail-door R15 · the clearing's owners kept as counts until notice-producers (R36) has read them
 **provenance**
@@ -42,6 +60,8 @@
 - T53-571 · K5705, R66 · the container's other picture kinds: uses reader-container (the edge entered at START) and image-cover's redraw (T53-570)
 
 ## Layer 4
+**content**
+- T53-621 · the independent audit (K5794) · R68: a test stubbing the constants to two other letters sees them at every interface; R64's hidden bundle tested with a member who cannot see it, not `viewer: "nobody"`; register-row.test.mjs uses registers' provider in place of its hand-built one (K4990) once registers is merged
 **extraction**
 - T53-610 · progressions' report (K5786) · `nosha.test.mjs` passes its own input string, not progressions' sentence; then progressions T53-611
 **reading-pipeline**
@@ -53,6 +73,12 @@
 - T53-600 · K5762 · a run of its tests writes no stored answer fixture of case-checker, plane or public-read (they are read, never rewritten, by another module's tests)
 
 ## Layer 5
+**query-language**
+- T53-622 · the independent audit (K5794) · the English regex sites at grammar.test.mjs:154-156 and :283 read by key, and the baseline lines its report said it removed (grammar.test.mjs 1, t33.test.mjs 2); to its open layer-5 job if work resumes before layer 5 closes
+**people**
+- T53-623 · the independent audit (K5794) · identity.test.mjs:111's copied grade-C sentence read by `word(...)`, as the grade B and D cases two lines away; to its open layer-5 job if work resumes before layer 5 closes
+**events**
+- T53-624 · the independent audit (K5794) · R60's test uses the walked standard's fixture and 200 captures, as its Test says (register.test.mjs uses synthetic captures only); to its open layer-5 job if work resumes before layer 5 closes
 **progressions**
 - T53-611 · K5786 · feeds:179's noSha sentence keyed by `localize` at its use and read by key in the test (after extraction T53-610)
 
