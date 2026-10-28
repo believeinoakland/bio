@@ -3,7 +3,7 @@
 import { tableDeclarationRefusals } from "../record-core/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, realWorld, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
+import { world, realWorld, PASSWORD, FOUNDER_HANDLE, addAdmin } from "./fixture.mjs";
 import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
 import { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -44,24 +44,20 @@ test("R16 a revocation (membership R20) ends every session of the member and rev
 
 test("R16 a carried administrator removal (membership R8) ends the target's sessions and revokes their keys, named for the completing voter", async () => {
   const w = await world().group("ann");
-  for (const id of ["third", "fourth"]) {
-    const p = await w.m.memberAdd({ memberId: id, cover: `c ${id}`, role: "admin", by: "admin" });
-    assert.equal(p.reason, "CONSENSUS_REQUIRED");
-    let e = null;
-    for (const by of w.m.activeAdmins()) e = await w.m.adminEndorse({ memberId: id, by });
-    assert.equal(e.ok, true);
-    assert.equal((await w.m.enroll({ invite: e.invite, handle: id, password: PASSWORD(id) })).ok, true);
+  for (const id of ["third", "fourth", "fifth"]) {
+    await addAdmin(w, id);
     await w.c.setPassword({ role: `member:${id}`, password: PASSWORD(id) });
   }
   assert.equal((await w.c.login({ handle: "fourth", password: PASSWORD("fourth") })).ok, true);
   w.c.signerAdd({ keyB64: "AAAAfourth", memberId: "fourth", by: "admin" });
-  /* five administrators: three votes carry it; a vote short of it changes nothing here */
-  assert.equal(w.m.adminRemove({ memberId: "fourth", by: "admin", reason: "r1" }).reason, "VOTES_SHORT");
-  assert.equal(w.m.adminRemove({ memberId: "fourth", by: "second", reason: "r2" }).reason, "VOTES_SHORT");
+  /* five administrators: three votes of the others carry it (the founder's own act removes alone, and is not a vote);
+     a vote short of it changes nothing here */
+  assert.equal(w.m.adminRemove({ memberId: "fourth", by: "second", reason: "r1" }).reason, "VOTES_SHORT");
+  assert.equal(w.m.adminRemove({ memberId: "fourth", by: "third", reason: "r2" }).reason, "VOTES_SHORT");
   assert.deepEqual([sessionsOf(w, "fourth"), keysOf(w, "fourth")[0].status], [1, "active"]);
-  const carried = w.m.adminRemove({ memberId: "fourth", by: "third", reason: "r3" });
+  const carried = w.m.adminRemove({ memberId: "fourth", by: "fifth", reason: "r3" });
   assert.equal(carried.ok, true);
-  assert.deepEqual([sessionsOf(w, "fourth"), keysOf(w, "fourth")], [0, [{ key_b64: "AAAAfourth", status: "revoked", status_by: "third" }]]);
+  assert.deepEqual([sessionsOf(w, "fourth"), keysOf(w, "fourth")], [0, [{ key_b64: "AAAAfourth", status: "revoked", status_by: "fifth" }]]);
 });
 
 test("R16 R17 start registers the listener and the claim fact once; a second start is refused by membership's R81 and changes nothing", async () => {

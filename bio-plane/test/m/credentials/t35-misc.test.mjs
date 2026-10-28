@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { world, sqlOver, PASSWORD, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
+import { world, sqlOver, PASSWORD, SEAL, SIGNIN_TOKEN, addAdmin } from "./fixture.mjs";
 import { AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS, SIGN_IN_CHECKS, CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS,
          KEYED_SERVICE_CHECKS, AI_CREDENTIAL_EXPIRY_DAYS, CREDENTIALS_TABLES, Credentials, credentialsOf }
   from "../../../src/credentials/index.mjs";
@@ -86,10 +86,7 @@ test("R42 a credential minted before expiry was recorded is given expiresAt 90 d
 
 test("R16 a member's revocation also spends their unspent recovery codes and clears their connected subscription, in the same act; no one else's", async () => {
   const w = await world().group("ann");
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  await w.m.enroll({ invite: e.invite, handle: "third", password: PASSWORD("third") });
+  await addAdmin(w, "third");
   const codes = w.c.recoveryCodesIssue({ by: "third" }).codes;
   w.c.recoveryCodesIssue({ by: "second" });
   for (const id of ["third", "ann"]) await w.signin(id);

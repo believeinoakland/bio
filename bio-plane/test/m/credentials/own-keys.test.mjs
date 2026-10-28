@@ -2,7 +2,7 @@
    at the interface; copied from membership's R89–R91 tests at the split (K637). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, addAdmin } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
 import { noSuchMember } from "../../../src/membership/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -94,10 +94,7 @@ test("R9 a registration: active, origin self, registered by the member, every ad
   assert.deepEqual([l.origin, l.registered_by, l.status, l.status_by, l.attests, l.attests_why], ["self", "bob", "active", "bob", true, null]);
   assert.ok(w.c.attestingKeys().some((k) => k.key_b64 === "AAAAbobkey" && k.member_id === "bob"));
   /* notified is membership's R86 at the act: a third administrator, once active, is told too; a revoked one is not */
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
-  assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  await w.m.enroll({ invite: e.invite, handle: "third", password: PASSWORD("third") });
+  await addAdmin(w, "third");
   assert.deepEqual(reg(w, "ann", "AAAAann1").notified, ["admin", "second", "third"]);
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
   assert.deepEqual(reg(w, "ann", "AAAAann2").notified, ["admin", "third"]);

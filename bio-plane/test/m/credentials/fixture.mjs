@@ -122,3 +122,20 @@ export function realWorld() {
   c.migrate();
   return { db, sql, ctx, rc, m, c, row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };
 }
+
+/* An administrator added and enrolled the way the roster allows at the time of the call and after member-roster's R84 to
+   R91 (T53; K5563): proposed by `second` and endorsed by every active administrator in turn until an invitation is
+   issued (the founder's endorsement alone issues it now; two administrators' endorsements did before). */
+export async function addAdmin(w, id) {
+  await w.m.memberAdd({ memberId: id, cover: `cover of ${id}`, role: "admin", by: "second" });
+  let invite = null;
+  for (const by of w.m.activeAdmins()) {
+    if (by === "second") continue;
+    const e = await w.m.adminEndorse({ memberId: id, by });
+    if (e.invite) { invite = e.invite; break; }
+  }
+  if (!invite) throw new Error(`${id} was not issued an invitation`);
+  const enrolled = await w.m.enroll({ invite, handle: id, password: PASSWORD(id) });
+  if (enrolled.ok !== true) throw new Error(`${id} did not enrol`);
+  return id;
+}
