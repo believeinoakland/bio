@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, V, MACHINE, BYLAW, UNKNOWN_CITE, TEST_PROFILE, REASON, profile, src } from "./fixture.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS } from "../../../src/standards/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
@@ -76,7 +77,7 @@ test("R3 the citation is matched against the active profiles' standard_sources: 
     const u = w.declare({ cite: UNKNOWN_CITE });
     assert.equal(u.ok, true, "an unmatched citation is still held");
     assert.equal(u.source.state, "undetermined");
-    assert.match(u.source.why, /matches the citation form of no source/);
+    assert.match(u.source.why, wordRx("standards.why.citation_matches_citation"));
     /* declared kind and issuer differ from the match: kept as declared, the difference beside it */
     const d = w.declare({ kind: "statute", issuer: "Someone Else" });
     assert.deepEqual([d.kind, d.issuer], ["statute", "Someone Else"]);
@@ -90,7 +91,7 @@ test("R3 the citation is matched against the active profiles' standard_sources: 
     const r = w.declare();
     assert.equal(r.ok, true);
     assert.equal(r.source.state, "undetermined");
-    assert.match(r.source.why, /no active jurisdiction profile/);
+    assert.match(r.source.why, wordRx("standards.why.group_civicsmith_active"));
   }
   {
     const w = seeded({ profiles: ["no-such-profile"] });
@@ -130,7 +131,7 @@ test("R3 the citation is matched against the active profiles' standard_sources: 
   {
     /* a profile listing no source */
     const w = seeded({ profiles: ["pe"], written: [profile("pe", [])] });
-    assert.match(w.declare().source.why, /list no source/);
+    assert.match(w.declare().source.why, wordRx("standards.active_jurisdiction_profiles"));
   }
 });
 

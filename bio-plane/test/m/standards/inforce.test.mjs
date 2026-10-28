@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, REASON } from "./fixture.mjs";
+import { WORD } from "./words.mjs";
 import { IN_FORCE_STATES } from "../../../src/standards/index.mjs";
 
 const EV = (s) => `EVT-2026-${s.padEnd(16, "0").slice(0, 16)}`;
@@ -31,7 +32,7 @@ test("R20 inForceAt for one standard answers {state, why, standard, version} thr
   /* no events module wired: an event bound is undetermined, saying so */
   const bare = seeded({ events: "none" });
   const s = bare.declare({ period: null, period_basis: { from: { event: ev.enact, edge: "start" } } }).id;
-  assert.match(bare.s.inForceAt({ standard: s, date: "2022-01-01" }).why, /events module is not wired/);
+  assert.ok(bare.s.inForceAt({ standard: s, date: "2022-01-01" }).why.startsWith(WORD("standards.why.event_cannot_read", { event_id: ev.enact })));
   /* refusals and robustness */
   assert.equal(w.s.inForceAt({ date: "2020-01-01" }).reason, "STANDARD_NO_ID");
   assert.equal(w.s.inForceAt({ standard: plain, date: "2020-02-30" }).reason, "STANDARD_DATE_INVALID");
