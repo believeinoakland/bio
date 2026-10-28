@@ -43338,6 +43338,13 @@
       "line": 671
     },
     {
+      "id": "provenance.brought_by_email",
+      "en": "a message a member brought in by email",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1316
+    },
+    {
       "id": "provenance.checks.deciding_who_issued_a",
       "en": "Deciding who issued a document is a named member's judgment, so nothing was recorded. A machine, an assistant or a call that carries nobody may suggest an issuer and never decides one. Sign in as a member.",
       "module": "provenance",
@@ -43377,98 +43384,273 @@
       "en": "document-directed: states, for each captured file of a document, who issued it as the record now stands, with the dated basis and whether a member reviewed it and could not tell; a decision made by a member is stated here and nothing is changed",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 102
+      "line": 103
     },
     {
       "id": "provenance.declared.declareorigin",
       "en": "document-directed: a member states, with their name and the date, the system a document came from, keyed by bundleId; a second declaration is added beside the first and never replaces it, and the document itself does not change",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 99
+      "line": 100
     },
     {
       "id": "provenance.declared.origins",
       "en": "document-directed: lists, oldest first, every system members have declared a document came from, with who declared it and when; the latest is the standing one, and nothing is changed",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 105
+      "line": 106
     },
     {
       "id": "provenance.declared.testify",
       "en": "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 96
+      "line": 97
     },
     {
       "id": "provenance.index.a_members_firsthand_observation_their",
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1965
+      "line": 2023
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 2041
+      "line": 2096
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1504
+      "line": 1558
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1467
+      "line": 1521
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1488
+      "line": 1542
     },
     {
       "id": "provenance.index.register_part_bytes",
       "en": "register[{index}] part {part} ({sha}) {said}: a part states its size as a whole number of bytes at least 0. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 629
+      "line": 645
     },
     {
       "id": "provenance.index.register_part_digest",
       "en": "register[{index}] part {part} names {digest}: a part is named by its SHA-256, 64 lowercase hex characters. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 635
+      "line": 651
     },
     {
       "id": "provenance.index.register_part_without_whole",
       "en": "register[{index}] ({sha}, path {path}) is a part of a capture whose whole the list does not name: a part is registered under its whole, which the list names. Nothing was written",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 639
+      "line": 655
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1486
+      "line": 1540
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1465
+      "line": 1519
+    },
+    {
+      "id": "provenance.register.attachment_no_container",
+      "en": "provenance documents[{i}] was an attachment of a message (capture.method '{method}') and carries no container block naming the message and the attachment it came from",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 83
+    },
+    {
+      "id": "provenance.register.chain_absent",
+      "en": "provenance documents[{i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 266
+    },
+    {
+      "id": "provenance.register.chain_empty",
+      "en": "provenance documents[{i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 279
+    },
+    {
+      "id": "provenance.register.determined_no_issuer",
+      "en": "provenance documents[{i}] declares authority_state 'determined' with no authority named, and this record is at or past verified",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 311
+    },
+    {
+      "id": "provenance.register.email_basis_wrong",
+      "en": "provenance documents[{i}] was brought in by email and its capture.grade_basis is '{stated}', not '{basis}': why it carries no letter is stated, never left to be inferred",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 387
+    },
+    {
+      "id": "provenance.register.email_has_letter",
+      "en": "provenance documents[{i}] was brought in by email and carries capture.grade '{grade}': a message a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 386
+    },
+    {
+      "id": "provenance.register.email_no_message",
+      "en": "provenance documents[{i}] was brought in by email and carries no message block of the message's headers",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 194
+    },
+    {
+      "id": "provenance.register.email_no_statement",
+      "en": "provenance documents[{i}] was brought in by email and carries no origin_statement: a message brought in records where it came from, in the member's own words",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 185
+    },
+    {
+      "id": "provenance.register.email_wrong_method",
+      "en": "provenance documents[{i}] was brought in by email and its capture.method is '{stated}', not '{method}'",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 182
+    },
+    {
+      "id": "provenance.register.emailed_wrong_origin",
+      "en": "provenance documents[{i}] states capture.method '{method}' but its origin.kind is not '{origin}': only a message a member brought in by email was emailed",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 178
+    },
+    {
+      "id": "provenance.register.grade_not_one_of",
+      "en": "provenance documents[{i}].capture.grade '{grade}' is not one of: {grades}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 109
+    },
+    {
+      "id": "provenance.register.hop_no_attestor",
+      "en": "provenance documents[{i}].provenance_chain[{h}] names no attestor: an unattributed hop cannot support the claim a published hash makes",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 286
+    },
+    {
+      "id": "provenance.register.message_malformed",
+      "en": "provenance documents[{i}].message is malformed: {fields}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 199
+    },
+    {
+      "id": "provenance.register.message_wrong_origin",
+      "en": "provenance documents[{i}] carries a message block but its origin.kind is not '{origin}': only a message brought in by email records its headers",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 179
+    },
+    {
+      "id": "provenance.register.origin_kind_one_of",
+      "en": "provenance documents[{i}].origin.kind must be one of: {kinds}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 409
+    },
+    {
+      "id": "provenance.register.release_by_machine",
+      "en": "collected -> verified transition authored by '{author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 455
+    },
+    {
+      "id": "provenance.register.sweep_fence",
+      "en": "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 470
+    },
+    {
+      "id": "provenance.register.undetermined_no_basis",
+      "en": "provenance documents[{i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 306
+    },
+    {
+      "id": "provenance.register.unpacked_archive_unread",
+      "en": "provenance documents[{i}] was cut out of archive {archive}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 132
+    },
+    {
+      "id": "provenance.register.unpacked_no_basis",
+      "en": "provenance documents[{i}] was cut out of an archive and carries no capture.grade and no grade_basis: why it carries no letter is stated, never left to be inferred",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 110
+    },
+    {
+      "id": "provenance.register.unpacked_no_container",
+      "en": "provenance documents[{i}] was cut out of an archive (capture.method '{method}') and carries no container block naming the archive and the entry it came from",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 91
+    },
+    {
+      "id": "provenance.register.upload_basis_wrong",
+      "en": "provenance documents[{i}] was brought in by a member's upload and its capture.grade_basis is '{stated}', not '{basis}': why it carries no letter is stated, never left to be inferred",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 381
+    },
+    {
+      "id": "provenance.register.upload_has_letter",
+      "en": "provenance documents[{i}] was brought in by a member's upload and carries capture.grade '{grade}': a file a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 380
+    },
+    {
+      "id": "provenance.register.upload_no_statement",
+      "en": "provenance documents[{i}] was brought in by a member's upload and carries no origin_statement: a file brought in records where it came from, in the member's own words",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 156
+    },
+    {
+      "id": "provenance.register.upload_wrong_method",
+      "en": "provenance documents[{i}] was brought in by a member's upload and its capture.method is '{stated}', not '{method}'",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/register-checks.mjs",
+      "line": 153
     },
     {
       "id": "provenance.releasable.no_chain",
@@ -43497,6 +43679,41 @@
       "module": "provenance",
       "file": "bio-plane/src/provenance/releasable.mjs",
       "line": 54
+    },
+    {
+      "id": "provenance.testify.authority_basis",
+      "en": "the author of these bytes is the signed-in member taken from the session at op=testify, {recorded}; the request could not name it",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 2039
+    },
+    {
+      "id": "provenance.testify.provenance_notes",
+      "en": "Authored through op=testify. Observed {obs}, in the member's own statement; recorded {recorded}, by this record's clock. The author is taken from the signed-in session, not from the request. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 2025
+    },
+    {
+      "id": "provenance.why.attachment_depth",
+      "en": "these bytes sit inside more than {archive_depth_max} containers, so the message that decides what they earn cannot be read and their capture grade is UNDETERMINED",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1392
+    },
+    {
+      "id": "provenance.why.attachment_locator_bad",
+      "en": "these bytes were recorded as an attachment of a message, but the receipt names the message as {locator}, not as email:<the message's 64-hex digest>!<the attachment's number>, so the message cannot be read and what they earn on the capture axis is UNDETERMINED",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1388
+    },
+    {
+      "id": "provenance.why.attachment_of_message",
+      "en": "an attachment of the message {message_sha}: it earns exactly what that message earns. {why}",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1401
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",

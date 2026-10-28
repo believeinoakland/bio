@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, provDoc, infoMd, sha, V } from "./fixture.mjs";
 import { PROVENANCE_ACT_CHECKS, registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const B = "INFO-2026-0001-a";
 const T = "2026-09-27T03:00:00Z";
@@ -146,7 +147,7 @@ test("R66: after a decision the C-18.9 check reads the new state, and before it 
   /* Undetermined and silent at verified: found; the decision's dated basis answers it. */
   const silent = { ...provDoc(a), authority: undefined, authority_state: "undetermined", authority_basis: "", provenance_chain: chain };
   assert.equal(c189(w, silent).length, 1, "before the decision the old state is read");
-  assert.match(c189(w, silent)[0].message, /states no authority_basis/);
+  assert.equal(c189(w, silent)[0].message, word("provenance.register.undetermined_no_basis", { i: "0" }));
   decide(w, a, { outcome: "undetermined_after_review", authority: undefined, basis: "asked the office twice; no answer by 2026-09-27" });
   assert.deepEqual(c189(w, silent), [], "after it, the decision's state and basis are read");
   /* Determined with no authority named: found; the decision names one. */
@@ -154,7 +155,7 @@ test("R66: after a decision the C-18.9 check reads the new state, and before it 
   const a2 = w2.cap("a");
   const unnamed = { ...provDoc(a2), authority: "", authority_state: "determined", provenance_chain: chain };
   assert.equal(c189(w2, unnamed).length, 1);
-  assert.match(c189(w2, unnamed)[0].message, /no authority named/);
+  assert.equal(c189(w2, unnamed)[0].message, word("provenance.register.determined_no_issuer", { i: "0" }));
   w2.prov.declareAuthority({ bundle: B, capture: a2.sha, outcome: "determined", authority: "City Clerk", basis: "letterhead", by: V("ruth"), viewer: V("ruth") });
   assert.deepEqual(c189(w2, unnamed), []);
   /* A later decision is the one read: back to undetermined and silent can never happen (a basis is required), so the

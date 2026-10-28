@@ -5,6 +5,7 @@ import { world, sha, V, infoMd } from "./fixture.mjs";
 import { ARCHIVE_CAPTURE_GRADE, ARCHIVE_VIA, DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE } from "../../../src/record-grammar/index.mjs";
 import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const T = "2026-09-27T01:00:00Z";
 const rank = (g) => BASIS_GRADES.indexOf(g);
@@ -76,8 +77,8 @@ test("R51: a capture received through the doorbell earns no fetched letter; its 
                 at: "2026-09-27T04:05:06Z" },
     why: undefined });
   /* Stated as authored, never as measured; existence proven by the receipt's timestamp. */
-  assert.match(g.why, /never fetched/);
-  assert.match(g.why, /stated as authored/);
+  assert.equal(g.why, word("provenance.why.bytes_fetched_address", { how: word("provenance.handed_group_through"),
+    earned_capture_ceiling: EARNED_CAPTURE_CEILING, first_retrieved: "2026-09-27T04:05:06Z", address: "knock:KNOCK-20260927-0a1b2c3d" }));
   assert.match(g.why, /2026-09-27T04:05:06Z/);
   assert.match(g.why, /knock:KNOCK-20260927-0a1b2c3d/);
   assert.equal(w.prov.captureGrade(`sha256:${s.toUpperCase()}`).route, "doorbell");

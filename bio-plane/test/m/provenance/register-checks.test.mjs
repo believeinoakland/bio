@@ -42,8 +42,8 @@ test("R42: C-18.1, the register's shape, release authority and the sweep fence, 
   const md = infoMd("INFO-2026-0001-x", { state: "verified", history: hist });
   const machine = run([{ ...good, provenance_chain: [{ who: "x" }], origin: { kind: "sweep", matched_sweep: "s", deeming_actor: "d" } }],
                       { md, files: { [cap.path]: cap.text } });
-  assert.equal(machine.some((x) => /release is a named member's decision/.test(x.message)), true);
-  assert.equal(machine.some((x) => /sweep-origin intake lands at collected/.test(x.message)), true);
+  assert.equal(machine.some((x) => x.message === word("provenance.register.release_by_machine", { author: "token:member" })), true);
+  assert.equal(machine.some((x) => x.message === word("provenance.register.sweep_fence")), true);
   /* information@2: the register's @2 shapes (encoding, custody, parts, derived, renditions, releases). */
   const md2 = infoMd("INFO-2026-0002-y").replace("schema: information@1", "schema: information@2");
   const at2 = run([{ ...good, capture: { ...good.capture, encoding: "rot13" }, parts: [], derived: {}, renditions: "x" }],
@@ -131,7 +131,8 @@ test("R45: C-18.6, every registered capture's stored bytes hash to the recorded 
   const b64 = { ...doc, capture: { ...doc.capture, encoding: "base64", sha256: sha(cap.text) } };
   assert.deepEqual(await gate([b64], { [cap.path]: Buffer.from(cap.text).toString("base64") }), []);
   const undecodable = await gate([b64], { [cap.path]: "***not base64***" });
-  assert.match(undecodable[0].message, /could not be decoded/);
+  assert.deepEqual([undecodable.length, undecodable[0].severity], [1, "error"]);
+  assert.notEqual(undecodable[0].message, moved[0].message, "refused for the bytes, not as a mutation");
   /* The slot is filled by the registration alone: with no grammar, nothing hashes the bytes. */
   assert.deepEqual((await run([doc], { [cap.path]: "mutated bytes" }, {})).findings.filter((x) => x.check === "C-18.6"), []);
 });
@@ -143,7 +144,7 @@ test("R46: C-18.9, at or past verified every document records a chain whose hops
   assert.deepEqual([absent.length, absent[0].code, absent[0].severity], [1, "chain-absent", "error"]);
   assert.equal(f({ ...good, provenance_chain: null })[0].code, "chain-not-an-array");
   assert.equal(f({ ...good, provenance_chain: [] })[0].code, "chain-empty");
-  assert.match(f({ ...good, provenance_chain: [{ who: " " }] })[0].message, /names no attestor/);
+  assert.equal(f({ ...good, provenance_chain: [{ who: " " }] })[0].message, word("provenance.register.hop_no_attestor", { i: "0", h: "0" }));
   assert.deepEqual(f({ ...good, provenance_chain: [{ who: "instance x" }] }), []);
   assert.match(f({ ...good, provenance_chain: [{ who: "x" }], authority: undefined, authority_state: "undetermined", authority_basis: "" })[0].message,
                /states no authority_basis/);
@@ -240,7 +241,7 @@ test("R42, R51 (N381): C-18.1 admits capture R65's pulled-knock document: no let
   /* A kind the register does not know is no doorbell document either, so it also owes a letter. */
   assert.deepEqual(runPulled([{ ...doc, origin: { kind: "knocked" } }]).map((x) => x.message),
     ["provenance documents[0].capture.grade 'null' is not one of: A, B, C",
-     "provenance documents[0].origin.kind must be one of: named_request, sweep, member, doorbell, upload"]);
+     word("provenance.register.origin_kind_one_of", { i: "0", kinds: "named_request, sweep, member, doorbell, upload, email" })]);
   /* The doorbell basis excuses only a doorbell document: a fetched one stating it still owes a letter. */
   assert.match(one({ ...doc, origin: { kind: "named_request" } }), /capture.grade 'null' is not one of: A, B, C/);
   /* Received material is not a member's authored observation: an authored claim keeps the authored arm's rules. */

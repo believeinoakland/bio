@@ -47,7 +47,7 @@ export { PROVENANCE_SCHEMA } from "./schema.mjs";
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
 export const PROVENANCE_TABLES = ["register", "register_parts", "captured_locators", "origin_declarations", "authority_decisions"];
 export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD, UPLOAD_ORIGIN,
-         UPLOADED_METHOD } from "./register-checks.mjs";
+         UPLOADED_METHOD, EMAIL_ORIGIN, EMAILED_METHOD, EMAILED_ATTACHMENT_METHOD } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, TESTIMONY_CHECKS } from "./checks.mjs";
 
 const hexBytes = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -189,6 +189,21 @@ export const DOORBELL_VIA = "doorbell";
  *  graded exactly as R51 grades it. The one spelling, exported for the writer. */
 export const UPLOAD_VIA = "upload";
 
+/** R82 · N824 (K2425, K509 (3)): the receipt `via` of a message a member brought in by email (`capture` R116). Received,
+ *  never fetched, and graded exactly as R63 grades an upload. The one spelling, exported for the writer. */
+export const EMAIL_VIA = "email";
+
+/** R84 · N824: the receipt `via` of a file that was an attachment of a captured message, its retrieval locator
+ *  `email:<messageSha>!<index>`. Such a file earns exactly what its message earns. The one spelling, exported. */
+export const EMAIL_ATTACHMENT_VIA = "email-attachment";
+/** R84's two answer codes (no catalogue row, as R59's): the message's answer passed through, and a chain that cannot be
+ *  read to a message within the depth bound. */
+export const ATTACHMENT_OF_MESSAGE = "CAPTURE_ATTACHMENT_OF_MESSAGE";
+export const ATTACHMENT_UNRESOLVED = "CAPTURE_ATTACHMENT_UNRESOLVED";
+/* R84: the retrieval locator an `email-attachment` receipt carries: the message's capture digest and the attachment's
+   0-based place among the message's attachments. */
+const ATTACHMENT_LOCATOR = /^email:([0-9a-fA-F]{64})!(\d+)$/;
+
 /** R59 · N688 (K1844, K1852): the receipt `via` of a file `acquisition.unpack` cut out of an archive the record holds
  *  (its R38; R15 here), at the archive's document address followed by `#zip:<index>`, its retrieval locator
  *  `zip:<archiveSha>!<index>`. Such a file earns exactly what its archive earns. The one spelling, exported for the
@@ -203,12 +218,13 @@ export const UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
 const UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
 /** R62 · N806 (K2333): the routes by which this copy fetched a capture itself: a direct fetch (Drive and render fetches
  *  record `direct` too), an archive replay, a capture request's fetch. A doorbell's file was handed in, and an
- *  upload's brought in by the member who holds it (R63): neither was fetched, so neither route is here.
+ *  upload's brought in by the member who holds it (R63), and a message's by email (R82): none was fetched, so none of
+ *  those routes is here.
  *  The one list, exported for every reader of the source condition (`file-safety` R6, `case-carriage` R15). */
 export const FETCHED_VIAS = Object.freeze(["direct", ARCHIVE_VIA, "capture-request"]);
 /* R59: between equal answers, the order of the routes; a route no ruling grades never outranks a ruled one.
    R63: an upload stands where the doorbell stands. */
-const ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3, upload: 3 };
+const ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, "email-attachment": 2, doorbell: 3, upload: 3, email: 3 };
 
 /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
    file publishes: the default a caller gets by saying nothing, and the
@@ -1117,7 +1133,8 @@ class Provenance {
    *  handed to the listeners as this write gave it, null when it gave none. A repeat that gives one replaces the
    *  stored answer (the newest lookup speaks for the address); one that gives none keeps it, as `retrieval_locator`
    *  is kept. It changes no other field, grade or chain. */
-  /*  R63 (K2449): a receipt of route `upload` holds, for each sighting, the uploading member `by` and her `statement` of
+  /*  R83 (N824): a receipt of route `email` holds `by` and `statement` as an upload's does.
+   *  R63 (K2449): a receipt of route `upload` holds, for each sighting, the uploading member `by` and her `statement` of
    *  where the file came from, appended to its `uploads` as `{by, statement, at}` (`at` the sighting's instant), so a
    *  second sighting by another member keeps her own statement beside the first: two members bringing the same bytes
    *  are two attributed sightings. Each is kept as given (a string, else null). A receipt of any other route takes
@@ -1127,7 +1144,7 @@ class Provenance {
     if (!addressNorm || !captureSha) return { recorded: false };
     const v = String(via || "direct");
     const rep = isObj(reputation) ? reputation : null;
-    const upload = v === UPLOAD_VIA;
+    const upload = v === UPLOAD_VIA || v === EMAIL_VIA; /* R63, R83: a sighting by a member who brought the bytes in */
     const sighting = upload ? { by: typeof by === "string" ? by : null, statement: typeof statement === "string" ? statement : null }
                             : { by: null, statement: null };
     const asked = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
@@ -1220,8 +1237,10 @@ class Provenance {
     let next = asked;
     for (let level = 0; level <= ARCHIVE_DEPTH_MAX && next.length; level++) {
       this.#loadFacts(next, facts);
-      next = [...new Set([...facts.values()].flatMap((f) => f.locs).filter((l) => l.via === UNPACKED_VIA)
-        .map((l) => UNPACKED_LOCATOR.exec(typeof l.retrieval_locator === "string" ? l.retrieval_locator : ""))
+      next = [...new Set([...facts.values()].flatMap((f) => f.locs)
+        .filter((l) => l.via === UNPACKED_VIA || l.via === EMAIL_ATTACHMENT_VIA)
+        .map((l) => (l.via === UNPACKED_VIA ? UNPACKED_LOCATOR : ATTACHMENT_LOCATOR)
+          .exec(typeof l.retrieval_locator === "string" ? l.retrieval_locator : ""))
         .filter((m) => m).map((m) => m[1].toLowerCase()))].filter((a) => !facts.has(a));
     }
     return asked.map((s) => this.#grade(s, 0, facts));
@@ -1291,6 +1310,14 @@ class Provenance {
        doorbell's material (R51), its existence at the upload's instant proven by the receipt the upload wrote. */
     if (vias.includes(UPLOAD_VIA))
       answers.push(this.#received(f, UPLOAD_VIA, word("provenance.brought_member_holds")));
+    /* R82 · N824: a message a member brought in by email: received, not fetched, graded as an upload; the sender's
+       claim (From, signatures, authentication results) is not read here and raises no letter. */
+    if (vias.includes(EMAIL_VIA))
+      answers.push(this.#received(f, EMAIL_VIA, localize("provenance.brought_by_email", "a message a member brought in by email")));
+    /* R84 · N824: an attachment earns exactly what its message earns, one answer per receipt in locator order. */
+    if (vias.includes(EMAIL_ATTACHMENT_VIA))
+      for (const loc of [...new Set(f.locs.filter((l) => l.via === EMAIL_ATTACHMENT_VIA).map((l) => l.retrieval_locator))].sort(cmp))
+        answers.push(this.#attachment(loc, depth, facts));
     if (answers.length) return this.#strongest(answers);
     /* R26: a route no ruling grades is NAMED, and the grade is undetermined. It answers only when no ruled route
        does (R59: it never outranks a ruled one). */
@@ -1349,6 +1376,33 @@ class Provenance {
              why: word("provenance.why.bytes_entry_archive", { index: String(index), archive_sha: String(archiveSha.slice(0, 16)), why: String(why) }) };
   }
 
+  /* R84 · N824: a file that was an attachment of a captured message earns exactly what its message earns. Every field
+     of the message's answer is passed through unchanged but `route`, `basis` and `why`; `message` names the message
+     whose route decided it (the outermost, for a message that is itself an attachment), with its own route and basis.
+     Read through at most `ARCHIVE_DEPTH_MAX` containers; past that, or with a locator not of the form
+     `email:<64-hex digest>!<whole index>`, the answer is undetermined and says why. */
+  #attachment(locator, depth, facts) {
+    const unresolved = (why) => ({ grade: null, route: EMAIL_ATTACHMENT_VIA, determined: false, basis: ATTACHMENT_UNRESOLVED, why });
+    const m = ATTACHMENT_LOCATOR.exec(typeof locator === "string" ? locator : "");
+    if (!m || !Number.isSafeInteger(Number(m[2])))
+      return unresolved(localize("provenance.why.attachment_locator_bad",
+        "these bytes were recorded as an attachment of a message, but the receipt names the message as {locator}, not as email:<the message's 64-hex digest>!<the attachment's number>, so the message cannot be read and what they earn on the capture axis is UNDETERMINED",
+        { locator: JSON.stringify(String(locator ?? "")).slice(0, 100) }));
+    if (depth + 1 > ARCHIVE_DEPTH_MAX)
+      return unresolved(localize("provenance.why.attachment_depth",
+        "these bytes sit inside more than {archive_depth_max} containers, so the message that decides what they earn cannot be read and their capture grade is UNDETERMINED",
+        { archive_depth_max: String(ARCHIVE_DEPTH_MAX) }));
+    const messageSha = m[1].toLowerCase();
+    const a = this.#grade(messageSha, depth + 1, facts);
+    if (a.basis === ATTACHMENT_UNRESOLVED) return unresolved(a.why);
+    const { route, basis, why, message: inner, ...rest } = a;
+    const message = route === EMAIL_ATTACHMENT_VIA ? inner : { sha256: messageSha, route, basis };
+    return { ...rest, route: EMAIL_ATTACHMENT_VIA, basis: ATTACHMENT_OF_MESSAGE, message,
+             why: localize("provenance.why.attachment_of_message",
+               "an attachment of the message {message_sha}: it earns exactly what that message earns. {why}",
+               { message_sha: messageSha.slice(0, 16), why: String(why) }) };
+  }
+
   /** R62 · N806 (K2333): whether this copy fetched the capture itself, the one definition of the source condition
    *  (lifted from `file-safety` R6). `fetched` when a receipt naming the capture (R60) has a `via` in `FETCHED_VIAS`
    *  (no `via` reads `direct`, R13), or when an `unpacked` receipt's locator names an archive for which this rule
@@ -1374,8 +1428,8 @@ class Provenance {
     const path = [...walked, s];
     let first = null;
     for (const r of rows) {
-      if (r.via !== UNPACKED_VIA) continue;
-      const m = UNPACKED_LOCATOR.exec(typeof r.retrieval_locator === "string" ? r.retrieval_locator : "");
+      if (r.via !== UNPACKED_VIA && r.via !== EMAIL_ATTACHMENT_VIA) continue;
+      const m = (r.via === UNPACKED_VIA ? UNPACKED_LOCATOR : ATTACHMENT_LOCATOR).exec(typeof r.retrieval_locator === "string" ? r.retrieval_locator : "");
       if (!m || !Number.isSafeInteger(Number(m[2]))) continue;
       const archive = m[1].toLowerCase();
       first ??= archive;
@@ -1869,7 +1923,7 @@ class Provenance {
   }
 
   /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */
-  testify({ words = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
+  testify({ words = null, observedAt = null, title = null, author = null, claimedAuthor = null, project = null } = {}) {
     const refusal = rowRefusal(TESTIMONY_CHECKS);
     const who = typeof author === "string" ? author.trim() : "";
     /* DEC-49 REGION is-testify-act
@@ -1892,6 +1946,9 @@ class Provenance {
     /* END DEC-49 REGION is-testify-act */
     const text = typeof words === "string" ? words : "";
     const bytes = new TextEncoder().encode(text);
+    /* R81 (T53; JOURNEYS R-24): the project the route names, stated in the document so promotion R53 commits the bundle
+       with it; one id token only, so no value can add a line to the front matter. */
+    const projectId = typeof project === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(project.trim()) ? project.trim() : null;
     const recorded = secondOf(this.#now());
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
     const obsMs = observedMs(obs);
@@ -1953,6 +2010,7 @@ class Provenance {
         `id: ${id}`, "object_type: information", "schema: information@1",
         `title: ${JSON.stringify(heading)}`, "current_state: collected", "prior_state: null",
         `created: "${recorded}"`, `last_updated: "${recorded}"`,
+        ...(projectId ? [`project: ${projectId}`] : []),
         "produced_by:", "  mode: human", "  capability_tier: session",
         "references: []", "state_history: []",
         "annotations_open: 0",
@@ -1964,9 +2022,7 @@ class Provenance {
         "---", "", "## Summary", "",
         localize("provenance.index.a_members_firsthand_observation_their", "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.", { file: String(file) }), "",
         "## Provenance Notes", "",
-        `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, `
-        + `by this record's clock. The author is taken from the signed-in session, not from the request. It stands on `
-        + `that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`, "",
+        localize("provenance.testify.provenance_notes", "Authored through op=testify. Observed {obs}, in the member's own statement; recorded {recorded}, by this record's clock. The author is taken from the signed-in session, not from the request. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).", { obs: String(obs), recorded: String(recorded) }), "",
         "## Session Log", "",
         `### Session ${recorded} | Authored | ${observer}`,
         "Trigger: testify",
@@ -1980,8 +2036,7 @@ class Provenance {
            named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
         authored: true, author: observer, observed_at: obs, recorded_at: recorded,
         authority: word("provenance.observing_member"), authority_state: "determined",
-        authority_basis: `the author of these bytes is the signed-in member taken from the session `
-                       + `at op=testify, ${recorded}; the request could not name it`,
+        authority_basis: localize("provenance.testify.authority_basis", "the author of these bytes is the signed-in member taken from the session at op=testify, {recorded}; the request could not name it", { recorded: String(recorded) }),
         provenance_chain: [{
           who: observer,
           asserts: `these are my own words, as written, about what I observed at ${obs}`,
