@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW, REASON } from "./fixture.mjs";
 import { standardsOps, PROPOSAL_STATES } from "../../../src/standards/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { MEMBERSHIP_CHECKS, PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/checks.mjs";
 import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 
@@ -106,7 +107,7 @@ test("R57 proposalsFor lists the proposals made for a project, newest first, eac
                                     project: P, proposed_at: "2026-10-02T10:00:00Z", has_text: false, adoption: null, standard: false,
                                     says: open.items[0].says });
   assert.equal(label.machine_work, true);
-  assert.match(open.items[0].says, /a proposal and not a standard/, "R9's sentence on each item");
+  assert.match(open.items[0].says, wordRx("standards.proposal_standard_record"), "R9's sentence on each item");
   const adopted = w.s.proposalsFor({ project: P, state: "adopted", viewer: V("carol") });
   assert.deepEqual(adopted.items.map((i) => [i.id, i.has_text, i.adoption]),
                    [[one.id, true, { standard: a.id, by: V("bob"), at: "2026-10-03T10:00:00Z" }]]);

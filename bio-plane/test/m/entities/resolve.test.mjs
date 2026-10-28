@@ -2,6 +2,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
+import { wordLike } from "./wordlike.mjs";
 
 test("R9 the cascade: A on the reference's fold, else B on the key's (differing from the reference's), else C on the label's, else unresolved; every matching entity at that tier; it stops at the first tier for every entity", () => {
   const { e, read } = world();
@@ -23,7 +26,7 @@ test("R9 the cascade: A on the reference's fold, else B on the key's (differing 
   assert.ok(!got.some(([, id]) => id === loser), "an A on one entity suppresses a C on another (the fall-through arm)");
   const a = r.resolved.find((m) => m.grade === "A");
   assert.equal(a.basis, "ORD:26-1", "the reference as the reading carries it; matched on its fold");
-  assert.match(a.method, /composite key/);
+  assert.equal(a.method, word("entities.index.source_identifier_the_references_composite", { ref: "ORD:26-1" }));
   const b = r.resolved.find((m) => m.grade === "B");
   assert.equal(b.basis, "26-2");
   assert.match(b.method, /key '26-2'/);
@@ -94,8 +97,7 @@ test("R12 testify refuses NO_SHA, NO_REF, NO_ENTITY, the act-shape NO_BASIS, NO_
   assert.equal(e.testify({ ...base, entityId: "ENT-2026-0404" }).reason, "NO_SUCH_ENTITY");
   const t = e.testify(base);
   assert.deepEqual([t.ok, t.grade_declared, t.grade, t.established, t.needs_confirmation], [true, "D", "D", false, false]);
-  assert.match(t.method, /member:ann/);
-  assert.match(t.method, /stated basis/);
+  assert.equal(t.method, word("entities.index.testimony_asserted_by_v1_on", { v1: "member:ann" }));
   assert.equal(t.basis, "I saw it");
   assert.equal(t.resolved_by, "member:ann");
   const again = e.testify({ ...base, basis: "again" });
@@ -116,7 +118,7 @@ test("R13 onResolved and onResolveAttempt: one registration per module (LISTENER
   assert.equal(attempts.length, 2);
   const [a0, a1] = attempts;
   assert.deepEqual([a0.captureSha, a0.bundleId, a0.ref, a0.matches.length, a0.resolvedBy], [sha("r13"), "INFO-1", "a:1", 1, MACHINE]);
-  assert.match(a0.considered, /composite key/);
+  assert.match(a0.considered, wordRx("entities.considered.composite_key"));
   assert.deepEqual([a1.ref, a1.matches.length], ["b:2", 0]);
   e.resolve({ captureSha: sha("r13") });
   assert.equal(resolved.length, 1, "a kept resolution runs none");

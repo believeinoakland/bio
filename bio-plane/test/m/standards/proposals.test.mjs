@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS, WHY_MAX } from "../../../src/standards/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 test("R9 a proposal is stored apart from standards, labelled by proposalLabel(proposer, \"standard\") with who proposed it and whether it is machine work, with a why of at most 240 characters; it is never a standard, never listed by standardsIn, and is answered with a sentence saying so", () => {
   const w = seeded();
@@ -13,7 +14,7 @@ test("R9 a proposal is stored apart from standards, labelled by proposalLabel(pr
                                   act: "ACT-2026-0001-permit", proposer: MACHINE, viewer: MACHINE });
   assert.equal(m.ok, true);
   assert.equal(m.standard, false);
-  assert.match(m.says, /a proposal and not a standard/);
+  assert.match(m.says, wordRx("standards.proposal_standard_record"));
   const label = proposalLabel(MACHINE, "standard");
   assert.deepEqual([m.proposal.by, m.proposal.state, m.proposal.machine_work, m.proposal.says],
                    [label.by, "machine_proposed", true, label.says]);
@@ -81,7 +82,7 @@ test("R9 R10 standardAdopt is R1 by a member naming the proposal: the standard r
   /* a proposal naming no text (R9): stored, and saying so; the adopting member must name it (R2) */
   const bare = w.s.standardPropose({ cite: BYLAW, why: "Maybe.", proposer: MACHINE });
   assert.deepEqual([bare.ok, bare.text_held], [true, false]);
-  assert.match(bare.says, /stored with no captured text, and cannot be adopted until a member names/);
+  assert.match(bare.says, wordRx("standards.index.proposal_stored_no_text"));
   assert.equal(w.s.standardPropose({ cite: BYLAW, why: "With text.", proposer: MACHINE, text: [text] }).text_held, undefined);
   const r = bare.proposal;
   assert.equal(w.s.standardAdopt({ proposal: r.id, author: V("bob"), kind: "ordinance", issuer: "Selectboard", reason: REASON }).reason,

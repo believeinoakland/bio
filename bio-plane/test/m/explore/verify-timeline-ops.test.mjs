@@ -84,7 +84,7 @@ test("R14 exploreOps publishes route arms for explore, explorepreset, explorever
   const x = exploreOf(null, { registry, events: { timeline: () => timelineAnswer() } });
   const url = new URL(`https://instance.example/?viewer=${V}`);
   const ops = exploreOps(x, url, { from: A, at: AT, viewer: "mallory" });
-  assert.deepEqual(Object.keys(ops).sort(), ["explore", "exploregraph", "explorepreset", "exploretimeline", "exploreverify"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["explore", "exploreall", "explorecontinue", "exploregraph", "explorepath", "explorepreset", "exploreshorter", "exploretimeline", "exploreverify"]);
   const e = ops.explore();
   const direct = x.explore({ from: A, at: AT, viewer: V });
   assert.deepEqual({ ...e, elapsed_ms: 0 }, { ...direct, elapsed_ms: 0 }, "the arm is explore with the stamped viewer");
@@ -158,5 +158,6 @@ test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the gr
   assert.equal(none.why, NO_EVENTS_RECORD);
   const noMoney = exploreOf(null, { events: { timeline: () => timelineAnswer() } }).timelineOver({ set: [A], viewer: V });
   assert.equal(noMoney.money_note, word("explore.money_note"));
-  for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);
+  const BANNED = ["this instance", "the instance", "copy", "plane", "server"];
+  for (const t of [none.why, noMoney.money_note]) assert.deepEqual(BANNED.filter((w) => new RegExp(`\\b${w}\\b`).test(t)), []);
 });

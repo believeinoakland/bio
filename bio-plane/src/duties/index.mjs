@@ -47,7 +47,7 @@ import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, BOUNDS } from "../connection-grammar/index.mjs";
 import { relate } from "../calc-grammar/index.mjs";
-import { combine as combineProfiles, governingZone } from "../../../jurisdictions/index.mjs";
+import { combine as combineProfiles, governingZone, nameResolve } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal, reasonWords } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
@@ -118,6 +118,13 @@ function noReason(reason) {
   if (said(reason) && reason.length <= REASON_MAX) return null;
   return refusal("DUTY_NO_REASON", localize("duties.index.give_your_reason_in_1", "give your reason, in 1 to {REASON_MAX} characters.", { REASON_MAX: String(REASON_MAX) }), { max: REASON_MAX });
   /* END DEC-49 REGION is-duty-reason */
+}
+/** R35: a rule name two active layers give, answered with the layers (`jurisdictions` R121), never a guess. */
+function ruleAmbiguous(rule, layers) {
+  /* DEC-49 REGION is-duty-rule-layer */
+  return refusal("NAME_AMBIGUOUS", localize("duties.index.rule_in_several_layers", "more than one active layer gives a rule named {rule}: name the layer it is from ({layers}).",
+    { rule: String(rule), layers: String((layers || []).map((l) => l.layer).join(", ")) }), { rule, layers: clone(layers) });
+  /* END DEC-49 REGION is-duty-rule-layer */
 }
 /** R7: a request naming no duty. */
 function noDuty() {
@@ -267,12 +274,49 @@ export class Duties {
     return ORGANISATION_KINDS.includes(e.kind) && e.sector === "government";
   }
 
+  /* R35: the layer a deadline of the view comes from: the id its fact is tagged `layer`, else the profile that gave it. */
+  static #layerOf(d) { return typeof d.layer === "string" ? d.layer : typeof d.profile === "string" ? d.profile : null; }
+  /* R35: the view's layers as `jurisdictions.nameResolve` takes them (R121): each with the deadlines it gives. [] when the
+     view is no layered one. */
+  static #layerSet(view) {
+    const ls = isObj(view) && Array.isArray(view.layers) ? view.layers : [];
+    const rules = isObj(view) && Array.isArray(view.deadlines) ? view.deadlines : [];
+    return ls.filter((l) => isObj(l) && said(l.id)).map((l) => ({
+      id: l.id,
+      layer: { ...(l.level ? { level: l.level, place: l.place } : {}), origin: l.origin, ...(l.within ? { within: l.within } : {}) },
+      deadlines: rules.filter((d) => isObj(d) && Duties.#layerOf(d) === l.id),
+    }));
+  }
+  /* R35: `nameResolve` of a rule over the view's layers (optionally the one `layer` named); null where the view has none. */
+  #ruleLayer(view, name, layer = null) {
+    const layers = Duties.#layerSet(view);
+    return layers.length ? nameResolve({ section: "deadlines", name, ...(said(layer) ? { layer } : {}), layers }) : null;
+  }
+  /* R35: the rule a duty's `time` names, read in the view: the layer it keeps (`time.layer`); a duty adopted before layers
+     has none, and its rule is read over the layers active on its `adopted_at` (`jurisdictions` R121, `record-core` R92)
+     where the view now holds the name in more than one. `undefined` where no held rule answers. */
+  #heldRule(tm, rules, view, adoptedAt) {
+    const named = rules.filter((d) => d && d.rule === tm.rule && (!said(tm.applies_to) || d.applies_to === tm.applies_to));
+    if (said(tm.layer)) return named.find((d) => Duties.#layerOf(d) === tm.layer);
+    if (named.length > 1 && Duties.#layerSet(view).length) {
+      let then = [];
+      try {
+        const ids = said(adoptedAt) && typeof this.record.getSettingAt === "function" ? this.record.getSettingAt("jurisdiction_profiles", adoptedAt) : null;
+        const c = Array.isArray(ids) ? combineProfiles(ids) : null;
+        if (c && c.ok) then = Duties.#layerSet(c.view);
+      } catch { then = []; }
+      const q = then.length ? nameResolve({ section: "deadlines", name: tm.rule, layers: then }) : null;
+      if (q && q.ok) return named.find((d) => Duties.#layerOf(d) === q.layer) ?? named[0];
+    }
+    return named[0];
+  }
+
   /* ===================================================================== *
    * R1: the refusals for a duty's fields, in order
    * ===================================================================== */
 
   /** R1 (and R4, R22): `null` when the fields stand, else the first refusal. The fields are normalised into `out`. */
-  fieldRefusal(f, out = {}, { pending = false } = {}) {
+  fieldRefusal(f, out = {}, { pending = false, layerCheck = true } = {}) {
     const view = this.view();
     /* DEC-49 REGION is-duty-modality */
     if (!MODALITIES.includes(f.modality))
@@ -341,6 +385,12 @@ export class Duties {
     if (tm.basis === "dependency" && (tm.lead === undefined || tm.lead === null || !said(tm.why)))
       return refusal("BAD_TIME", localize("duties.index.a_dependency_names_its_lead", "a dependency names its lead (time.lead) and why (time.why)."));
     /* END DEC-49 REGION is-duty-time */
+    /* R35: a rule of a layered view keeps the layer that gives it (`time.layer`); a name two layers give is refused, not guessed */
+    if (layerCheck && tm.basis === "rule" && said(tm.rule) && !isObj(tm.response_to)) {
+      const q = this.#ruleLayer(view, tm.rule, tm.layer);
+      if (q && q.ok === false && q.reason === "NAME_AMBIGUOUS") return ruleAmbiguous(tm.rule, q.layers);
+      if (q && q.ok) { tm.rule = q.entry.rule; tm.layer = q.layer; }
+    }
     /* DEC-49 REGION is-duty-performance */
     if (!isObj(f.performance) || !said(f.performance.act) || f.performance.act.length > WORDS_MAX)
       return refusal("NO_PERFORMANCE", localize("duties.index.say_the_act_owed_in", "say the act owed, in 1 to {WORDS_MAX} characters (performance.act).", { WORDS_MAX: String(WORDS_MAX) }));
@@ -574,13 +624,18 @@ export class Duties {
     const b = isObj(a) ? a : {};
     const view = this.view();
     const rules = Array.isArray(view.deadlines) ? view.deadlines : [];
-    const rule = rules.find((d) => d && d.rule === b.rule && (!said(b.applies_to) || d.applies_to === b.applies_to));
+    /* R35 (jurisdictions R121): the rule's layer, or NAME_AMBIGUOUS with the layers; the proposal keeps it as `time.layer` */
+    const q = this.#ruleLayer(view, b.rule, b.layer);
+    if (q && q.ok === false && q.reason === "NAME_AMBIGUOUS") return ruleAmbiguous(b.rule, q.layers);
+    const layer = q && q.ok ? q.layer : null;
+    const rule = rules.find((d) => d && d.rule === (q && q.ok ? q.entry.rule : b.rule) && (!said(b.applies_to) || d.applies_to === b.applies_to)
+                                   && (layer === null || Duties.#layerOf(d) === layer));
     if (!rule) return refusal("BAD_TIME", localize("duties.index.the_active_jurisdiction_profiles_hold_2", "the active jurisdiction profiles hold no such rule."), { rule: said(b.rule) ? b.rule : null });
     return this.propose({
       modality: "duty", obligor: b.office, obligee: b.obligee ?? null,
       performance: { act: said(b.act) ? b.act : word("duties.act.respond_requires", { rule: String(rule.citation || rule.rule) }) },
       source: b.source, trigger: { kind: "source", source: b.trigger_source },
-      time: { basis: "rule", rule: rule.rule, applies_to: rule.applies_to, ...(said(b.office_role) ? { office: b.office_role } : {}) },
+      time: { basis: "rule", rule: rule.rule, applies_to: rule.applies_to, ...(layer !== null ? { layer } : {}), ...(said(b.office_role) ? { office: b.office_role } : {}) },
       by: b.by, why: word("duties.why.computed_profile_rule", { rule: String(rule.rule), citation: String(rule.citation || "no citation") }),
     });
   }
@@ -841,7 +896,8 @@ export class Duties {
     const cur = this.#fieldsOf(d.duty_id, d.version);
     const changes = Duties.#fields(b);
     const next = Duties.#fields({ ...cur, ...changes });
-    const r = this.fieldRefusal(next);
+    /* R35: a revision that leaves `time` alone leaves a legacy duty's rule as it is read (no layer is given it here) */
+    const r = this.fieldRefusal(next, {}, { layerCheck: changes.time !== undefined || !!(cur.time && cur.time.layer) });
     if (r) return r;
     const at = this.#stamp();
     return this.#told(() => this.record.transact(() => {
@@ -1075,7 +1131,7 @@ export class Duties {
   }
 
   /* R9, R18 (K1431): the due date of one instance, `{due, basis_kind, law_set, trace}` or undetermined. */
-  #dueOf(fields, date, view) {
+  #dueOf(fields, date, view, adoptedAt = null) {
     const tm = fields.time || {};
     if (!date) return { undetermined: true, why: word("duties.why.trigger_date_placed"), rc: "trigger_undated" };
     if (isUndet(date)) return { undetermined: true, why: word("duties.why.trigger_date_undetermined", { why: String(date.why) }), rc: "trigger_undated" };
@@ -1084,7 +1140,7 @@ export class Duties {
         const rules = Array.isArray(view.deadlines) ? view.deadlines : [];
         let rule;
         if (said(tm.rule)) {
-          rule = rules.find((d) => d && d.rule === tm.rule && (!said(tm.applies_to) || d.applies_to === tm.applies_to));
+          rule = this.#heldRule(tm, rules, view, adoptedAt);
           if (!rule) return { undetermined: true, why: word("duties.why.active_jurisdiction_profiles", { rule: String(tm.rule), applies_to: String(said(tm.applies_to) ? ` for ${tm.applies_to}` : "") }), basis_kind: "rule", law_set: true, rc: "deadline_not_held" };
         } else {
           /* R30: a report's required response, its rule chosen on each read from the governing view (R5): the deadlines
@@ -1151,7 +1207,7 @@ export class Duties {
   }
 
   #occurrence(d, fields, inst, key, asOf, view, inForce, viewer) {
-    const due = this.#dueOf(fields, inst.date, view);
+    const due = this.#dueOf(fields, inst.date, view, d.adopted_at);
     const dueUndet = isUndet(due);
     const basis = (fields.time || {}).basis;
     const occ = {

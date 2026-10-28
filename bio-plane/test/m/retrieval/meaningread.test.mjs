@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { world, V, T0 } from "./fixture.mjs";
 import { Retrieval, PROJECTION_RELATION, MEANING_READ_CHECKS, retrievalRoutes } from "../../../src/retrieval/index.mjs";
 import { compile, cachedNotes, GATE_MARK, MEANING, MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX } from "../../../src/query.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 
 const ARMS = Object.keys(MEANING);
 const ENVELOPE = ["arm", "cached", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset", "ok", "query",
@@ -167,7 +168,7 @@ test("R29, R11, R13: an absent or unrecognised viewer is answered an honest empt
       const r = w.retrieval.meaningRows({ q: "", rows: arm, viewer });
       assert.deepEqual([r.ok, r.rows, r.count, r.total, r.scope.documents, r.scope.documents_with_rows], [true, [], 0, 0, 0, 0],
         `${arm} ${viewer}`);
-      assert.match(r.says, /no document was in scope/, `${arm} ${viewer}`);
+      assert.equal(r.says, WORD("retrieval.text.matched_document_scope"), `${arm} ${viewer}`);
       if (arm === "passage") assert.equal(r.scope.captures_counted, 0, String(viewer));
     }
   }

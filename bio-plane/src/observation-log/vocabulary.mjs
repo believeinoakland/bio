@@ -1536,6 +1536,55 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
   const badCondition = checkCondition(condition, conditionKinds);
   if (badCondition) return badCondition;
 
+  return checkObservationFields(e, authorityKind);
+}
+
+/** R40 — the outcomes a `read` field states. */
+export const OBSERVATION_READ_OUTCOMES = Object.freeze(["answered", "refused"]);
+/** R40 — the authority kinds whose entry may carry a `read` or a `disagree`. */
+export const OBSERVATION_FIELD_AUTHORITY_KINDS = Object.freeze(["run", "step"]);
+
+const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const hasKeys = (v, keys) => Object.keys(v).length === keys.length && keys.every((k) => Object.prototype.hasOwnProperty.call(v, k));
+const wholeNumber = (v) => typeof v === "number" && Number.isInteger(v);
+
+/** R40 — the shape of a `read`: `{record, n, total, outcome}`, no other key. Pure. */
+export function readFieldShapeOk(v) {
+  return plain(v) && hasKeys(v, ["record", "n", "total", "outcome"])
+    && typeof v.record === "string" && v.record !== "" && wholeNumber(v.n) && wholeNumber(v.total)
+    && v.n >= 1 && v.n <= v.total && OBSERVATION_READ_OUTCOMES.includes(v.outcome);
+}
+
+/** R40 — the shape of a `disagree`: `{record, levels}`, no other key; `levels` at least two distinct names of R1's
+ *  four levels, in the order given. Pure. */
+export function disagreeFieldShapeOk(v) {
+  return plain(v) && hasKeys(v, ["record", "levels"]) && typeof v.record === "string" && v.record !== ""
+    && Array.isArray(v.levels) && v.levels.length >= 2 && new Set(v.levels).size === v.levels.length
+    && v.levels.every((l) => typeof l === "string" && Object.prototype.hasOwnProperty.call(OBSERVATION_LEVELS, l));
+}
+
+/** C-22.32 / C-22.33 — THE `read` AND `disagree` FIELDS OF ONE ENTRY (R40), asked after C-22.4. A field is carried when
+ *  it is neither absent nor null. The shape of each carried field comes first (`OBSERVATION_FIELD_MALFORMED`, `read`
+ *  before `disagree`), then whether the entry may carry them: not both, and only under authority `run` or `step`
+ *  (`OBSERVATION_FIELD_NOT_ALLOWED`). Each refusal names the field. Pure; an entry carrying neither is not asked. */
+export function checkObservationFields(entry, authorityKind = null) {
+  const e = entry && typeof entry === "object" ? entry : {};
+  const carried = [["read", readFieldShapeOk], ["disagree", disagreeFieldShapeOk]].filter(([k]) => e[k] != null);
+  if (!carried.length) return null;
+  for (const [field, ok] of carried)
+    if (!ok(e[field]))
+      return refusal("OBSERVATION_FIELD_MALFORMED",
+        localize("observation-log.vocabulary.field_malformed", "the entry's {field} is not in the form the record keeps (a read: record, n of total with 1 <= n <= total, outcome {outcomes}; a disagreement: record and at least two distinct levels of {levels})", { field, outcomes: OBSERVATION_READ_OUTCOMES.join(" or "), levels: Object.keys(OBSERVATION_LEVELS).join(", ") }),
+        { field });
+  const kind = authorityKind || (typeof e.authority_kind === "string" ? e.authority_kind : "");
+  if (carried.length > 1)
+    return refusal("OBSERVATION_FIELD_NOT_ALLOWED",
+      localize("observation-log.vocabulary.field_both", "the entry carries both a read and a disagreement; it may carry one of the two", {}),
+      { field: carried.map(([k]) => k).join(", ") });
+  if (!OBSERVATION_FIELD_AUTHORITY_KINDS.includes(kind))
+    return refusal("OBSERVATION_FIELD_NOT_ALLOWED",
+      localize("observation-log.vocabulary.field_authority", "the entry's {field} is carried only under authority {kinds}, and this entry's authority is '{kind}'", { field: carried[0][0], kinds: OBSERVATION_FIELD_AUTHORITY_KINDS.join(" or "), kind: String(kind) }),
+      { field: carried[0][0] });
   return null;
 }
 

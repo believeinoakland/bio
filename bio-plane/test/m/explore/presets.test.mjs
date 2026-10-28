@@ -1,7 +1,8 @@
 /* explore at its interface: the presets as kind sets of the one walk (R10, R15) and overlaps between two persons (R11). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { exploreOf, OVERLAP_SENTENCE, HUB_WORDS } from "../../../src/explore/index.mjs";
+import { exploreOf, OVERLAP_SENTENCE, HUB_WORDS, PRESET_RULES } from "../../../src/explore/index.mjs";
+import { exploreOps } from "../../../src/explore/ops.mjs";
 import { othersWords } from "../../../src/explore/presets.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
@@ -131,4 +132,20 @@ test("R11 R7 an overlap through a step the viewer may not see is not answered or
   // alice reaching the board from P alone counts only what she may see.
   const alice = x.overlaps({ a: P, b: ent(4), at: AT, viewer: V });
   assert.equal(alice.overlaps[0].others.held, 0);
+});
+
+test("R37 presets() answers each preset's plain-word name by key (`words`) beside its id (`name`) and kinds", () => {
+  const { x } = make([conn("line:part_of", ent(1), ent(2), { id: "org" })]);
+  const rows = x.presets();
+  assert.equal(rows.length, 5);
+  for (const row of rows) {
+    assert.equal(row.words, PRESET_RULES[row.name].words, "the words are what the key holds");
+    assert.ok(row.words.trim() !== "" && row.words !== row.name, "words a member can read, not the id");
+    assert.ok(row.kinds.length > 0);
+  }
+  assert.equal(new Set(rows.map((r) => r.words)).size, rows.length);
+  // control: running a preset by its name walks the same kind set as before
+  const run = (preset) => exploreOps(x, new URL("https://instance.example/?viewer=" + V), { preset, from: ent(1), at: AT }).explorepreset();
+  assert.deepEqual(run("chain").paths.map(ids), ["org"]);
+  assert.equal(run("no such preset").refused, "UNKNOWN_PRESET");
 });

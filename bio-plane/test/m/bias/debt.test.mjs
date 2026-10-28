@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, FM, S, source, WHY } from "./world.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const A = "BIAS-2026-0001-a", P = "PROJ-2026-0001-p", NOW = Date.parse("2026-07-10T00:00:00Z");
 const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
@@ -451,7 +452,7 @@ test("R44: settled answers the debts settled at or after since that the gate adm
   for (const since of [null, undefined, "", "  ", "soon", NaN, Infinity, {}, ["2026-07-01T00:00:00Z"]]) {
     const x = w.bias.settled({ gate: admin, since });
     assert.deepEqual([x.debts, x.truncated, x.since, x.limit], [[], false, null, 200], String(since));
-    assert.match(x.stated, /not an instant/);
+    assert.match(x.stated, wordRx("bias.instant_settled_bias"));
     assert.equal("undetermined" in x, false, "a since that is no instant is not a failed read");
   }
   /* a debt settled before the kind was kept: null kind, and no actor or reason attributed to it */
@@ -470,7 +471,7 @@ test("R44: settled answers the debts settled at or after since that the gate adm
   w.sql.exec(`ALTER TABLE bias_debts RENAME TO gone`);
   const failed = w.bias.settled({ gate: admin, since: "2026-07-01T00:00:00Z" });
   assert.deepEqual([failed.debts, failed.truncated, failed.undetermined], [[], false, true]);
-  assert.match(failed.stated, /could not be read/);
+  assert.match(failed.stated, wordRx("bias.settled_bias_debts"));
 });
 
 test("R44: at most limit (1–1,000, default 200), truncated measured by reading one more — 201 settlements give truncated", async () => {

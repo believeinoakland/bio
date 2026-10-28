@@ -48,7 +48,7 @@ test("R2: a signed amount differing from its award's (the award as adopted again
   const k3 = contract(w, { award: "1000" });
   const c3 = byCheck(w.c.amountChecks({ contract: k3.id, viewer: ALICE })).signed_differs_from_award;
   assert.equal(c3.holds, "undetermined");
-  assert.match(c3.why, /no award amount/);
+  assert.match(c3.why, wordRx("money-checks.why.award_amount_held"));
 });
 
 test("R2 R3: change orders above a stated share; none stated answers undetermined, never a default", () => {
