@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerFormat, unregisterFormat, getFormat, listFormats, detectFormat, formatNameFor, kindTable } from "../../../src/formats.mjs";
+import { READ_BOUNDS, boundOf } from "../../../src/read-bounds.mjs";
 import { WORD_ROWS, hasWord } from "../../../src/setup-words/index.mjs";
 import { makeZip, officeZip, odfZip } from "./zipfix.mjs";
 
@@ -295,4 +296,23 @@ test("R42: the table has a row for each roster key, each named unlisted type and
   assert.equal(table.find((r) => r.key === "txt"), undefined);
   assert.ok(Object.isFrozen(table[0]));
 });
-test.todo("R42: each limit equals the runtime-limits figure for its kind, a changed runtime-limits row changing it (waits: runtime-limits' per-kind rows, R37 there, a CHANGE; the row names are set by that job)");
+test("R42: each limit is the runtime-limits figure for its kind, read through boundOf, never a literal here", () => {
+  const MiB = 1048576;
+  const bound = (key, what) => kindTable().find((r) => r.key === key).limit.figures.find((f) => f.what === what);
+  for (const row of kindTable()) {
+    for (const f of row.limit.figures) {
+      assert.notEqual(f.bound, null, `${row.key}.${f.what}: runtime-limits holds row ${f.row.join(".")}`);
+      assert.equal(f.bound, boundOf(...f.row), `${row.key}.${f.what}`);
+      assert.equal(f.key, READ_BOUNDS[f.row[0]][f.row[1]].key);
+    }
+  }
+  assert.deepEqual([bound("pdf", "bytes").bound, bound("pdf", "pages").bound], [100 * MiB, 5000]);
+  assert.deepEqual([bound("xlsx", "bytes").bound, bound("xlsx", "rows").bound], [50 * MiB, 1048576]);
+  assert.equal(bound("xls", "rows_per_sheet").bound, 65536);
+  assert.equal(bound("jpeg", "bytes").bound, 50 * MiB);
+  assert.equal(bound("json", "nesting").bound, 1000);
+  assert.equal(bound("ics", "events").bound, 100000);
+  assert.equal(bound("mbox", "messages").bound, 100000);
+  assert.equal(bound("audio", "bytes").bound, bound("pdf", "bytes").bound, "audio and video take the document class's bound (K5571 (3))");
+  assert.equal(kindTable().find((r) => r.key === "rar").limit.figures.length, 0);
+});

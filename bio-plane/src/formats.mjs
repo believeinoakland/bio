@@ -904,17 +904,18 @@ export function formatNameFor(answer) {
 const LIMIT_CLASSES = {
   document: [["bytes", "document", "bytes"], ["pages", "document", "pages"]],
   spreadsheet: [["bytes", "spreadsheet", "bytes"], ["rows", "spreadsheet", "rows"]],
-  xls: [["bytes", "spreadsheet", "bytes"], ["rows_per_sheet", "spreadsheet", "xls_rows"]],
+  xls: [["bytes", "spreadsheet", "bytes"], ["rows_per_sheet", "spreadsheet", "xls_sheet_rows"]],
   text: [["bytes", "text", "bytes"]],
   json: [["bytes", "text", "bytes"], ["nesting", "text", "nesting"]],
   calendar: [["bytes", "text", "bytes"], ["events", "text", "calendar_events"]],
   picture: [["bytes", "image", "bytes"]],
   tiff: [["bytes", "image", "bytes"], ["pages", "document", "pages"]],
-  message: [["bytes", "message", "upload_bytes"], ["received_bytes", "mail", "received_bytes"]],
+  message: [["bytes", "message", "upload_bytes"], ["received_bytes", "mail", "message_bytes"]],
   mailbox: [["bytes", "archive", "uploaded_bytes"], ["messages", "archive", "mailbox_messages"]],
   archive: [["bytes", "archive", "uploaded_bytes"], ["unpacked_bytes", "archive", "unpacked_bytes"], ["members", "archive", "members"], ["depth", "archive", "depth"]],
-  kept50: [["bytes", "kept", "bytes_50"]],
-  kept100: [["bytes", "kept", "bytes_100"]],
+  /* R42 gives the kept kinds no row of their own: the data kinds take the spreadsheet class's 50 MB, the rest the document class's 100 MB */
+  kept50: [["bytes", "spreadsheet", "bytes"]],
+  kept100: [["bytes", "document", "bytes"]],
   none: [],
 };
 function limitOf(cls) {
