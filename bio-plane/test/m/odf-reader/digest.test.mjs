@@ -2,11 +2,18 @@
  * OpenDocument package's substance (build/requirements/odf-reader.md R32–R37). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { odfEvidentiaryDigest, odtNormalisedContentXml, ODF_EVIDENTIARY_VERSION, ODF_EVIDENTIARY_MEASURED } from "../../../src/odf.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { odfEvidentiaryDigest, odtNormalisedContentXml, ODF_EVIDENTIARY_VERSION, ODF_EVIDENTIARY_MEASURED, ODF_EVIDENTIARY_NORMALISE } from "../../../src/odf.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { buildZip, members, pkg, withCd, contentXml, sha256, sha256Hex, enc, TYPES, OVER_BOUND } from "./pkg.mjs";
 
 const D = (bytes) => odfEvidentiaryDigest(bytes, sha256Hex);
+// the basis a determined digest states: its part, its normalisation or absence, the version and the measurement
+const v1Of = (flavour) => (ODF_EVIDENTIARY_NORMALISE[flavour]
+  ? word("odf-reader.odf.normalised_by", { name: ODF_EVIDENTIARY_NORMALISE[flavour].name })
+  : word("odf-reader.odf.no_byte_rewritten"));
+const basisOf = (flavour) => word("odf-reader.odf.the_sha256_of_the_flavour", {
+  flavour, v1: v1Of(flavour), ODF_EVIDENTIARY_VERSION: String(ODF_EVIDENTIARY_VERSION), v2: ODF_EVIDENTIARY_MEASURED[flavour],
+});
 const refused = (d, flavour) => {
   assert.equal(d.determined, false);
   assert.equal(d.flavour, flavour);
@@ -29,7 +36,7 @@ test("R32 only a package detected with certainty is digested; anything else is r
   ]) {
     const d = await D(bytes);
     refused(d, null);
-    assert.equal(d.basis, localize("odf-reader.odf.the_bytes_are_not_an", "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken"));
+    assert.equal(d.basis, word("odf-reader.odf.the_bytes_are_not_an"));
   }
   assert.equal((await D(pkg("ods"))).determined, true);
 });
@@ -41,7 +48,7 @@ test("R33 a flavour with no measured-stable entry (.odp) is refused, naming that
   for (const bytes of [pkg("odp"), buildZip(withCd(members("odp"), "content.xml", { crc: 1 }))]) {
     const d = await D(bytes);
     refused(d, "odp");
-    assert.equal(d.basis, localize("odf-reader.odf.no_odp_export_has_been", "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp"));
+    assert.equal(d.basis, word("odf-reader.odf.no_odp_export_has_been"));
   }
 });
 
@@ -51,11 +58,11 @@ test("R34 refused when content.xml is over the bound (not inflated) or cannot be
   for (const f of ["odt", "ods"]) {
     const over = await D(buildZip(withCd(members(f), "content.xml", { usize: OVER_BOUND })));
     refused(over, f);
-    assert.match(over.basis, /over the declared-uncompressed text bound \(over_size_bound\)/);
+    assert.equal(over.basis, word("odf-reader.odf.content_xml_is_over_the", { v1: "over_size_bound" }));
     for (const [cd, why] of [[{ crc: 1 }, "crc_mismatch"], [{ usize: 5 }, "size_mismatch"], [{ lhOffset: 1 }, "local_header_invalid"]]) {
       const d = await D(buildZip(withCd(members(f), "content.xml", cd)));
       refused(d, f);
-      assert.match(d.basis, new RegExp(`content\\.xml could not be read whole \\(${why}\\)`));
+      assert.equal(d.basis, word("odf-reader.odf.content_xml_could_not_be", { why }));
     }
   }
 });
@@ -69,11 +76,12 @@ test("R35 refused when content.xml references, by any href in any namespace, a m
   for (const f of ["odt", "ods"]) {
     const d = await D(pkg(f, { body, extra }));
     refused(d, f);
-    assert.match(d.basis, /content\.xml references 5 package member\(s\)/);
-    assert.match(d.basis, /\(Pictures\/1\.png, Object 1\/content\.xml, Object 1\/styles\.xml, …\)/);
+    assert.equal(d.basis, word("odf-reader.odf.content_xml_references_length_package", {
+      length: "5", refs: "Pictures/1.png, Object 1/content.xml, Object 1/styles.xml", v1: ", \u2026",
+    }));
     const one = await D(pkg(f, { body: `<text:p><draw:image xlink:href="./Pictures/1.png"/></text:p>`, extra }));
     refused(one, f);
-    assert.match(one.basis, /references 1 package member\(s\) whose bytes it does not hold \(Pictures\/1\.png\)/);
+    assert.equal(one.basis, word("odf-reader.odf.content_xml_references_length_package", { length: "1", refs: "Pictures/1.png", v1: "" }));
     // not members: a URL, a fragment, a name the package does not hold
     const none = await D(pkg(f, { body: `<text:p><text:a xlink:href="https://example.org/Pictures/1.png">u</text:a><text:a xlink:href="#Pictures/1.png">f</text:a><draw:image xlink:href="Pictures/absent.png"/></text:p>`, extra }));
     assert.equal(none.determined, true);
@@ -89,11 +97,11 @@ test("R36 an href on a font-face-uri element (any prefix) is not a referenced me
   for (const f of ["odt", "ods"]) {
     const d = await D(pkg(f, { fonts, extra, body: "<text:p>t</text:p>" }));
     assert.equal(d.determined, true, d.basis);
-    assert.match(d.basis, /embedded font faces are discounted/);
-    for (const ref of [`<draw:image xlink:href="Pictures/1.png"/>`, `<draw:object xlink:href="./Object 1"/>`, `<draw:image xlink:href="Fonts/font1.ttf"/>`]) {
+    assert.equal(d.basis, basisOf(f));
+    for (const [ref, name] of [[`<draw:image xlink:href="Pictures/1.png"/>`, "Pictures/1.png"], [`<draw:object xlink:href="./Object 1"/>`, "Object 1/content.xml"], [`<draw:image xlink:href="Fonts/font1.ttf"/>`, "Fonts/font1.ttf"]]) {
       const r = await D(pkg(f, { fonts, extra, body: `<text:p>${ref}</text:p>` }));
       refused(r, f);
-      assert.match(r.basis, /references 1 package member/);
+      assert.equal(r.basis, word("odf-reader.odf.content_xml_references_length_package", { length: "1", refs: name, v1: "" }));
     }
   }
 });
@@ -128,20 +136,14 @@ test("R37 .odt digests content.xml with text:list ids relabelled in document ord
   assert.equal(ds.determined, true);
   assert.equal(ds.evidentiary, sha256(enc(odsXml)));
   // the basis names the part, the normalisation or its absence, the version, the discounts and the measurement
-  assert.match(d1.basis, /content\.xml member \(inflated, length and CRC-32 verified\)/);
-  assert.match(d1.basis, /normalised by odt-list-ids v1/);
-  assert.match(ds.basis, /no byte rewritten/);
-  for (const d of [d1, ds]) {
-    assert.ok(d.basis.includes(`odf-evidentiary v${ODF_EVIDENTIARY_VERSION}`));
-    assert.match(d.basis, /the ZIP envelope, meta\.xml, settings\.xml, styles\.xml, thumbnails and embedded font faces are discounted/);
-    assert.ok(d.basis.includes(ODF_EVIDENTIARY_MEASURED[d.flavour]));
-  }
+  assert.equal(d1.basis, basisOf("odt"));
+  assert.equal(ds.basis, basisOf("ods"));
   // not valid UTF-8: refused, for either flavour, never decoded lossily
   for (const f of ["odt", "ods"]) {
     const bad = new Uint8Array([...enc(contentXml(f, "<text:p>")), 0xff, 0xfe, ...enc("</text:p>")]);
     const r = await D(buildZip(members(f, { content: bad })));
     refused(r, f);
-    assert.match(r.basis, /not valid UTF-8/);
+    assert.equal(r.basis, word("odf-reader.odf.content_xml_is_not_valid"));
   }
   assert.equal(odtNormalisedContentXml(new Uint8Array([0xc3, 0x28])), null);
 });

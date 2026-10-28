@@ -17,3 +17,7 @@
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 9 | filing-templates | 0 / 2 | 0 / 0 / 1 (1) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-532 · jurisdictions R126 · R15 and R35 against R126. Detail: T53-301 already replaces R15's private `#lacks` with `attributionLacks`; the check is that R15 and R35 still say what R126 judges. They do not yet: R15 counts "at least one `professional` review whose outcome is `no_concerns`", and R126 (with its K5527 deltas) also requires a named reviewer with organisation and credential, a real `at`, a `reviewed_text_sha` equal to the hash of the text now, and a non-machine reviewer; R126 also lacks `writer` when `authored_by` is a machine. R35's `unofferedFor` answers the same words as `textsLack` for the same template (R126's own test). R15 and R35 are re-worded to cite R126 and drop their own copy of the rule (`TEMPLATE_NOT_REVIEWED` and its key stay). This is T53-301's line: BOB writes it once.

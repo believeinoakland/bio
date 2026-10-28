@@ -7,7 +7,7 @@ import { instantText, wallOf, localDayNumber, startOfDay, wallToInstants, runtim
 import { spanOf, isNo, refuse, zoneRefusal } from "./values.mjs";
 import { calendar, calendarStated, missing } from "./calendar.mjs";
 import { word, localize } from "../setup-words/index.mjs";
-import { reason } from "./reasons.mjs";
+import { reason, reasonText } from "./reasons.mjs";
 
 const UNITS = ["days", "hours", "business_hours", "months", "years"];
 const no = (code, why, extra) => ({ undetermined: true, code, why, ...(extra || {}) });
@@ -133,8 +133,8 @@ function dueAtTime(rule, n, zone, view, office, trace) {
     const wd = weekdayOf(n);
     const spans = h && Array.isArray(h.weekly) ? h.weekly.filter((s) => s && s.day === wd) : [];
     if (!spans.length) {
-      trace.notes.push(h ? `the close of business is undetermined: the office's hours list no opening on ${wd}`
-        : "the close of business is undetermined: the jurisdiction view holds no hours for the governing office");
+      trace.notes.push(h ? reasonText(reason("civil-time.rules.close_of_business_no_opening", { weekday: String(wd) }))
+        : reasonText(reason("civil-time.rules.close_of_business_no_hours")));
       return dayDt(n, zone);
     }
     hhmm = spans.map((s) => s.close).sort().pop();
@@ -354,8 +354,9 @@ export function evaluateRule(args) {
   if (base.undetermined) return { ...base, trace: { ...head } };
   const trace = { ...head, ...base.trace };
   for (const e of base.trace.calendar ? base.trace.calendar.entries : []) {
-    if (e.status === "unconfirmed" || e.status === "corrected") trace.notes.push(`calendar entry ${e.year}${e.list ? ` (${e.list})` : ""}: ${e.status}`);
-    if (e.governs === "correction" && e.status !== "corrected") trace.notes.push(`calendar entry ${e.year}${e.list ? ` (${e.list})` : ""}: counted on its correction, now ${e.status}`);
+    const entryVars = { year: String(e.year), list: String(e.list ? ` (${e.list})` : ""), status: String(e.status) };
+    if (e.status === "unconfirmed" || e.status === "corrected") trace.notes.push(reasonText(reason("civil-time.rules.calendar_entry_status", entryVars)));
+    if (e.governs === "correction" && e.status !== "corrected") trace.notes.push(reasonText(reason("civil-time.rules.calendar_entry_on_correction", entryVars)));
   }
   const out = { due: base.due, trace };
   if (rule.extension && r.units !== "hours" && r.units !== "business_hours" && base.results) {

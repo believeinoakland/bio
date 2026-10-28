@@ -9,10 +9,10 @@
  * the counters; `priority: "raised"` is "Read it" and is never lowered. The row commits or rolls back with the
  * caller's transaction (`transact(fn)` here, as `core.transact` there); arming the alarm is `armJobs()`, after. */
 
-/** The kinds a job row may have: today's PENDING_KINDS and the four this round adds. */
-export const JOB_KINDS = Object.freeze(["keep", "reading", "ocr", "subresources", "unpack", "fetch", "scan", "safe_view", "grade", "ingest"]);
+/** The kinds a job row may have: today's PENDING_KINDS, the four fix round 9 added, and `member` (R29, T53). */
+export const JOB_KINDS = Object.freeze(["keep", "reading", "ocr", "subresources", "unpack", "fetch", "scan", "safe_view", "grade", "ingest", "member"]);
 /** The kinds keyed by capture session, not by digest. */
-export const SESSION_KEYED = Object.freeze(["fetch", "subresources"]);
+export const SESSION_KEYED = Object.freeze(["fetch", "subresources", "member"]);
 const SHA = /^[0-9a-f]{64}$/;
 
 /**

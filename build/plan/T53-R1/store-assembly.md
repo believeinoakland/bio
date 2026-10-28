@@ -29,3 +29,7 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 
 ## 2. Order and `uses` (BOB's, P4)
 8. **The retired ops and service names** (ai-accounts' twelve) are still named in sixteen modules: op-declarations, op-grades, admission, store-door, store-request, store-assembly, control-plane, interface-shell, signin-door, screens-settings, screens-entry, screens-inquiry, screens-daily, wizard-scripts, affordances, journey-check. Each of those layer-11 jobs takes the re-pointing as a CHANGE in the same round (no aliases, ai-accounts For BOB 6); the plan names it in each job's START.
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types. Detail: `registerReaders()` calls `registerCourtTypes`, then `registerBudgetTypes`, then `generic`; it adds `["court-doctypes-api", registerCourtApiTypes(register)]` after `registerCourtTypes` and before `generic` (idempotent like the others, in the answer's order); test: the roster's answer names the step and `courtlistener_api` is registered.

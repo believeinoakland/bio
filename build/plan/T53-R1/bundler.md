@@ -13,3 +13,7 @@
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 1 | bundler | 0 / 2 | 8 / 63 / 77 (7) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-523 · reader-container's report (K5448 (4)) · enrol `reader-container` as a fleet member. Detail: the module has no `fleet-member.json`, `wrangler.jsonc`, Worker front or plane binding; enrolment makes `bundles.mjs` build it and changes the generated `dist` artifacts and fleetbundles' verify (bundler R24-R27). `[owed: BOB schedules it; bundler is layer 1 and merged, so a CHANGE or the next round; the routing is control-plane's, T53-536]`

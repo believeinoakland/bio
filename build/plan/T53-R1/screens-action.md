@@ -44,3 +44,7 @@ Every screen job of this layer also draws DEC-445's rows and DEC-446's layout th
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 11 | screens-action | 1 / 8 | 0 / 1 / 6 (6) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-533 · jurisdictions R105 (N1257, DEC-404) · `help-records.mjs` picks the chosen law's block. Detail: lines 33-35 read `view.records_help` as one object and take it only when it is not an array; R105 makes it a list of blocks keyed by `law` (the law's layer-qualified name in `records_laws`), so the screen picks the block of the law the member chose (the law `request` offers by `governs`, T53-457), draws the fills of that block alone, and draws nothing short when the law has no block (R22). Test: with a California CPRA block and a federal FOIA block, each law's page draws its own response period and citation; a block of another law is never drawn.

@@ -81,7 +81,7 @@ export function streamTable(fields, input, size, name) {
     } finally {
       if (!done && typeof it.return === "function") it.return();
     }
-    if (n !== size) bad(`it answered ${size} rows on its first pass and ${n} on a later one`);
+    if (n !== size) bad(localize("calc-grammar.rows_first_pass", "it answered {size} rows on its first pass and {n} on a later one", { size: String(size), n: String(n) }));
   }
   return { fields, streamed: true, size, reader: readers(fields), scan, pick: (idx) => pickByPass(scan, idx),
     asArray: (row) => row };
