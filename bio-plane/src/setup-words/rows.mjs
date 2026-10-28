@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7790 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7793 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -20854,6 +20854,7 @@ export const WORD_ROWS = Object.freeze([
   ["ai-use.index.use_not_in_map","use NOT IN ({map})",null,null,false,"code"],
   ["ai-use.index.use_over_time_is_read_for","use over time is read for 'group', 'project:<id>' or 'member:<id>'.",null,null,false,"code"],
   ["ai-use.index.why_nothing_was_started","{why} Nothing was started.",null,null,false,"code"],
+  ["ai.reauth.connect","connecting an AI account",null,null,false,"code"],
   ["ai.refused.accountnotlisted","The account {account} is not on this list, or is named twice. Nothing was changed.",null,null,false,"code"],
   ["ai.refused.aicredentialnotserved","An account's credential is served only to the assistant's own worker, for its own call. Nothing was served.",null,null,false,"code"],
   ["ai.refused.checklocked","The check {check} is held on by the {level}, so it cannot be turned off here. Nothing was changed.",null,null,false,"code"],
@@ -22874,6 +22875,7 @@ export const WORD_ROWS = Object.freeze([
   ["credentials.checks.an_agent_credential_has_to","An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither.",null,null,false,"code"],
   ["credentials.checks.only_a_key_a_member_registered","Only a key a member registered for themselves, and that is still in use, can be marked as one you know about. This key was registered by an administrator, or it has been withdrawn, so there is nothing to confirm. Nothing was changed.",null,null,false,"code"],
   ["credentials.checks.only_a_named_person_signed","Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it — not even about itself.",null,null,false,"code"],
+  ["credentials.checks.reauth_due","Type your password again to do this. Signing or publishing a case, changing administrators and {connect} always ask for it. Nothing was changed.",null,null,false,"code"],
   ["credentials.declared.claim","claims an instance at bootstrap",null,null,false,"code"],
   ["credentials.declared.passwordreset","credential: a reset link and a new password, reached with no session; moves no bundle",null,null,false,"code"],
   ["credentials.declared.passwordresetlink","credential: an administrator's reset link for one member, answered once; moves no bundle",null,null,false,"code"],
@@ -22897,6 +22899,7 @@ export const WORD_ROWS = Object.freeze([
   ["credentials.index.a_runs_credential_holds","a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.a_runs_credential_is","a run's credential is minted only for an active member's own run. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.a_runs_credential_names","a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.",null,null,false,"code"],
+  ["credentials.index.a_runs_credential_names_account","a run's credential names the account that serves the segment as a non-empty string, or names none, and this was neither. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.a_runs_credential_names_the","a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.a_standing_question_runs","a standing question runs only for an active member. Nothing was minted.",null,null,false,"code"],
   ["credentials.index.an_administrator_says_they_know","an administrator says they know about a member's signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no administrator behind them to say it. Nothing was written.",null,null,false,"code"],

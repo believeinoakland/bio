@@ -4,27 +4,25 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
-import { SIGNIN_TOKEN_LENGTH } from "../../../src/ai-accounts/index.mjs";
 
 const PINNED = Date.parse("2026-10-20T10:15:30.000Z");
 const PINNED_SECOND = "2026-10-20T10:15:30Z";   /* ai-accounts stamps whole seconds */
-const TOKEN = "t".repeat(SIGNIN_TOKEN_LENGTH.min);
 
-test("K5197 a clock handed to credentialsOf reaches ai-accounts: a sign-in recorded through this instance is stamped with the handed instant", async () => {
+test("K5197 a clock handed to credentialsOf reaches ai-accounts: an account set through this instance is stamped with the handed instant", async () => {
   const w = world({ now: () => PINNED });
   await w.claim();
-  const held = await w.c.accounts.subscriptionTokenHold({ member: "admin", token: TOKEN, validFor: "1 day" });
+  const held = await w.own("admin");
   assert.equal(held.ok, true);
-  assert.equal(held.since, PINNED_SECOND);
+  assert.equal(held.set_at, PINNED_SECOND);
 });
 
-test("K5197 control: an instance handed no clock stamps the same sign-in with the wall clock, between the calls either side", async () => {
+test("K5197 control: an instance handed no clock stamps the same account with the wall clock, between the calls either side", async () => {
   const w = world();
   await w.claim();
   const before = Date.now();
-  const held = await w.c.accounts.subscriptionTokenHold({ member: "admin", token: TOKEN, validFor: "1 day" });
+  const held = await w.own("admin");
   const after = Date.now();
   assert.equal(held.ok, true);
-  const at = Date.parse(held.since);
-  assert.ok(at >= Math.floor(before / 1000) * 1000 && at <= after, `wall clock, got ${held.since}`);
+  const at = Date.parse(held.set_at);
+  assert.ok(at >= Math.floor(before / 1000) * 1000 && at <= after, `wall clock, got ${held.set_at}`);
 });

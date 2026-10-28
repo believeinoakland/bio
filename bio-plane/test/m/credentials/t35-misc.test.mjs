@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { world, sqlOver, PASSWORD, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
+import { world, sqlOver, PASSWORD, SEAL, SIGNIN_TOKEN, addAdmin } from "./fixture.mjs";
 import { AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS, SIGN_IN_CHECKS, CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS,
          KEYED_SERVICE_CHECKS, AI_CREDENTIAL_EXPIRY_DAYS, CREDENTIALS_TABLES, Credentials, credentialsOf }
   from "../../../src/credentials/index.mjs";
@@ -30,7 +30,7 @@ test("R42 R12 aiCredentialMint takes an optional expiresInDays, a whole number f
     const r = w.c.aiCredentialMint({ ...base, tokenId: "t", expiresInDays });
     assert.deepEqual(shape(r), { ok: false, reason: "AI_CREDENTIAL_BAD_EXPIRY", code: "AI_CREDENTIAL_BAD_EXPIRY", check: "C-29.28",
       translation: AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_BAD_EXPIRY.translation }, String(expiresInDays));
-    assert.match(r.detail, /Nothing was written\.$/);
+    assert.equal(r.detail, word("credentials.index.expiresindays_is_a", { min: "1", max: "365", default: "90" }));
   }
   assert.equal(w.snapshot(), before, "nothing written");
   for (const [tokenId, expiresInDays, want] of [["d", undefined, "2026-12-30T12:00:00Z"], ["n", null, "2026-12-30T12:00:00Z"],
@@ -84,12 +84,9 @@ test("R42 a credential minted before expiry was recorded is given expiresAt 90 d
   assert.equal(c.aiCredentialLook({ secretSha: SHA("e") }).credential.expiresAt, second(T + 90 * D));
 });
 
-test("R16 a member's revocation also spends their unspent recovery codes and clears their connected subscription, in the same act; no one else's", async () => {
+test("R16 a member's revocation also spends their unspent recovery codes and ai-accounts clears their accounts, in the same act; no one else's", async () => {
   const w = await world().group("ann");
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  await w.m.enroll({ invite: e.invite, handle: "third", password: PASSWORD("third") });
+  await addAdmin(w, "third");
   const codes = w.c.recoveryCodesIssue({ by: "third" }).codes;
   w.c.recoveryCodesIssue({ by: "second" });
   for (const id of ["third", "ann"]) await w.signin(id);
@@ -100,7 +97,7 @@ test("R16 a member's revocation also spends their unspent recovery codes and cle
   assert.equal(r?.ok, true);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM recovery_codes WHERE role='member:third' AND spent_at IS NULL`).n, 0);
   assert.equal(w.c.recoveryCodesState({ by: "second" }).remaining, 10, "no one else's");
-  assert.deepEqual(w.rows(`SELECT member_id FROM subscription_connections`).map((x) => x.member_id), ["ann"]);
+  assert.deepEqual(w.rows(`SELECT DISTINCT owner FROM ai_accounts`).map((x) => x.owner), ["member:ann"]);
   w.m.memberSet({ memberId: "third", status: "active", by: "admin" });
   assert.equal((await w.c.recover({ handle: "third", code: codes[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED",
     "spent for good, whatever the member's later standing");
@@ -112,7 +109,7 @@ test("R30 T35's tables are declared through declareTable, each never exported an
   for (const t of ["signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries"])
     assert.deepEqual([cls(t).module ?? "credentials", cls(t).purge, cls(t).export, cls(t).sight, cls(t).expunge],
       ["credentials", "exempt", "never", "group", "none"], t);
-  assert.equal(w.core.declared.get("subscription_connections").module, "ai-accounts");
+  assert.equal(w.core.declared.get("ai_accounts").module, "ai-accounts");
   assert.ok(CREDENTIALS_TABLES.every((t) => t.export !== "yes" || t.name === "signers"));
 });
 
@@ -137,7 +134,7 @@ test("R3 R38 R39 R43 R44 R45 R46 R47 R49 R53 T35's rows, T36's R49 row and T37's
     assert.deepEqual([r.check, r.where], want[code], code);
     assert.match(r.translation, /\.$/);
   }
-  assert.deepEqual([AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_BAD_EXPIRY.check, ACCOUNT_CHECKS.SUBSCRIPTION_LOGIN_REFUSED.check], ["C-29.28", "C-29.29"]);
+  assert.equal(AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_BAD_EXPIRY.check, "C-29.28");
   assert.deepEqual([AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_NO_SECRET.check, AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_NO_SECRET.where],
     ["C-29.33", W("aiCredentialMint", "is-ai-credential-digest")], "T37: R53");
   const ids = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS]
@@ -176,7 +173,16 @@ test("R1 R4 R39 R45 R46 R47 R43 the T35 routes: `source` and `country`, `by` and
   assert.equal((await w.ops("source=r", { handle: "second", code: issued.codes[0], password: "new-passphrase-1" }).recover()).ok, true);
 });
 
-test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your group's Civicsmith\" where it said this instance, this copy or its seal secret, as answered at the interface", async () => {
+/* R48 (T53; K3472): the names the team's Civicsmith is never called in a sentence a member or the founder reads. */
+const NAMES_FOR_THE_TEAMS_CIVICSMITH = /\b(?:group|instance|copy|copies|plane|server)\b/i;
+
+test("R48 control: a sentence that calls the team's Civicsmith \"your group's Civicsmith\" is caught by the check the strings below pass, and each other name it must not have", () => {
+  for (const name of ["group", "instance", "copy", "plane", "server"])
+    assert.match(`in ${name === "group" ? "your group's" : `this ${name}`} Civicsmith`, NAMES_FOR_THE_TEAMS_CIVICSMITH, name);
+  assert.doesNotMatch(word("credentials.country_proof_behind"), NAMES_FOR_THE_TEAMS_CIVICSMITH, "control: a sentence needing no name passes");
+});
+
+test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your team's Civicsmith\" where it said this instance, this copy or its seal secret, as answered at the interface", async () => {
   const w = await world().group("ann", "dee");
   await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" });
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
@@ -196,37 +202,20 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   const unknown = w.c.aiCredentialRevoke({ who: "ann", tokenId: "nope" });
   has(unknown.translation, word("refusal.AI_CREDENTIAL_UNKNOWN"));
   has(unknown.detail, localize("credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", { v1: "nope" }));
-  /* :153, :154 (C-29.22) and index :794 */
-  const bare = await world({ sealSecret: null }).group("ann");
-  const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
-  /* (T50; plan rule 6) ai-accounts' rows are read by key, never quoted: the row's translation is the word itself */
-  assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
-  has(unsealed.detail, localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read."));
-  /* index :822 */
-  has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
-    "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
+  /* :153, :154, :822 are ai-accounts' rows and words (its R30), tested there */
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
   assert.equal(refused.detail, localize("credentials.index.sign_in_refused", "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential."));
   assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
-  /* index :880, :1060, :1243: a sealed key that no longer opens */
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  await w.c.groupKeySet({ key: "sk-group", by: "admin" });
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.groupKeyNoticeSeen({ member: "dee", by: "dee" });
+  /* a keyed service's sealed key that no longer opens (:1243; the other two are ai-accounts') */
   await w.c.keyedServiceSet({ service: "courtlistener", key: "cl", by: "admin" });
   w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
   const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: `${SEAL}-changed` });
-  has((await other.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
-    localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
-  w.c.groupKeyNoticeSeen({ member: "second", by: "second" });
-  has((await other.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
-    localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
   has((await other.keyedServiceFor({ service: "courtlistener" })).detail,
     localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
 });
 
-test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
+test("R48 (T36: R29, R35, R49, R51 included; T53, K3472) no member- or founder-facing string this module answers calls the team's Civicsmith a group, a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
   const w = await world().group("ann", "dee");
   await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" });
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
@@ -235,7 +224,6 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
   for (const f of [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS])
     for (const r of Object.values(f)) said.push({ translation: r.translation });
   said.push({ detail: Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED });
-  const bare = await world({ sealSecret: null }).group("ann");
   for (const p of [
     w.c.signerAdd({ keyB64: "x", memberId: "ann", by: "admin" }), w.c.signerAdd({ keyB64: "AAAAk", memberId: "cal", by: "admin" }),
     w.c.signerAdd({ keyB64: "AAAAk", memberId: "dee", by: "admin" }), w.c.signerRegisterOwn({ keyB64: "AAAAk", by: "class:ai" }),
@@ -244,31 +232,26 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
     w.c.aiCredentialMint({ who: "ann", principalKind: "organisation", tokenId: "t" }),
     w.c.aiCredentialMint({ who: "ann", principalKind: "member", tokenId: "t", expiresInDays: 0 }),
     w.c.aiCredentialRevoke({ who: "class:ai" }), w.c.aiCredentialRevoke({ who: "ann", tokenId: "x" }),
-    w.c.accountReferenceSet({ member: "ann", kind: "x", secret: "s", by: "ann" }), w.c.accountReferenceSet({ member: "ann", by: null }),
-    w.c.accountReferenceSet({ member: "ann", by: "dee" }), w.c.accountReferenceSet({ member: "dee", by: "dee" }),
-    w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "", by: "ann" }), w.c.accountUsesSet({ owner: "member:ann", switch: "x", by: "ann" }),
-    w.c.accountReferenceFor({ member: "ann", act: null }), w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    w.c.groupKeySet({ key: "k", by: "ann" }), w.c.groupKeyState({ viewer: null }),
+    w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
     w.c.aiGrantAdmit({ token: "x" }), w.c.aiGrantMintStanding({ member: "ann", question: "q" }),
     w.c.keyedServiceFor({ service: "x" }), w.c.keyedServiceFor({ service: "courtlistener" }), w.c.keyedServiceSet({ service: "courtlistener", key: "", by: "admin" }),
-    w.c.subscriptionConnected({ member: "ann", token: "t" }), w.c.subscriptionConnected({ member: "dee" }),
     w.c.securityCount({ kind: "x" }), w.c.securityMap({ from: "x", to: "y", by: "admin" }), w.c.securityMap({ by: "ann" }),
     w.c.signOut({ token: "x" }), w.c.recoveryCodesIssue({ by: "ann" }),
     w.c.recover({ handle: "ann", code: "x", password: "new-passphrase-1", source: "a" }),
     w.c.login({ handle: "x", password: "wrong-passphrase", source: "b" }),
-    bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" }),
+    w.served("ann"),
     /* T37's refusals: R3's three of its own, R53's mint with no digest */
     w.c.passwordChange({ by: "class:admin" }), w.c.passwordChange({ by: "ann", session: "none" }),
     w.c.aiCredentialMint({ who: "ann", tokenId: "nd", principalKind: "member" }),
     /* T36's refusals: AI_KEEP_AWAY_NO_REASON, a security tool's empty set, the totals' period and failure */
-    w.c.aiKeepAwaySet({ on: true, by: "admin" }), w.c.keyedServiceSet({ service: "security:t1", key: { a: "" }, by: "admin" }),
+    w.c.accounts.aiKeepAwaySet({ on: true, by: "admin" }), w.c.keyedServiceSet({ service: "security:t1", key: { a: "" }, by: "admin" }),
     w.c.keyedServiceSet({ service: "security:", key: "k", by: "admin" }), w.c.securityTotals({ from: "x", to: "y" }),
     w.c.securityTotals.call(Object.create(Object.getPrototypeOf(w.c)), { from: 0, to: 1 })]) await keep(p);
   /* AI_KEPT_AWAY, read and unread */
-  w.c.aiKeepAwaySet({ on: true, reason: "r", by: "admin" });
-  await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
+  w.c.accounts.aiKeepAwaySet({ on: true, reason: "r", by: "admin" });
+  await keep(w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
   w.sql.exec(`DROP TABLE ai_keep_away`);
-  await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
+  await keep(w.c.accounts.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
   for (let i = 0; i < 10; i++) await w.c.login({ handle: "y", password: "wrong", source: `p${i}` });
   await keep(w.c.login({ handle: "y", password: "wrong", source: "p" }));
   let n = 0;
@@ -277,7 +260,7 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
     for (const k of ["translation", "detail", "remedy", "message", "stated"]) {
       if (typeof a?.[k] !== "string") continue;
       n++;
-      assert.doesNotMatch(a[k], /\b(?:instance|copy|copies|plane|server)\b/i, `${k}: ${a[k]}`);
+      assert.doesNotMatch(a[k], NAMES_FOR_THE_TEAMS_CIVICSMITH, `${k}: ${a[k]}`);
       assert.doesNotMatch(a[k], /seal secret bound|secret is bound|no seal secret bound/i, `${k}: ${a[k]}`);
     }
   assert.ok(n > 60, `strings read: ${n}`);

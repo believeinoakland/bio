@@ -91,12 +91,12 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   assert.deepEqual(w.ops("limit=1").aicredentials().limit, 1);
   assert.equal(w.ops("tokenId=t1&who=class:ai", { who: "ann" }).aicredentialrevoke().reason, "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER");
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
-  /* (T49; N1073, K3268) never hand-listed: the ops that moved to ai-accounts (R72) are read from its own declaration, and
-     every route this module answers is one name, answered once */
+  /* (T49; N1073, K3268) never hand-listed; (T53; R72 retired) the ops that moved to ai-accounts are served by its own
+     map, never by this one: every route this module answers is its own name */
   const moved = Object.keys(aiAccountsOps(w.c.accounts, new URL("http://x/"), null, {}));
   const routes = Object.keys(w.ops());
   assert.deepEqual(routes.sort(), Object.keys(credentialsOpsNoVersion(w)).sort(), "the routes are this module's own map");
-  assert.ok(moved.every((op) => routes.includes(op)), "the moved routes are answered here, through their delegates");
+  assert.ok(moved.every((op) => !routes.includes(op)), "no moved route is answered here: ai-accounts serves its own");
 });
 
 test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
@@ -141,19 +141,9 @@ test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this m
   assert.ok(!ids.includes("C-29.16") && !("ACCOUNT_LEVEL_MEMBER_ONLY" in ACCOUNT_CHECKS), "C-29.16 retired with R26 (K1756), not reused");
 });
 
-test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `session` from the query over the body; the secret from the body only; never answered back", async () => {
+test("R27 R29 the T33-20 routes: `by`, `member` and `session` from the query over the body; the grant answered once; the keyed services' key from the body only, never answered back", async () => {
   const w = await world().group("ann");
-  const sub = await w.ops("by=ann", { member: "ann", kind: "subscription", secret: "sk-route-sub", by: "admin" }).accountreferenceset();
-  assert.equal(sub.reason, "UNKNOWN_ACCOUNT_KIND", "T38: the subscription token retired");
-  assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, false);
-  const set = await w.ops("by=ann", { member: "ann", kind: "apikey", secret: "sk-route", by: "admin" }).accountreferenceset();
-  assert.equal(set.ok, true);
-  assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).ok, true,
-    "the stamp wins over the body's `by` and `member` (ai-accounts R38): the caller sets its own reference");
-  assert.equal(w.ops("member=second&viewer=member:second").accountreference().held, true, "R38: second's own reference, not ann's");
-  assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, true);
-  assert.equal(w.ops("member=ann&viewer=member:second").accountreference().reason, "NOT_YOUR_ACCOUNT");
-  assert.equal(w.ops("by=ann", { owner: "member:ann", switch: "standing", on: true }).accountusesset().on, true, "T41: accountswitchset retired");
+  assert.equal((await w.served("ann")).ok, true);
   const tok = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   const g = await w.ops(`member=ann&by=ann&session=${tok}`).aigrantmint();
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).member, "ann");
@@ -161,6 +151,5 @@ test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `sessi
   assert.equal((await w.ops("by=admin", { service: "courtlistener", key: "k" }).keyedserviceset()).ok, true);
   assert.equal(w.ops("by=admin", { service: "courtlistener", on: true }).keyedserviceswitch().on, true);
   assert.deepEqual(w.ops().keyedservices(), w.c.keyedServices());
-  assert.equal(w.ops("by=ann", { member: "ann" }).accountreferenceremove().removed, true);
-  assert.ok(!JSON.stringify([sub, set, g]).includes("sk-route"));
+  assert.ok(!JSON.stringify([g, w.ops().keyedservices()]).includes("sk-route"));
 });

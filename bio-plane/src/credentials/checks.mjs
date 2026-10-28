@@ -11,6 +11,10 @@
 
 import { word, localize } from '../setup-words/index.mjs';
 
+/* R66 (T53; K5457): the word for the act of connecting an AI account, as the password-again prompt names it. */
+export const REAUTH_CONNECT_KEY = "ai.reauth.connect";
+export const REAUTH_CONNECT = localize("ai.reauth.connect", "connecting an AI account");
+
 const at = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
 
 /* R38 (F3; K1881, K1934 (2)): the sign-in window's bounds, BOB's under K1881. Refused attempts are estimated per source
@@ -154,7 +158,9 @@ export const ACCOUNT_CHECKS = Object.freeze({
      moved to `ai-accounts`, T48). New rows, joining the row census red until T48's stamp. */
   REAUTH_DUE: Object.freeze({
     check: 'C-29.42', where: at("reauthDue", "is-reauth-window"),
-    translation: word('refusal.REAUTH_DUE'),
+    /* R66 (T53; K5457): the acts that ask are named in this one sentence, and the AI account's is the word `ai.reauth.connect`,
+       read by key and naming no provider; the design's `refusal.REAUTH_DUE` still said it by one provider's name. */
+    translation: localize('credentials.checks.reauth_due', 'Type your password again to do this. Signing or publishing a case, changing administrators and {connect} always ask for it. Nothing was changed.', { connect: { key: REAUTH_CONNECT_KEY } }),
   }),
   SESSION_LOCKED: Object.freeze({
     check: 'C-29.43', where: at("sessionLockedRefusal", "is-session-unlocked"),

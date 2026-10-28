@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
 import { notAnAdmin, noSuchMember, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
 
@@ -37,7 +37,7 @@ test("R6 signerAdd: refusals in order, each writing nothing; a known key rebinds
   assert.deepEqual([cal.reason, cal.code, cal.check, cal.translation, cal.memberId, cal.member_status, cal.enrolled],
     ["SIGNER_MEMBER_NOT_ENROLLED", "SIGNER_MEMBER_NOT_ENROLLED", "C-63.1",
      SIGNER_ENROLMENT_CHECKS.SIGNER_MEMBER_NOT_ENROLLED.translation, "cal", "invited", false]);
-  assert.match(cal.detail, /Nothing was written\.$/);
+  assert.equal(cal.detail, word("credentials.index.memberid_has_not_enrolled_status", { memberId: "cal", status: "invited" }));
   const dee = w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "dee", by: "admin" });
   assert.deepEqual([dee.reason, dee.check, dee.translation, dee.memberId, dee.member_status, dee.enrolled],
     ["SIGNER_MEMBER_NOT_ACTIVE", "C-63.2", SIGNER_ENROLMENT_CHECKS.SIGNER_MEMBER_NOT_ACTIVE.translation, "dee", "revoked", true]);

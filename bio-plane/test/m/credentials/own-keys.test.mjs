@@ -2,9 +2,10 @@
    at the interface; copied from membership's R89–R91 tests at the split (K637). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, addAdmin } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
 import { noSuchMember } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const keyRow = (w, k) => w.row(`SELECT member_id, status, status_by, origin, registered_by, comment FROM signers WHERE key_b64=?`, k);
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
@@ -35,7 +36,7 @@ test("R9 refusals in order, each writing nothing: no member behind the caller (C
       assert.deepEqual(Object.keys(r).sort(), ["by", "check", "code", "detail", "ok", "reason", "translation"], label);
       assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.by],
         [false, "MACHINE_CANNOT_REGISTER_KEY", "MACHINE_CANNOT_REGISTER_KEY", "C-96.17", MACHINE.translation, by || null], label);
-      assert.match(r.detail, /Nothing was written\.$/, label);
+      assert.equal(r.detail, word("credentials.index.a_member_registers_their"), label);
     }
   assert.equal(new Set(NOBODY.map((by) => JSON.stringify({ ...reg(w, by, "AAAAannkey"), by: null }))).size, 1);
   /* BAD_KEY, R6's answer byte for byte (C-96.8), before the member's standing */
@@ -60,7 +61,7 @@ test("R9 refusals in order, each writing nothing: no member behind the caller (C
   assert.deepEqual([held.ok, held.reason, held.code, held.check, held.translation],
     [false, "SIGNER_KEY_HELD_BY_ANOTHER", "SIGNER_KEY_HELD_BY_ANOTHER", "C-96.15", HELD.translation]);
   for (const name of ["ann", "cover of ann", "admin"]) assert.ok(!held.detail.includes(name), name);
-  assert.match(held.detail, /Nothing was written\.$/);
+  assert.equal(held.detail, word("credentials.index.this_key_is_registered"));
   assert.equal(w.snapshot(), before, "no refusal writes");
 });
 
@@ -93,10 +94,7 @@ test("R9 a registration: active, origin self, registered by the member, every ad
   assert.deepEqual([l.origin, l.registered_by, l.status, l.status_by, l.attests, l.attests_why], ["self", "bob", "active", "bob", true, null]);
   assert.ok(w.c.attestingKeys().some((k) => k.key_b64 === "AAAAbobkey" && k.member_id === "bob"));
   /* notified is membership's R86 at the act: a third administrator, once active, is told too; a revoked one is not */
-  const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
-  assert.equal(p.reason, "CONSENSUS_REQUIRED");
-  const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
-  await w.m.enroll({ invite: e.invite, handle: "third", password: PASSWORD("third") });
+  await addAdmin(w, "third");
   assert.deepEqual(reg(w, "ann", "AAAAann1").notified, ["admin", "second", "third"]);
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
   assert.deepEqual(reg(w, "ann", "AAAAann2").notified, ["admin", "third"]);
@@ -133,7 +131,7 @@ test("R9 a key the member already holds: active, existed: true and nothing rewri
     assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "ok", "reason", "translation"], key);
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
       [false, "SIGNER_KEY_REVOKED", "SIGNER_KEY_REVOKED", "C-96.16", REVOKED.translation], key);
-    assert.match(r.detail, /Nothing was written\.$/);
+    assert.equal(r.detail, word("credentials.index.this_key_of_yours"));
     assert.deepEqual([listed(w, key).status, listed(w, key).attests], ["revoked", false], key);
   }
   assert.equal(w.snapshot(), revoked, "no refusal writes");

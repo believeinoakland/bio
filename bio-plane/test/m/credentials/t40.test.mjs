@@ -3,7 +3,7 @@
    `ai-accounts`' (its R10–R14, R22), reached here through R72's delegates; the T40 tests of those moved there. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, PLANS, HOSTS } from "./fixture.mjs";
 import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
 import { noSuchProject, projectViewer } from "../../../src/membership/index.mjs";
 
@@ -28,21 +28,21 @@ async function projectWorld(opts) {
 
 /* ===== R56: the cascade, and the account used ===== */
 
-test("R27 aiGrantMint takes `project`, asking R56 for {kind: ask, member, project}: refused PROJECT_KEY_NOTICE_DUE as GROUP_KEY_NOTICE_DUE is, and every refusal of the cascade; minted once the project's account serves", async () => {
+test("R27 aiGrantMint takes `project`, asking R56 for {kind: ask, member, project}: refused RECIPIENT_NOTICE_DUE as for any account whose recipient is unread, and every refusal of the cascade; minted once the project's account serves", async () => {
   const w = await projectWorld();
   const s = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
   const mint = (project) => w.c.aiGrantMint({ member: "bob", by: "bob", session: s, project });
   assert.equal((await mint()).reason, "NO_ACCOUNT");
-  await w.c.projectKeySet({ project: "P", key: KEY, by: "ann" });
-  w.c.projectAccountSwitch({ project: "P", on: true, by: "ann" });
+  const account = await w.projectAccount("P", "ann", { secret: KEY });
+  assert.equal(w.a.accountSwitch({ account_id: account.account_id, on: true, by: "ann" }).ok, true);
   const before = w.snapshot();
-  assert.deepEqual(shape(await mint("P")), refusal("PROJECT_KEY_NOTICE_DUE"));
+  assert.deepEqual(shape(await mint("P")), refusal("RECIPIENT_NOTICE_DUE"));
   assert.deepEqual(await mint("S"), noSuchProject("S"));
   assert.equal((await mint()).reason, "NO_ACCOUNT", "without the project, nothing serves bob");
-  w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "ann" });
-  w.c.projectKeyNoticeSeen({ member: "bob", project: "P", by: "bob" });
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("project:P"), switch: "ask", on: false, by: "ann" });
+  w.a.recipientNoticeSeen({ member: "bob", provider: PLANS.provider, host: HOSTS.main, by: "bob" });
   assert.deepEqual(shape(await mint("P")), refusal("AI_USE_SWITCHED_OFF"));
-  w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: true, by: "ann" });
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("project:P"), switch: "ask", on: true, by: "ann" });
   const g = await mint("P");
   assert.equal(g.ok, true);
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, projectViewer("member:bob", "P"),

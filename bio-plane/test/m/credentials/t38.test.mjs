@@ -1,44 +1,45 @@
-/* T38 (T38-5; N785, K2200), at the interface: the ask grant mints for a member her own sign-in serves (R27), and (T41;
-   N796, Bob K2425) her standing questions are governed by her sign-in's own `standing` switch, off by default (R32).
-   (T48; K3101) The sign-in, its switches and the cascade are `ai-accounts`' (its R7, R14, R18, R19), reached here through
-   R72's delegates; its T38 tests moved there with them. The grant ends when she disconnects through R73. */
+/* T38 (T38-5; N785, K2200), at the interface: the ask grant mints for a member an account serves (R27), and (T41; N796,
+   Bob K2425; T53, K5457) her standing questions are governed by the `standing` switch of the account that serves her, off
+   by default (R32). (T48; K3101) The accounts, their switches and the cascade are `ai-accounts`' (its R7, R11, R14, R25);
+   its T38 tests moved there with them. The standing grant ends when its account is removed (R73). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check, translation: ACCOUNT_CHECKS[code].translation });
+const RETIRED = ["GROUP_KEY_NOTICE_DUE", "PROJECT_KEY_NOTICE_DUE"];
 
-test("R27 R32 R73 a member served by their own sign-in is granted an ask (no notice asked, the group key on or off); refused NO_ACCOUNT once disconnected with no other account; (T41; N796) their standing questions governed by their sign-in's own standing switch, off by default, and its grant ended when the sign-in is disconnected", async () => {
+test("R27 R32 R73 a member an account serves is granted an ask (no retired notice code asked or returned); refused NO_ACCOUNT once that account is removed with no other; their standing questions governed by the serving account's standing switch, off by default, and its grant ended when that account is removed", async () => {
   const w = await world().group("ann", "bob");
-  await w.signin("ann");
+  assert.equal((await w.served("ann")).ok, true);
   const s = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   const mint = () => w.c.aiGrantMint({ member: "ann", by: "ann", session: s });
   const g = await mint();
   assert.deepEqual(Object.keys(g).sort(), ["expires", "ok", "token"]);
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, "member:ann");
-  await w.c.groupKeySet({ key: "sk-group", by: "admin" });
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
-  assert.equal((await mint()).ok, true, "the group key's notice is not asked: the sign-in serves her");
   /* R22's refusals still come first */
   assert.deepEqual(shape(await w.c.aiGrantMint({ member: "ann", by: "bob", session: s })), refusal("NOT_YOUR_ACCOUNT"));
-  /* R32 (T41; N796): her sign-in's own standing switch governs, off by default (the group key's on does not) */
+  /* R32: the serving account's own standing switch governs, off by default (the team's on does not) */
+  const team = await w.on(w.team(), "ann");
+  w.c.accounts.accountUsesSet({ account_id: w.idOf("group"), switch: "standing", on: true, by: "admin" });
   const before = w.snapshot();
   const st = await w.c.aiGrantMintStanding({ member: "ann", question: "what is new?" });
   assert.deepEqual([shape(st), st.member], [refusal("STANDING_SWITCH_OFF"), "ann"]);
-  assert.match(st.detail, /member's own sign-in/);
+  assert.equal(st.detail, word("credentials.index.standing_questions_are_off", { who: "member's own account" }));
   assert.equal(w.snapshot(), before, "nothing minted or written");
-  assert.equal(w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" }).ok, true, "on her sign-in");
+  assert.equal(w.c.accounts.accountUsesSet({ account_id: w.idOf("member:ann"), switch: "standing", on: true, by: "ann" }).ok, true, "on her account");
   const sg = await w.c.aiGrantMintStanding({ member: "ann", question: "what is new?" });
-  assert.equal(sg.ok, true, "a sign-in is never refused for being one");
+  assert.equal(sg.ok, true);
   assert.equal((await w.c.aiGrantHeld({ token: sg.token })).member, "ann");
-  /* disconnected, the group key off: no account, no grant */
-  w.c.subscriptionDisconnect({ member: "ann", by: "ann" });
-  assert.equal((await w.c.aiGrantHeld({ token: sg.token })).reason, "GRANT_NOT_HELD", "R32: ended when she disconnects");
-  w.c.groupKeySwitch({ on: false, by: "admin" });
-  assert.deepEqual(shape(await mint()), refusal("NO_ACCOUNT"));
-  assert.match(ACCOUNT_CHECKS.NO_ACCOUNT.translation, /Claude subscription/);
-  assert.match((await mint()).detail, /not connected through their subscription/);
+  /* her account removed, the team's key off: no account, no grant, and the standing grant ended */
+  w.removeAccounts("member:ann", "ann");
+  assert.equal((await w.c.aiGrantHeld({ token: sg.token })).reason, "GRANT_NOT_HELD", "R32: ended when her account is removed");
+  w.a.accountSwitch({ account_id: team.account_id, on: false, by: "admin" });
+  const none = await mint();
+  assert.deepEqual(shape(none), refusal("NO_ACCOUNT"));
+  assert.ok(!RETIRED.includes(none.code));
 });
+

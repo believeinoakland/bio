@@ -36,7 +36,7 @@ test("R44 securityCount: one count of a known kind for the current UTC hour and 
     for (const kind of [null, undefined, "", "Signin", "login", "refused", 7]) {
       const r = w.c.securityCount({ kind, country: "US" });
       assert.deepEqual(shape(r), refusal("SECURITY_KIND_UNKNOWN"), String(kind));
-      assert.match(r.detail, /Nothing was counted\.$/);
+      assert.equal(r.detail, word("credentials.index.the_kinds_counted_are", { kinds: SECURITY_KINDS.join(", ") }));
     }
     assert.equal(w.snapshot(), before, "counting nothing");
     for (const kind of SECURITY_KINDS) assert.deepEqual(w.c.securityCount({ kind, country: "us" }), { ok: true, kind, counted: true });
