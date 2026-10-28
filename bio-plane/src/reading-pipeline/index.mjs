@@ -60,6 +60,9 @@ export const WHOLE_READ_MAX = boundOf("pdf", "bytes");
 /* R66 (T53-124): a text kind is refused above the text bound (100 MB, the active figure), but it is read whole only up to the measured whole-read figure, the text row's alpha
    (24 MiB, quoted from `READ_BOUNDS`); a text between the two is read in byte windows with a carry (R50, R51), never held whole. */
 export const TEXT_WINDOW_FROM = READ_BOUNDS.text.bytes.alpha;
+/* The same measured figure for a CSV (K4868): the PDF byte row's alpha, 24 MiB, what a whole read held before the beta lifted the active figure (WHOLE_READ_MAX) to the standard's 100 MB; a CSV above it
+   and within its own bound (50 MB) is read by range, never held whole. */
+export const CSV_WINDOW_FROM = READ_BOUNDS.pdf.bytes.alpha;
 const WHOLE_READ_ROW = ["pdf", "bytes"];
 /* R37 (D4): why a reading failed, as `reading.failure`. `transient`: the cause is outside the document (the store did not
    answer, a member was down or answered 5xx, an entry threw), so a later read can succeed; `final`: the document's own
@@ -780,6 +783,14 @@ function stateOcr(target, left, t3, i2text) {
     .filter((l) => Number.isInteger(l.page)).sort((a, b) => a.page - b.page)
     .map((l) => ({ ...l, partly: !(typeof l.share === "number" && l.share >= LEGIBLE_SHARE), ...(refusedAt.has(l.page) ? { stored: false } : {}) }));
   if (leg.length) target.legibility = leg;
+  /* R68 (T53-126; DEC-479 (51)): the words below the reader's own measured clarity, where the reader measured each word (the OCR member's `legibility`: its words
+     and those it rated at its threshold). A reading with no such measure (a text layer, a digital document, a model's opinion of itself) carries no `unclear_words`, never a
+     zero. A refused page's text is not kept, so its words are no part of the reading. The member states a count per page and no offset per word, so a position is the page
+     and the number of its unclear words, in page order. */
+  const unclear = leg.filter((l) => l.stored !== false && Number.isInteger(l.words) && Number.isInteger(l.confident_words) && l.words >= l.confident_words);
+  if (unclear.length)
+    target.unclear_words = { count: unclear.reduce((n, l) => n + (l.words - l.confident_words), 0),
+                             positions: unclear.filter((l) => l.words > l.confident_words).map((l) => ({ page: l.page, count: l.words - l.confident_words })) };
   const owedAt = new Set(left ? left.pages : []);
   let skipped = refusedAt.size, pictures = 0;
   for (const pg of (i2text && Array.isArray(i2text.pages) ? i2text.pages : [])) {
@@ -2118,7 +2129,7 @@ async function windowTick(evidence, sha, c, ask, doc) {
    when the capture is not one (another size or kind, an encoding or a record the windows cannot take): it is read, or refused, as before. */
 async function csvRangedHead(evidence, doc, { recorded, declared }) {
   const src = rangeSource(evidence, doc);
-  if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("csv", "bytes"))) return null;
+  if (!(Number.isInteger(src.size) && src.size > CSV_WINDOW_FROM && src.size <= boundOf("csv", "bytes"))) return null;
   if (!(recorded === null || recorded === "csv" || recorded === "undetermined")) return null;
   const probe = await src.readRange(0, Math.min(src.size, CSV_HEAD_BYTES + 2 * CSV_SLACK_BYTES));
   if (!(probe instanceof Uint8Array) || probe.length < CSV_HEAD_BYTES + 2 * CSV_SLACK_BYTES) return null;
@@ -2806,12 +2817,12 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
     /* a text, JSON or XML over its own bound is stated against that row (R50), a CSV against its (K4868), every other kind against the whole-load ceiling's */
     const row = kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"]
       : textual && size > boundOf("text", "bytes") ? ["text", "bytes"] : WHOLE_READ_ROW;
-    const st = row[0] === "pdf" && ceiling === TEXT_WINDOW_FROM ? { ...statement("text", "bytes", size), bound: TEXT_WINDOW_FROM } : statement(...row, size);
+    const st = row[0] === "pdf" && ceiling !== WHOLE_READ_MAX ? { ...statement(ceiling === CSV_WINDOW_FROM ? "csv" : "text", "bytes", size), bound: ceiling } : statement(...row, size);
     return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st, metric: "bytes" },
              why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound, parts: parts ? parts.length : 1 }) };
   };
   /* R66: a text kind is held whole only to the text row's whole-read figure (`TEXT_WINDOW_FROM`); a text above it that the windows could not take (an encoding they do not carry) is stated, not loaded */
-  const ceiling = textual && (kind === null || kind === "undetermined" || kind === "text" || kind === "json" || kind === "xml" || kind === "html") ? TEXT_WINDOW_FROM : WHOLE_READ_MAX;
+  const ceiling = textual && (kind === null || kind === "undetermined" || kind === "text" || kind === "json" || kind === "xml" || kind === "html") ? TEXT_WINDOW_FROM : kind === "csv" ? CSV_WINDOW_FROM : WHOLE_READ_MAX;
   if (total !== null && total > ceiling) return tooBig(total);
   /* the store is asked only when the document states no size */
   const held = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
@@ -2941,7 +2952,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     ? await csvRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null }).catch(() => null) : null;
   /* a read that is not in pieces cannot hold it: it says so and is tried again, in pieces, by the ledger (R37 `transient`) */
   if (rangedCsv && !piecesOn)
-    return early(failed(doc, null, localize("reading-pipeline.index.csv_in_pieces", "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedCsv.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
+    return early(failed(doc, null, localize("reading-pipeline.index.csv_in_pieces", "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedCsv.size), limit: String(CSV_WINDOW_FROM) }), { failure: FAILURE_TRANSIENT }));
   if (rangedCsv) fmt = "csv";
   /* R50: a text, JSON or XML past a whole read's bound and within the text bound is read by range from its first piece too */
   const textual = profile.profiled_from_text === true || TEXT_TYPE.test(profile.source_content_type || ct || "");
@@ -3480,7 +3491,7 @@ export async function cellsInRange(evidence, doc, { format, sheet, fromRow, toRo
       /* K4868: a CSV past a whole read's bound and within its own is held in the range source's one read (its cells are made by the entry, which
          reads it in windows); every other capture is `bytesOf`'s */
       const src = format === "csv" ? rangeSource(evidence, doc || {}) : null;
-      if (src && Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("csv", "bytes")) {
+      if (src && Number.isInteger(src.size) && src.size > CSV_WINDOW_FROM && src.size <= boundOf("csv", "bytes")) {
         const all = await src.readRange(0, src.size);
         got = all instanceof Uint8Array && all.length === src.size ? { bytes: all } : { bytes: null, failure: FAILURE_TRANSIENT };
       } else got = await bytesOf(evidence, doc || {});
@@ -3497,5 +3508,130 @@ export async function cellsInRange(evidence, doc, { format, sheet, fromRow, toRo
     return out;
   } catch (e) {
     return { ok: false, reason: CELLS_NOT_INTERPRETABLE, why: String(e && e.message || e).slice(0, 200) };
+  }
+}
+
+/* ===================================================================== *
+ * Parts of a reading, and a part's own interpretation (R64, R65; T53-125; N1272).
+ * ===================================================================== */
+
+/* R65: a part is `{kind, from, to}` for `pdf-page` (pages from 0), `doc-para` (paragraphs from 0) and `slide` (slides from 1), or
+   `{kind: "sheet-range", sheet, from_row, to_row}` (rows from 1), numbered in the reading's own extent (K5734); `extraction`'s `normalPart` keys it. */
+export const PART_KINDS = Object.freeze(["pdf-page", "doc-para", "slide", "sheet-range"]);
+/* R65: the most parts one reading names (a protective bound, stated with `truncated` and the count when passed) */
+export const PARTS_MAX = 10000;
+/* R65: the unit a part is opened in. A sheet's block is the rows whose cells one `cellsOf` call answers (`extraction` R98: CELLS_RANGE_MAX, 20,000 in-extent cells;
+   the figure is that module's, a layer above this one, so it is held here as the unit of a block); a document without headings is named in runs of this many pages
+   or paragraphs, a deck by the slide. */
+const PART_BLOCK_CELLS = 20000;
+const PART_RUN = { "pdf-page": 10, "doc-para": 50 };
+const isInt = (n) => Number.isInteger(n);
+const partKindOfUnit = (u) => (u && u.extent && u.extent.kind === "pdf-page" ? "pdf-page" : u && u.extent && u.extent.kind === "doc-para" ? "doc-para"
+  : u && u.extent && u.extent.kind === "slide-shape" ? "slide" : null);
+const placeOfUnit = (kind, u) => (kind === "pdf-page" ? u.extent.page : kind === "doc-para" ? u.extent.para : u.extent.slide);
+const isHeadingUnit = (u) => !!u && (u.heading === true || u.kind === "heading");
+
+/* R65: `partsOf(reading, {kind})` names the candidate parts of a reading (`reading` is a reading, with its `text_units` when the caller holds them): its sheets in row
+   blocks, its pages, paragraphs or slides by heading when its units state headings (`heading: true`), else in runs. In document order, at most PARTS_MAX; `{parts, total,
+   truncated, headings?}` (`headings[i]` the text of a headed part i, aligned with `parts`), and a reading naming none says so with `why`. A part has no weight. Never throws. */
+export function partsOf(reading, { kind = null } = {}) {
+  const r = reading && typeof reading === "object" ? (reading.reading && typeof reading.reading === "object" ? { ...reading.reading, text_units: reading.text_units ?? reading.reading.text_units } : reading) : {};
+  const want = (k) => kind === null || kind === undefined || kind === k;
+  const parts = [], headings = [];
+  let headed = false;
+  const add = (p, heading = null) => { parts.push(p); headings.push(heading); if (heading !== null) headed = true; };
+  const ext = r.container_extent && typeof r.container_extent === "object" ? r.container_extent : null;
+  const units = Array.isArray(r.text_units) ? r.text_units : [];
+  /* sheets: row blocks of the sheet's unit size, in the order the sheets stand */
+  if (want("sheet-range") && ext && Array.isArray(ext.sheets)) {
+    for (const s of ext.sheets) {
+      const rows = s && isInt(s.usedRows) ? s.usedRows : s && isInt(s.rows) ? s.rows : 0;
+      const cols = s && isInt(s.usedCols) ? s.usedCols : s && isInt(s.cols) ? s.cols : 1;
+      if (!(s && typeof s.name === "string" && rows > 0)) continue;
+      const block = Math.max(1, Math.floor(PART_BLOCK_CELLS / Math.max(1, cols)));
+      for (let from = 1; from <= rows; from += block) {
+        add({ kind: "sheet-range", sheet: s.name, from_row: from, to_row: Math.min(rows, from + block - 1) });
+      }
+    }
+  }
+  /* pages, paragraphs and slides: by heading when the units state them, else by run (a slide by itself) */
+  for (const k of ["pdf-page", "doc-para", "slide"]) {
+    if (!want(k)) continue;
+    const mine = units.filter((u) => partKindOfUnit(u) === k && isInt(placeOfUnit(k, u)));
+    const first = k === "slide" ? 1 : 0;
+    const count = k === "pdf-page" ? (isInt(r.page_count) && r.page_count > 0 ? r.page_count : null)
+      : k === "doc-para" ? (ext && isInt(ext.paragraphs) ? ext.paragraphs : null)
+      : (ext && Array.isArray(ext.slides) ? ext.slides.length : null);
+    const last = Math.max(count !== null ? count - 1 + first : -1, ...mine.map((u) => placeOfUnit(k, u)));
+    if (!mine.length && count === null) continue;
+    if (last < first) continue;
+    const heads = mine.filter(isHeadingUnit).sort((a, b) => placeOfUnit(k, a) - placeOfUnit(k, b));
+    if (heads.length && k !== "slide") {
+      const starts = [...new Set(heads.map((u) => placeOfUnit(k, u)))];
+      starts.forEach((from, i) => {
+        const text = heads.find((u) => placeOfUnit(k, u) === from).text;
+        add({ kind: k, from, to: (i + 1 < starts.length ? starts[i + 1] - 1 : last) }, typeof text === "string" ? text.slice(0, 200) : "");
+      });
+    } else {
+      const run = k === "slide" ? 1 : PART_RUN[k];
+      for (let from = first; from <= last; from += run) add({ kind: k, from, to: Math.min(last, from + run - 1) });
+    }
+  }
+  const total = parts.length;
+  const truncated = total > PARTS_MAX;
+  const shown = truncated ? parts.slice(0, PARTS_MAX) : parts;
+  return { parts: shown, total: truncated ? total : shown.length, truncated, ...(headed ? { headings: (truncated ? headings.slice(0, PARTS_MAX) : headings) } : {}),
+           ...(total === 0 ? { why: "NO_UNITS" } : {}) };
+}
+
+/* R64: `interpretUnits(document, part, {evidence, env, view})` makes the facts the record relies on from one part's units only, mechanically. A sheet part goes through
+   `cellsInRange` (R44); a page, paragraph or slide part through the content type's reader (R1), handed the text of that part's units alone. `{ok: true, part, entities, facts,
+   cells?, at, basis}`, `basis` saying which units were read; `{ok: false, reason}` for a part not of this document or a read that failed. The whole-document entities and facts
+   of the reading (R1) stay the reading's own, for search, and are not touched. No AI is asked (no `transcription` is passed to the read) and no tier is added to what the
+   document's reading already used (`env` is the caller's, as for `read`). Never throws. */
+export async function interpretUnits(document, part, { evidence = null, env = {}, view, liveCalibration = null } = {}) {
+  try {
+    if (!part || typeof part !== "object" || !PART_KINDS.includes(part.kind)) return { ok: false, reason: "PART_NOT_VALID" };
+    const at = document && typeof document.retrieved === "string" ? document.retrieved : null;
+    if (part.kind === "sheet-range") {
+      if (!(typeof part.sheet === "string" && part.sheet && isInt(part.from_row) && isInt(part.to_row) && part.from_row >= 1 && part.to_row >= part.from_row))
+        return { ok: false, reason: "PART_NOT_VALID" };
+      const recorded = document && document.profile ? document.profile.format : null;
+      const format = typeof recorded === "string" ? recorded : recorded && typeof recorded.format === "string" ? recorded.format : null;
+      const got = await cellsInRange(evidence, document, { format, sheet: part.sheet, fromRow: part.from_row, toRow: part.to_row });
+      if (!got || got.ok !== true) return { ok: false, reason: got && got.reason ? got.reason : CELLS_NOT_INTERPRETABLE, ...(got && got.failure ? { failure: got.failure } : {}) };
+      return { ok: true, part, entities: [], facts: {}, cells: got.cells, at,
+               basis: localize("reading-pipeline.index.interpret_cells", "read from the cells of {sheet}, rows {from} to {to}", { sheet: part.sheet, from: String(part.from_row), to: String(part.to_row) }) };
+    }
+    if (!(isInt(part.from) && isInt(part.to) && part.from >= (part.kind === "slide" ? 1 : 0) && part.to >= part.from)) return { ok: false, reason: "PART_NOT_VALID" };
+    /* the document's units, all of them (no wire budget), piece by piece when its reading is cut in pieces */
+    const units = [];
+    let cursor = null;
+    for (let guard = 0; guard < 100000; guard++) {
+      const out = await read(document, { evidence, env, view, liveCalibration, cursor, unitsBudget: Infinity, maxUnits: 1000000 });
+      if (!out || !out.reading || out.reading.failure) return { ok: false, reason: "READING_FAILED", ...(out && out.reading && out.reading.failure ? { failure: out.reading.failure } : {}) };
+      for (const u of (Array.isArray(out.text_units) ? out.text_units : [])) units.push(u);
+      if (out.more !== true || typeof out.cursor !== "string") break;
+      cursor = out.cursor;
+    }
+    const inPart = units.filter((u) => partKindOfUnit(u) === part.kind && isInt(placeOfUnit(part.kind, u)) && placeOfUnit(part.kind, u) >= part.from && placeOfUnit(part.kind, u) <= part.to);
+    if (!inPart.length) return { ok: false, reason: "PART_HAS_NO_UNITS" };
+    const text = inPart.map((u) => u.text).join("\n");
+    const ct = document && document.capture && typeof document.capture.content_type === "string" ? document.capture.content_type : "";
+    const ctx = { headers: {}, locator: documentAddressOf(document), content_type: ct || null, text, origin: CAPTURE_ORIGIN };
+    const vw = view ? { view } : {};
+    const stackId = identify(ctx);
+    const docType = doctypeFor({ ...ctx, handler: stackId.handler, kind: stackId.kind, ...vw });
+    let entities = [], facts = {};
+    if (docType && docType.type && typeof docType.type.parse === "function") {
+      const parsed = docType.type.parse({ ...ctx, handler: stackId.handler, at, ...vw }) || {};
+      const { entities: e, ...rest } = parsed;
+      facts = (rest && typeof rest.facts === "object" && Object.keys(rest).length === 1) ? rest.facts : rest;
+      entities = readEntities(e);
+    }
+    return { ok: true, part, entities, facts: facts || {}, at,
+             basis: localize("reading-pipeline.index.interpret_units", "read from {count} text unit(s), numbers {first} to {last}", { count: String(inPart.length), first: String(inPart[0].seq), last: String(inPart[inPart.length - 1].seq) }) };
+  } catch (e) {
+    return { ok: false, reason: "INTERPRETATION_FAILED", why: String(e && e.message || e).slice(0, 200) };
   }
 }

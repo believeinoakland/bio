@@ -1,5 +1,5 @@
 /* reading-pipeline: a CSV past a whole read is read from its first piece by range (fix round 9, K4868; R45 R40 R41 R35 R37 R44 R54), at the module's
- * interface. A CSV between `WHOLE_READ_MAX` and its own bound (`READ_BOUNDS` csv, 50 MiB) is never held whole, nor is its text: the first piece reads a
+ * interface. A CSV between `CSV_WINDOW_FROM` and its own bound (`READ_BOUNDS` csv, 50 MiB) is never held whole, nor is its text: the first piece reads a
  * head range, the pieces after it a byte window each, through the range source (the object held whole or in parts). The 48 MiB file is read to its
  * last row in a child of its own whose old space is the object's 128 MB (csv-range-child.mjs), in each shape a capture arrives in; the same
  * child run against the module before this change reads nothing (final, TOO_LARGE). */
@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { fresh, hold, doc, evidenceStore, sha } from "./fixture.mjs";
-import { read, cellsInRange, rangeSource, WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
+import { read, cellsInRange, rangeSource, CSV_WINDOW_FROM } from "../../../src/reading-pipeline/index.mjs";
 import { boundOf } from "../../../src/read-bounds.mjs";
 import { said } from "./said.mjs";
 
@@ -30,7 +30,7 @@ for (const [shape, what] of [["parts", "held in 8 MiB parts with no whole object
       const c = await child(shape);
       assert.equal(c.code, 0, `the read did not complete in a 128 MB old space (${c.signal ?? "exit " + c.code}): ${c.err.split("\n").slice(0, 3).join(" | ")}`);
       const r = JSON.parse(c.out);
-      assert.ok(r.size > WHOLE_READ_MAX && r.size <= boundOf("csv", "bytes"), "the file is past a whole read and within the CSV's bound");
+      assert.ok(r.size > CSV_WINDOW_FROM && r.size <= boundOf("csv", "bytes"), "the file is past a whole read and within the CSV's bound");
       assert.ok(!r.stuck, "no piece answered the cursor it was asked with");
       /* every row once, none twice (a block's repeated header is no row, R41) */
       assert.equal(r.rows, r.expectedRows, "every row of the sheet is in a unit");
@@ -83,7 +83,7 @@ async function csvInParts(mib) {
 
 test("R44 R45 (K4868): the typed cells of a row of a CSV past a whole read are made from its parts, the last row's included; a first piece and the row's cells agree", { timeout: 300_000 }, async () => {
   const { w, rows, document, all } = await csvInParts(25);
-  assert.ok(all.length > WHOLE_READ_MAX);
+  assert.ok(all.length > CSV_WINDOW_FROM);
   const ev = evidenceStore(w.evidence);
   const last = await cellsInRange(ev, document, { format: "csv", sheet: "csv", fromRow: rows, toRow: rows });
   assert.equal(last.ok, true, JSON.stringify(last).slice(0, 200));
@@ -144,7 +144,7 @@ test("R45 R40 (K4868): a CSV the windows cannot take (UTF-16) past a whole read 
   const rowsBig = Array.from({ length: 1000 }, (_, i) => `${i},n${i}`).join("\n") + "\n";
   const unit = new Uint8Array(rowsBig.length * 2);
   for (let i = 0; i < rowsBig.length; i++) unit[2 * i] = rowsBig.charCodeAt(i);
-  const bigBytes = new Uint8Array(WHOLE_READ_MAX + 4096); bigBytes[0] = 0xff; bigBytes[1] = 0xfe;
+  const bigBytes = new Uint8Array(CSV_WINDOW_FROM + 4096); bigBytes[0] = 0xff; bigBytes[1] = 0xfe;
   for (let at = 2; at + unit.length <= bigBytes.length; at += unit.length) bigBytes.set(unit, at);
   const bw = fresh();
   const bigDoc = doc({ digest: await hold(bw.evidence, bigBytes), bytes: bigBytes.length, ct: "text/csv", format: "csv" });
@@ -152,5 +152,5 @@ test("R45 R40 (K4868): a CSV the windows cannot take (UTF-16) past a whole read 
   assert.equal(refused.reading.failure, "final");
   assert.equal(refused.reading.reason, "TOO_LARGE");
   assert.equal(refused.reading.size, bigBytes.length);
-  assert.equal(refused.reading.bound, WHOLE_READ_MAX);
+  assert.equal(refused.reading.bound, CSV_WINDOW_FROM);
 });

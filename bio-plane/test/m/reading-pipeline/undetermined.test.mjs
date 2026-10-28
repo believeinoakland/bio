@@ -66,7 +66,7 @@ test("R32 R37: a 12 MB UTF-8 text file declared text/plain, uploaded in two part
 
 test("R2 R37 (control): a PDF over the whole-read ceiling, recorded `undetermined`, still states the ceiling and its size, final", async () => {
   const w = fresh();
-  const total = 30 * 1024 * 1024;
+  const total = WHOLE_READ_MAX + 1;
   const parts = Array.from({ length: 4 }, (_, i) => ({ sha256: String(i).repeat(64), bytes: i < 3 ? PART : total - 3 * PART }));
   const d = doc({ digest: "e".repeat(64), bytes: total, ct: "", format: "undetermined", headers: [], parts });
   const out = await w.read(d);

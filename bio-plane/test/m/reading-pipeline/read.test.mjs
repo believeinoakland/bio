@@ -10,7 +10,7 @@ import { fresh, bucket, hold, doc, member, withEntry, i2, noText, folio, unreadI
 import { identify, doctypeFor, registerDoctype } from "../../../../docprofile/registry.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
-import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP, tier2Escalate, tier3Extend } from "../../../src/reading-pipeline/index.mjs";
+import { WHOLE_READ_MAX, MULTIPART_READ_MAX, OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP, tier2Escalate, tier3Extend } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 import { said } from "./said.mjs";
 
@@ -128,11 +128,16 @@ test("R2: a multi-part capture within the bound is assembled from its parts for 
   assert.equal(missing.reading.found, false);
   assert.match(missing.reading.basis, /part 2 of 2 is not held/);
   const over = await withEntry({ format: "t3multi", text: async () => ({ ok: true }) },
-    () => w.read(doc({ digest: "f".repeat(64), format: "t3multi", parts: [{ sha256: p1, bytes: 30 * 1024 * 1024 }] })));
+    () => w.read(doc({ digest: "f".repeat(64), format: "t3multi", parts: [{ sha256: p1, bytes: WHOLE_READ_MAX + 1 }] })));
   /* R54 (fix round 9): a size over the bound states the size and the limit (TOO_LARGE), not "parts" */
   assert.equal(over.reading.reason, "TOO_LARGE");
-  assert.equal(over.reading.size, 30 * 1024 * 1024);
+  assert.equal(over.reading.size, WHOLE_READ_MAX + 1);
   assert.ok(over.reading.basis.includes(String(over.reading.bound)) && over.reading.basis.includes(String(over.reading.size)), over.reading.basis);
+  /* between the assembly bound and the whole-read ceiling: the parts cannot be assembled for the entry, which is not the file's own fault (transient, R37), and no size is refused */
+  const between = await withEntry({ format: "t3multi", text: async () => ({ ok: true }) },
+    () => w.read(doc({ digest: "f".repeat(64), format: "t3multi", parts: [{ sha256: p1, bytes: MULTIPART_READ_MAX + 1 }] })));
+  assert.equal(between.reading.failure, "transient");
+  assert.equal(between.reading.reason, undefined);
 });
 
 test("R3 R10: tier 2 is asked only when undetermined markers outnumber glyphs (not for scan markers alone), merged page by page; two tiers give two page-scoped parts; tier 2 only when a page moved; the producer marker carried", async () => {
