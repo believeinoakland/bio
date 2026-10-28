@@ -12,7 +12,7 @@ import { cleanPdf } from "./pdf.mjs";
 import { cleanPackage, tooManyEntries, CLEAN_MAX_PART_BYTES, CLEAN_MAX_ENTRIES } from "./package.mjs";
 import { newScan } from "./xml.mjs";
 import { cleanMessage } from "./mail.mjs";
-import { detectMail } from "../mail-reader/index.mjs";
+import { detectFormat } from "../formats.mjs";
 import { boundOf } from "../read-bounds.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -44,7 +44,7 @@ const FAMILY = { docx: "ooxml", xlsx: "ooxml", pptx: "ooxml", odt: "odf", ods: "
  *  scan (`scanned` bytes, `tokens`, `yields`), so a caller can see that the work was bounded by count, not by time
  *  (R-CLOCK). `options.materialNames` (R13, K5534) is the display names the case's author marked material: the only
  *  names an email's published copy will show; none given, every name is withheld. A message (`eml`, `msg`) is judged
- *  by `mail-reader`'s detection and answered as an EML copy (`mail.mjs`). Nothing is kept between calls (R7). */
+ *  by `format-registry`'s detection and answered as an EML copy (`mail.mjs`). Nothing is kept between calls (R7). */
 export async function cleanDocument(bytes, { yieldNow, scan = newScan(yieldNow), materialNames = [] } = {}) {
   try {
     if (!Array.isArray(materialNames) || materialNames.some((n) => typeof n !== "string"))
@@ -54,7 +54,7 @@ export async function cleanDocument(bytes, { yieldNow, scan = newScan(yieldNow),
     if (d.length > CLEAN_MAX_BYTES)
       throw new CleanRefusal("DOCUMENT_TOO_LARGE", localize("doc-clean.index.the_document_is_length_bytes", "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads", { length: String(d.length), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }));
     let format, done;
-    const mail = detectMail(d);
+    const found = detectFormat(d, null).format, mail = found === "eml" || found === "msg" || found === "mbox" ? found : null;
     if (mail === "mbox") throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.a_mailbox_of_messages_not_a", "a mailbox of messages, not a format this module cleans"));
     if (mail) {
       format = mail;

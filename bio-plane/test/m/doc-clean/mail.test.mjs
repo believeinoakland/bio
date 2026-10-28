@@ -80,4 +80,18 @@ test("R13 control: a text file that merely contains a From line is not a message
   assert.deepEqual(r, { ok: true, clean: true, format: "text" });
 });
 
-test("R13 detection by format-registry's eml/msg entries", { todo: "format-registry's eml/msg entries are not merged yet (BOB #327 tells the job); detection is mail-reader's detectMail meanwhile" }, () => {});
+test("R13 an EML renamed to anything is judged by its bytes, and a PNG named .eml is not a message", async () => {
+  const r = await cleanDocument(F.eml([...HEADERS], "Body."));
+  assert.equal(r.format, "eml");
+  const png = await cleanDocument(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]));
+  assert.equal(png.ok, false);
+  assert.equal(png.code, "NOT_A_CLEANABLE_FORMAT");
+});
+
+test("R13 an Outlook message is judged msg by its container and answered as an EML copy", async () => {
+  const m = F.msg({ subject: "Records request", fromName: "Ada Lane", fromAddress: "ada@example.org", body: "Body." });
+  const r = await cleanDocument(m);
+  assert.equal(r.ok, true, r.detail);
+  assert.equal(r.format, "msg");
+  assert.equal((await readMessage(r.bytes)).format, "eml");
+});
