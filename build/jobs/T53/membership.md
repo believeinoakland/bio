@@ -1,6 +1,6 @@
 # membership (T53)
 
-**Status** · session_018BhcefgcLdaAA53reT314Q · depth 2 · WORKING
+**Status** · session_018BhcefgcLdaAA53reT314Q · depth 2 · WAITING: member-roster COMPLETE, then job complete --with member-roster; work done on a local merge, unpushed
 **Sessions** · 1
 
 ## Completion (2026-10-28)
