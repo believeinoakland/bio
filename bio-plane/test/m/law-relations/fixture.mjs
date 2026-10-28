@@ -217,3 +217,9 @@ export function seeded(opts) {
 }
 
 export const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
+
+// A regex for a word's text, never the English (K5313): `wordRx` for a word with no placeholder, `wordTextRx` for one with
+// the values the product fills it with.
+const escapeRx = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export const wordRx = (key, flags = "") => new RegExp(escapeRx(word(key)), flags);
+export const wordTextRx = (key, vars = {}, flags = "") => new RegExp(escapeRx(word(key, vars)), flags);

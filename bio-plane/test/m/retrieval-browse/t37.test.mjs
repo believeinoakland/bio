@@ -7,6 +7,7 @@
  * carried by reading-pipeline R28; the text units as the reading's), held here as extraction holds a reading. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { world, V } from "./fixture.mjs";
 import { RECORDED_BY_MODULES } from "../../../src/retrieval-browse/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
@@ -175,7 +176,8 @@ test("R1 (DEC-98): people — when the followed people and offices cannot be rea
     const { w, c } = plain({ entities });
     const k = kindOf(find(w, { scope: { capture: c.sha }, kinds: ["people"] }), "people");
     assert.deepEqual([k.nothing, k.items, k.not_read.map((x) => x.capture_sha)], [false, [], [c.sha]]);
-    assert.match(k.not_read[0].why, /followed people and offices could not be read/);
+    const why = entities ? WORD("retrieval.unread.read_followed_people_offices", { ans: ` (${refusal.reason})` }) : WORD("retrieval.unread.read_followed_people");
+    assert.equal(k.not_read[0].why, why);
   }
 });
 
@@ -185,7 +187,7 @@ test("R3: a reading whose language names an inherited property of an object (con
     w.st.sql.exec(`UPDATE readings SET reading = ? WHERE capture_sha = ?`, JSON.stringify({ language }), c.sha);
     const ans = find(w, { scope: { capture: c.sha }, kinds: ["money", "dates", "requirements"] });
     assert.equal(ans.ok, true);
-    for (const k of ans.kinds) assert.deepEqual([k.nothing, k.not_read.map((x) => x.why)], [false, [`no matcher for ${language.toLowerCase()} yet`]], language);
+    for (const k of ans.kinds) assert.deepEqual([k.nothing, k.not_read.map((x) => x.why)], [false, [WORD("retrieval-browse.findin.no_matcher_for_lang_yet", { lang: language.toLowerCase() })]], language);
   }
 });
 

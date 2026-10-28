@@ -1,6 +1,7 @@
 /* retrieval: one capture's content axis (R23–R27, D-672, D-724), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { world, V, MACHINE, VOCAB } from "./fixture.mjs";
 import { CAPTURE_TEXT_SKIPPED_RUNS_MAX, CAPTURE_TEXT_SKIPPED_SAYS } from "../../../src/retrieval/index.mjs";
 
@@ -13,7 +14,7 @@ test("R23: no sha answers found: false with the vocabulary and a note; a capture
   const w = world();
   const none = w.retrieval.contentAxis({ viewer: V("vera") });
   assert.deepEqual([none.found, none.vocabulary, none.undetermined_value], [false, VOCAB.CONTENT_AXIS_STATES, "undetermined"]);
-  assert.match(none.note, /one capture/);
+  assert.equal(none.note, WORD("retrieval.note.content_axis_read"));
   const hid = w.cap("hidden", "h");
   w.project("Hidden", "ann", { captures: [hid] });
   ex(w, hid, "PRESENT", { authority: "PROJ" });

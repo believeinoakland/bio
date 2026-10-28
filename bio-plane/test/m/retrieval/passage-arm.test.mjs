@@ -10,7 +10,8 @@
  * written as extraction's index writes them. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, V, T0 } from "./fixture.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
+import { world, V, T0, coverageOf, leadOf as lead } from "./fixture.mjs";
 import { MARK_OPEN, MARK_CLOSE } from "../../../src/query.mjs";
 
 const marked = (word) => new RegExp(`${MARK_OPEN}${word}${MARK_CLOSE}`);
@@ -103,8 +104,7 @@ test("R13, R14: rows=passage with no passage: term is answered, not refused — 
     assert.deepEqual([r.ok, r.count, r.total], [true, 2, 2], q);
     assert.deepEqual(r.rows.map((x) => [x.bundle_id, x.seq, x.snippet]), [["INFO-1", 0, null], ["INFO-1", 1, null]], q);
     assert.equal(r.levels.content.matched, false, q);
-    assert.match(r.levels.content.why, /no `passage:` selector/, q);
-    assert.match(r.levels.content.why, /Coverage: /, q);
+    assert.equal(r.levels.content.why, WORD("retrieval.why.answer_lists_indexed", { coverage: coverageOf(r.scope) }), q);
   }
   assert.equal(rowsOf(w, "").total, 3, "no arm at all: every unit the viewer may see");
 });
@@ -148,19 +148,23 @@ test("R13, R14: says tells the empties and the hits apart — no document in sco
   const w = scoped();
   const noDoc = rowsOf(w, "passage:zzqx text:nosuchprobe").says;
   const blind = rowsOf(w, "passage:zzqx text:unreadprobe");
-  const partial = rowsOf(w, "passage:zzqx text:scopeprobe").says;
-  const clean = rowsOf(w, "passage:zzqx text:fullprobe").says;
-  const hitGap = rowsOf(w, "passage:culverts text:scopeprobe").says;
-  const hitClean = rowsOf(w, "passage:easements text:fullprobe").says;
-  assert.match(noDoc, /no document was in scope .* empty DOCUMENT level, not an empty record/);
+  const partial = rowsOf(w, "passage:zzqx text:scopeprobe");
+  const clean = rowsOf(w, "passage:zzqx text:fullprobe");
+  const hitGap = rowsOf(w, "passage:culverts text:scopeprobe");
+  const hitClean = rowsOf(w, "passage:easements text:fullprobe");
+  assert.equal(noDoc, WORD("retrieval.text.matched_document_scope"));
   assert.equal(blind.scope.documents, 1);
-  assert.match(blind.says, /^Coverage: .*NOTHING IN SCOPE WAS SEARCHABLE.*The next move is to read them/);
-  assert.match(partial, /^Coverage: .*Nothing matched over 1 searchable capture\(s\) in scope, but 1 further capture\(s\) in scope have not been read at passage grain.*covers only the part of the record that has been read/);
-  assert.doesNotMatch(partial, /no document was in scope|NOTHING IN SCOPE WAS SEARCHABLE/);
-  assert.match(clean, /^Coverage: .*Nothing matched over 1 searchable capture\(s\) in scope, and every capture in scope can be searched at passage grain — this absence is about the documents/);
-  assert.match(hitGap, /^Coverage: .*1 passage\(s\) matched over 2 document\(s\) in scope, and 1 capture\(s\) in that scope have not been read at passage grain/);
-  assert.match(hitClean, /^Coverage: .*1 passage\(s\) matched over 1 document\(s\) in scope, over a scope every capture of which can be searched/);
-  assert.equal(new Set([noDoc, blind.says, partial, clean, hitGap, hitClean]).size, 6, "every sentence is its own");
+  assert.equal(blind.says, `${lead(blind.scope)} ${WORD("retrieval.text.matched_scope_searchable")}`);
+  assert.equal(partial.says, `${lead(partial.scope)} ${WORD("retrieval.text.matched_over_searchable",
+    { count: 1, rest: `, ${WORD("retrieval.text.further_capture_scope", { gap: 1 })}` })}`);
+  assert.ok(!partial.says.includes(WORD("retrieval.text.matched_scope_searchable")), "a capture was searchable: not the nothing-searchable sentence");
+  assert.equal(clean.says, `${lead(clean.scope)} ${WORD("retrieval.text.matched_over_searchable",
+    { count: 1, rest: `, ${WORD("retrieval.text.capture_scope_searched")}` })}`);
+  assert.equal(hitGap.says, `${lead(hitGap.scope)} ${WORD("retrieval.text.passage_matched_over",
+    { passages: 1, documents: 2, rest: `, ${WORD("retrieval.text.capture_scope_read", { gap: 1 })}` })}`);
+  assert.equal(hitClean.says, `${lead(hitClean.scope)} ${WORD("retrieval.text.passage_matched_over",
+    { passages: 1, documents: 1, rest: `, ${WORD("retrieval.text.over_scope_capture")}` })}`);
+  assert.equal(new Set([noDoc, blind.says, partial.says, clean.says, hitGap.says, hitClean.says]).size, 6, "every sentence is its own");
 });
 
 test("R13, R14: a passage miss's content level is the coverage of the text index, never the citation sentence a content: answer gives over the same scope; the internet level is named undetermined", () => {
@@ -168,10 +172,10 @@ test("R13, R14: a passage miss's content level is the coverage of the text index
   const miss = rowsOf(w, "passage:zzqx text:scopeprobe");
   const cited = w.retrieval.meaningRows({ q: "text:scopeprobe", rows: "content", viewer: V("vera") });
   assert.deepEqual([miss.level, miss.levels.content.state, miss.levels.content.matched], ["content", "COUNTED", true]);
-  assert.match(miss.levels.content.why, /THE ABSENCE OF A HIT IS NOT EVIDENCE OF ABSENCE UNTIL THE COVERAGE IS READ/);
-  assert.match(miss.levels.content.why, /1 never extracted — nobody has read them/);
+  assert.equal(miss.levels.content.why, WORD("retrieval.why.matching_unit_over",
+    { total: 0, with_rows: miss.scope.documents_with_rows, documents: miss.scope.documents, coverage: coverageOf(miss.scope) }));
   assert.doesNotMatch(miss.levels.content.why, /cited/);
-  assert.match(cited.levels.content.why, /cited or marked citable/);
+  assert.equal(cited.levels.content.why, WORD("retrieval.why.document_scope_holds", { count: cited.scope.documents }));
   assert.notEqual(miss.levels.content.why, cited.levels.content.why);
   assert.equal(miss.levels.internet.state, "UNDETERMINED");
   assert.equal(miss.levels.meaning.state, "UNDETERMINED");

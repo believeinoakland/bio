@@ -34,7 +34,8 @@ test("R35: level is document by default; any other level answers found: false, b
   w.st.db.exec(`ALTER TABLE links RENAME TO links_gone`);
   const broken = w.retrieval.frontier({ level: "document", viewer: V("vera") });
   assert.deepEqual([broken.failed, broken.truncated], [true, true]);
-  assert.match(broken.note, /NOT an empty frontier/);
+  const e = broken.note.slice(broken.note.indexOf("(") + 1, broken.note.indexOf("), so"));
+  assert.equal(broken.note, word("retrieval.note.read_level_failed", { level: "document", e }));
 });
 
 test("R36, R40: a built level answers found, built, level, limit, truncated, looked, never_looked, never_looked_count, tally and note; looked is the latest row per address, newest first, with state, authority, actor class, referent, detail, at, governed, last_verified and unreachable_since, and result_purged; NEVER_LOOKED is never a tally state", () => {

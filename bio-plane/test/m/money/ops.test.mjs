@@ -4,9 +4,9 @@ import assert from "node:assert/strict";
 import { seeded, sha, MACHINE, ANN } from "./fixture.mjs";
 import { makeRecord, makeMembership, promotionOver, registeredSteps } from "../promotion/fixtures.mjs";
 import { moneyOps, MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, SET_PURPOSES, FUND_TYPES, BALANCE_FAMILIES,
-  CONNECTION_WORD } from "../../../src/money/index.mjs";
+  CONNECTION_FAMILIES } from "../../../src/money/index.mjs";
 
-const OPS = ["moneyrecord", "moneywithdraw", "money", "moneyof", "moneysummable", "moneyreconcile", "moneysetcreate", "moneyset", "moneysets",
+const OPS = ["moneyrecord", "moneywithdraw", "money", "moneyof", "moneyby", "moneyfiscalyears", "moneysummable", "moneyreconcile", "moneysetcreate", "moneyset", "moneysets",
   "moneysetinclude", "moneysetexclude", "moneysetpropose", "moneyfundtype", "committedagainstpaid", "authoritychain"];
 const url = (q) => new URL(`https://do.invalid/?${new URLSearchParams(q)}`);
 const strip = (x) => JSON.parse(JSON.stringify(x, (k, v) => (k === "fact_id" || k === "at" ? undefined : v)));
@@ -77,7 +77,7 @@ test("R22 Civicsmith's own words in money never say ledger, diverted, misused, u
   keep(s.m.committedAgainstPaid({ contract: s.contract, viewer: ANN })); keep(s.m.authorityChain({ factId: b, viewer: ANN }));
   keep(s.m.moneyOf({ entity: s.vendor, viewer: ANN })); keep(s.m.createSet({ purpose: "x" }));
   keep(s.m.include({ setId: "x", factId: a, reason: "r", by: MACHINE }));
-  keep([MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, SET_PURPOSES, FUND_TYPES, BALANCE_FAMILIES, CONNECTION_WORD]);
+  keep([MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, SET_PURPOSES, FUND_TYPES, BALANCE_FAMILIES, CONNECTION_FAMILIES]);
   const all = texts.join("\n");
   for (const w of ["ledger", "diverted", "misused", "unauthorised", "unauthorized", "conflict", "rank", "largest", "most "])
     assert.equal(all.toLowerCase().includes(w), false, w);

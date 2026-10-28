@@ -32,7 +32,7 @@ function countTableReads(w) {
   const real = w.st.sql.exec.bind(w.st.sql);
   w.st.sql.exec = (q, ...a) => {
     const out = real(q, ...a);
-    if (!/SELECT\s+chunk\s+FROM calc_table_bytes/i.test(q)) return out;
+    if (!(q.includes("calc_table_bytes") && /SELECT\s+chunk\s+FROM/i.test(q))) return out;
     const rows = [...out];
     n.statements++;
     n.chars += rows.reduce((c, r) => c + (typeof r.chunk === "string" ? r.chunk.length : 0), 0);
