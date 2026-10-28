@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 OPEN · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #329 · session_018BhcefYrW3vwL3mYqzy8xd · depth 1
-**Jobs** · credentials: CREDENTIALS #1 session_018Bhceesg4XYzpL7ZX32uiC; promotion: PROMOTION #1 session_018BhcegYHK2EwFjRJE5A3Md
-**Owed** · archive credentials; archive promotion
+**Jobs** · promotion: PROMOTION #1 session_018BhcegYHK2EwFjRJE5A3Md
+**Owed** · archive promotion
 
 # Plan T53 · round R1, the beta's build
 
