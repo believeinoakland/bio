@@ -9,7 +9,7 @@
   "draft": 5,
   "photo": 13,
   "handle": 7,
-  "ai": 175,
+  "ai": 192,
   "date": 14,
   "queue": 505,
   "transcribe": 19,
@@ -239,7 +239,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19817,
+  "total": 19834,
   "protected": 1181
  },
  "words": [
@@ -4606,10 +4606,10 @@
   },
   {
    "key": "session.reauth",
-   "en": "For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.",
+   "en": "For this, enter your password again: signing or publishing a case, changing administrators and connecting an AI account always ask.",
    "protected": true,
    "source": "DEC-200",
-   "note": "D3 (K3061)"
+   "note": "D3 (K3061); DEC-259: reworded"
   },
   {
    "key": "session.keep",
@@ -85802,6 +85802,125 @@
    "note": "DEC-486: add: the fold"
   },
   {
+   "key": "ai.refused.catalogueevidencemissing",
+   "en": "The list of AIs was refused because one of its claims doesn't say where it was found. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.1 CATALOGUE_EVIDENCE_MISSING"
+  },
+  {
+   "key": "ai.refused.catalogueentryinvalid",
+   "en": "The list of AIs was refused because one of its AIs is described wrongly or incompletely. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.2 CATALOGUE_ENTRY_INVALID"
+  },
+  {
+   "key": "ai.refused.catalogueplaninvalid",
+   "en": "The list of AIs was refused because one of its plans is described wrongly or incompletely. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.3 CATALOGUE_PLAN_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguepayloadinvalid",
+   "en": "The list of AIs was refused because part of it couldn't be read. One wrong part refuses the whole list. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.4 CATALOGUE_PAYLOAD_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguepathinvalid",
+   "en": "The list of AIs wasn't fetched: it pointed somewhere other than where the list is published. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.5 CATALOGUE_PATH_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguerollbackunknown",
+   "en": "Your team's Civicsmith doesn't hold that earlier list of AIs, so it can't go back to it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.6 CATALOGUE_ROLLBACK_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.catalogueunavailable",
+   "en": "Your team's Civicsmith holds no checked list of AIs yet, so it can offer none. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.7 CATALOGUE_UNAVAILABLE"
+  },
+  {
+   "key": "ai.refused.digestmismatch",
+   "en": "The list of AIs that arrived isn't the one that was announced, so it was refused. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.8 DIGEST_MISMATCH"
+  },
+  {
+   "key": "ai.refused.notnewer",
+   "en": "The list of AIs that arrived is no newer than the one your team holds, so it wasn't applied. Your team's copy is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.9 NOT_NEWER: a replayed old list changes nothing"
+  },
+  {
+   "key": "ai.refused.advisorybadmove",
+   "en": "A notice about an AI asked for a change the list doesn't allow, such as bringing back a retired AI, so it was refused. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.10 ADVISORY_BAD_MOVE"
+  },
+  {
+   "key": "ai.refused.advisoryreasonunknown",
+   "en": "A notice about an AI gave a reason Civicsmith doesn't recognize, so it was refused. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.11 ADVISORY_REASON_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.partunknown",
+   "en": "The list of AIs doesn't cover that kind of work, so no AIs were listed for it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.12 PART_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.checkunknown",
+   "en": "That isn't one of the checks an AI must pass, so it can't be required. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: C-156.13 CHECK_UNKNOWN: also a shown-only value (terms, breach notice) asked as a requirement"
+  },
+  {
+   "key": "ai.catalogue.state.unavailable",
+   "en": "Your team's Civicsmith has no checked list of AIs yet, so it can't offer any AI.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: the copy's state: nothing verified held"
+  },
+  {
+   "key": "ai.catalogue.state.needs_newer_release",
+   "en": "A newer list of AIs exists, but this version of your team's Civicsmith can't read it. It offers the list it has until Civicsmith is updated.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: the copy's state: a signed list of a schema this copy cannot read"
+  },
+  {
+   "key": "ai.catalogue.state.stale",
+   "en": "The list of AIs may be out of date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: the copy's state: no successful check within the policy's days; the date is screen.aiproviders.list.old's"
+  },
+  {
+   "key": "ai.catalogue.state.current",
+   "en": "The list of AIs is up to date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-488: the copy's state: current"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -116799,10 +116918,10 @@
   },
   {
    "key": "refusal.REAUTH_DUE",
-   "en": "Type your password again to do this. Signing or publishing a case, changing administrators and connecting Claude always ask for it. Nothing was changed.",
+   "en": "Type your password again to do this. Signing or publishing a case, changing administrators and connecting an AI account always ask for it. Nothing was changed.",
    "protected": false,
    "source": "DEC-260",
-   "note": "credentials' translation, keyed by its code"
+   "note": "credentials' translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.RECEIPT_MALFORMED",
