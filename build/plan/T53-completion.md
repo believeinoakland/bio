@@ -21,6 +21,8 @@
 - T53-574 · K5705, FILE-SAFETY's finding · `purge` removes rows only, so derived objects of a purged capture (safe views, copies, pictures) stay in the store unreferenced: purge removes them too (whether record-core finds them or their owners register them for purge, settled at START)
 
 ## Layer 3
+**mail-door**
+- T53-591 · K5748, mail-door R15 · the clearing's owners kept as counts until notice-producers (R36) has read them
 **provenance**
 - T53-588 · N1200 (K5747) · registers its reader of a project's reach (its captures) through `membership.registerProjectReach` (N1186)
 **acquisition**
