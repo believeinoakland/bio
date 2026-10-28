@@ -4,7 +4,6 @@ import { test } from "node:test";
 import { noSha } from "../../../src/extraction/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, DAY } from "./fixture.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
 import { wordRx } from "../../word-rx.mjs";
 
 const T = (w, entityId, placements) =>
@@ -178,7 +177,7 @@ test("R19: NO_SHA; every placement of a capture, each instance once, findings wi
     const r = w.p.captureProgressions(b);
     assert.deepEqual(r, noSha(r.detail), JSON.stringify(b));
     assert.equal(r.check, "C-51.6");
-    assert.match(r.detail, wordRx("progressions.index.capture_sha_required"));
+    assert.match(r.detail, /capture sha256/);
   }
   w.define();
   w.entity("ENT-2");
