@@ -125,6 +125,8 @@ const wholeReadKind = (profile) => {
 /** R121: the rows a cut preview shows at a time (DEC-455's drawing: "Showing rows 1 to 200"), and the longest sheet name `previewMore` takes. */
 export const PREVIEW_ROWS = 200;
 const PREVIEW_SHEET_MAX = 300;
+/** R119: the extensions whose type the table keys by another name (`format-registry`'s `kindTable()` keys: `text`, `jpeg`, `tiff`, `html`). */
+const EXTENSION_KIND = Object.freeze({ txt: "text", md: "text", log: "text", jpg: "jpeg", tif: "tiff", htm: "html" });
 /** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
 const UPLOAD_HEAD = 64 * 1024;
 /** R107: `bytes` less a UTF-8 code point cut at their end (a lead byte and too few continuation bytes), so a head that ends inside a
@@ -859,7 +861,8 @@ export class Capture {
 
   /* the kind the name and the declared type alone give (before a byte is read), a key of the table or null */
   static #declaredKind(rows, name, type) {
-    const ext = typeof name === "string" ? extensionOf(name) : "";
+    const ext0 = typeof name === "string" ? extensionOf(name) : "";
+    const ext = EXTENSION_KIND[ext0] ?? ext0;
     if (ext && rows.has(ext)) return ext;
     if (typeof type === "string" && type) {
       try { const d = detectFormat(null, type, null); if (d && typeof d.format === "string" && rows.has(d.format)) return d.format; } catch { /* no answer */ }
@@ -917,10 +920,6 @@ export class Capture {
     const mailMax = email ? Capture.#lowered(boundOf("mail", "message_bytes"), bounds && bounds.mail) : Infinity;
     const reqMax = email ? Infinity : Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
     const ceiling = Math.min(capMax, reqMax, mailMax), ceilingIs = email && mailMax <= capMax ? "mail" : reqMax <= capMax ? "request" : "capture";
-    if (Number.isSafeInteger(declared) && declared > ceiling) {
-      await reader.cancel();
-      return Capture.#tooLarge(declared, ceilingIs, ceiling, capMax);
-    }
     /* R119: a kind's own bound is judged on the size declared up front, from the name and the declared type, before one byte is read; the bytes' own kind
        is judged below, at the head of the file and again on the whole of a file held in one part. */
     const kinds = Capture.#kindRows();
@@ -928,6 +927,10 @@ export class Capture {
     if (kindFig && Number.isSafeInteger(declared) && declared > kindFig.bound) {
       await reader.cancel();
       return Capture.#kindTooLarge(declared, kindFig, kindKey);
+    }
+    if (Number.isSafeInteger(declared) && declared > ceiling) {
+      await reader.cancel();
+      return Capture.#tooLarge(declared, ceilingIs, ceiling, capMax);
     }
     /* R119: the bytes' kind, once known: a refused kind is refused, any kind's bound is judged on what has arrived; null to go on */
     const judgeKind = (bytesForKind, size) => {
@@ -979,13 +982,13 @@ export class Capture {
         if (done) break;
         if (!value) throw new Error("not bytes");
         total += value.length;
-        if (total > ceiling) {
-          await reader.cancel();
-          return Capture.#tooLarge(total, ceilingIs, ceiling, capMax);
-        }
         if (kindFig && total > kindFig.bound) {
           await reader.cancel();
           return Capture.#kindTooLarge(total, kindFig, kindKey);
+        }
+        if (total > ceiling) {
+          await reader.cancel();
+          return Capture.#tooLarge(total, ceilingIs, ceiling, capMax);
         }
         whole.update(value);
         if (partBytes && total > MULTIPART_KEEP_MAX) { partBytes = null; tally.release(keptBytes); keptBytes = 0; }
@@ -2068,11 +2071,13 @@ export class Capture {
       if (!out || typeof out !== "object" || out.ok !== true) return reason(String(out && (out.reason || out.why) || "cells_not_interpretable").replace(/[^a-z0-9_]/gi, "_").slice(0, 60).toLowerCase() || "cells_not_interpretable");
       const rowOf = (c) => { const m = /(\d+)$/.exec(String(c && c.source && (c.source.cell ?? c.source.ref) || "")); return m ? Number(m[1]) : null; };
       const got = Array.isArray(out.cells) ? out.cells : [];
-      const to = out.rows && Number.isSafeInteger(out.rows.to) ? out.rows.to : null;
-      const more = Number.isSafeInteger(out.next_row) && out.next_row <= last ? out.next_row : to !== null && to > last ? last + 1 : null;
+      /* the rows that hold cells decide where the window ends: a reader may answer `rows.to` as the row it was asked to stop at, whether or not the sheet reaches it */
+      let seen = null;
+      for (const c of got) { const r = rowOf(c); if (r !== null && (seen === null || r > seen)) seen = r; }
+      const more = Number.isSafeInteger(out.next_row) && out.next_row <= last ? out.next_row : seen !== null && seen > last ? last + 1 : null;
       const cells = got.filter((c) => { const r = rowOf(c); return r === null || r <= last; });
       return { ok: true, captureSha, format: kind.format, ...(sheet != null ? { sheet } : {}), cells,
-               rows: { from: fromRow, to: to === null ? fromRow - 1 : Math.min(to, last) },
+               rows: { from: fromRow, to: seen === null ? fromRow - 1 : Math.min(seen, last) },
                ...(more !== null && more > fromRow ? { next_row: more } : {}) };
     } catch { return none; }
   }

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, register, sha } from "./fixture.mjs";
 import { PREVIEW_ROWS, DECLARED_OPS, captureOps } from "../../../src/capture/index.mjs";
+import { generate } from "../../sheetgen.mjs";
 
 const te = new TextEncoder();
 const ROWS = PREVIEW_ROWS * 2 + 37;
@@ -87,4 +88,28 @@ test("R121: op=previewmore is declared and routed: the stamped viewer decides si
   assert.equal(ok.rows.from, 2);
   assert.equal((await ask("")).reason, "NO_SUCH_CAPTURE");
   void rowsOf;
+});
+
+test("R121: a workbook sheet likewise: every row once and in order from next_row, to the last row, none after it", async () => {
+  const rows = PREVIEW_ROWS * 2 + 50;
+  const g = generate({ kind: "xlsx", seed: "pm", size: { rows, cols: 3 } });
+  const f = held(await g.bytes(), { format: "xlsx" });
+  const seenRows = [];
+  let from = 1, calls = 0;
+  for (;;) {
+    const r = await f.c.previewMore({ captureSha: f.digest, sheet: "Sheet1", fromRow: from, viewer: "member:ann" });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
+    calls++;
+    for (const c of r.cells) seenRows.push(Number(/(\d+)$/.exec(c.source.cell)[1]));
+    if (r.next_row === undefined) break;
+    assert.equal(r.next_row, r.rows.to + 1);
+    from = r.next_row;
+    assert.ok(calls < 10, "the walk ends");
+  }
+  const distinct = [...new Set(seenRows)];
+  assert.deepEqual(distinct, [...distinct].sort((a, b) => a - b), "in order");
+  assert.deepEqual([distinct[0], distinct.length], [1, distinct[distinct.length - 1]], "every row once from the first to the last, none missing");
+  assert.ok(calls >= 2 && distinct[distinct.length - 1] >= rows, `a ${rows}-row sheet is walked in windows`);
+  const past = await f.c.previewMore({ captureSha: f.digest, sheet: "Sheet1", fromRow: distinct[distinct.length - 1] + 1, viewer: "member:ann" });
+  assert.deepEqual([past.ok, past.cells, past.next_row], [true, [], undefined]);
 });

@@ -74,15 +74,17 @@ test("R119: an unlisted kind (an Outlook mailbox, a database) is filed whole, he
   assert.deepEqual(f.j.rows().map((x) => x.kind), ["reading"], "its reading is owed");
 });
 
-test("R119: a file over its kind's bound, declared up front, is TOO_LARGE with its size, the limit and the limit's key before one byte is read or held (spreadsheet, image)", async () => {
+test("R119: a file over its kind's bound, declared up front, is TOO_LARGE with its size, the limit and the limit's key before one byte is read or held (spreadsheet, image, document, text)", async () => {
   const f = setup();
   const before = f.state();
-  const cases = [["data.csv", "spreadsheet", "bytes"], ["data.xlsx", "spreadsheet", "bytes"], ["photo.png", "image", "bytes"], ["photo.jpeg", "image", "bytes"]];
+  const cases = [["data.csv", "spreadsheet", "bytes"], ["data.xlsx", "spreadsheet", "bytes"], ["photo.png", "image", "bytes"], ["photo.jpeg", "image", "bytes"],
+                 ["minutes.pdf", "document", "bytes"], ["minutes.docx", "document", "bytes"], ["notes.txt", "text", "bytes"]];
   for (const [name, kind, row] of cases) {
     const bound = boundOf(kind, row), s = streamOf(bound + 1);
     const r = await up(f, s.stream, { name, declared: bound + 1 });
     assert.deepEqual([r.ok, r.reason, r.status, r.size, r.bound], [false, "TOO_LARGE", 413, bound + 1, bound], name);
     assert.equal(r.key, `limit.${kind}.${row}`, name);
+    assert.equal("in_parts" in r, false, `${name}: a file over its kind's bound cannot be sent in parts either`);
     assert.equal(s.cancelled, true, name);
     assert.equal(s.pulled, 0, `${name}: no byte was read`);
   }
