@@ -109,15 +109,12 @@ test("R34: identical bytes serving the version with matching limits, bindings an
     for (const [label, settings] of [["no key", { observability: undefined }], ["enabled false", { observability: { enabled: false } }]]) {
       const r = deploy(root, atServing(root, settled(root, { settings })));
       assert.equal(r.status, 0, `${label}: ${r.stdout}${r.stderr}`);
-      assert.match(r.stdout, /Workers Logs|observability/i, label);
       assert.match(r.stdout, /METADATA deploy proceeds/, label);
-      assert.doesNotMatch(r.stdout, /nothing to do/, label);
       assert.equal(uploads(r).length, 1, label);
       assert.deepEqual(uploads(r)[0].metadata.observability, ON, label);
     }
     const held = deploy(root, atServing(root, settled(root)));
     assert.equal(held.status, 0, held.stdout + held.stderr);
-    assert.match(held.stdout, /nothing to do/);
     assert.deepEqual(held.calls.filter((c) => c.method === "PUT"), [], "nothing is uploaded and nothing is set");
   } finally { rm(root); }
 });

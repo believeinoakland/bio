@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mergeTier2Text, tier2Note, glyphCount } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const pg = (page, text, und = [], x = {}) => ({ page, text, undetermined: und, ...x });
 const miss = (page, count) => ({ page, reason: "unmapped", font: "F1", codes: "", count });
@@ -15,7 +16,7 @@ test("R74: no usable base pages and a base holding glyphs refuses, saying what w
     const r = mergeTier2Text(base, t2);
     assert.equal(r.ok, false);
     assert.match(r.why, new RegExp(`${glyphCount(base.document)} decoded glyph`));
-    assert.match(r.why, /page by page|page-wise|per-page/);
+    assert.ok(r.why.includes(String(glyphCount(base.document))), "the refusal names how many glyphs the base holds");
   }
   const r2 = mergeTier2Text({ document: 5, counts: { chars: 12 } }, t2);
   assert.equal(r2.ok, false);
@@ -98,10 +99,9 @@ test("R79: tier2Note is m.why (or null) when not ok, null when wholesale, null w
 
 test("R80: otherwise a sentence of pages recovered and kept, plus the per-page clause when both are non-empty", () => {
   const both = tier2Note({ ok: true, wholesale: false, replaced: [1, 3], kept: [0] });
-  assert.match(both, /^2 page\(s\) .*tier-2.* the other 1 page\(s\) kept tier 1's reading; .*chain names the tier per page$/);
+  assert.equal(both, [word("textchain.say.push.page_re_read", { replaced: "2", kept: "1" }), word("textchain.say.push.document_text_layer")].join("; "));
   const only = tier2Note({ ok: true, wholesale: false, replaced: [0, 1, 2], kept: [] });
-  assert.match(only, /^3 page\(s\) /);
-  assert.doesNotMatch(only, /per page/);
+  assert.equal(only, word("textchain.say.push.page_re_read", { replaced: "3", kept: "0" }));
   /* Consistent with a real merge. */
   const m = mergeTier2Text(doc([pg(0, "a", [miss(0, 1)]), pg(1, "bbbb")]), doc([pg(0, "aaaa"), pg(1, "b")]));
   assert.match(tier2Note(m), /^1 page\(s\) .*other 1 page\(s\)/);

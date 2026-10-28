@@ -40,12 +40,12 @@ test("R36 R4 R13 R19 R35 nothing is registered by default: doctypeFor answers th
   // readText: a determined reading with no reader, stated (R19)
   const t = readText("a letter about nothing in particular", {});
   assert.deepEqual([t.determined, t.doctype.type, t.parsed], [true, NO_TYPE, null]);
-  assert.match(t.parse_error, /unregistered content type declares no reader/);
+  assert.equal(t.parse_error, localize("docprofile.readtext.the_key_content_type_declares", "the {key} content type declares no reader", { key: "unregistered" }));
   // assess: the substance differs and nothing is claimed about it (R13)
   const a = await assess(enc("<p>one</p>"), enc("<p>two</p>"), { sha256 });
   assert.deepEqual([a.content_type, a.verdict, a.meaningful, a.events, a.stopped_at],
                    ["unregistered", "changed", null, [], "L5_meaning"]);
-  assert.match(a.why, /declares no reader/);
+  assert.equal(a.why, localize("docprofile.pipeline.the_substance_differs_and_why", "the substance differs and {why}, so what changed is not described", { why: localize("docprofile.pipeline.the_content_type_content_type", "the {content_type} content type declares no reader", { content_type: "unregistered" }) }));
   // what does not reach L4 is unchanged by an empty registry
   assert.equal((await assess(enc("<p>one</p>"), enc("<p>one</p>"), { sha256 })).verdict, "identical");
 });
