@@ -8,11 +8,20 @@
 **runtime-limits**
 - T53-572 · K5705, T53-510 (FILE-SAFETY's measurement) · `file_safety.grade_read`'s standard lowered from 100 MiB to the whole-read figure a Worker holds (a 100 MiB PDF graded whole measured 315 MiB above idle against 206 MiB headroom); the figure from FILE-SAFETY's ranged-grading report, larger containers graded by pieces (K1881, K5637's pattern)
 
+**register-readers**
+- T53-580 · K5715, ACQUISITION's finding · `register-readers` R9: `createReducer` offers a `snapshot()`/resume of its carry (the unfinished row, the row number, the hashes), so acquisition R127's offset checkpoint can be built; and `createRowParser` reads a separate header file in the header piece's own delimiter (acquisition's `headerInDelimiter` work-around then removed). With acquisition R127 after it
+**runtime-limits** (also)
+- T53-581 · K5715, acquisition R126 · the two `register` rows of `READ_BOUNDS` (runtime-limits R47) once M-R7 records them; acquisition R126 then met
+
 ## Layer 2
+**promotion**
+- T53-582 · K5715, capture's new rows · the census re-stamped for C-118.12 (`MAIL_NO_STATEMENT`), C-118.13 (`FILE_KIND_REFUSED`), C-139.22-.24 and every other check row minted in T53, last in its layer
 **record-core**
 - T53-574 · K5705, FILE-SAFETY's finding · `purge` removes rows only, so derived objects of a purged capture (safe views, copies, pictures) stay in the store unreferenced: purge removes them too (whether record-core finds them or their owners register them for purge, settled at START)
 
 ## Layer 3
+**acquisition**
+- T53-583 · K5715, R126, R127 · met once T53-580 and T53-581 land
 **file-safety**
 - T53-571 · K5705, R66 · the container's other picture kinds: uses reader-container (the edge entered at START) and image-cover's redraw (T53-570)
 

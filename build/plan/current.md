@@ -477,6 +477,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-314 · N1259, K1484, K4403 · CAPABILITIES rows
 - T53-315 · K5006 · reds: first settle, then fix
 - T53-316 · K5565 · English in tests: its entry
+- T53-577 · K5715, acquisition R130 · the store's `followStanding({follow, service})` answers whether a member still follows the case, for `keyedFetch`'s daily check
 - rows: `build/plan/T53-R1/following.md`
 **link-sweep**
 - T53-317 · K5565 · English in tests: its entry
@@ -606,6 +607,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-374 · K5565 · English in tests: its entry
 - T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
 - T53-576 · K5705, file-safety R1, R60 · the `safe_view` job is registered for `.png`/`.jpg` names, as file-safety R1's name rule reads them
+- T53-578 · K5715, capture R119 · `r9-jobs.test.mjs`:481 (R75 R2) uploads a 200 MiB file named `.pdf`, now `TOO_LARGE` under a document's 100 MB bound: its input is a kind with the archive bound (a `.zip`)
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
@@ -792,6 +794,7 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 - T53-470 · K5565 · English in tests: its entry
 - T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
 - T53-569 · mail-door R12 and its composition note · composes `mailDoorOf(ctx, {capture, settings})`, `settings()` from instance-setup R114 (the mail domain and switch); the `email()` export waits on M1 (K5692 (3))
+- T53-579 · K5715, acquisition R130, R136; capture R117 · wires `store.followStanding`, a `member` row's tick calling `fileMember(store, row.detail)`, and `emailCapture`'s attachments registered with `memberRow(...)`
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
