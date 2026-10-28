@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7621 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7623 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25531,10 +25531,12 @@ export const WORD_ROWS = Object.freeze([
   ["odf-reader.odf.content_xml_not_read_its","content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())",null,null,false,"code"],
   ["odf-reader.odf.content_xml_not_read_over","content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",null,null,false,"code"],
   ["odf-reader.odf.content_xml_references_length_package","content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed",null,null,false,"code"],
+  ["odf-reader.odf.no_byte_rewritten",", no byte rewritten",null,null,false,"code"],
   ["odf-reader.odf.no_flavour_export_has_been","no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",null,null,false,"code"],
   ["odf-reader.odf.no_intra_link_odf_manifest","no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)",null,null,false,"code"],
   ["odf-reader.odf.no_intra_link_odf_manifest_2","no intra link: {ODF_MANIFEST_PART} lists no embedded member",null,null,false,"code"],
   ["odf-reader.odf.no_odp_export_has_been","no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",null,null,false,"code"],
+  ["odf-reader.odf.normalised_by",", normalised by {name}",null,null,false,"code"],
   ["odf-reader.odf.part_odf_mimetype_part_is","part: {ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified",null,null,false,"code"],
   ["odf-reader.odf.the_bytes_are_not_an","the bytes are not an OpenDocument package detected with certainty, so no container digest was taken",null,null,false,"code"],
   ["odf-reader.odf.the_packages_central_directory_could","the package's central directory could not be read ({why})",null,null,false,"code"],

@@ -40391,6 +40391,13 @@
       "line": 2894
     },
     {
+      "id": "odf-reader.odf.no_byte_rewritten",
+      "en": ", no byte rewritten",
+      "module": "odf-reader",
+      "file": "bio-plane/src/odf.mjs",
+      "line": 2901
+    },
+    {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
@@ -40417,6 +40424,13 @@
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
       "line": 2758
+    },
+    {
+      "id": "odf-reader.odf.normalised_by",
+      "en": ", normalised by {name}",
+      "module": "odf-reader",
+      "file": "bio-plane/src/odf.mjs",
+      "line": 2901
     },
     {
       "id": "odf-reader.odf.part_odf_mimetype_part_is",
