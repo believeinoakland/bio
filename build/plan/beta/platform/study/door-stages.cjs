@@ -29,7 +29,7 @@ const timing=h=>{const o={};for(const part of String(h||'').split(',')){const [n
    await page.click('button[data-act="captureupload"]');
    let ok=true; try{ await page.getByText(/Captured:|already held exactly/).first().waitFor({timeout:45000}); }catch{ ok=false; }
    const wall=Date.now()-tc; await page.waitForTimeout(500);
-   const shown=ok?null:(await page.innerText('body').catch(()=>'')).replace(/\s+/g,' ').slice(0,400);
+   const shown=ok?null:(await page.innerText('body').catch(()=>'')).replace(/\s+/g,' ').slice(-700);
    out.push({C,w,i,size:buf.length,ok,wall,shown,ops:ops.filter(o=>['captureupload','promote'].includes(o.op)).map(o=>({op:o.op,status:o.status,from:o.start-tc,ms:o.end-o.start,t:o.t}))});
    fs.unlinkSync(f);
   }
