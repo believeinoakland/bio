@@ -866,6 +866,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - T53-468 · N1259, N824 · CAPABILITIES rows
 - T53-469 · K5438 · per-week counts kept per copy: record bytes, members at once, share of screens over class (PL26)
 - T53-470 · K5565 · English in tests: its entry
+- T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
