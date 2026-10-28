@@ -6,9 +6,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { world, SEAL } from "./fixture.mjs";
-import { PLANS as P, ENTRIES as E, setUnavailable } from "./catalogue.mjs";
+import { PLANS as P, ENTRIES as E, emptyCatalogue } from "./catalogue.mjs";
+import { coreOver } from "../record-core/fixtures.mjs";
 import { ask, projectWorld } from "./helpers.mjs";
-import { AI_ACCOUNTS_LEGACY_SCHEMA, AI_ACCOUNTS_LEGACY_TABLES } from "../../../src/ai-accounts/index.mjs";
+import { AI_ACCOUNTS_LEGACY_SCHEMA, AI_ACCOUNTS_LEGACY_TABLES, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 
 async function seal(owner, kind, text, secret = SEAL) {
   const enc = new TextEncoder();
@@ -116,15 +117,15 @@ test("R59 R28: a second migrate changes nothing; a row of an unknown kind is lef
 
 test("R59: a catalogue that cannot give the plan or its entries yet defers the conversion: the rows stay in their tables, counted `deferred`, and a later boot converts them; nothing is dropped", async () => {
   const w = await legacy();
-  setUnavailable(w);
-  const r = w.a.migrate();
+  /* the same store, read by a copy whose catalogue holds no payload yet */
+  const blind = aiAccountsOf({ storage: { sql: w.sql } }, { record: coreOver(w.db), membership: w.m, sealSecret: SEAL, catalogue: await emptyCatalogue() });
+  const r = blind.migrate();
   assert.equal(r.ok, true);
   assert.deepEqual(Object.values(r.converted).reduce((a, b) => a + b, 0), 1, "only the project's sign-in account, which needs no plan, ends");
   assert.ok(r.deferred > 0);
   assert.equal(accountsOf(w).length, 0);
   assert.equal(w.rows(`SELECT member_id FROM account_references`).length, 1, "kept");
   assert.equal(w.rows(`SELECT member_id FROM subscription_connections`).length, 2);
-  setUnavailable(w, false);
   const later = w.a.migrate();
   assert.deepEqual([later.converted.member_key, later.converted.member_signin, later.converted.team_key, later.converted.project_key, later.deferred], [1, 2, 1, 1, 0]);
   assert.equal(accountsOf(w).length, 5);

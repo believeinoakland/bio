@@ -4,13 +4,14 @@
    negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, SECRET } from "./fixture.mjs";
-import { PLANS as P, ENTRIES as E, setGate, setCheck, setLifecycle, setUnavailable } from "./catalogue.mjs";
+import { world, SECRET, SEAL } from "./fixture.mjs";
+import { PLANS as P, ENTRIES as E, setGate, setCheck, setLifecycle, emptyCatalogue, HOSTS } from "./catalogue.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { shape, refusal, ask, act, projectWorld, on } from "./helpers.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 
-const seen = (w, ...members) => { for (const m of members) w.a.recipientNoticeSeen({ member: m, provider: P.provider, host: "api.anthropic.com", by: m }); };
+const seen = (w, ...members) => { for (const m of members) w.a.recipientNoticeSeen({ member: m, provider: P.provider, host: HOSTS.main, by: m }); };
 const TOKEN = (who) => `sk-ant-oat01-sentinel-${who}-0123456789`;
 const served = async (w, member, a) => (await w.a.accountFor({ member, act: a ?? ask(member) }));
 
@@ -22,7 +23,7 @@ test("R7 R11: accountFor answers `{ok, account_id, level, owner, provider, plan,
   const r = await served(w, "bob");
   assert.deepEqual({ ...r, secret: r.secret === SECRET("team") }, { ok: true, account_id: team.account_id, level: "group", owner: "group", provider: P.provider,
     plan: P.teamApi, means: "sealed", entry_id: E.a, entries: [E.a, E.b], member: "bob", suggestions: false, personal: false,
-    disclosed: [{ provider: P.provider, host: "api.anthropic.com" }], secret: true });
+    disclosed: [{ provider: P.provider, host: HOSTS.main }], secret: true });
   const proj = await on(w, w.projectAccount("P", "ann"));
   assert.equal((await served(w, "bob", ask("bob", "P"))).account_id, proj.account_id, "the project's, for an act in the project");
   assert.equal((await served(w, "bob")).account_id, team.account_id, "outside the project: the team's");
@@ -67,18 +68,18 @@ test("R11 (4): the head is refused, never skipped: its switch for the kind off (
   w.a.accountUsesSet({ account_id: a1.account_id, switch: "ask", on: true, by: "ann" });
   /* a pair excluded only by a check in force is skipped */
   w.a.checksSet({ level: "member:ann", check: "P1", ticked: true, by: "ann" });
-  setCheck(w, E.a, "P1", false);
+  await setCheck(w, E.a, "P1", false);
   assert.equal((await served(w, "ann")).account_id, a2.account_id, "claude-a is not offered under P1: skipped");
-  setCheck(w, E.a, "P1", true);
+  await setCheck(w, E.a, "P1", true);
   /* the recipient's notice: eve, served by the team's account, has not read it (connecting records it, so a member's own account has) */
   await on(w, w.team());
   const due = await served(w, "eve");
-  assert.deepEqual([due.reason, due.recipient], ["RECIPIENT_NOTICE_DUE", { provider: P.provider, host: "api.anthropic.com" }]);
+  assert.deepEqual([due.reason, due.recipient], ["RECIPIENT_NOTICE_DUE", { provider: P.provider, host: HOSTS.main }]);
   seen(w, "eve");
   assert.equal((await served(w, "eve")).level, "group");
   /* free tier */
   const fr = await on(w, w.a.accountSet({ owner: "member:cy", provider: P.freeProvider, plan: P.freeApi, means: "sealed", secret: SECRET("cy"), by: "cy" }));
-  w.a.recipientNoticeSeen({ member: "cy", provider: P.freeProvider, host: "free.example", by: "cy" });
+  w.a.recipientNoticeSeen({ member: "cy", provider: P.freeProvider, host: HOSTS.free, by: "cy" });
   assert.equal((await served(w, "cy")).reason, "FREE_TIER_NOT_ACCEPTED");
   assert.equal((await served(w, "cy")).reason, "FREE_TIER_NOT_ACCEPTED", "a free-tier head refuses and does not fall through to the team's");
   assert.equal(fr.ok, true);
@@ -88,14 +89,14 @@ test("R11 (5): no usable pair is NO_ACCOUNT when the level holds no account that
   const w = await projectWorld();
   seen(w, "ann");
   const x = await on(w, w.own("ann"));
-  setGate(w, E.a, "ask", "not_suitable");
-  setGate(w, E.b, "ask", "not_rated");
+  await setGate(w, E.a, "ask", "not_suitable");
+  await setGate(w, E.b, "ask", "not_yet_rated");
   const none = await served(w, "ann");
   assert.deepEqual(shape(none), refusal("NO_ENTRY_OFFERED"));
   assert.deepEqual(none.reasons.sort(), ["PART_NOT_PASSED", "PART_NOT_RATED"]);
   assert.match(none.detail, /PART_NOT_PASSED/);
   assert.equal((await served(w, "ann", act("run", "ann"))).account_id, x.account_id, "the same entries are offered for another part");
-  setGate(w, E.a, "ask", "passes"); setGate(w, E.b, "ask", "passes");
+  await setGate(w, E.a, "ask", "passes"); setGate(w, E.b, "ask", "passes");
   w.a.accountSwitch({ account_id: x.account_id, on: false, by: "ann" });
   assert.equal((await served(w, "ann")).reason, "NO_ACCOUNT");
   w.a.accountSwitch({ account_id: x.account_id, on: true, by: "ann" });
@@ -106,27 +107,27 @@ test("R55: entryOffered answers {ok} or the first refusal in order: ENTRY_NOT_AL
   const w = await projectWorld();
   const a = ask("ann");
   assert.deepEqual(w.a.entryOffered({ entry_id: E.a, member: "ann", act: a }), { ok: true });
-  setCheck(w, E.a, "P1", null);
+  await setCheck(w, E.a, "P1", null);
   const open = w.a.entryOffered({ entry_id: E.a, member: "ann", act: a });
   assert.equal(open.ok, false);
   assert.deepEqual([open.reason, open.entry_id, open.check_id], ["CHECK_OPEN", E.a, "P1"]);
   w.a.checksSet({ level: "group", check: "P1", ticked: false, by: "admin" });
   assert.deepEqual(w.a.entryOffered({ entry_id: E.a, member: "ann", act: a }), { ok: true }, "offered where P1 is not in force");
   w.a.checksSet({ level: "group", check: "P1", ticked: true, by: "admin" });
-  setCheck(w, E.a, "P1", false);
+  await setCheck(w, E.a, "P1", false);
   assert.equal(w.a.entryOffered({ entry_id: E.a, member: "ann", act: a }).reason, "CHECK_NOT_MET");
-  setCheck(w, E.a, "P1", true);
-  setGate(w, E.a, "draft", "not_suitable");
+  await setCheck(w, E.a, "P1", true);
+  await setGate(w, E.a, "draft", "not_suitable");
   const part = w.a.entryOffered({ entry_id: E.a, member: "ann", act: act("draft", "ann") });
   assert.deepEqual([part.reason, part.part], ["PART_NOT_PASSED", "draft"]);
   assert.match(part.detail, /draft/);
   assert.equal(w.a.entryOffered({ entry_id: E.a, member: "ann", act: a }).ok, true, "offered for the others");
   assert.equal(w.a.entryOffered({ entry_id: E.a, member: "ann", act: act("enquire", "ann") }).reason, "PART_NOT_PASSED", "enquire is the draft part");
-  setGate(w, E.a, "draft", "not_rated");
+  await setGate(w, E.a, "draft", "not_yet_rated");
   assert.equal(w.a.entryOffered({ entry_id: E.a, member: "ann", act: act("draft", "ann") }).reason, "PART_NOT_RATED");
-  setLifecycle(w, E.b, "lapsed");
+  await setLifecycle(w, E.b, "lapsed");
   assert.equal(w.a.entryOffered({ entry_id: E.b, member: "ann", act: a }).reason, "ENTRY_LAPSED");
-  setLifecycle(w, E.b, "retired");
+  await setLifecycle(w, E.b, "retired");
   assert.equal(w.a.entryOffered({ entry_id: E.b, member: "ann", act: a }).reason, "ENTRY_RETIRED");
   assert.equal(w.a.entryOffered({ entry_id: "no-such", member: "ann", act: a }).reason, "ENTRY_NOT_ALLOWED");
   /* the intersection first */
@@ -141,14 +142,16 @@ test("R55: entryOffered answers {ok} or the first refusal in order: ENTRY_NOT_AL
 test("R56: a plan the catalogue marks free_tier_trains serves only after the owner's acceptance of its current warning version: freeTierAccept (an administrator's for a team account, a project owner's for a project's, the member's for their own) records who, when, plan and warning version; freeTierWithdraw removes it; an acceptance of an older warning version no longer counts; control: a non-owner cannot accept, a plan not marked needs none", async () => {
   const w = await projectWorld();
   const x = await on(w, w.a.accountSet({ owner: "project:P", provider: P.freeProvider, plan: P.freeApi, means: "sealed", secret: SECRET("fp"), by: "ann" }));
-  w.a.recipientNoticeSeen({ member: "bob", provider: P.freeProvider, host: "free.example", by: "bob" });
+  w.a.recipientNoticeSeen({ member: "bob", provider: P.freeProvider, host: HOSTS.free, by: "bob" });
   assert.equal((await served(w, "bob", ask("bob", "P"))).reason, "FREE_TIER_NOT_ACCEPTED");
   assert.equal(w.a.freeTierAccept({ account_id: x.account_id, by: "bob" }).reason, "PROJECT_ACT_NOT_THE_OWNER");
   const acc = w.a.freeTierAccept({ account_id: x.account_id, by: "ann" });
-  assert.deepEqual([acc.ok, acc.needed, acc.accepted, acc.warning_version], [true, true, true, "w1"]);
+  const warning = w.catalogue.plansOf({ plan_id: P.freeApi })[0].plans[0].warning_version;
+  assert.match(warning, /^[0-9a-f]{64}$/, "the catalogue's version of the warning: the SHA-256 of its text");
+  assert.deepEqual([acc.ok, acc.needed, acc.accepted, acc.warning_version], [true, true, true, warning]);
   assert.equal((await served(w, "bob", ask("bob", "P"))).account_id, x.account_id);
   const row = w.row(`SELECT * FROM ai_free_tier WHERE account_id=?`, x.account_id);
-  assert.deepEqual([row.accepted_by, row.plan, row.warning_version], ["ann", P.freeApi, "w1"]);
+  assert.deepEqual([row.accepted_by, row.plan, row.warning_version], ["ann", P.freeApi, warning]);
   assert.equal(w.a.accountHistory({ owner: "project:P", viewer: "ann" }).changes.some((c) => c.change === "free_tier" && c.accepted === true && c.by === "ann"), true, "R16");
   w.sql.exec(`UPDATE ai_free_tier SET warning_version='w0' WHERE account_id=?`, x.account_id);
   assert.equal((await served(w, "bob", ask("bob", "P"))).reason, "FREE_TIER_NOT_ACCEPTED", "an older warning version no longer counts, with no act of anyone");
@@ -167,12 +170,12 @@ test("R56: a plan the catalogue marks free_tier_trains serves only after the own
 test("R51: disclosure is per provider and host: recipientNoticeDue answers null when the member has seen that recipient's notice, else RECIPIENT_NOTICE_DUE with the recipient; recipientNoticeSeen is the member's own act; connecting an account of one's own records its recipient seen in the same act; a second member's notice is separate", async () => {
   const w = await projectWorld();
   const due = w.a.recipientNoticeDue({ member: "ann", entry_id: E.a });
-  assert.deepEqual([due.reason, due.recipient], ["RECIPIENT_NOTICE_DUE", { provider: P.provider, host: "api.anthropic.com" }]);
-  assert.match(due.detail, /api\.anthropic\.com \(anthropic\)/);
-  assert.equal(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "bob" }).reason, "NOT_YOUR_ACCOUNT");
-  assert.equal(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: null }).reason, "MACHINE_CANNOT_HOLD_ACCOUNT");
-  assert.deepEqual(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "ann" }), { ok: true, seen: true, already: false });
-  assert.equal(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "ann" }).already, true);
+  assert.deepEqual([due.reason, due.recipient], ["RECIPIENT_NOTICE_DUE", { provider: P.provider, host: HOSTS.main }]);
+  assert.ok(due.detail.includes(HOSTS.main) && due.detail.includes(P.provider), "names the recipient: the host and the provider");
+  assert.equal(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "bob" }).reason, "NOT_YOUR_ACCOUNT");
+  assert.equal(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: null }).reason, "MACHINE_CANNOT_HOLD_ACCOUNT");
+  assert.deepEqual(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "ann" }), { ok: true, seen: true, already: false });
+  assert.equal(w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "ann" }).already, true);
   assert.equal(w.a.recipientNoticeDue({ member: "ann", entry_id: E.a }), null);
   assert.equal(w.a.recipientNoticeDue({ member: "ann", entry_id: E.b }), null, "the same provider and host");
   assert.equal(w.a.recipientNoticeDue({ member: "bob", entry_id: E.a }).reason, "RECIPIENT_NOTICE_DUE", "a second member's notice is separate");
@@ -236,12 +239,14 @@ test("R63: fail closed: an unreadable catalogue, check row, offered set or switc
   seen(w, "ann");
   const x = await on(w, w.own("ann"));
   assert.equal((await served(w, "ann")).ok, true, "control: all readable");
-  setUnavailable(w);
-  const cat = await served(w, "ann");
+  /* the same store, read by a copy whose catalogue holds no payload */
+  const blind = aiAccountsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: SEAL, catalogue: await emptyCatalogue() });
+  const cat = await blind.accountFor({ member: "ann", act: ask("ann") });
   assert.equal(cat.reason, "CATALOGUE_UNAVAILABLE");
-  assert.equal(w.a.entryOffered({ entry_id: E.a, member: "ann", act: ask("ann") }).reason, "CATALOGUE_UNAVAILABLE");
-  assert.deepEqual(w.a.entriesOffered({ member: "ann", act: ask("ann") }), { ok: true, entries: [], unreadable: true });
-  setUnavailable(w, false);
+  assert.equal(cat.check, "C-156.7", "ai-catalogue's own row, as it mints it");
+  assert.equal(blind.entryOffered({ entry_id: E.a, member: "ann", act: ask("ann") }).reason, "CATALOGUE_UNAVAILABLE");
+  assert.deepEqual(blind.entriesOffered({ member: "ann", act: ask("ann") }), { ok: true, entries: [], unreadable: true });
+  assert.equal((await blind.accountSet({ owner: "member:bob", provider: P.provider, plan: P.memberApi, secret: "s", by: "bob" })).reason, "CATALOGUE_UNAVAILABLE");
   for (const [what, table] of [["a check row", "ai_check_ticks"], ["an offered set", "ai_offered"]]) {
     w.sql.exec(`ALTER TABLE ${table} RENAME TO ${table}_gone`);
     const r = await served(w, "ann");

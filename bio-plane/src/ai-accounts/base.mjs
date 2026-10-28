@@ -7,6 +7,7 @@
  * serving, lifecycle, then `index.mjs`), so that no file grows past what one reader holds; what the layers share is named
  * with a leading underscore and is the module's, never a caller's. Every refusal names its reason; no service throws. */
 import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { refusal as catalogueRefusal } from "../ai-catalogue/checks.mjs";
 import { Membership, notAnAdmin, noSuchProject, notTheOwner, listenerRefusal } from "../membership/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { AI_ACCOUNT_CHECKS, AI_WORDS, fillSentence } from "./checks.mjs";
@@ -157,7 +158,7 @@ export class AiAccountsBase {
   static _switchedOff(whose, use, project = null) {
     /* DEC-49 REGION is-use-switched-on */
     const name = whose === "project" ? "this project's" : whose === "group" ? "your team's" : "your own";
-    return AiAccountsBase._row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", localize("ai-accounts.index.the_account_used_for_this", "the account used for this act is {name} AI account, and its switch for {use} is off; the act does not move to another account. Nothing was used.", { name: String(name), use: String(use) }),
+    return AiAccountsBase._row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", localize("ai-accounts.index.the_account_used_for_this", "the account used for this act is {name} Claude account, and its switch for {use} is off; the act does not move to another account. Nothing was used.", { name: String(name), use: String(use) }),
       { whose, use, ...(project !== null ? { project } : {}) });
     /* END DEC-49 REGION is-use-switched-on */
   }
@@ -194,7 +195,7 @@ export class AiAccountsBase {
     if (id === null || AiAccountsBase._memberOf(by) !== id)
       return AiAccountsBase._notYours(localize("ai-accounts.index.a_members_account_is_acted", "a member's AI account is acted on only by that member; another member, an administrator or the founder cannot. Nothing was written."));
     if (!this._holderActive(id))
-      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_holds", "only an active member holds an AI account. Nothing was written."));
+      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_holds", "only an active member holds a Claude account reference. Nothing was written."));
     /* END DEC-49 REGION is-account-own-act */
     return null;
   }
@@ -344,7 +345,7 @@ export class AiAccountsBase {
     const text = typeof sealed === "string" && typeof iv === "string"
       ? await this._decrypt(String(owner), String(kind), sealed, iv) : null;
     if (text === null)
-      return AiAccountsBase._sealRefusal(localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; its owner sets it again. Nothing was used."));
+      return AiAccountsBase._sealRefusal(localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
     return { ok: true, text };
   }
 
@@ -361,40 +362,42 @@ export class AiAccountsBase {
     return null;
   }
 
-  /* CATALOGUE_UNAVAILABLE is `ai-catalogue`'s own row (its R49), used as it mints it; a catalogue that cannot be asked at
-     all is that refusal, with the row when the catalogue gives it. */
-  _catalogueUnavailable() {
-    try {
-      const r = this.catalogue?.unavailable?.();
-      if (r && r.code === "CATALOGUE_UNAVAILABLE") return r;
-    } catch { /* the refusal below */ }
-    return { ok: false, reason: "CATALOGUE_UNAVAILABLE", code: "CATALOGUE_UNAVAILABLE", check: null, translation: null,
-             detail: localize("ai-accounts.index.the_list_of_ais_could", "the list of AIs could not be read, so nothing was offered. Nothing was written or used.") };
+  /* CATALOGUE_UNAVAILABLE is `ai-catalogue`'s own row (its R49), used as it mints it (K231). */
+  _catalogueUnavailable() { return catalogueRefusal("CATALOGUE_UNAVAILABLE"); }
+
+  /* CHECK_UNKNOWN is `ai-catalogue`'s own row too (its R13, R49), minted by it alone: what names a check it does not know. */
+  _checkUnknown(check) { return catalogueRefusal("CHECK_UNKNOWN", { check_id: typeof check === "string" ? check.slice(0, 20) : null }); }
+
+  /* Whether the catalogue holds a verified payload (R63: an unreadable or absent one offers nothing). */
+  _catalogueHeld() {
+    try { return this.catalogue.catalogueState({ at: this._at() }).state !== "unavailable"; } catch { return false; }
   }
 
   /* R40: the plan `planId` under `provider`, `{plan}`, or `{refusal}`: UNKNOWN_PLAN when the catalogue has no such plan,
-     CATALOGUE_UNAVAILABLE when it cannot be read. */
-  _plan(provider, planId) {
+     CATALOGUE_UNAVAILABLE when it holds none or cannot be read. `at` the instant its terms are judged at (the instance
+     clock's). */
+  _plan(provider, planId, at = this._at()) {
     const cat = this.catalogue;
-    if (!cat || typeof cat.plansOf !== "function") return { refusal: this._catalogueUnavailable() };
-    let list;
-    try { list = AiAccountsBase._listOf(cat.plansOf({ provider, plan_id: planId }), "plans"); } catch { list = null; }
-    if (list === null) return { refusal: this._catalogueUnavailable() };
-    const plan = list.find((p) => p && (p.plan_id ?? p.id) === planId && (p.provider === undefined || p.provider === provider));
+    if (!cat || typeof cat.plansOf !== "function" || !this._catalogueHeld()) return { refusal: this._catalogueUnavailable() };
+    let groups;
+    try { groups = AiAccountsBase._listOf(cat.plansOf({ provider, plan_id: planId, at }), "plans"); } catch { groups = null; }
+    if (groups === null) return { refusal: this._catalogueUnavailable() };
+    const plan = groups.flatMap((g) => (Array.isArray(g?.plans) ? g.plans : [g])).find((p) => p && p.plan_id === planId && (p.provider === undefined || p.provider === provider));
     if (!plan) return { refusal: this._refuse("UNKNOWN_PLAN", { provider: String(provider), plan: String(planId) }, { provider: provider ?? null, plan: planId ?? null }) };
     return { plan };
   }
 
   /* An account's plan, by its row. */
-  _planOfRow(row) { return this._plan(row.provider, row.plan); }
+  _planOfRow(row, at = this._at()) { return this._plan(row.provider, row.plan, at); }
 
   /* R55: the entry `entryId`, `{entry}` (null when the catalogue has no such id), or `{unreadable: true}`. */
   _entry(entryId) {
     const cat = this.catalogue;
     if (!cat || typeof cat.entryOf !== "function") return { unreadable: true };
     try {
-      const e = cat.entryOf(entryId);
+      const e = cat.entryOf(entryId, { at: this._at() });
       if (e && typeof e === "object" && e.ok === false) return { unreadable: true };
+      if (!e && !this._catalogueHeld()) return { unreadable: true };
       return { entry: e ?? null };
     } catch { return { unreadable: true }; }
   }
@@ -413,7 +416,7 @@ export class AiAccountsBase {
     const seen = [];
     try {
       for (const part of ["ask", "draft", "read", "transcribe", "run", "account"]) {
-        const list = AiAccountsBase._listOf(cat.entriesFor({ part, checksInForce: [] }), "entries");
+        const list = AiAccountsBase._listOf(cat.entriesFor({ part, checksInForce: [], at: this._at() }), "entries");
         if (list === null) return null;
         for (const e of list) {
           const plans = Array.isArray(e?.plans) ? e.plans : [];
@@ -455,7 +458,7 @@ export class AiAccountsBase {
     } catch { shown = false; }
     if (shown) return null;
     /* DEC-49 REGION is-disclosure-shown */
-    return AiAccountsBase._row(AI_ACCOUNT_CHECKS, "DISCLOSURE_DUE", localize("ai-accounts.index.you_have_not_yet_been", "you have not yet been shown what connecting your own AI account means, so nothing was connected or sent. Read it, then try again."),
+    return AiAccountsBase._row(AI_ACCOUNT_CHECKS, "DISCLOSURE_DUE", localize("ai-accounts.index.you_have_not_yet_been", "you have not yet been shown what connecting your own Claude account means, so nothing was connected or sent. Read it, then try again."),
       { member: typeof member === "string" ? member : null });
     /* END DEC-49 REGION is-disclosure-shown */
   }

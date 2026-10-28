@@ -58,11 +58,12 @@ export function world({ sealSecret = SEAL, now = null, catalogue = undefined } =
   const fact = { claimed: false };
   seams(m, fact);
   const cat = catalogue === undefined ? catalogueFor(ctx, { record: core }) : catalogue;
+  const ready = cat?.seeded ?? Promise.resolve();
   const a = aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now, catalogue: cat });
   if (aiAccountsOf(ctx) !== a) throw new Error("aiAccountsOf answers one instance per storage");
   a.migrate();
   const w = {
-    db, sql, core, m, a, c: a, ctx, fact, catalogue: cat,
+    db, sql, core, m, a, c: a, ctx, fact, catalogue: cat, ready,
     row(q, ...args) { return sql.exec(q, ...args)[0] ?? null; },
     rows(q, ...args) { return sql.exec(q, ...args); },
     /* The founder claims the instance: the test's fact (membership R94). */
@@ -76,6 +77,7 @@ export function world({ sealSecret = SEAL, now = null, catalogue = undefined } =
     },
     /* The founder plus a second administrator, so ordinary members may be added; then each member, enrolled. */
     async group(...members) {
+      await ready;
       await w.claim();
       await w.enrol("second", "admin");
       for (const id of members) await w.enrol(id);
@@ -138,5 +140,5 @@ export function realWorld() {
   const cat = catalogueFor(ctx, { record: rc });
   const a = aiAccountsOf(ctx, { sealSecret: SEAL, catalogue: cat });
   a.migrate();
-  return { db, sql, ctx, rc, m, a, fact, catalogue: cat, row(q, ...args) { return sql.exec(q, ...args)[0] ?? null; } };
+  return { db, sql, ctx, rc, m, a, fact, catalogue: cat, ready: cat.seeded, row(q, ...args) { return sql.exec(q, ...args)[0] ?? null; } };
 }

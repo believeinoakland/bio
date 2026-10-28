@@ -60,8 +60,8 @@ export class AiAccountsServing extends AiAccountsOffering {
   /* R11 (3), R48, R55: whether a pair is usable for the act: its account on and held, a personal subscription only for its
      owner's act, and the entry offered (R55); `{ok}` or `{why}` naming what excluded it. */
   _usablePair(row, entryId, id, actFull) {
-    if (!row.is_on || !row.held) return { why: "not on or not held" };
-    if (row.personal && row.owner !== `member:${id}`) return { why: "a personal subscription serves only its own member" };
+    if (!row.is_on || !row.held) return { why: "NOT_ON_OR_NOT_HELD" };
+    if (row.personal && row.owner !== `member:${id}`) return { why: "PERSONAL_NOT_SHARED" };
     const o = this.entryOffered({ entry_id: entryId, member: id, act: actFull, account_id: row.account_id });
     return o.ok ? { ok: true } : { why: o.code, refusal: o };
   }
@@ -111,7 +111,7 @@ export class AiAccountsServing extends AiAccountsOffering {
 
   /* R63: fail closed (K2093): what could not be read offers nothing, and says so; never a throw. */
   _unreadable() {
-    return this._refuse("NO_ENTRY_OFFERED", { why: "the accounts could not be read" }, { reasons: [], unreadable: true });
+    return this._refuse("NO_ENTRY_OFFERED", { why: "ACCOUNTS_UNREADABLE" }, { reasons: [], unreadable: true });
   }
 
   _resolveRead(member, act) {
@@ -362,7 +362,7 @@ export class AiAccountsServing extends AiAccountsOffering {
       const out = [];
       for (const row of this._rows(`SELECT * FROM ai_accounts ORDER BY seq`)) {
         if (!this._manages(row, viewer)) continue;
-        const p = this._planOfRow(row);
+        const p = this._planOfRow(row, new Date(now).toISOString());
         if (p.refusal) continue;
         for (const t of Array.isArray(p.plan.terms_pending) ? p.plan.terms_pending : []) {
           const from = Date.parse(t.effective_from);

@@ -5,7 +5,7 @@
    record-core, a real SQLite database, and ai-catalogue's published fixture): the founder `admin` and a second administrator
    `second` hold the team, the members named are enrolled. */
 import { world, SECRET } from "./fixture.mjs";
-import { PLANS, ENTRIES } from "./catalogue.mjs";
+import { PLANS, ENTRIES, HOSTS } from "./catalogue.mjs";
 
 const KEY = "sk-ant-fixture-key-0123456789";
 const TOKEN = (who) => `sk-ant-oat01-fixture-${who}-0123456789`;
@@ -17,7 +17,7 @@ export { PLANS, ENTRIES };
 async function groupWith(member, { project = false } = {}) {
   const w = await world().group(member);
   if (project) w.project("P", member);
-  w.a.recipientNoticeSeen({ member, provider: PLANS.provider, host: "api.anthropic.com", by: member });
+  w.a.recipientNoticeSeen({ member, provider: PLANS.provider, host: HOSTS.main, by: member });
   return w;
 }
 
@@ -121,7 +121,7 @@ export async function freeTierNotAccepted({ member = "ann", act = actOf(member) 
   const w = await world().group(member);
   const s = await w.a.accountSet({ owner: `member:${member}`, provider: PLANS.freeProvider, plan: PLANS.freeApi, means: "sealed", secret: KEY, by: member });
   w.a.accountSwitch({ account_id: s.account_id, on: true, by: member });
-  w.a.recipientNoticeSeen({ member, provider: PLANS.freeProvider, host: "free.example", by: member });
+  w.a.recipientNoticeSeen({ member, provider: PLANS.freeProvider, host: HOSTS.free, by: member });
   return w.a.accountFor({ member, act });
 }
 

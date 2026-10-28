@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { SECRET } from "./fixture.mjs";
-import { PLANS as P, ENTRIES as E } from "./catalogue.mjs";
+import { PLANS as P, ENTRIES as E, HOSTS } from "./catalogue.mjs";
 import { projectWorld, on, leaks, shape, refusal } from "./helpers.mjs";
 import { DECLARED_OPS, aiAccountsOps, AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 
@@ -95,7 +95,7 @@ test("R61 ai-accounts declares the screens' ops for the account model: each held
   await run("aitermsaccept", ann, { account_id: "x" }, { adapt: ID("free") });
   await run("aitermswithdraw", ann, { account_id: "x" }, { adapt: ID("free") });
   await run("aicreditsclear", ann, { account_id: "x" }, { adapt: ID("own") });
-  await run("aisend", ann, { provider: P.provider, host: "api.anthropic.com" }, {}, { provider: ["VALUE"], host: ["VALUE"] });
+  await run("aisend", ann, { provider: P.provider, host: HOSTS.main }, {}, { provider: ["VALUE"], host: ["VALUE"] });
   await run("aioptinset", adm, { account_id: "x", on: true }, { adapt: ID("team") }, { on: ["SWITCH_VALUE_INVALID"] });
   const ops = Object.keys(aiAccountsOps(null, new URL("http://x/"), null, {}));
   for (const op of Object.keys(DECLARED_OPS)) assert.ok(ops.includes(op), `${op} is served`);
@@ -124,7 +124,7 @@ test("R71 R61: the answers never echo a secret: `aikeyseal`, `aikeyenter`, `aiac
   for (const s of [KEY, KEY + "2", KEY + "3", KEY + "4"]) assert.deepEqual(leaks(w, s, { answers: outs }), [], s);
   const miss = await w.ops("by=ann", { account_id: x.account_id }).aikeyseal();
   assert.equal(miss.reason, "NO_SECRET");
-  assert.match(miss.detail, /no key or token/);
+  assert.equal(miss.check, AI_ACCOUNT_CHECKS.NO_SECRET.check);
 });
 
 test("R58: the new refusals are rows of C-29, each the next free number, each sentence read by key with `team` in every one (K3472): every code R58 lists is a row; a refusal answered at the interface carries its row's code, check id and translation, its detail the translation with the answer's values put in and no placeholder left; control: no row's text contains `group`, and CHECK_UNKNOWN and CATALOGUE_UNAVAILABLE are the catalogue's own rows, used as it mints them", async () => {

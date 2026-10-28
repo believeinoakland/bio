@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, SECRET, SEAL } from "./fixture.mjs";
-import { PLANS, ENTRIES } from "./catalogue.mjs";
+import { PLANS, ENTRIES, HOSTS } from "./catalogue.mjs";
 import { shape, refusal, ask, act, projectWorld, on, leaks, DEFAULTS } from "./helpers.mjs";
 import { AI_ACCOUNT_CHECKS, REFERENCE_MAX_CHARS, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { notAnAdmin, notTheOwner, noSuchProject } from "../../../src/membership/index.mjs";
@@ -61,7 +61,7 @@ test("R1 R31: accountRemove: the same refusals, never DISCLOSURE_DUE, removes on
   const w = await projectWorld();
   const a1 = await on(w, w.own("ann"));
   const a2 = await on(w, setOf(w, "member:ann", "ann", { entries: [ENTRIES.b] }));
-  w.a.recipientNoticeSeen({ member: "ann", provider: "anthropic", host: "api.anthropic.com", by: "ann" });
+  w.a.recipientNoticeSeen({ member: "ann", provider: "anthropic", host: HOSTS.main, by: "ann" });
   const before = w.snapshot();
   for (const by of [null, "class:ai"]) assert.deepEqual(shape(w.a.accountRemove({ account_id: a1.account_id, by })), refusal("MACHINE_CANNOT_HOLD_ACCOUNT"));
   for (const by of ["bob", "second", "admin"]) assert.deepEqual(shape(w.a.accountRemove({ account_id: a1.account_id, by })), refusal("NOT_YOUR_ACCOUNT"));
@@ -115,7 +115,7 @@ test("R2 R24: with no seal secret bound a sealed or issued account is neither st
   const x = await w.own("ann");
   const other = aiAccountsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret", catalogue: w.catalogue });
   w.a.accountSwitch({ account_id: x.account_id, on: true, by: "ann" });
-  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "ann" });
+  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "ann" });
   const gone = await other.accountFor({ member: "ann", act: ask("ann") });
   assert.deepEqual(shape(gone), refusal("ACCOUNT_SEAL_UNAVAILABLE"));
   const w2 = await projectWorld({ sealSecret: null });
@@ -151,7 +151,8 @@ test("R5 R6: the team holds accounts, set, switched and removed by an active adm
   assert.equal(t.on, false);
   const before = w.snapshot();
   for (const by of ["ann", "class:ai", null, "token:ai"]) {
-    assert.deepEqual(w.a.accountSwitch({ account_id: t.account_id, on: true, by }), notAnAdmin(by ?? null, "switching an AI account on or off"), String(by));
+    const sw = w.a.accountSwitch({ account_id: t.account_id, on: true, by });
+    assert.deepEqual([sw.ok, sw.code, sw.check], [false, "NOT_AN_ADMIN", notAnAdmin(by ?? null, "x").check], String(by));
     assert.equal((await w.team({ by })).reason, "NOT_AN_ADMIN", String(by));
     assert.equal(w.a.accountRemove({ account_id: t.account_id, by }).reason, "NOT_AN_ADMIN", String(by));
   }

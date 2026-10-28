@@ -4,8 +4,10 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 
-export const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
-export const refusal = (code) => ({ ok: false, reason: code, code, check: AI_ACCOUNT_CHECKS[code].check, translation: AI_ACCOUNT_CHECKS[code].translation });
+/* a refusal as its fields in order (ok, reason, code, check, translation), and what a refusal of `code` is by its row: compared as lists,
+   so no test builds a refusal of another shape by hand */
+export const shape = (r) => [r.ok, r.reason, r.code, r.check, r.translation];
+export const refusal = (code) => [false, code, code, AI_ACCOUNT_CHECKS[code].check, AI_ACCOUNT_CHECKS[code].translation];
 export const act = (kind, member, project) => ({ kind, member, ...(project !== undefined ? { project } : {}) });
 export const ask = (member, project) => act("ask", member, project);
 export const DEFAULTS = { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false };

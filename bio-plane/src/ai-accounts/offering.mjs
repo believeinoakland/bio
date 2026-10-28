@@ -16,16 +16,6 @@ const A = AiAccountsAccounts;
 export class AiAccountsOffering extends AiAccountsLists {
   /* ===== R52, R53: the checks ===== */
 
-  /* `ai-catalogue`'s own CHECK_UNKNOWN row (its R49), used as it mints it. */
-  _checkUnknown(check) {
-    try {
-      const r = this.catalogue?.checkUnknown?.(check);
-      if (r && r.code === "CHECK_UNKNOWN") return r;
-    } catch { /* the refusal below */ }
-    return { ok: false, reason: "CHECK_UNKNOWN", code: "CHECK_UNKNOWN", check: null, translation: null,
-             detail: localize("ai-accounts.index.that_is_not_one_of_the_checks", "that is not one of the checks ({checks}). Nothing was changed.", { checks: CHECK_IDS.join(", ") }), check_id: typeof check === "string" ? check.slice(0, 20) : null };
-  }
-
   /* A level's tick of `check`, `true`, `false` or null when it set none; throws when unreadable. */
   _tick(level, check) {
     const r = this._one(`SELECT ticked FROM ai_check_ticks WHERE level=? AND check_id=?`, level, check);
@@ -137,18 +127,21 @@ export class AiAccountsOffering extends AiAccountsLists {
     if (account_id !== null && account_id !== undefined && !row) return this._refuse("ENTRY_NOT_ALLOWED", { entry: String(entry_id) }, { entry_id });
     const actOf = { ...(act && typeof act === "object" ? act : {}), member: member ?? act?.member };
     const allowed = this._allowedEntries(row, actOf);
-    if (allowed.unreadable) return this._refuse("NO_ENTRY_OFFERED", { why: "the limits on which AIs may be offered could not be read" }, { unreadable: true });
+    if (allowed.unreadable) return this._refuse("NO_ENTRY_OFFERED", { why: "CEILING_UNREADABLE" }, { unreadable: true });
     if (allowed.entries !== null && !allowed.entries.includes(entry_id)) return this._refuse("ENTRY_NOT_ALLOWED", { entry: String(entry_id) }, { entry_id });
     const force = this.checksInForce({ member: actOf.member, act: actOf });
-    if (force.unreadable) return this._refuse("NO_ENTRY_OFFERED", { why: "the checks could not be read" }, { unreadable: true });
+    if (force.unreadable) return this._refuse("NO_ENTRY_OFFERED", { why: "CHECKS_UNREADABLE" }, { unreadable: true });
     const cat = this.catalogue;
     if (!cat || typeof cat.whyNotOffered !== "function") return this._catalogueUnavailable();
+    const part = PART_OF_KIND[actOf.kind] ?? null;
     let why;
-    try { why = cat.whyNotOffered({ entry_id, part: PART_OF_KIND[actOf.kind] ?? null, checksInForce: force.checks }); } catch { why = null; }
-    if (!why || typeof why !== "object" || (why.ok === false && why.code)) return this._catalogueUnavailable();
+    try { why = cat.whyNotOffered({ entry_id, part, checksInForce: force.checks, at: this._at() }); } catch { why = null; }
+    if (!why || typeof why !== "object") return this._catalogueUnavailable();
+    if (why.ok === false) return why;   /* the catalogue's own refusal (a part or check it does not know), as it mints it */
     if (why.offered === true) return { ok: true };
-    const first = Array.isArray(why.reasons) && why.reasons.length ? why.reasons[0] : { code: "ENTRY_UNKNOWN" };
-    return this._reasonRefusal(first, entry_id);
+    const reasons = Array.isArray(why.reasons) ? why.reasons : [];
+    if (reasons.some((r) => r?.code === "CATALOGUE_UNAVAILABLE")) return this._catalogueUnavailable();
+    return this._reasonRefusal({ ...(reasons[0] ?? { code: "ENTRY_UNKNOWN" }), part }, entry_id);
   }
 
   /* R55 `entriesOffered`: in-plane, the entries that pass for the act, for the choosing screens: the catalogue's closed list
@@ -160,7 +153,7 @@ export class AiAccountsOffering extends AiAccountsLists {
     const force = this.checksInForce({ member: actOf.member, act: actOf });
     if (allowed.unreadable || force.unreadable) return { ok: true, entries: [], unreadable: true };
     let list = null;
-    try { list = M._listOf(this.catalogue.entriesFor({ part: PART_OF_KIND[actOf.kind] ?? null, checksInForce: force.checks }), "entries"); } catch { list = null; }
+    try { list = M._listOf(this.catalogue.entriesFor({ part: PART_OF_KIND[actOf.kind] ?? null, checksInForce: force.checks, at: this._at() }), "entries"); } catch { list = null; }
     if (list === null) return { ok: true, entries: [], unreadable: true };
     return { ok: true, entries: list.filter((e) => allowed.entries === null || allowed.entries.includes(e.entry_id)) };
   }
@@ -248,7 +241,7 @@ export class AiAccountsOffering extends AiAccountsLists {
     const bar = this._accountBar(member, by);
     if (bar) return bar;
     if (typeof provider !== "string" || provider === "" || typeof host !== "string" || host === "")
-      return M._valueInvalid("the recipient", ["a provider and a host"], { switch: "recipient" });
+      return M._valueInvalid("the recipient", ["provider", "host"], { switch: "recipient" });
     const id = M._memberOf(member);
     const already = !!this._one(`SELECT member_id FROM ai_recipients_seen WHERE member_id=? AND provider=? AND host=?`, id, provider, host);
     if (!already) this.sql.exec(`INSERT INTO ai_recipients_seen (member_id, provider, host, seen_at) VALUES (?,?,?,?)`, id, provider, host, this._at());

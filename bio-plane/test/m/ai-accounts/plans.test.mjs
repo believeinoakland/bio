@@ -4,8 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SECRET } from "./fixture.mjs";
-import { PLANS as P, ENTRIES as E, setPlanTerms } from "./catalogue.mjs";
+import { PLANS as P, ENTRIES as E, addTerm, HOSTS } from "./catalogue.mjs";
 import { shape, refusal, ask, projectWorld, on, leaks } from "./helpers.mjs";
+import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 
 const TOKEN = (who) => `sk-ant-oat01-sentinel-${who}-0123456789`;
 const sub = (w, owner, by, more = {}) => w.a.accountSet({ owner, provider: P.provider, plan: P.subscription, means: "issued", secret: TOKEN(by), by, ...more });
@@ -36,8 +37,7 @@ test("R44 R73: a key reaches a gateway account by (a) gatewayKeyEnter: handed to
   const unavailable = await w.a.accountSet({ owner: "group", provider: P.provider, plan: P.teamApi, means: "gateway", by: "admin" });
   assert.deepEqual(shape(unavailable), refusal("GATEWAY_UNAVAILABLE"));
   assert.deepEqual(unavailable.extra, noPort.grant.extra, "R73: the one who holds the team's Cloudflare account");
-  assert.match(unavailable.detail, /whoever holds your team's Cloudflare account/);
-  assert.match(unavailable.detail, /built-in AI, a sealed key and a reference work without it/);
+  assert.equal(unavailable.detail, AI_ACCOUNT_CHECKS.GATEWAY_UNAVAILABLE.translation, "its words name who can grant it and what works without it (R73)");
   assert.equal((await w.team()).ok, true, "a sealed account is set in the same copy with no port");
   const puts = [];
   const flags = { refuse: false };
@@ -98,7 +98,7 @@ test("R19: an issued account's token, held sealed: issuedTokenHold replaces any 
   assert.deepEqual(leaks(w, NEW, { answers: [held] }), []);
   assert.deepEqual(leaks(w, TOKEN("ann")), []);
   w.a.accountSwitch({ account_id: x.account_id, on: true, by: "ann" });
-  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "ann" });
+  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "ann" });
   assert.equal((await w.a.accountFor({ member: "ann", act: ask("ann") })).secret, NEW, "the replacement is the token held");
   /* refused: dropped, refused_at recorded, listeners told once, held: false and it serves nothing */
   assert.deepEqual(w.a.issuedTokenRefused({ account_id: x.account_id }), { ok: true, dropped: true });
@@ -184,7 +184,7 @@ test("R46: an account's entries are an ordered allow-list of entries of its plan
 test("R46: the ceilings above the accounts: offeredSet sets an owner's ceiling (the team's by administrators, a project's by its owners, a member's own by that member; null: none); a lower level's set must lie inside the team's, else NARROWING_ONLY naming the entry; for an act the entries allowed are the intersection of the account's list, the team's ceiling, the project's when the act is directly in it and the member's own, so a later shrink above drops out below with no rewrite", async () => {
   const w = await projectWorld();
   const x = await on(w, w.own("ann"));
-  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "ann" });
+  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "ann" });
   assert.deepEqual(w.a.offeredSet({ owner: "group", entries: [E.a, E.b], by: "admin" }), { ok: true, owner: "group", entries: [E.a, E.b] });
   const out = w.a.offeredSet({ owner: "project:P", entries: [E.a, E.free], by: "ann" });
   assert.deepEqual([out.reason, out.entry], ["NARROWING_ONLY", E.free]);
@@ -218,17 +218,18 @@ test("R46: the ceilings above the accounts: offeredSet sets an owner's ceiling (
 
 test("R47 R48: connecting a personal subscription records {member, at, plan, terms_version, account_id} in the same act; personalChoiceState answers the member alone and `stale: true` once the catalogue's terms version has changed, and a stale record does not stop serving; control: a sealed API account has no record", async () => {
   const w = await projectWorld();
-  const x = await sub(w, "member:ann", "ann", { terms_version: "t1" });
+  const t1 = w.catalogue.plansOf({ provider: P.provider }).flatMap((g) => g.plans).find((p) => p.plan_id === P.subscription).terms_version;
+  const x = await sub(w, "member:ann", "ann", { terms_version: t1 });
   assert.equal(x.ok, true);
   const st = w.a.personalChoiceState({ account_id: x.account_id, viewer: "ann" });
-  assert.deepEqual({ ...st, record: { ...st.record, at: null } }, { ok: true, account_id: x.account_id, record: { member: "ann", at: null, plan: P.subscription, terms_version: "t1", account_id: x.account_id }, stale: false });
+  assert.deepEqual({ ...st, record: { ...st.record, at: null } }, { ok: true, account_id: x.account_id, record: { member: "ann", at: null, plan: P.subscription, terms_version: t1, account_id: x.account_id }, stale: false });
   assert.match(st.record.at, /^\d{4}-/);
   for (const viewer of ["bob", "admin", "class:ai", null]) assert.equal(w.a.personalChoiceState({ account_id: x.account_id, viewer }).ok, false, String(viewer));
   w.a.accountSwitch({ account_id: x.account_id, on: true, by: "ann" });
-  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: "api.anthropic.com", by: "ann" });
-  setPlanTerms(w, P.subscription, "t2");
+  w.a.recipientNoticeSeen({ member: "ann", provider: P.provider, host: HOSTS.main, by: "ann" });
+  await addTerm(w, P.subscription);
   const changed = w.a.personalChoiceState({ account_id: x.account_id, viewer: "ann" });
-  assert.deepEqual([changed.stale, changed.record.terms_version], [true, "t1"], "the catalogue's version changed: the record is stale");
+  assert.deepEqual([changed.stale, changed.record.terms_version], [true, t1], "the catalogue's version changed: the record is stale");
   assert.equal((await w.a.accountFor({ member: "ann", act: ask("ann") })).ok, true, "a stale record does not stop serving");
   assert.equal(w.a.personalChoiceState({ account_id: (await w.own("bob")).account_id, viewer: "bob" }).ok, false, "control: not a personal subscription");
   assert.equal(w.a.accountHistory({ owner: "member:ann", viewer: "ann" }).changes.some((c) => c.change === "personal_choice"), true, "R16");

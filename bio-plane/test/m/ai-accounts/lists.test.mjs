@@ -4,10 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SECRET } from "./fixture.mjs";
-import { PLANS as P, ENTRIES as E, setCheck, setGate } from "./catalogue.mjs";
+import { PLANS as P, ENTRIES as E, setCheck, setGate, HOSTS } from "./catalogue.mjs";
 import { shape, refusal, ask, act, projectWorld, on, leaks } from "./helpers.mjs";
 
-const seen = (w, ...members) => { for (const m of members) w.a.recipientNoticeSeen({ member: m, provider: P.provider, host: "api.anthropic.com", by: m }); };
+const seen = (w, ...members) => { for (const m of members) w.a.recipientNoticeSeen({ member: m, provider: P.provider, host: HOSTS.main, by: m }); };
 const TOKEN = (who) => `sk-ant-oat01-sentinel-${who}-0123456789`;
 const ids = (w, owner, viewer) => w.a.accountsOf({ owner, viewer }).accounts.map((x) => x.account_id);
 const order = (w, owner, accounts, by) => w.a.accountOrderSet({ owner, accounts, by });
@@ -123,12 +123,12 @@ test("R50: hopFor walks on after `from` in the sequence R11 chose and returns th
   assert.equal(end.who, "member");
   /* a target with a check open, a part not passed or an unaccepted free tier is skipped */
   w.a.checksSet({ level: "member:ann", check: "P2", ticked: true, by: "ann" });
-  setCheck(w, E.b, "P2", null);
+  await setCheck(w, E.b, "P2", null);
   assert.equal(hop(w, "ann", { account_id: a1.account_id, entry_id: E.a }).account_id, a2.account_id, "claude-b is open on P2: skipped");
-  setCheck(w, E.b, "P2", true);
-  setGate(w, E.b, "ask", "not_suitable");
+  await setCheck(w, E.b, "P2", true);
+  await setGate(w, E.b, "ask", "not_suitable");
   assert.equal(hop(w, "ann", { account_id: a1.account_id, entry_id: E.a }).account_id, a2.account_id, "claude-b does not pass ask: skipped");
-  setGate(w, E.b, "ask", "passes");
+  await setGate(w, E.b, "ask", "passes");
   /* the same owner's or an opted-in account's, tested at each hop */
   w.a.crossOwnerOptInSet({ account_id: team.account_id, on: false, by: "admin" });
   assert.equal(hop(w, "ann", { account_id: a2.account_id, entry_id: E.a }).reason, "LIST_EXHAUSTED", "the flag is off: it left her list (R72)");
@@ -143,8 +143,8 @@ test("R50: a hop reason is one of limit, unavailable, lapsed, capability, auth, 
   seen(w, "ann");
   const a1 = await on(w, w.own("ann", { entries: [E.a] }));
   const free = await on(w, w.a.accountSet({ owner: "member:ann", provider: P.freeProvider, plan: P.freeApi, means: "sealed", secret: SECRET("free"), by: "ann" }));
-  w.a.recipientNoticeSeen({ member: "ann", provider: P.freeProvider, host: "free.example", by: "ann" });
-  w.sql.exec(`DELETE FROM ai_recipients_seen WHERE member_id='ann' AND host='free.example'`);
+  w.a.recipientNoticeSeen({ member: "ann", provider: P.freeProvider, host: HOSTS.free, by: "ann" });
+  w.sql.exec(`DELETE FROM ai_recipients_seen WHERE member_id='ann' AND host=?`, HOSTS.free);
   w.a.freeTierAccept({ account_id: free.account_id, by: "ann" });
   const from = { account_id: a1.account_id, entry_id: E.a };
   const before0 = w.snapshot();
@@ -159,10 +159,10 @@ test("R50: a hop reason is one of limit, unavailable, lapsed, capability, auth, 
   assert.equal(w.snapshot(), before, "nothing moves");
   w.a.accountUsesSet({ account_id: a1.account_id, switch: "ask", on: true, by: "ann" });
   const wait = hop(w, "ann", from);
-  assert.deepEqual([wait.ok, wait.wait, wait.code, wait.recipient, wait.account_id], [false, true, "RECIPIENT_NOTICE_DUE", { provider: P.freeProvider, host: "free.example" }, free.account_id]);
+  assert.deepEqual([wait.ok, wait.wait, wait.code, wait.recipient, wait.account_id], [false, true, "RECIPIENT_NOTICE_DUE", { provider: P.freeProvider, host: HOSTS.free }, free.account_id]);
   const nonInteractive = hop(w, "ann", from, "limit", { kind: "run", member: "ann", interactive: false });
   assert.deepEqual([nonInteractive.wait, nonInteractive.code, nonInteractive.interactive], [true, "RECIPIENT_NOTICE_DUE", false], "it waits and never proceeds");
-  w.a.recipientNoticeSeen({ member: "ann", provider: P.freeProvider, host: "free.example", by: "ann" });
+  w.a.recipientNoticeSeen({ member: "ann", provider: P.freeProvider, host: HOSTS.free, by: "ann" });
   const go = hop(w, "ann", from);
   assert.deepEqual([go.ok, go.account_id, go.entry_id], [true, free.account_id, E.free]);
   /* an unaccepted free tier is skipped, never a wait */

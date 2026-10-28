@@ -273,8 +273,10 @@ export class AiAccountsLifecycle extends AiAccountsServing {
     try {
       const list = M._listOf(cat.plansOf({ provider: MIGRATED_PROVIDER }), "plans");
       if (!list) return null;
-      const plan = list.find((p) => p && p.kind === kind && (p.provider === undefined || p.provider === MIGRATED_PROVIDER)
+      const plans = list.flatMap((g) => (Array.isArray(g?.plans) ? g.plans : [g]));
+      const fits = plans.filter((p) => p && p.kind === kind && (p.provider === undefined || p.provider === MIGRATED_PROVIDER)
         && (kind !== "api" || !Array.isArray(p.means_allowed) || p.means_allowed.includes("sealed")));
+      const plan = fits.find((p) => p.scope === (kind === "api" ? "team" : "member")) ?? fits[0];
       if (!plan) return null;
       const entries = this._planEntries(plan.plan_id ?? plan.id);
       return entries ? { plan, entries } : null;

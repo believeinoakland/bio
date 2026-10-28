@@ -200,8 +200,8 @@ export class AiAccountsAccounts extends AiAccountsLimits {
   /* R19: a token's length bounds from the plan, else the module's. */
   static _tokenBounds(plan) {
     const b = plan?.token_bounds;
-    const min = Number.isInteger(b?.min) ? b.min : SIGNIN_TOKEN_LENGTH.min;
-    const max = Number.isInteger(b?.max) ? b.max : SIGNIN_TOKEN_LENGTH.max;
+    const min = Number.isInteger(b?.min_length) ? b.min_length : SIGNIN_TOKEN_LENGTH.min;
+    const max = Number.isInteger(b?.max_length) ? b.max_length : SIGNIN_TOKEN_LENGTH.max;
     return { min, max };
   }
 
@@ -354,7 +354,7 @@ export class AiAccountsAccounts extends AiAccountsLimits {
     if (!row || !row.owner.startsWith("member:") || who === null || isMachineIdentity(act.member) || row.owner !== `member:${who}`)
       return M._notYours(localize("ai-accounts.index.a_members_account_serves_only", "a member's AI account serves only that member's own acts. Nothing was used."));
     if (!this._holderActive(who))
-      return M._row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_holds", "only an active member holds an AI account. Nothing was written."));
+      return M._row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_holds", "only an active member holds a Claude account reference. Nothing was written."));
     if (!row.held) return this._noAccount(who, "account");
     return this._credentialOf(row);
   }
@@ -368,7 +368,7 @@ export class AiAccountsAccounts extends AiAccountsLimits {
       if (unsealable) return unsealable;
       const secret = row.sealed ? await this._decrypt(row.seal_owner ?? row.owner, row.means === "issued" ? "signin" : "apikey", row.sealed, row.iv) : null;
       if (secret === null)
-        return M._sealRefusal(localize("ai-accounts.index.the_credential_does_not_open", "the credential does not open under the seal secret of your team's Civicsmith, which has changed; its owner sets it again. Nothing was used."));
+        return M._sealRefusal(localize("ai-accounts.index.the_credential_does_not_open", "the credential does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
       return { ...base, secret };
     }
     if (row.means === "reference") { let ref = null; try { ref = JSON.parse(row.reference); } catch { ref = null; } return { ...base, reference: ref }; }

@@ -2,7 +2,7 @@
    project's and a member's own, and what `checksInForce` answers for an act. Every id is tested with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PLANS as P, ENTRIES as E } from "./catalogue.mjs";
+import { PLANS as P, ENTRIES as E, HOSTS } from "./catalogue.mjs";
 import { shape, refusal, ask, act, projectWorld } from "./helpers.mjs";
 import { CHECK_IDS } from "../../../src/ai-accounts/index.mjs";
 
@@ -70,10 +70,10 @@ test("R53 R54: a project's tick binds all work directly in the project, whoever 
   /* the project's tick binds bob's act in P whichever account serves it, and not his act outside */
   const mine = await w.own("bob");
   w.a.accountSwitch({ account_id: mine.account_id, on: true, by: "bob" });
-  w.a.recipientNoticeSeen({ member: "bob", provider: P.provider, host: "api.anthropic.com", by: "bob" });
+  w.a.recipientNoticeSeen({ member: "bob", provider: P.provider, host: HOSTS.main, by: "bob" });
   const { setCheck } = await import("./catalogue.mjs");
-  setCheck(w, E.a, "P3", false);
-  setCheck(w, E.b, "P3", false);
+  await setCheck(w, E.a, "P3", false);
+  await setCheck(w, E.b, "P3", false);
   assert.equal((await w.a.accountFor({ member: "bob", act: ask("bob", "P") })).reason, "NO_ENTRY_OFFERED", "the project's P3 binds the act in the project");
   assert.equal((await w.a.accountFor({ member: "bob", act: ask("bob") })).ok, true, "and does not reach work outside it");
   /* unreadable: fail closed */

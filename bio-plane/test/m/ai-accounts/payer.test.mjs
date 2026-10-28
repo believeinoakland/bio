@@ -4,11 +4,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SECRET } from "./fixture.mjs";
-import { PLANS as P, ENTRIES as E, setPendingTerms } from "./catalogue.mjs";
+import { PLANS as P, ENTRIES as E, addTerm, HOSTS } from "./catalogue.mjs";
 import { shape, refusal, ask, act, projectWorld, on, leaks } from "./helpers.mjs";
 
 const WORKER = "token:agent-worker";
-const seen = (w, ...members) => { for (const m of members) w.a.recipientNoticeSeen({ member: m, provider: P.provider, host: "api.anthropic.com", by: m }); };
+const seen = (w, ...members) => { for (const m of members) w.a.recipientNoticeSeen({ member: m, provider: P.provider, host: HOSTS.main, by: m }); };
 
 /* a team gateway account whose key is held, switched on, with the port registered */
 async function gatewayWorld() {
@@ -203,13 +203,14 @@ test("R76: termsNoticesDue answers for each account the viewer may manage each b
   seen(w, "bob");
   const t = await on(w, w.team());
   const mine = await w.own("ann", { plan: P.teamApi });
-  const at = "2026-10-28T00:00:00Z";
+  const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const at = new Date().toISOString();
   assert.deepEqual(w.a.termsNoticesDue({ viewer: "admin", at }), []);
-  setPendingTerms(w, P.teamApi, [{ doc: "usage-policy", version: "v9", effective_from: "2026-11-02T00:00:00Z", days_until: 5 },
-                                  { doc: "old", version: "v1", effective_from: "2026-10-01T00:00:00Z", days_until: -27 },
-                                  { doc: "far", version: "v2", effective_from: "2027-03-01T00:00:00Z", days_until: 124 }]);
+  await addTerm(w, P.teamApi, { doc: "usage-policy", version: "v9", from: day(5) });
+  await addTerm(w, P.teamApi, { doc: "old", version: "v1", from: day(-27) });
+  await addTerm(w, P.teamApi, { doc: "far", version: "v2", from: day(124) });
   const rows = w.a.termsNoticesDue({ viewer: "admin", at });
-  assert.deepEqual(rows, [{ account_id: t.account_id, plan_id: P.teamApi, doc: "usage-policy", version: "v9", effective_from: "2026-11-02T00:00:00Z", key: rows[0].key }]);
+  assert.deepEqual(rows, [{ account_id: t.account_id, plan_id: P.teamApi, doc: "usage-policy", version: "v9", effective_from: day(5), key: rows[0].key }]);
   assert.deepEqual(w.a.termsNoticesDue({ viewer: "second", at }), rows, "every administrator, the same key on every read");
   assert.deepEqual(w.a.termsNoticesDue({ viewer: "admin", at }), rows);
   assert.deepEqual(w.a.termsNoticesDue({ viewer: "ann", at }).map((r) => r.account_id), [mine.account_id], "her own account's plan: its member");
@@ -219,6 +220,6 @@ test("R76: termsNoticesDue answers for each account the viewer may manage each b
   w.a.termsNoticesDue({ viewer: "admin", at });
   assert.equal(w.snapshot(), before);
   assert.equal((await w.a.accountFor({ member: "bob", act: ask("bob") })).ok, true, "the account serves throughout");
-  assert.deepEqual(w.a.termsNoticesDue({ viewer: "admin", at: "2026-11-03T00:00:00Z" }), [], "a term past its date answers none");
-  assert.equal(w.a.termsNoticesDue({ viewer: "admin", at: "2026-10-01T00:00:00Z" }).length, 0, "beyond the window");
+  assert.deepEqual(w.a.termsNoticesDue({ viewer: "admin", at: new Date(Date.now() + 6 * 86400000).toISOString() }), [], "a term past its date answers none (its day has come)");
+  assert.equal(w.a.termsNoticesDue({ viewer: "admin", at: new Date(Date.now() - 70 * 86400000).toISOString() }).length, 0, "beyond the window");
 });

@@ -214,7 +214,7 @@ export class AiAccountsLists extends AiAccountsAccounts {
       }
       if (owner !== "group") {
         const top = this._ceiling("group");
-        if (top.unreadable) return this._refuse("NO_ENTRY_OFFERED", { why: "the team's limits could not be read" }, { unreadable: true });
+        if (top.unreadable) return this._refuse("NO_ENTRY_OFFERED", { why: "CEILING_UNREADABLE" }, { unreadable: true });
         const outside = top.entries ? list.find((e) => !top.entries.includes(e)) : undefined;
         if (outside !== undefined) return this._refuse("NARROWING_ONLY", { entry: outside }, { entry: outside });
       }

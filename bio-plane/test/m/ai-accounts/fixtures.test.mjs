@@ -1,3 +1,4 @@
+import { HOSTS } from "./catalogue.mjs";
 /* The fixtures ai-accounts publishes (`fixtures.mjs`), each called here and its real answer checked: a user's test takes the
    answer from the fixture, and this is what shows the fixture's answer is the module's own. */
 import { test } from "node:test";
@@ -44,7 +45,7 @@ test("R7 R40 (fixtures teamAccountServing, projectAccountServing, personalSubscr
 
 test("R11 R51 R56 (fixtures recipientNoticeDue, freeTierNotAccepted, switchedOff): the head's refusals: RECIPIENT_NOTICE_DUE with the recipient, FREE_TIER_NOT_ACCEPTED naming the plan, AI_USE_SWITCHED_OFF naming whose and the use", async () => {
   const n = await fx.recipientNoticeDue({ member: "ann" });
-  assert.deepEqual([n.code, n.check, n.recipient], ["RECIPIENT_NOTICE_DUE", "C-29.72", { provider: fx.PLANS.provider, host: "api.anthropic.com" }]);
+  assert.deepEqual([n.code, n.check, n.recipient], ["RECIPIENT_NOTICE_DUE", "C-29.72", { provider: fx.PLANS.provider, host: HOSTS.main }]);
   const f = await fx.freeTierNotAccepted({ member: "ann" });
   assert.deepEqual([f.code, f.check, f.plan], ["FREE_TIER_NOT_ACCEPTED", "C-29.71", fx.PLANS.freeApi]);
   for (const whose of ["own", "group"]) {
