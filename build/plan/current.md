@@ -740,6 +740,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
 - T53-569 · mail-door R12 and its composition note · composes `mailDoorOf(ctx, {capture, settings})`, `settings()` from instance-setup R114 (the mail domain and switch); the `email()` export waits on M1 (K5692 (3))
 - T53-579 · K5715, acquisition R130, R136; capture R117 · wires `store.followStanding`, a `member` row's tick calling `fileMember(store, row.detail)`, and `emailCapture`'s attachments registered with `memberRow(...)`
+- T53-584 · K5726, content R64 · composes content's `creditOf({member, row})` resolver from the module that holds the attribution levels (DEC-102), so a typed row names its typist only as credited
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
