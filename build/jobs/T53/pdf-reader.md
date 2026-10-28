@@ -59,3 +59,32 @@ Recommendation: option 1 now (the reason reaches the user through doc-clean's jo
 
 Tests: 202/202. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018Bhcefr6qakyreu8WK9cuR): test runs 2, module lines 5766
+
+## Completion (2026-10-28)
+
+# pdf-reader · T53 · report (ANSWER K5641, R51)
+
+## Entries applied
+
+- **R51 (new, K5641).** A reference the `pdf.direct_object` bound stopped is listed in `objects().unresolved` with `over: "direct_object"` and `figure` (the bound, 4194304). Any other unresolved reference stays `{num, gen}`.
+  - `bio-plane/src/pdfstructure.mjs`: the object scan records a bound stop by object number (`ObjectTable.stopped`); `parse` records and clears it; `put` clears it for a definition that parses; `objects()` reads it into `unresolved`.
+  - Why the scan record was needed: the scan never put object 4 in the table, so the first version (recording only in `parse`) named nothing. Found by test, fixed.
+  - `bio-plane/test/m/pdf-reader/bounds.test.mjs`: the 270,000-reference test asserts `{num:4, gen:0, over:"direct_object", figure:4194304}`; a second assertion checks that a dangling reference keeps the plain `{num, gen}` form.
+
+## Results
+
+- pdf-reader suite (`bio-plane/test/m/pdf-reader/*.test.mjs`, `bio-plane/test/pdfstructure.test.mjs`): 202/202.
+- doc-clean suite: 76 pass, 0 fail (78 total, 2 not run).
+
+## Found in other modules
+
+- `doc-clean/pdf.mjs` (lines 42-44): still refuses with "object {num} {gen} is referred to and cannot be read" and does not read `over` or `figure`. It must use `unresolved[0].over` to name the bound. Its job's change, not this module's.
+
+## Not done
+
+- The figure is not raised (K5641: option 1).
+
+**Met** · R51
+
+Tests: 202/202. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018Bhcefr6qakyreu8WK9cuR): test runs 3, module lines 5783

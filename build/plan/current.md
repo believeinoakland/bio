@@ -41,6 +41,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - T53-26 · N824, K5527, N1259 · CAPABILITIES rows
 - T53-27 · K5565 · English in tests: its entry
 - T53-511 · R37, K5624 · after office-readers, odf-reader, doc-clean and ooxml merge T53-510 (BOB's CHANGE says when): every reader row's active figure becomes its `standard` (`pdf.worker_bytes`, `document.clean_bytes`, `file_safety.grade_read`, `office.text_bytes`, `office.streamed_text_bytes`, `xlsx.declared_text`, `ods.content_xml`, `sheet_worker.bytes`, `image.cover_bytes`, `archive.unpacked_bytes`, `archive.member_bytes`, `scan.max_bytes`), save a figure a reader reported it cannot hold, kept with that report cited
+- T53-540 · K5648 · `xlsx.declared_text` standard 25 MB
 - rows: `build/plan/T53-R1/runtime-limits.md`
 **bundler**
 - T53-30 · K5457 · agent Worker `HEALTH` object; `deleted_classes` `RemoteSession`
@@ -56,6 +57,7 @@ Merged this round, their entries moved whole to `build/plan/archive/T53-R1-layer
 - T53-39 · K5565 · English in tests: its entry
 - T53-510 · R37, K5624 · the readers' rows to the beta: the module's tests read each figure it bounds by from runtime-limits (`boundOf(kind, row)`), never a pinned 20 MiB / 256 MiB; a bound tied to another row (`ARCHIVE_TOTAL_MAX` to `archive.unpacked_bytes`, `MEMBER_MAX` to `archive.member_bytes`) stays tied at whatever figure is active; then confirm the reading holds at the row's `standard` (beta) figure, streaming where whole reads would not fit; a figure the module cannot hold is reported with its measurement, never silently kept
 - T53-537 · K5637 · fixtures reach the over-bound path at whatever figure is active (from `boundOf`, or a bound seam)
+- T53-541 · K5648 · R46 probe sized from `boundOf`, after T53-540
 - rows: `build/plan/T53-R1/office-readers.md`
 **pdf-reader**
 - T53-41 · K5565 · English in tests: its entry

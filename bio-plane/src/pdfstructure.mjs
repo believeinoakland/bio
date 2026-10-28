@@ -594,6 +594,7 @@ class ObjectTable {
     this.types = [null];
     this.typeIx = new Map();
     this.slots = new Int32Array(512); // row + 1; 0 empty
+    this.stopped = new Map();         // num -> the direct-object bound its last parse was stopped at (R51)
   }
   get size() { return this.n; }
   static hash(n) { return Math.imul((n % 4294967296) | 0, 0x9e3779b1) >>> 0; }
@@ -621,6 +622,7 @@ class ObjectTable {
   /** A definition of `n` whose value, parsed at `p` of the file (`stm` -1) or of object stream `stm`, is `v`: the later
    *  one replaces an earlier one's, keeping the number's place in the order. */
   put(n, p, w, stm, g, v) {
+    this.stopped.delete(n); // R51: a definition that parsed is not stopped
     let r = this.row(n);
     if (r < 0) {
       if (this.n === this.num.length) this.grow();
@@ -683,7 +685,15 @@ class ObjectTable {
   parse(r) {
     const stm = this.stm[r];
     const src = stm < 0 ? this.doc._b : this.doc._innerBytes(stm);
-    return src ? parseWindow(src, this.p[r], this.w[r]) : null;
+    const got = src ? parseWindow(src, this.p[r], this.w[r]) : null;
+    /* R51: a value the direct-object bound stopped is recorded, so `objects()` can name it; a value that parses clears it */
+    if (got || !parseWindow.over) this.stopped.delete(this.num[r]);
+    else this.stopped.set(this.num[r], DIRECT_OBJECT_MAX);
+    return got;
+  }
+  /** R51: the direct-object bound that stopped object `n`'s last parse, or null. */
+  boundStopped(n) {
+    return this.stopped.get(n) ?? null;
   }
   /** Object numbers, in order, whose winning definition is of kind `kind` (1 dictionary, 2 stream, 3 either) and, when
    *  given, has the `/Type` name `type`. */
@@ -786,6 +796,8 @@ export class PdfDoc {
       if (this._objs.size >= OBJECTS_MAX && !this._objs.has(num)) { this.note(`over_bound:objects:${OBJECTS_MAX + 1}:${OBJECTS_MAX}`); break; }
       const r = parseWindow(b, bodyStart);
       if (parseWindow.over && !this.notes.some((n) => n.startsWith("over_bound:direct_object"))) this.note(`over_bound:direct_object:${DIRECT_OBJECT_MAX + 1}:${DIRECT_OBJECT_MAX}`);
+      /* R51: an object the bound stopped is recorded by number, so `objects()` can name it */
+      if (parseWindow.over) this._objs.stopped.set(num, DIRECT_OBJECT_MAX);
       if (r) {
         this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
         /* R8 (b): what a stream holds is its data and not objects: the scan resumes after it */
@@ -1370,7 +1382,12 @@ export class PdfDoc {
         const row = this._objs.row(n);
         if (row >= 0 ? done[row] : missing.has(n)) continue;
         const value = this.resolve({ t: "ref", n, g });
-        if (value === null) { missing.set(n, { num: n, gen: g }); if (row >= 0) done[row] = 1; }
+        if (value === null) {
+          /* R51: a reference the direct-object bound stopped says so, with the figure; any other stays `{num, gen}` */
+          const figure = this._objs.boundStopped(n);
+          missing.set(n, figure === null ? { num: n, gen: g } : { num: n, gen: g, over: "direct_object", figure });
+          if (row >= 0) done[row] = 1;
+        }
         else { done[row] = 1; found.push({ num: n, gen: this._objs.gen(n) ?? 0, value }); }
         refsIn(this._objs.get(n)); // a cycle of bare references still names its members
       }
