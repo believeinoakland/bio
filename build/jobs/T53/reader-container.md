@@ -1,6 +1,6 @@
 # reader-container (T53)
 
-**Status** · session_018BhcedfcFpkDwfqT6uTLcn · depth 2 · WAITING: the image digest from BOB's container-images.yml run on 2120a48c, to record with bundles.mjs --record-image
+**Status** · session_018BhcedfcFpkDwfqT6uTLcn · depth 2 · WORKING
 **Sessions** · 1
 
 ## Completion (2026-10-27)
