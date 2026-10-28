@@ -2395,3 +2395,6 @@ A need from ai-catalogue (merged K5673; requirements R49 and its state rows): 17
 - 13 refusal keys, check family C-156: `ai.refused.<code>` for each code of R49's rows in `bio-plane/src/ai-catalogue/checks.mjs` on tranche/T53 (from `ai.refused.catalogueevidencemissing` to `ai.refused.checkunknown`), each saying in plain words why the AI list (or an entry of it) was refused and that nothing changed.
 - 4 state keys: `ai.catalogue.state.unavailable`, `.needs_newer_release`, `.stale`, `.current`: what a member sees about the team's copy of the signed AI list.
 Send as a MERGE with their words-reads.json rows for `ai-catalogue`; I land it into the tranche at once.
+
+## B568 · HANDOFF · 2026-10-28 · session_018BhcefYrW3vwL3mYqzy8xd · secondary
+From credentials (T53, K5677; R66): the design rows `refusal.REAUTH_DUE` and `session.reauth` in words.json still say "connecting Claude". Since K5457 the product connects any AI account, never a named provider; credentials now composes REAUTH_DUE with `ai.reauth.connect` ("connecting an AI account"). Please reword the two rows to name no provider (or have them read `ai.reauth.connect`), as a MERGE; with B566 and B567 if they are ready together.
