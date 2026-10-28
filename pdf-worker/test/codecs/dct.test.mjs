@@ -18,7 +18,7 @@
  * saying why; `pdf-pixels` maps each code to its reasons (shown beside each code
  * below for reference, not tested here). */
 import "../../../bio-plane/test/sandbox.mjs";
-import { localize } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -99,7 +99,7 @@ test("R1 readJpegHeader and colourTransformOf: libjpeg's colour-transform rule, 
   assert.deepEqual(colourTransformOf(adobe), { ycc: false, why: "Adobe APP14 transform=0" });
   const comps = (ids) => ({ frame: { comps: ids.map((id) => ({ id })) }, jfif: false, adobe: null });
   assert.deepEqual(colourTransformOf(comps([82, 71, 66])), { ycc: false, why: "component ids R,G,B" });
-  assert.deepEqual(colourTransformOf(comps([1, 2, 3])), { ycc: true, why: localize("image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components") });
+  assert.deepEqual(colourTransformOf(comps([1, 2, 3])), { ycc: true, why: word("image-codecs.dctdecode.libjpeg_s_default_for_three") });
   assert.equal(colourTransformOf({ ...comps([82, 71, 66]), jfif: true }).ycc, true, "JFIF wins over the ids");
   assert.equal(colourTransformOf({ ...comps([1, 2, 3]), adobe: { transform: 1 } }).ycc, true);
   /* The rule is what decoding follows: the Adobe file decodes untransformed, and matches libjpeg. */
@@ -294,28 +294,37 @@ test("R1 a Huffman table libjpeg refuses is a CORRUPT_DATA refusal naming the ta
     while (!(d[sos] === 0xff && d[sos + 1] === 0xda)) sos++;
     return Uint8Array.from([...d.subarray(0, sos), ...segs.flat(), ...d.subarray(sos)]);
   };
+  /* Each refusal's note is the word its decoder check names (dctdecode.mjs, the DHT walk and bogusHuffman), with its values. */
+  const note = {
+    classOrId: () => word("image-codecs.dctdecode.huffman_table_class_or_id"),
+    countsRunPast: () => word("image-codecs.dctdecode.huffman_table_counts_run_past"),
+    ofTotal: (total) => word("image-codecs.dctdecode.huffman_table_of_total_symbols", { total: String(total), v1: total > 256 ? "past 256" : "runs past its DHT" }),
+    bogus: (get) => word("image-codecs.dctdecode.bogus_huffman_table_definition_get", { get }),
+    codes: (v1, l) => word("image-codecs.dctdecode.v1_codes_of_l_bits", { v1: String(v1), l: String(l) }),
+    dcSymbol: (s) => word("image-codecs.dctdecode.dc_symbol_s_past_15", { s: String(s) }),
+  };
   const refused = [
-    ["three codes of 1 bit (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 3 }, [0, 1, 2])), "dc 0"],
-    ["the all-ones code of 1 bit (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 2 }, [0, 1])), "dc 0"],
-    ["the all-ones code of 2 bits (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 1, 2: 2 }, [0, 1, 2])), "dc 0"],
+    ["three codes of 1 bit (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 3 }, [0, 1, 2])), "dc 0", () => note.bogus(note.codes(3, 1))],
+    ["the all-ones code of 1 bit (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 2 }, [0, 1])), "dc 0", () => note.bogus(note.codes(2, 1))],
+    ["the all-ones code of 2 bits (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 1, 2: 2 }, [0, 1, 2])), "dc 0", () => note.bogus(note.codes(2, 2))],
     ["the all-ones code of 16 bits (ac 0, used)", spliced("grey-baseline", table(1, 0, { ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => [i + 1, 1])), 16: 2 },
-      Array.from({ length: 17 }, (_, i) => i))), "ac 0"],
-    ["a DC symbol of 16 (dc 0, used)", spliced("grey-baseline", table(0, 0, { 2: 3 }, [0, 16, 2])), "dc 0"],
-    ["the colour file's chroma AC table (ac 1, used)", spliced("rgb-444", table(1, 1, { 1: 2 }, [0, 1])), "ac 1"],
-    ["a used table redefined bogus after a good one", spliced("grey-baseline", table(0, 0, { 1: 1 }, [0]), table(0, 0, { 1: 3 }, [0, 1, 2])), "dc 0"],
-    ["an id past 3, unused", spliced("grey-baseline", dht([0x04, ...counts({ 1: 1 }), 0])), null],
-    ["a class past AC, unused", spliced("grey-baseline", dht([0x20, ...counts({ 1: 1 }), 0])), null],
-    ["257 symbols, unused", spliced("grey-baseline", dht([0x13, ...counts({ 8: 255, 9: 2 }), ...Array(257).fill(0)])), "ac 3"],
-    ["counts that run past the DHT, unused", spliced("grey-baseline", dht([0x13, ...counts({ 2: 5 }), 0, 0])), "ac 3"],
-    ["a DHT cut inside its counts, unused", spliced("grey-baseline", dht([0x13, 0, 0, 0])), "ac 3"],
+      Array.from({ length: 17 }, (_, i) => i))), "ac 0", () => note.bogus(note.codes(2, 16))],
+    ["a DC symbol of 16 (dc 0, used)", spliced("grey-baseline", table(0, 0, { 2: 3 }, [0, 16, 2])), "dc 0", () => note.bogus(note.dcSymbol(16))],
+    ["the colour file's chroma AC table (ac 1, used)", spliced("rgb-444", table(1, 1, { 1: 2 }, [0, 1])), "ac 1", () => note.bogus(note.codes(2, 1))],
+    ["a used table redefined bogus after a good one", spliced("grey-baseline", table(0, 0, { 1: 1 }, [0]), table(0, 0, { 1: 3 }, [0, 1, 2])), "dc 0", () => note.bogus(note.codes(3, 1))],
+    ["an id past 3, unused", spliced("grey-baseline", dht([0x04, ...counts({ 1: 1 }), 0])), null, note.classOrId],
+    ["a class past AC, unused", spliced("grey-baseline", dht([0x20, ...counts({ 1: 1 }), 0])), null, note.classOrId],
+    ["257 symbols, unused", spliced("grey-baseline", dht([0x13, ...counts({ 8: 255, 9: 2 }), ...Array(257).fill(0)])), "ac 3", () => note.ofTotal(257)],
+    ["counts that run past the DHT, unused", spliced("grey-baseline", dht([0x13, ...counts({ 2: 5 }), 0, 0])), "ac 3", () => note.ofTotal(5)],
+    ["a DHT cut inside its counts, unused", spliced("grey-baseline", dht([0x13, 0, 0, 0])), "ac 3", note.countsRunPast],
   ];
-  for (const [label, d, named] of refused) {
+  for (const [label, d, named, expected] of refused) {
     for (const fn of [() => readJpegHeader(d), () => decodeBaselineJpeg(d)]) {
       const e = refusal(fn);
       assert.equal(e.code, "CORRUPT_DATA", label);
       if (named) assert.equal(e.detail.table, named, `${label}: the detail names the table`);
       else assert.ok(Number.isInteger(e.detail.id) && Number.isInteger(e.detail.class), `${label}: the detail names the class and id`);
-      assert.match(e.detail.note, /Huffman table/, label);
+      assert.equal(e.detail.note, expected(), label);
     }
   }
   /* A bogus table the scan does not use: libjpeg decodes the picture, and so does R1. */
