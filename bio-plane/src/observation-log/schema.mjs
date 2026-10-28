@@ -72,7 +72,9 @@ CREATE TABLE IF NOT EXISTS observation_log (
   terminal       INTEGER NOT NULL DEFAULT 0,
   result_kind    TEXT,              -- capture | content | entity | reading | observation (a rollup, REC-100). What the look produced, if anything
   result_ref     TEXT,              -- THE BACK-REFERENCE: the capture_sha, content_id, entity id
-  detail         TEXT               -- unchanged | changed | the reason | the reader name
+  detail         TEXT,              -- unchanged | changed | the reason | the reader name
+  read           TEXT,              -- a run's or step's read as data, JSON {record, n, total, outcome}, else NULL (R40)
+  disagree       TEXT               -- a run's or step's disagreement as data, JSON {record, levels}, else NULL (R40)
 );
 -- The three reads this table exists to answer, and none of them may be a scan.
 -- THE FRONTIER (section 5) is the latest row per level/subject_kind/subject --
@@ -162,10 +164,14 @@ export function observationLogOwns(t) {
 }
 
 /** The module's tables, created where absent. The statements are the schema text above, run one by one; then a
- *  `lead_shares` made before DEC-88 gains its `reason` column (R16), migrated forward and never rewritten. */
+ *  `lead_shares` made before DEC-88 gains its `reason` column (R16), and an `observation_log` made before T53 its `read`
+ *  and `disagree` columns (R40), each migrated forward and never rewritten. */
 export function migrateObservationLog(sql) {
   const bare = OBSERVATION_LOG_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const stmt of bare.split(";")) if (stmt.trim()) sql.exec(stmt);
   const cols = [...sql.exec(`PRAGMA table_info(lead_shares)`)].map((c) => c.name);
   if (!cols.includes("reason")) sql.exec(`ALTER TABLE lead_shares ADD COLUMN reason TEXT`);
+  /* An `observation_log` made before T53 gains the two fields of R40, migrated forward: its rows read both as NULL. */
+  const logCols = [...sql.exec(`PRAGMA table_info(observation_log)`)].map((c) => c.name);
+  for (const c of ["read", "disagree"]) if (!logCols.includes(c)) sql.exec(`ALTER TABLE observation_log ADD COLUMN ${c} TEXT`);
 }

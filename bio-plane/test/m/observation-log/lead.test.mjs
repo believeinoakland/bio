@@ -167,7 +167,7 @@ test("R17 leadLook: C-54.8; C-54.5; C-54.6 (NEVER_LOOKED answered with why); C-5
   assert.equal(check(look({ lead: "nope" })), "C-54.5");
   assert.equal(check(look({ viewer: V("eve") })), "C-54.5");
   const nl = look({ state: "NEVER_LOOKED" });
-  assert.equal(check(nl), "C-54.6"); assert.match(nl.detail, /never stored/);
+  assert.equal(check(nl), "C-54.6"); assert.equal(nl.detail, word("observation-log.index.never_looked_is_never_stored", { LEAD_LOOK_OUTCOMES: LEAD_LOOK_OUTCOMES.join(", ") }));
   for (const s of [null, "", "MAYBE", "present"]) assert.equal(check(look({ state: s })), "C-54.6", String(s));
   assert.equal(check(look({ state: "PRESENT", resultKind: "capture" })), "C-54.7", "a kind without a ref");
   assert.equal(check(look({ state: "PRESENT", resultRef: open })), "C-54.7", "a ref without a kind");

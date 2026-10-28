@@ -18233,126 +18233,126 @@
       "en": "connection derivation, keyed by entity",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1522
+      "line": 1545
     },
     {
       "id": "connections.declared.connectionassert",
       "en": "connection-directed: a member asserts a connection between two held documents with a stated basis, keyed by the document pair; writes an asserted-connection row, grade D, apart from derived ones",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1524
+      "line": 1547
     },
     {
       "id": "connections.declared.connectionchoose",
       "en": "connection-directed: records which mention is on point on ONE end of ONE connection, keyed by (capture, other capture, entity); writes a choice row beside the machine's pair and moves nothing existing",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1526
+      "line": 1549
     },
     {
       "id": "connections.declared.stepsource",
       "en": "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a declared step, withdrawn only by a reasoned act and never erased; moves no bundle",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1528
+      "line": 1551
     },
     {
       "id": "connections.declared.stepsourcewithdraw",
       "en": "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a declared step, withdrawn only by a reasoned act and never erased; moves no bundle",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1530
+      "line": 1553
     },
     {
       "id": "connections.declared.themedeclare",
       "en": "member-directed: a member declares a theme (an idea and its test) keyed by nothing the record holds; writes a `themes` row, no edge and no entity, and is never evidence",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1532
+      "line": 1555
     },
     {
       "id": "connections.declared.themeplace",
       "en": "theme-directed: a member places a document or a passage in a theme, keyed by (theme id, target); writes a `theme_placements` row as membership and no edge",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1534
+      "line": 1557
     },
     {
       "id": "connections.declared.themepropose",
       "en": "theme-directed: a member or a machine proposes a placement, keyed by (theme id, target); writes a `theme_placements` row as a hunch that is never membership",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1536
+      "line": 1559
     },
     {
       "id": "connections.declared.themeread",
       "en": "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1538
+      "line": 1561
     },
     {
       "id": "connections.declared.themewithdraw",
       "en": "theme-directed: a member withdraws a placement or rejects a hunch in a theme with a reason, keyed by (theme id, target); the placement is kept, shown as withdrawn",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1540
+      "line": 1563
     },
     {
       "id": "connections.index.act_names_no_member",
       "en": "this act names no member; the plane stamps the member from the credential that asked",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1086
+      "line": 1104
     },
     {
       "id": "connections.index.assert_carries_basis",
       "en": "a member's connection carries its basis: why these two documents are connected",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1089
+      "line": 1107
     },
     {
       "id": "connections.index.assert_joins_two_held",
       "en": "a member's connection joins two documents this record holds and you can see",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1097
+      "line": 1115
     },
     {
       "id": "connections.index.assert_machine_credential",
       "en": "'{who}' is a machine credential; asserting a connection is a member's act, in their name",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1085
+      "line": 1103
     },
     {
       "id": "connections.index.assert_names_one_twice",
       "en": "a connection joins two documents; this names one twice",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1099
+      "line": 1117
     },
     {
       "id": "connections.index.asserted_says",
       "en": "connections asserted by a member, by a source's own link and by the system's positional inference, each labelled with who asserts it and kept apart from the connections derived from resolutions",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1150
+      "line": 1168
     },
     {
       "id": "connections.index.backlinks_need_target",
       "en": "backlinks are asked of an object: pass target=<record id>",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 894
+      "line": 912
     },
     {
       "id": "connections.index.basis_over_limit",
       "en": "{count} characters of basis, over {limit}; refused rather than cut",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1092
+      "line": 1110
     },
     {
       "id": "connections.index.cannot_be_placed",
@@ -18429,56 +18429,56 @@
       "en": "connection — this document is an end of no connection through this subject",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1344
+      "line": 1362
     },
     {
       "id": "connections.index.empty_level_outside",
       "en": "connection — every connection of this document was established outside this portion",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1345
+      "line": 1363
     },
     {
       "id": "connections.index.empty_level_where_read",
       "en": "where in the document the determining reference was read, or which mention is on point",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1343
+      "line": 1361
     },
     {
       "id": "connections.index.judge_is_member_act",
       "en": "confirming or rejecting an inferred membership is a member's judgement, in their name",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1272
+      "line": 1290
     },
     {
       "id": "connections.index.judgement_carries_reason",
       "en": "a judgement carries its reason",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1277
+      "line": 1295
     },
     {
       "id": "connections.index.membership_read_says",
       "en": "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1263
+      "line": 1281
     },
     {
       "id": "connections.index.membership_stored_says",
       "en": "each file is assigned to the agenda item printed above it; a pair is stored as a connection the system asserts, graded C and never established, once both documents are held, and a member may confirm or reject it. A pair whose documents are not both held is served only at the read",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1217
+      "line": 1235
     },
     {
       "id": "connections.index.no_capture_by_digest",
       "en": "this record holds no capture by that digest that you can see",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1197
+      "line": 1215
     },
     {
       "id": "connections.index.no_content_row",
@@ -18506,14 +18506,14 @@
       "en": "this record holds no stored item-to-file membership by that id that you can see",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1281
+      "line": 1299
     },
     {
       "id": "connections.index.only_resolved_links_project_and",
       "en": "only resolved links project, and only to a target some record has registered. skipped_unregistered counts targets whose BYTES the record holds while no record claims them: those become edges when the target is promoted. Each edge is written into the source document's references as links_to and never cites, because the source asserted it and not the team; a member promoting it to cites is a member's act.",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 983
+      "line": 1001
     },
     {
       "id": "connections.index.pair_selection_by_rule",
@@ -18597,28 +18597,28 @@
       "en": "the source document's references block is not in a shape this act can extend in place",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1006
+      "line": 1024
     },
     {
       "id": "connections.index.rel_rel_target_target_status",
       "en": "  - rel: {rel}\n    target: {target}\n    status: {status}{v1}{v2}{v3}\n    note: \"{v4}\"",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1362
+      "line": 1380
     },
     {
       "id": "connections.index.session_when_projected_length_link",
       "en": "### Session {when} | Projected {length} link{v1} | {by}\nTrigger: op=linkproject\nChanges: links_to edges added to {map}, each the source's own link, resolved to a held document; asserted by the source, never by the team.\n",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1009
+      "line": 1027
     },
     {
       "id": "connections.index.source_document_not_held",
       "en": "the source record's document is not held as text, so its links cannot be written into it",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 992
+      "line": 1010
     },
     {
       "id": "connections.index.this_document_does_not_read",
@@ -18639,14 +18639,14 @@
       "en": "verdict is confirm or reject",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1275
+      "line": 1293
     },
     {
       "id": "connections.index.who_word_that_the_file",
       "en": "{who} {word} that the file belongs to the agenda item; the inference and every judgement are kept",
       "module": "connections",
       "file": "bio-plane/src/connections/index.mjs",
-      "line": 1287
+      "line": 1305
     },
     {
       "id": "connections.index.whole_document_citation",
@@ -26122,35 +26122,35 @@
       "en": "event-directed: keyed by (event, entity, role); writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1527
+      "line": 1582
     },
     {
       "id": "events.declared.createevent",
       "en": "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1525
+      "line": 1580
     },
     {
       "id": "events.declared.recorddatedfact",
       "en": "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1523
+      "line": 1578
     },
     {
       "id": "events.declared.relate",
       "en": "event-directed: keyed by the two events; writes a cited relation and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1529
+      "line": 1584
     },
     {
       "id": "events.follow.a_register_import_reads_one",
       "en": "a register import reads one captured register, named by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/follow.mjs",
-      "line": 286
+      "line": 313
     },
     {
       "id": "events.follow.an_import_reads_one_captured",
@@ -26164,14 +26164,14 @@
       "en": "court-doctypes {content_type}: the entry's date as written",
       "module": "events",
       "file": "bio-plane/src/events/follow.mjs",
-      "line": 304
+      "line": 322
     },
     {
       "id": "events.follow.following_a_register_names_the",
       "en": "following a register names the proceeding a member follows, by its entity id",
       "module": "events",
       "file": "bio-plane/src/events/follow.mjs",
-      "line": 284
+      "line": 311
     },
     {
       "id": "events.follow.following_names_the_one_body",
@@ -26213,7 +26213,7 @@
       "en": "the capture is not a register court-doctypes read",
       "module": "events",
       "file": "bio-plane/src/events/follow.mjs",
-      "line": 290
+      "line": 317
     },
     {
       "id": "events.follow.the_capture_is_not_one",
@@ -26227,77 +26227,77 @@
       "en": "a capture attestation names the extent that attests the event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 466
+      "line": 467
     },
     {
       "id": "events.index.a_cause_is_held_only",
       "en": "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 943
+      "line": 947
     },
     {
       "id": "events.index.a_correction_names_the_subject",
       "en": "a correction names the subject the participant is, by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 792
+      "line": 795
     },
     {
       "id": "events.index.a_correction_says_why_the",
       "en": "a correction says why the participant was wrong; it is kept beside the row",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 787
+      "line": 790
     },
     {
       "id": "events.index.a_dated_fact_is_a",
       "en": "a dated fact is a captured document's own statement, named by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 300
+      "line": 301
     },
     {
       "id": "events.index.a_dated_fact_is_one",
       "en": "a dated fact is one of {DATED_KINDS}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 306
+      "line": 307
     },
     {
       "id": "events.index.a_dated_fact_names_the",
       "en": "a dated fact names the extent of the capture that states it",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 303
+      "line": 304
     },
     {
       "id": "events.index.a_dated_fact_says_how",
       "en": "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 309
+      "line": 310
     },
     {
       "id": "events.index.a_hypothesis_is_never_a",
       "en": "a hypothesis is never a participant (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 515
+      "line": 516
     },
     {
       "id": "events.index.a_hypothesis_is_never_an",
       "en": "a hypothesis is never an end of an event's relation (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 933
+      "line": 937
     },
     {
       "id": "events.index.a_hypothesis_is_never_what",
       "en": "a hypothesis is never what an event concerns (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 506
+      "line": 507
     },
     {
       "id": "events.index.a_hypothesis_v1_is_never",
@@ -26311,28 +26311,28 @@
       "en": "a merge says why the two records are one happening",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 818
+      "line": 821
     },
     {
       "id": "events.index.a_participant_is_a_registered",
       "en": "a participant is a registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 514
+      "line": 515
     },
     {
       "id": "events.index.a_participant_is_what_a",
       "en": "a participant is what a document states or a member testifies, never filled from who held an office",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 522
+      "line": 523
     },
     {
       "id": "events.index.a_participant_names_the_attestation",
       "en": "a participant names the attestation that states it, by its index in attestations",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 572
+      "line": 573
     },
     {
       "id": "events.index.a_payer_or_payee_lives",
@@ -26346,189 +26346,196 @@
       "en": "a proceeding's status is read by its entity id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1374
+      "line": 1428
     },
     {
       "id": "events.index.a_relation_is_between_two",
       "en": "a relation is between two distinct events",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 935
+      "line": 939
     },
     {
       "id": "events.index.a_relation_is_one_of",
       "en": "a relation is one of {RELATION_KINDS}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 931
+      "line": 935
     },
     {
       "id": "events.index.a_relation_names_two_events",
       "en": "a relation names two events by id: from and to",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 932
+      "line": 936
     },
     {
       "id": "events.index.a_role_is_one_of",
       "en": "a role is one of {ROLES}; a payer or payee lives on the money fact, never on an event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 519
+      "line": 520
     },
     {
       "id": "events.index.a_split_leaves_at_least",
       "en": "a split leaves at least one attestation on the event it splits",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 863
+      "line": 867
     },
     {
       "id": "events.index.a_split_names_the_attestations",
       "en": "a split names the attestations that move to the new event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 858
+      "line": 862
     },
     {
       "id": "events.index.a_split_says_why_one",
       "en": "a split says why one record held two happenings",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 854
+      "line": 858
     },
     {
       "id": "events.index.a_stated_cause_is_held",
       "en": "a stated cause is held only from a named source by a member; the machine never writes one",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 941
+      "line": 945
     },
     {
       "id": "events.index.a_status_is_one_of",
       "en": "a status is one of {STATUSES}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 560
+      "line": 561
     },
     {
       "id": "events.index.a_status_is_read_as",
       "en": "a status is read as of a date",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1389
+      "line": 1443
     },
     {
       "id": "events.index.a_timeline_is_of_an",
       "en": "a timeline is of an explicit set of entity or event ids, or of captures; a project's or inquiry's scope is resolved by its caller",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1176
+      "line": 1210
     },
     {
       "id": "events.index.a_timeline_reads_the_dated",
       "en": "a timeline reads the dated facts of at most {CAPTURES_MAX} captures",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1181
+      "line": 1215
     },
     {
       "id": "events.index.a_timeline_s_audience_is",
       "en": "a timeline's audience is \"public\", or none for the team's own reading",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1179
+      "line": 1213
     },
     {
       "id": "events.index.a_vote_is_held_with",
       "en": "a vote is held with the value the record states",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 539
+      "line": 540
     },
     {
       "id": "events.index.a_vote_value_is_one",
       "en": "a vote value is one of the profile's: {values}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 545
+      "line": 546
     },
     {
       "id": "events.index.a_withdrawal_says_why_the",
       "en": "a withdrawal says why the relation was wrong; it is kept beside it",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 971
+      "line": 975
+    },
+    {
+      "id": "events.index.a_withdrawal_says_why_the_event",
+      "en": "a withdrawal says why the event was wrong; it is kept beside it",
+      "module": "events",
+      "file": "bio-plane/src/events/index.mjs",
+      "line": 986
     },
     {
       "id": "events.index.an_act_is_named_by",
       "en": "an act is named by its ACT- id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 998
+      "line": 1015
     },
     {
       "id": "events.index.an_attestation_from_a_captured",
       "en": "an attestation from a captured document names its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 463
+      "line": 464
     },
     {
       "id": "events.index.an_attestation_is_a_held",
       "en": "an attestation is a held dated fact, a passage of a captured document, or a member's testimony",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 454
+      "line": 455
     },
     {
       "id": "events.index.an_attestation_with_no_date",
       "en": "an attestation with no date of its own cannot govern when the event happened",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 643
+      "line": 644
     },
     {
       "id": "events.index.an_event_concerns_a_registered",
       "en": "an event concerns a registered subject or another event, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 505
+      "line": 506
     },
     {
       "id": "events.index.an_event_is_held_only",
       "en": "an event is held only with at least one attestation",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 562
+      "line": 563
     },
     {
       "id": "events.index.an_event_is_not_merged",
       "en": "an event is not merged into itself",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 822
+      "line": 825
     },
     {
       "id": "events.index.an_event_is_one_of",
       "en": "an event is one of {EVENT_KINDS}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 559
+      "line": 560
     },
     {
       "id": "events.index.an_event_is_read_by",
       "en": "an event is read by its id (op=event&id=EVT-…)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1100
+      "line": 1123
     },
     {
       "id": "events.index.an_event_of_kind_kind",
       "en": "an event of kind {kind} is held only with its provision, reason and outcome: it is recorded with op={v1}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 553
+      "line": 554
     },
     {
       "id": "events.index.an_event_row_holds_no",
@@ -26542,56 +26549,56 @@
       "en": "author",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 416
+      "line": 417
     },
     {
       "id": "events.index.choosing_which_readings_dates_are",
       "en": "choosing which readings' dates are held",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 365
+      "line": 366
     },
     {
       "id": "events.index.dated_facts_are_read_for",
       "en": "dated facts are read for a captured document, by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 427
+      "line": 428
     },
     {
       "id": "events.index.edit_acts_are_read_from",
       "en": "edit acts are read from a captured office document, named by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 403
+      "line": 404
     },
     {
       "id": "events.index.events_are_read_for_one",
       "en": "events are read for one registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1159
+      "line": 1193
     },
     {
       "id": "events.index.every_relation_is_cited",
       "en": "every relation is cited",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 938
+      "line": 942
     },
     {
       "id": "events.index.its_two_ends_were_merged",
       "en": "its two ends were merged into one event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 837
+      "line": 840
     },
     {
       "id": "events.index.kept_as_governing_when_another",
       "en": "kept as governing when another event was merged into this one",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 827
+      "line": 830
     },
     {
       "id": "events.index.no_dated_fact_with_that",
@@ -26612,154 +26619,154 @@
       "en": "no participant with that id is held",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 789
+      "line": 792
     },
     {
       "id": "events.index.no_question_with_that_id",
       "en": "no question with that id is held where you can see it; a question is an inquiry the record holds",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 311
+      "line": 312
     },
     {
       "id": "events.index.no_relation_with_that_id",
       "en": "no relation with that id is held",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 973
+      "line": 977
     },
     {
       "id": "events.index.office_metadata_the_files_field",
       "en": "office metadata: the file's {field} value{v1}; what the file states about itself, never a finding",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 416
+      "line": 417
     },
     {
       "id": "events.index.only_a_member_merges_or",
       "en": "only a member merges or splits events; the machine's rows are corrected by a member's act",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 812
+      "line": 815
     },
     {
       "id": "events.index.only_a_member_records_which",
       "en": "only a member records which of two events came first; the machine infers no order (R41)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 945
+      "line": 949
     },
     {
       "id": "events.index.statements_are_read_for_one",
       "en": "statements are read for one registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1364
+      "line": 1418
     },
     {
       "id": "events.index.status_as_of_a_date",
       "en": "status as of a date is read of an entity of kind proceeding",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1380
+      "line": 1434
     },
     {
       "id": "events.index.testimony_carries_the_member_s",
       "en": "testimony carries the member's own account of the event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 474
+      "line": 475
     },
     {
       "id": "events.index.testimony_is_a_member_s",
       "en": "testimony is a member's own account, never the machine's",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 475
+      "line": 476
     },
     {
       "id": "events.index.that_act_already_names_another",
       "en": "that act already names another event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1003
+      "line": 1020
     },
     {
       "id": "events.index.that_event_holds_no_such",
       "en": "that event holds no such attestation",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 642
+      "line": 643
     },
     {
       "id": "events.index.that_row_was_already_corrected",
       "en": "that row was already corrected; correct the row that replaced it",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 790
+      "line": 793
     },
     {
       "id": "events.index.that_within_would_make_an",
       "en": "that within would make an event lie within itself",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 950
+      "line": 954
     },
     {
       "id": "events.index.the_capture_s_reading_holds",
       "en": "the capture's reading holds no office metadata",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 408
+      "line": 409
     },
     {
       "id": "events.index.the_extent_names_no_part",
       "en": "the extent names no part of that capture",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 323
+      "line": 324
     },
     {
       "id": "events.index.the_machine_writes_no_relation",
       "en": "the machine writes no relation but within (R41)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 947
+      "line": 951
     },
     {
       "id": "events.index.the_opt_in_set_is",
       "en": "the opt-in set is a list of capture classes (content-type keys), empty for none",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 367
+      "line": 368
     },
     {
       "id": "events.index.the_record_holds_no_such",
       "en": "the record holds no such capture you can see",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 302
+      "line": 303
     },
     {
       "id": "events.index.the_two_events_dates_already",
       "en": "the two events' dates already answer which came first: {f} {answer} {t}; a cited order is held only for a pair no date settles",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 955
+      "line": 959
     },
     {
       "id": "events.index.the_write_was_undone_because",
       "en": "the write was undone because {module}'s listener failed: {message}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 608
+      "line": 609
     },
     {
       "id": "events.index.who_was_sent_something_is",
       "en": "who was sent something is read of a communication, an issuance or a meeting",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1354
+      "line": 1408
     },
     {
       "id": "events.owner.this_node_has_v1_connections",
@@ -41809,77 +41816,77 @@
       "en": "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1109
+      "line": 1128
     },
     {
       "id": "observation-log.declared.leadlist",
       "en": "read: the leads this viewer may read, each once — `leadread`'s fence over a list; writes nothing",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1117
+      "line": 1136
     },
     {
       "id": "observation-log.declared.leadlook",
       "en": "lead-directed: a member records following a lead, keyed by lead id; with the looker's words on where they looked and what they found, now required (observation-log R17, C-54.11; DEC-88: `reasoned`); writes one observation_log row under authority_kind lead",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1111
+      "line": 1130
     },
     {
       "id": "observation-log.declared.leadread",
       "en": "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1115
+      "line": 1134
     },
     {
       "id": "observation-log.declared.leadshare",
       "en": "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project), with the sharer's reason for telling that project, now required (observation-log R16, C-54.12; DEC-88: `reasoned`); writes a `lead_shares` row and no edge",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 1113
+      "line": 1132
     },
     {
       "id": "observation-log.index.a_container_has_no_arm",
       "en": "a {container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is a page, a paragraph, a slide or a sheet's used range, and HTML has no `dom` producer)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 357
+      "line": 376
     },
     {
       "id": "observation-log.index.a_look_recorded_as_st",
       "en": "a look recorded as {st} found nothing, so it cannot point at something it found",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 930
+      "line": 949
     },
     {
       "id": "observation-log.index.a_resolver_is_registered_for",
       "en": "a resolver is registered for one of {RESOLVED_AUTHORITY_KINDS}; the records every other authority kind names are fixed by the observation log",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 675
+      "line": 694
     },
     {
       "id": "observation-log.index.an_authored_observation_indexed_at",
       "en": "an authored observation indexed at a {container} extent has no indexing unit arm: its one unit is the whole document (extraction R61)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 384
+      "line": 403
     },
     {
       "id": "observation-log.index.and_b_of_locator",
       "en": " and {bytes} B of locator",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 828
+      "line": 847
     },
     {
       "id": "observation-log.index.bytes_b_of_words_v1",
       "en": "{bytes} B of words{v1}, over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 828
+      "line": 847
     },
     {
       "id": "observation-log.index.first_extraction_authored",
@@ -41889,221 +41896,235 @@
       "line": 71
     },
     {
+      "id": "observation-log.index.first_extraction_prefix",
+      "en": "first extraction; ",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/index.mjs",
+      "line": 76
+    },
+    {
       "id": "observation-log.index.lead_call_carries_nobody",
       "en": "this call carries nobody. The plane stamps the author from the credential that asked",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 822
+      "line": 841
     },
     {
       "id": "observation-log.index.lead_empty",
       "en": "the lead is empty. Its words are what the member was told or suspects, as they write it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 825
+      "line": 844
     },
     {
       "id": "observation-log.index.lead_id_was_written_by",
       "en": "{lead_id} was written by another member; only its author shares it. A machine credential is never the author (the author is a member id, stamped when the lead was written)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 857
+      "line": 876
     },
     {
       "id": "observation-log.index.look_call_carries_nobody",
       "en": "this call carries nobody. The plane stamps who looked from the credential that asked",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 915
+      "line": 934
     },
     {
       "id": "observation-log.index.look_detail_blank",
       "en": "the detail is blank. Say where you looked and what you found",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 944
+      "line": 963
     },
     {
       "id": "observation-log.index.never_looked_is_never_stored",
       "en": "NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all (OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of {LEAD_LOOK_OUTCOMES}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 922
+      "line": 941
     },
     {
       "id": "observation-log.index.no_lead_is_addressed_by",
       "en": "no lead is addressed by {lid} in this record",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 805
+      "line": 824
     },
     {
       "id": "observation-log.index.no_rk_rr_is_held",
       "en": "no {rk} {rr} is held in this record where you can read it. Capture what the look found first, then record the look against it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 936
+      "line": 955
     },
     {
       "id": "observation-log.index.nothing_found_citable",
       "en": "nothing it found is citable through it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 966
+      "line": 985
     },
     {
       "id": "observation-log.index.pass_detail_hint",
       "en": "pass detail=<your words>: where you looked and what you found",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 942
+      "line": 961
     },
     {
       "id": "observation-log.index.pass_lead_hint",
       "en": "pass lead=<LEAD-…>: the id op=lead returned",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 806
+      "line": 825
     },
     {
       "id": "observation-log.index.pass_project_hint",
       "en": "pass project=<PROJ-…>: the project to share this lead to",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 863
+      "line": 882
     },
     {
       "id": "observation-log.index.pass_reason_hint",
       "en": "pass reason=<your words>: why this lead is disclosed to {pid}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 873
+      "line": 892
     },
     {
       "id": "observation-log.index.per_capture_text_bound",
       "en": "the per-capture text bound, {bytes} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 456
+      "line": 475
     },
     {
       "id": "observation-log.index.per_capture_unit_bound",
       "en": "the per-capture UNIT bound, {units} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 455
+      "line": 474
     },
     {
       "id": "observation-log.index.per_unit_cut_bound",
       "en": "the per-unit text cap: {truncated} unit(s) were stored cut, so the record holds only the start of their text",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 462
+      "line": 481
+    },
+    {
+      "id": "observation-log.index.re_extraction_prefix",
+      "en": "re-extraction; ",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/index.mjs",
+      "line": 77
     },
     {
       "id": "observation-log.index.referent_kind_and_id",
       "en": "a referent is a KIND and an id together (resultKind capture|content, resultRef); one without the other names nothing",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 927
+      "line": 946
     },
     {
       "id": "observation-log.index.rk_is_not_something_a",
       "en": "'{rk}' is not something a look can find: capture or content. An observation referent is a rollup's (REC-100), and a member's look is never a rollup",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 933
+      "line": 952
     },
     {
       "id": "observation-log.index.the_detail_must_be_your",
       "en": "the detail must be your words, as text; a {v1} was sent",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 943
+      "line": 962
     },
     {
       "id": "observation-log.index.the_look_found_citable",
       "en": "the {rk} the look found is what a leg can cite",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 966
+      "line": 985
     },
     {
       "id": "observation-log.index.the_looks_detail_is_over",
       "en": "the look's detail is over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 950
+      "line": 969
     },
     {
       "id": "observation-log.index.the_reason_is_blank_say",
       "en": "the reason is blank. Say why this lead is disclosed to {pid}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 875
+      "line": 894
     },
     {
       "id": "observation-log.index.the_reason_is_chars_characters",
       "en": "the reason is {chars} characters, over the {LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 876
+      "line": 895
     },
     {
       "id": "observation-log.index.the_reason_must_be_your",
       "en": "the reason must be your words, as text; a {v1} was sent",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 874
+      "line": 893
     },
     {
       "id": "observation-log.index.unit_arm_no_unit_text",
       "en": "this container has an indexing unit arm and produced no unit carrying text (M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record holds no addressable passage of it",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 469
+      "line": 488
     },
     {
       "id": "observation-log.index.v1_is_not_one_of",
       "en": "'{v1}' is not one of {LEAD_LOOK_OUTCOMES}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 923
+      "line": 942
     },
     {
       "id": "observation-log.index.v1_or_the_acquire_answers",
       "en": "{v1} or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 454
+      "line": 473
     },
     {
       "id": "observation-log.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. A lead is what a PERSON was told or has reason to believe, in their own name",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 821
+      "line": 840
     },
     {
       "id": "observation-log.index.who_is_a_machine_credential_2",
       "en": "'{who}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 914
+      "line": 933
     },
     {
       "id": "observation-log.index.written_unit_s_indexed_bytes",
       "en": "{written} unit(s) indexed, {bytes} B",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 463
+      "line": 482
     },
     {
       "id": "observation-log.index.you_are_not_a_joined",
       "en": "you are not a joined participant of a project addressed by {pid}",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/index.mjs",
-      "line": 862
+      "line": 881
     },
     {
       "id": "observation-log.vocabulary.a_governed_refusal_cannot_support",
@@ -42337,6 +42358,27 @@
       "line": 1101
     },
     {
+      "id": "observation-log.vocabulary.field_authority",
+      "en": "the entry's {field} is carried only under authority {kinds}, and this entry's authority is '{kind}'",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/vocabulary.mjs",
+      "line": 1586
+    },
+    {
+      "id": "observation-log.vocabulary.field_both",
+      "en": "the entry carries both a read and a disagreement; it may carry one of the two",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/vocabulary.mjs",
+      "line": 1582
+    },
+    {
+      "id": "observation-log.vocabulary.field_malformed",
+      "en": "the entry's {field} is not in the form the record keeps (a read: record, n of total with 1 <= n <= total, outcome {outcomes}; a disagreement: record and at least two distinct levels of {levels})",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/vocabulary.mjs",
+      "line": 1577
+    },
+    {
       "id": "observation-log.vocabulary.it_tried_considered",
       "en": "; it tried {considered}",
       "module": "observation-log",
@@ -42411,7 +42453,7 @@
       "en": "'{String}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)",
       "module": "observation-log",
       "file": "bio-plane/src/observation-log/vocabulary.mjs",
-      "line": 1548
+      "line": 1597
     },
     {
       "id": "observation-log.vocabulary.subject_extent",
@@ -50063,6 +50105,20 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/checks.mjs",
       "line": 376
+    },
+    {
+      "id": "refusal.OBSERVATION_FIELD_MALFORMED",
+      "en": "That entry carries a read or a disagreement that is not in the form the record keeps. A read names the record, which one it was of how many, and whether it was answered or refused; a disagreement names the record and at least two different levels, in the order they were named. Nothing was written.",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/checks.mjs",
+      "line": 197
+    },
+    {
+      "id": "refusal.OBSERVATION_FIELD_NOT_ALLOWED",
+      "en": "Only an entry of a run or of one of its steps can carry a read or a disagreement, and only one of the two. Nothing was written.",
+      "module": "observation-log",
+      "file": "bio-plane/src/observation-log/checks.mjs",
+      "line": 203
     },
     {
       "id": "refusal.SITE_ASKS_FOR_PERSON",

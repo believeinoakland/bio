@@ -26,10 +26,10 @@ test("R8 the reader run: PRESENT with its count names the reading; a reader that
   // found true with an empty list, and a list without found: LOOKED_ABSENT, each saying which
   w.obs.observeReaderRun("B", "c2", reading({ found: true, entities: [] }));
   assert.deepEqual([last().state, last().result_kind, last().result_ref], ["LOOKED_ABSENT", "reading", "c2"]);
-  assert.match(last().detail, /says it found something and carries an empty entity list/);
+  assert.ok(last().detail.includes(word("observation-log.vocabulary.empty_entity_list")));
   w.obs.observeReaderRun("B", "c3", reading({ found: false }));
   assert.deepEqual([last().state, last().result_ref], ["LOOKED_ABSENT", "c3"]);
-  assert.match(last().detail, /carries 2 reference\(s\) and does not say it found anything, so the weaker/);
+  assert.ok(last().detail.includes(word("observation-log.vocabulary.reading_carries_references", { n: "2" })));
   w.obs.observeReaderRun("B", "c4", reading({ found: false, entities: [] }));
   assert.match(last().detail, /found no entity references\. This is a MEANING-level absence/);
   // an unrecorded type and version are said, never guessed
@@ -42,7 +42,7 @@ test("R8 the reader run: PRESENT with its count names the reading; a reader that
   }
   w.obs.observeReaderRun("B", "none", reading(), { readerRegistered: false });
   assert.deepEqual([last().state, last().condition, last().result_kind, last().result_ref], ["LOOKED_INDETERMINATE", null, null, null]);
-  assert.match(last().detail, /no reader is registered for this document's type \(agenda\)/);
+  assert.equal(last().detail, word("observation-log.vocabulary.no_reader_is_registered_for", { v1: "agenda" }));
   // no reading: nothing to record
   const n = w.count("observation_log");
   assert.deepEqual(w.obs.observeReaderRun("B", "gone", null), { written: 0, refused: [], state: null });
@@ -67,7 +67,8 @@ test("R8 the resolution attempt: the subject the reference and the authority the
   w.obs.observeResolutionAttempt({ captureSha: "c1", ref: "k:3", matches: [{ entity_id: "ENT-2", grade: "B" }, { entity_id: "ENT-3", grade: "A" }],
                                    resolvedBy: "class:ai/tok-1" });
   assert.deepEqual([last().state, last().result_ref, last().actor_class], ["PRESENT", "ENT-2", "machine"]);
-  assert.match(last().detail, /to 2 registered entity\(ies\) at grade\(s\) A,B; the name is ambiguous across entities .* does not choose between them/);
+  assert.equal(last().detail, word("observation-log.vocabulary.the_recogniser_matched_r_to", { r: "k:3", length: "2",
+    v1: word("observation-log.vocabulary.at_grades", { grades: "A,B" }), v2: word("observation-log.vocabulary.ambiguous_name") }));
   const n = w.count("observation_log");
   for (const ref of [null, "", { ref: null }])
     assert.deepEqual(w.obs.observeResolutionAttempt({ captureSha: "c1", ref, matches: [] }), { written: 0, refused: [], state: null });
@@ -91,7 +92,8 @@ test("R8 the connection derivation: its count and documents, PRESENT when it wro
     assert.match(last().detail, new RegExp(`over 32 document\\(s\\) .* was CUT by its own bound and wrote ${count} connection`));
   }
   w.obs.observeConnectionDerivation({ entityId: "ENT-9", count: 1, documents: null, entityKnown: false });
-  assert.match(last().detail, /read an unrecorded number of document\(s\).*not in the subject registry/);
+  assert.equal(last().detail, word("observation-log.vocabulary.the_derivation_read_ends_document", { ends: word("observation-log.text.unrecorded_number"),
+    n: "1", unregistered: word("observation-log.text.entity_id_subject") }));
   const n = w.count("observation_log");
   assert.deepEqual(w.obs.observeConnectionDerivation({ entityId: null, count: 1 }), { written: 0, refused: [], state: null });
   assert.equal(w.count("observation_log"), n);
@@ -103,10 +105,10 @@ test("R8 R27 the derivation statement read back from the row: whole, cut, formed
     says: "the latest derivation (2026-09-27T03:00:00Z) read 4 document(s) and was not cut" });
   const cutRow = derivationStatement({ state: "partial", at: "t", detail: derivationObservation({ entityId: "E", count: 496, documents: 32, truncated: true }).row.detail });
   assert.deepEqual([cutRow.cut, cutRow.documents, cutRow.derived], [true, 32, "derived"]);
-  assert.match(cutRow.says, /was CUT by its bound after 32 document\(s\): the connections here are true but are part of the set/);
+  assert.equal(cutRow.says, word("observation-log.text.latest_derivation_cut", { at: "t", over: "32 document(s)" }));
   const none = derivationStatement({ state: "LOOKED_ABSENT", at: "t", detail: derivationObservation({ entityId: "E", count: 0, documents: 1 }).row.detail });
   assert.deepEqual([none.cut, none.documents], [false, 1]);
-  assert.match(none.says, /ran over 1 document\(s\), was not cut, and formed no connection/);
+  assert.equal(none.says, word("observation-log.text.latest_derivation_ran", { at: "t", over: "1 document(s)" }));
   const odd = derivationStatement({ state: "LOOKED_INDETERMINATE", at: "t", detail: "something else" });
   assert.deepEqual([odd.documents, odd.cut], [null, false]);
   assert.match(odd.says, /recorded state LOOKED_INDETERMINATE/);
@@ -146,12 +148,13 @@ test("R8 registered with connections itself, under this module's name: a derivat
   assert.deepEqual([d.ok, d.count, d.documents], [true, 0, 0]);
   assert.deepEqual(w.log().map(fields),
     [["meaning", "entity", "ENT-1", "derive", "ENT-1", "LOOKED_ABSENT", null, "entity", "ENT-1", "plane", null]]);
-  assert.match(w.log()[0].detail, /ran over 0 document\(s\) .* not in the subject registry/);
+  assert.equal(w.log()[0].detail, word("observation-log.vocabulary.the_derivation_ran_over_ends", { ends: "0", v1: word("observation-log.vocabulary.connection_pair"),
+    unregistered: word("observation-log.text.entity_id_subject") }));
   // and connections' own read carries the statement read back from that row
   const read = k.read({ entityId: "ENT-1", viewer: "class:member" });
   assert.deepEqual([read.derivation.state, read.derivation.cut, read.derivation.documents, read.derivation.derived],
     ["LOOKED_ABSENT", false, 0, "derived"]);
-  assert.match(read.derivation.says, /ran over 0 document\(s\), was not cut, and formed no connection/);
+  assert.equal(read.derivation.says, word("observation-log.text.latest_derivation_ran", { at: read.derivation.at, over: "0 document(s)" }));
   w.obs.observeConnectionDerivation({ entityId: "ENT-1", count: 496, documents: 32, truncated: true });
   const s = k.derivationStatement("ENT-1");
   assert.deepEqual([s.state, s.cut, s.documents, s.derived], ["partial", true, 32, "derived"]);

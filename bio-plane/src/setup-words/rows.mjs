@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8026 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 8034 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23623,6 +23623,7 @@ export const WORD_ROWS = Object.freeze([
   ["events.index.a_vote_is_held_with","a vote is held with the value the record states",null,null,false,"code"],
   ["events.index.a_vote_value_is_one","a vote value is one of the profile's: {values}",null,null,false,"code"],
   ["events.index.a_withdrawal_says_why_the","a withdrawal says why the relation was wrong; it is kept beside it",null,null,false,"code"],
+  ["events.index.a_withdrawal_says_why_the_event","a withdrawal says why the event was wrong; it is kept beside it",null,null,false,"code"],
   ["events.index.an_act_is_named_by","an act is named by its ACT- id",null,null,false,"code"],
   ["events.index.an_attestation_from_a_captured","an attestation from a captured document names its capture sha256",null,null,false,"code"],
   ["events.index.an_attestation_is_a_held","an attestation is a held dated fact, a passage of a captured document, or a member's testimony",null,null,false,"code"],
@@ -25827,6 +25828,7 @@ export const WORD_ROWS = Object.freeze([
   ["observation-log.index.and_b_of_locator"," and {bytes} B of locator",null,null,false,"code"],
   ["observation-log.index.bytes_b_of_words_v1","{bytes} B of words{v1}, over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut",null,null,false,"code"],
   ["observation-log.index.first_extraction_authored","first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them",null,null,false,"code"],
+  ["observation-log.index.first_extraction_prefix","first extraction; ",null,null,false,"code"],
   ["observation-log.index.lead_call_carries_nobody","this call carries nobody. The plane stamps the author from the credential that asked",null,null,false,"code"],
   ["observation-log.index.lead_empty","the lead is empty. Its words are what the member was told or suspects, as they write it",null,null,false,"code"],
   ["observation-log.index.lead_id_was_written_by","{lead_id} was written by another member; only its author shares it. A machine credential is never the author (the author is a member id, stamped when the lead was written)",null,null,false,"code"],
@@ -25843,6 +25845,7 @@ export const WORD_ROWS = Object.freeze([
   ["observation-log.index.per_capture_text_bound","the per-capture text bound, {bytes} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)",null,null,false,"code"],
   ["observation-log.index.per_capture_unit_bound","the per-capture UNIT bound, {units} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on",null,null,false,"code"],
   ["observation-log.index.per_unit_cut_bound","the per-unit text cap: {truncated} unit(s) were stored cut, so the record holds only the start of their text",null,null,false,"code"],
+  ["observation-log.index.re_extraction_prefix","re-extraction; ",null,null,false,"code"],
   ["observation-log.index.referent_kind_and_id","a referent is a KIND and an id together (resultKind capture|content, resultRef); one without the other names nothing",null,null,false,"code"],
   ["observation-log.index.rk_is_not_something_a","'{rk}' is not something a look can find: capture or content. An observation referent is a rollup's (REC-100), and a member's look is never a rollup",null,null,false,"code"],
   ["observation-log.index.the_detail_must_be_your","the detail must be your words, as text; a {v1} was sent",null,null,false,"code"],
@@ -25891,6 +25894,9 @@ export const WORD_ROWS = Object.freeze([
   ["observation-log.vocabulary.coverage_backed","the row names what the look produced: `result_ref` points at it, and the claim can be checked against the thing itself",null,null,false,"code"],
   ["observation-log.vocabulary.coverage_none_owed","the row's state does not assert the record obtained anything, so C-22.10 requires no referent and its absence is a fact about the look rather than an unknown",null,null,false,"code"],
   ["observation-log.vocabulary.empty_entity_list","; the reading says it found something and carries an empty entity list, and the empty list is what this record can actually point at",null,null,false,"code"],
+  ["observation-log.vocabulary.field_authority","the entry's {field} is carried only under authority {kinds}, and this entry's authority is '{kind}'",null,null,false,"code"],
+  ["observation-log.vocabulary.field_both","the entry carries both a read and a disagreement; it may carry one of the two",null,null,false,"code"],
+  ["observation-log.vocabulary.field_malformed","the entry's {field} is not in the form the record keeps (a read: record, n of total with 1 <= n <= total, outcome {outcomes}; a disagreement: record and at least two distinct levels of {levels})",null,null,false,"code"],
   ["observation-log.vocabulary.it_tried_considered","; it tried {considered}",null,null,false,"code"],
   ["observation-log.vocabulary.level_content","extracted content within documents (DEC-23: content is the unit)",null,null,false,"code"],
   ["observation-log.vocabulary.meaning_pre_log","this subject was looked at BEFORE the observation log carried the meaning level, so the look is recorded in the table that holds what it produced -- a reading, a resolution, a connection -- and not here. It is not a subject nobody looked at",null,null,false,"code"],
@@ -26995,6 +27001,8 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.FILE_TYPE_REFUSED","Your team's Civicsmith does not keep this kind of file, so nothing was saved. Send the document in another form, such as a PDF.",null,null,false,"code"],
   ["refusal.MAIL_NO_STATEMENT","A message brought in records where it came from, in your own words, and none was given, or it is longer than 2,000 characters. Write it. Nothing was written.",null,null,false,"code"],
   ["refusal.MEMBER_NOT_CUT","Your team's Civicsmith could not cut this attachment out of its message, so nothing was saved for it. Open the message yourself and add the file.",null,null,false,"code"],
+  ["refusal.OBSERVATION_FIELD_MALFORMED","That entry carries a read or a disagreement that is not in the form the record keeps. A read names the record, which one it was of how many, and whether it was answered or refused; a disagreement names the record and at least two different levels, in the order they were named. Nothing was written.",null,null,false,"code"],
+  ["refusal.OBSERVATION_FIELD_NOT_ALLOWED","Only an entry of a run or of one of its steps can carry a read or a disagreement, and only one of the two. Nothing was written.",null,null,false,"code"],
   ["refusal.SITE_ASKS_FOR_PERSON","The site asked for proof that a person is asking, so nothing was saved. Open the page yourself and add the file you get.",null,null,false,"code"],
   ["refusal.WORKBOOK_FILE_TOO_LARGE","This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",null,null,false,"code"],
   ["retrieval-browse.browse.marks_another_shape","the registered read of watches and flags answered another shape than its contract's",null,null,false,"code"],
