@@ -148,7 +148,9 @@ test("R65 unlock clears the lock with the session's password, under R38's window
 
 /* ===== R66: the password asked again ===== */
 
-test("R66 the password-again prompt names the act of connecting an AI account by the key `ai.reauth.connect`, read from the word table, and its resolved sentence names no one provider; control: the design's earlier prompt, which named one, is not what this module answers", async () => {
+const PROVIDER_NAMED = /\b(?:claude|anthropic|openai|gpt|gemini|mistral)\b/i;
+
+test("R66 the password-again prompt names the act of connecting an AI account by the key `ai.reauth.connect`, read from the word table, and its resolved sentence names no one provider; control: a prompt reworded to name one provider is caught by the same check", async () => {
   const w = await signedIn("shared");
   const due = w.w.c.reauthDue({ token: "none" });
   assert.equal(due.code, "REAUTH_DUE");
@@ -157,8 +159,10 @@ test("R66 the password-again prompt names the act of connecting an AI account by
   assert.ok(ACCOUNT_CHECKS.REAUTH_DUE.translation.includes(connect), "the key's sentence is in the prompt");
   assert.ok(due.translation.includes(connect));
   for (const text of [connect, ACCOUNT_CHECKS.REAUTH_DUE.translation])
-    assert.doesNotMatch(text, /\b(?:claude|anthropic|openai|gpt|gemini|mistral)\b/i);
-  assert.notEqual(ACCOUNT_CHECKS.REAUTH_DUE.translation, word("refusal.REAUTH_DUE"), "control: not the earlier design sentence");
+    assert.doesNotMatch(text, PROVIDER_NAMED);
+  /* control: the check that passes the sentences above catches a prompt that names one provider */
+  assert.match(ACCOUNT_CHECKS.REAUTH_DUE.translation.replace(connect, "connecting Claude"), PROVIDER_NAMED);
+  assert.match("connecting Claude", PROVIDER_NAMED);
 });
 
 test("R66 R71 reauth opens a 5-minute window that session answers as reauthUntil; reauthDue answers null inside it and REAUTH_DUE (C-29.42) outside, one second either side, a locked or unknown session included; control: an act not named is unaffected", async () => {
