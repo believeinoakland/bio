@@ -1,6 +1,6 @@
 # acquisition (T53)
 
-**Status** · session_018BhcefbymZskaMPXAgDmRQ · depth 2 · COMPLETE
+**Status** · session_018BhcefbymZskaMPXAgDmRQ · depth 2 · WAITING: complete; at BOB's disposal
 **Sessions** · 1
 
 ## Completion (2026-10-28)
