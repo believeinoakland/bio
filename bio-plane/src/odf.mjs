@@ -2840,7 +2840,7 @@ export function odtNormalisedContentXml(bytes) {
 }
 /** Per flavour, the normalisation applied to content.xml before it is digested.
  *  `.ods` needs none (content.xml measured byte-stable, M-123). */
-const ODF_EVIDENTIARY_NORMALISE = Object.freeze({
+export const ODF_EVIDENTIARY_NORMALISE = Object.freeze({
   odt: { name: "odt-list-ids v1 (xml:id on text:list relabelled in document order, text:continue-list rewritten to match)",
          apply: odtNormalisedContentXml },
 });
@@ -2898,6 +2898,6 @@ async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex) {
   return {
     determined: true, flavour, over: CONTENT_PART,
     evidentiary: await sha256Hex(digested),
-    basis: localize("odf-reader.odf.the_sha256_of_the_flavour", "the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}", { flavour: String(flavour), v1: String(norm ? `, normalised by ${norm.name}` : ", no byte rewritten"), ODF_EVIDENTIARY_VERSION: String(ODF_EVIDENTIARY_VERSION), v2: String(ODF_EVIDENTIARY_MEASURED[flavour]) }),
+    basis: localize("odf-reader.odf.the_sha256_of_the_flavour", "the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}", { flavour: String(flavour), v1: String(norm ? localize("odf-reader.odf.normalised_by", ", normalised by {name}", { name: String(norm.name) }) : localize("odf-reader.odf.no_byte_rewritten", ", no byte rewritten")), ODF_EVIDENTIARY_VERSION: String(ODF_EVIDENTIARY_VERSION), v2: String(ODF_EVIDENTIARY_MEASURED[flavour]) }),
   };
 }

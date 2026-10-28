@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseFigure, multiply } from "../../../src/calc-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const signed = (f) => (f.sign === "-" ? `-${f.value}` : f.value);
 /* An exact decimal string normalised (no leading zeros, no trailing fraction zeros), for comparing values. */
@@ -53,10 +54,10 @@ test("R1 reads every form of its grammar exactly: separators, decimal point, cur
 test("R1 refuses two signs, an unclosed parenthesis and an unknown scale word, each with why; and what is not a figure", () => {
   for (const t of ["(-5)", "-(5)", "($-5)", "--5", "-$-5", "- -5"]) {
     const r = parseFigure(t);
-    assert.equal(r.refused, "FIGURE_INVALID", t); assert.match(r.why, /two signs|not a figure/, t);
+    assert.equal(r.refused, "FIGURE_INVALID", t); assert.equal(r.why, word("calc-grammar.figure_carries_two"), t);
   }
   for (const t of ["(5", "5)", "$(5", "(1,234 million"]) assert.match(parseFigure(t).why, /parenthesis/, t);
-  for (const t of ["5 zillion", "5 lakh", "3 dozen"]) assert.match(parseFigure(t).why, /not a scale word/, t);
+  for (const t of ["5 zillion", "5 lakh", "3 dozen"]) assert.equal(parseFigure(t).why, word("calc-grammar.scale_word_module", { word: t.split(" ")[1] }), t);
   for (const t of ["", "  ", "abc", "1,23", "12,3456", "1.2.3", "1e6", "$", "5 $ €", "$5 USD", "5% USD", "Infinity", "NaN"]) {
     const r = parseFigure(t);
     assert.equal(r.refused, "FIGURE_INVALID", t); assert.ok(r.why.length > 0, t);

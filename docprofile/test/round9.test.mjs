@@ -123,7 +123,7 @@ test("R18 a marker's why is read as its reason, and a size refusal is worded as 
   const flat = readText({ document: "", undetermined: [{ why: "over_size_bound", size, bound }], counts: { undetermined: 1 } }, {});
   assert.equal(flat.why, stated);
   const pdf = readText({ document: "", undetermined: [{ reason: "encrypted" }], counts: { undetermined: 1 } }, {});
-  assert.match(pdf.why, /undecodable region/);
+  assert.equal(pdf.why, localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: 1, named: ": encrypted" }));
   assert.deepEqual(pdf.reasons, ["encrypted"]);
   // a refusal beside text that was read states itself on the partial reading too
   const part = readText({ document: "some text that was read", undetermined: [{ why: "over_size_bound", guard }], counts: { undetermined: 1 } }, {});
