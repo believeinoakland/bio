@@ -8,6 +8,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, LAYER, sha } from "./fixture.mjs";
 import { VERSION_NOTICE_CHECKS, VERSION_NOTICE_GRADES, VERSION_NOTICE_STATES } from "../../../src/content/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 /* ------------------------------------------------------------------ versiongrade's ground */
 const T = "Council approved the transfer of two point one million dollars from the general fund to the reserve";
@@ -244,12 +246,11 @@ test("R29 (versionnotice): 'no newer capture' only where the chain was read (a c
   const S = w.content.passageNotice({ contentId: ids.S, viewer: V("ruth") });
   assert.deepEqual([S.state, S.newer, S.chain_read, S.says, S.candidates, S.affects, S.addresses_asked],
     ["no_newer_capture", false, true, null, [], null, 1]);
-  assert.match(S.why, /read and holds nothing after it/);
+  assert.equal(S.why, word("content.why.version_chain_capture"));
   const X = w.content.passageNotice({ contentId: ids.X, viewer: V("ruth") });
   assert.deepEqual([X.state, X.newer, X.chain_read, X.addresses_asked, X.addresses_truncated, X.affects, X.candidates],
     ["chain_unread", null, false, 0, false, "undetermined", []]);
-  assert.match(X.says, /UNDETERMINED/);
-  assert.match(X.says, /not a statement that there is none/);
+  assert.equal(X.says, VERSION_NOTICE_STATES.chain_unread);
   assert.match(X.why, /no address/);
   assert.deepEqual(w.snapshot(), before, "nothing written");
 });
@@ -261,18 +262,14 @@ test("R30 (versionnotice): a matched extent is a labelled CANDIDATE, never the s
   const M = n(ids.M), U = n(ids.U), N = n(ids.N), P = n(ids.P), W = n(ids.W);
   const m = M.candidates[0];
   assert.deepEqual([M.state, m.matched, m.extent, m.reason], ["newer_capture_matched", true, { kind: "pdf-page", page: 1, rect: null }, "extent_in_newer_capture"]);
-  assert.deepEqual([m.candidate_only, m.identity, /CANDIDATE/.test(m.says), /never evidence of identity/.test(m.says)],
+  assert.deepEqual([m.candidate_only, m.identity, m.says === word("content.index.candidate_same_extent_newer"), M.says === VERSION_NOTICE_STATES.newer_capture_matched],
     [true, "not_established", true, true]);
-  const json = JSON.stringify(M);
-  assert.equal((json.match(/same passage/gi) || []).length, (json.match(/(not|never)[^"]{0,40}same passage/gi) || []).length,
-    "'same passage' appears only to deny it");
-  assert.ok((json.match(/same passage/gi) || []).length > 0, "(the denial is there to be counted)");
   const u = U.candidates[0];
-  assert.deepEqual([U.state, u.matched, u.reason, u.extent, /may have moved/.test(u.why)],
+  assert.deepEqual([U.state, u.matched, u.reason, u.extent, wordIn(u.why, "content.why.newer_capture_hold")],
     ["newer_capture_undetermined", false, "outside_newer_capture", null, true]);
-  assert.deepEqual([/newer version of this document exists/.test(U.says), /UNDETERMINED/.test(U.says), /UNDETERMINED/.test(u.says)], [true, true, true]);
+  assert.deepEqual([U.says === VERSION_NOTICE_STATES.newer_capture_undetermined, /UNDETERMINED/.test(U.says), /UNDETERMINED/.test(u.says)], [true, true, true]);
   const nn = N.candidates[0];
-  assert.deepEqual([N.state, nn.matched, nn.reason, /not about the document/.test(nn.why), /may have moved/.test(nn.why)],
+  assert.deepEqual([N.state, nn.matched, nn.reason, nn.why === word("content.index.nobody_has_read_newer"), wordIn(nn.why, "content.why.newer_capture_hold")],
     ["newer_capture_undetermined", false, "newer_capture_unread", true, false], "the reason is about the record, not the document");
   const p = P.candidates[0];
   assert.deepEqual([P.state, P.newer, p.matched, p.reason, /no page set/.test(p.why)],
@@ -305,8 +302,7 @@ test("R29, R37 (versionnotice): the chains are the ones this viewer sees: a newe
   const said = JSON.stringify(dave);
   assert.deepEqual([said.includes(C.G2.sha), said.includes(proj.bundleId), /PROJ-/.test(said)], [false, false, false],
     "nothing in dave's answer names the hidden capture or the project holding it");
-  assert.match(dave.visible_to, /visible to you/);
-  assert.match(dave.visible_to, /not in them/);
+  assert.equal(dave.visible_to, word("content.index.version_chains_visible_to"));
   assert.deepEqual(w.snapshot(), before, "nothing written");
 });
 

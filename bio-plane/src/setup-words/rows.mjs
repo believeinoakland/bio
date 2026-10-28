@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19835 design words, 1181 protected; SHA-256
-   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7988 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   457061021af118684b422898409ad2e65a8620216f49c436dd984b1d80da7204) followed by 7991 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22774,7 +22774,7 @@ export const WORD_ROWS = Object.freeze([
   ["content.index.v1_so_it_states_no","{v1}, so it states no office metadata",null,null,false,"code"],
   ["content.index.version_chains_visible_to","the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",null,null,false,"code"],
   ["content.index.who_is_a_machine_credential","'{who}' is a machine credential. Typing what a page says is a person's act in their own name; a machine's reading of a page is OCR, a different step kind",null,null,false,"code"],
-  ["content.index.who_typed_describeextent_what_a","{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}",null,null,false,"code"],
+  ["content.index.who_typed_describeextent_graded","{who} typed {describeExtent}. What a member types is graded as the typist's word until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest), which raises it one step. The typist's own attestation is refused{v1}",null,null,false,"code"],
   ["content.index.who_typed_this_transcription_at","{who} typed this transcription ({at}). An attestation is a SECOND member checking it against the page; the typist's own is not evidence and would raise the ceiling on one member's word",null,null,false,"code"],
   ["content.notice.chain_unread","whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none",null,null,false,"code"],
   ["content.notice.cited_extent_unreadable","the cited passage's extent could not be read back from its row",null,null,false,"code"],
@@ -22793,6 +22793,9 @@ export const WORD_ROWS = Object.freeze([
   ["content.notice.why_so_there_is_nothing_2","{why}, so there is nothing to compare",null,null,false,"code"],
   ["content.part_kind.body","body",null,null,false,"code"],
   ["content.ref.with_part_kind","{ref} ({kind})",null,null,false,"code"],
+  ["content.typed.anonymous_member","a member of the team",null,null,false,"code"],
+  ["content.typed.checked","typed by {typist}, checked by {checkers}",null,null,false,"code"],
+  ["content.typed.unchecked","typed by {typist}, not yet checked",null,null,false,"code"],
   ["contradiction.checks.disclosure_malformed","What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written.",null,null,false,"code"],
   ["contradiction.checks.flag_no_passage","Setting two documents side by side as a contradiction names a passage in each, as a document and the part of it. One of them is missing, is not held here, or is not one you can see; which of the two is named. Nothing was written.",null,null,false,"code"],
   ["contradiction.checks.flag_no_reason","Saying two documents contradict is a kept decision, and a kept decision says why. Give the reason in your own words. Nothing was written.",null,null,false,"code"],

@@ -181,7 +181,7 @@ const refWithKind = (ref, kind) => (kind && kind !== "body" && PART_KIND_WORDS[k
   ? localize("content.ref.with_part_kind", "{ref} ({kind})", { ref: String(ref), kind: String(PART_KIND_WORDS[kind]) }) : ref);
 
 export class Content {
-  constructor({ storage, record, membership, provenance, extraction = null, now = null, readRange = null }) {
+  constructor({ storage, record, membership, provenance, extraction = null, now = null, readRange = null, creditOf = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -191,6 +191,9 @@ export class Content {
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     /* R59: `acquisition.readRange` (its R113), handed in as `deps.readRange` (a test's own, or acquisition's): a capture's bytes by its whole digest */
     this.readRange = typeof readRange === "function" ? readRange : acquisitionReadRange;
+    /* R64: `creditOf({member, row})` answers a DEC-102 credit level (`group`, `project`, `cover`, `name`); only `name` shows her name,
+       and with no resolver or no level she is not named (the plane wires it, layer 11, T53-584) */
+    this.creditOf = typeof creditOf === "function" ? creditOf : () => null;
     this.staleListeners = [];
   }
 
@@ -788,6 +791,24 @@ export class Content {
     return { by, truncated: page.length > cap };
   }
 
+  /** R64: who typed a typing and who checked it, as the credit level in force allows; `label_key` is
+   *  `content.typed.unchecked` or `content.typed.checked`. Only members other than the typist are checkers, in time order. */
+  #typedBlock(r, tx) {
+    const credited = (member) => {
+      const level = this.creditOf({ member, row: r });
+      return { name: level === "name" ? member : null, credit: typeof level === "string" && level ? level : null };
+    };
+    const said = (c) => (c.name ?? localize("content.typed.anonymous_member", "a member of the team"));
+    const typist = credited(tx.transcriber);
+    const checkers = tx.attestations.filter((a) => a.attestor !== tx.transcriber)
+      .map((a) => ({ ...credited(a.attestor), at: a.at }));
+    const checked = checkers.length > 0;
+    const label = checked
+      ? localize("content.typed.checked", "typed by {typist}, checked by {checkers}", { typist: said(typist), checkers: checkers.map(said).join(", ") })
+      : localize("content.typed.unchecked", "typed by {typist}, not yet checked", { typist: said(typist) });
+    return { typist, at: tx.at, checkers, checked, label_key: checked ? "content.typed.checked" : "content.typed.unchecked", label };
+  }
+
   /** ONE ROW'S STANDING: its ceiling on the transcription axis (R21) and the sentence that says which. The capture's
    *  attestations are judged against the ROW's own chain (an attestation made against a transcription the citation
    *  never saw did not check the text it points at); a TYPING is raised only by attestations of that typing, by
@@ -820,6 +841,7 @@ export class Content {
       cited_as: r.cited_as ?? "text",
       mint: mintLabel(r.minted_by),
       transcription,
+      ...(tx ? { typed: this.#typedBlock(r, tx) } : {}),
       /* The capture axis is the DOCUMENT's (DEC-4): one value, keyed by bundle, never a per-portion copy (R19, R35). */
       capture: { grain: "document", from: `earned.capture[${r.bundle_id}]`,
         why: localize("content.index.capture_axis_answered_once", "the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at — so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture") },
@@ -1047,7 +1069,8 @@ export class Content {
       transcriber: who, text_sha256: digest, bytes, chain, chain_says: describeChain(chain),
       derivation_cap: standing ? standing.derivation_cap : null,
       transcription: standing ? standing.transcription : null,
-      says: localize("content.index.who_typed_describeextent_what_a", "{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}", { who: String(who), describeExtent: String(describeExtent(extent)), v1: String(out.minted ? `` : localize("content.index.exact_typing_already_recorded", ". This exact typing by {who} was already recorded, and is found rather than written again", { who: String(who) })) }),
+      typed: standing ? standing.typed : null,
+      says: localize("content.index.who_typed_describeextent_graded", "{who} typed {describeExtent}. What a member types is graded as the typist's word until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest), which raises it one step. The typist's own attestation is refused{v1}", { who: String(who), describeExtent: String(describeExtent(extent)), v1: String(out.minted ? `` : localize("content.index.exact_typing_already_recorded", ". This exact typing by {who} was already recorded, and is found rather than written again", { who: String(who) })) }),
     };
   }
 
@@ -1104,6 +1127,7 @@ export class Content {
       ok: true, content_id: t.content_id, transcriber: t.transcriber, attestor: who, at: att.at, extent: scope,
       ceiling_before: before ? before.transcription : null,
       transcription: after ? after.transcription : null,
+      typed: after ? after.typed : null,
       says: word("content.says.checked_typing_against", { who: String(who), transcriber: String(t.transcriber) }),
     };
   }
@@ -1126,10 +1150,11 @@ export class Content {
       chain_says: describeChain(standing ? standing.chain : null),
       derivation_cap: standing ? standing.derivation_cap : null,
       transcription: standing ? standing.transcription : null,
+      typed: standing ? standing.typed : null,
       attestations: (tx ? tx.attestations : []).map((a) => ({ attestor: a.attestor, at: a.at, note: a.note,
                                                               counts: a.attestor !== t.transcriber })),
       ...(txs.truncated ? { attestations_truncated: true } : {}),
-      says: word("content.says.typed_authored_text", { transcriber: String(t.transcriber), portion: String(standing ? standing.ref : "this portion") }),
+      says: standing && standing.typed ? standing.typed.label : "",
     };
   }
 
@@ -1160,9 +1185,12 @@ export class Content {
     const truncated = page.length > cap;
     const rows = page.slice(0, cap);
     const txs = this.#transcriptionsOver(rows.map((r) => r.content_id));
+    const held = new Map(this.#rows(`SELECT ${ROW_COLS} FROM content WHERE content_id IN (SELECT value FROM json_each(?))`,
+      JSON.stringify(rows.map((r) => r.content_id))).map((c) => [c.content_id, c]));
     const transcriptions = rows.map((r) => {
       const tx = txs.by.get(r.content_id);
-      return { content_id: r.content_id, bundle_id: r.bundle_id, capture_sha: r.capture_sha,
+      const standing = this.#standing(held.get(r.content_id), { by: new Map(), truncated: false }, txs);
+      return { transcription: standing.transcription, typed: standing.typed, content_id: r.content_id, bundle_id: r.bundle_id, capture_sha: r.capture_sha,
                extent_kind: r.extent_kind, extent: safeJson(r.extent), ref: r.ref,
                transcriber: r.transcriber, at: r.at, text_sha256: r.text_sha256,
                attestations: (tx ? tx.attestations : []).map((a) => ({ attestor: a.attestor, at: a.at,

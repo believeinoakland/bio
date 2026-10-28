@@ -12,6 +12,8 @@ import { inflateSync } from "node:zlib";
 import { world, bucket, V, sha, MIXED } from "./fixture.mjs";
 import { describeExtent, canonicalExtent, contentIdFor } from "../../../src/content/index.mjs";
 import { mergedChain } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const DOC = "INFO-2026-0001-a";
 
@@ -118,7 +120,7 @@ test("R4, R12, R21 (cpdf18-pdf-images): a PDF image minted by page and rect read
   assert.equal(read.ok, true, JSON.stringify(read).slice(0, 300));
   assert.deepEqual([read.cited_as, read.chain, read.derivation_cap], ["bytes", null, null]);
   assert.deepEqual([read.transcription.applies, read.transcription.ceiling, read.transcription.determinant], [false, null, null]);
-  assert.match(read.transcription.why, /does not apply/);
+  assert.ok(wordIn(read.transcription.why, "content.why.row_cites_itself"));
   const s = w.content.standings([m.content_id])[m.content_id];
   assert.deepEqual([s.cited_as, s.chain, s.derivation_cap, s.transcription.applies], ["bytes", null, null, false]);
   /* over-strictness: a pdf-page region at the same place is TEXT, with the capture's chain, and a determined axis */
@@ -170,7 +172,7 @@ test("R32 (cpdf18-pdf-images): the image painted inside a Form XObject is croppe
   assert.deepEqual([r.derived, r.rendition, r.content_id, r.capture_sha, r.capture_sha256], [true, "crop", id, FORM_SHA, FORM_SHA]);
   assert.deepEqual(r.of, { kind: "image", page: 0, rect: FORM_RECT });
   assert.deepEqual([r.route, r.width, r.height], ["raw-samples-grey8", 2, 2]);
-  assert.match(r.says, /derived rendition/);
+  assert.equal(r.says, word("content.index.derived_rendition_for_display"));
   const file = Buffer.from(r.bytes_base64, "base64");
   assert.equal(sha(file), r.file_sha256);
   assert.equal(r.mediaType, "image/png");

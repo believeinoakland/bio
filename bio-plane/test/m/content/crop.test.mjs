@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { inflateSync } from "node:zlib";
 import { world, bucket, V, sha, onePagePdf } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const DOC = "INFO-2026-0001-a";
 
@@ -39,7 +41,7 @@ test("R32: the crop of a cited PDF image by page and rectangle, through pdf-pixe
   assert.deepEqual(w.snapshot(), before, "the crop writes nothing");
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.deepEqual([r.derived, r.rendition, r.content_id, r.capture_sha, r.capture_sha256], [true, "crop", id, pdfSha, pdfSha]);
-  assert.match(r.says, /derived rendition/);
+  assert.equal(r.says, word("content.index.derived_rendition_for_display"));
   assert.equal(r.mediaType, "image/png");
   /* N119: the file travels as base64, one wire form for every route, and it is the file whose hash the answer states */
   assert.equal("bytes" in r, false, "no raw octets");

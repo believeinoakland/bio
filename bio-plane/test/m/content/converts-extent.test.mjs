@@ -16,6 +16,8 @@ import {
 import { sha256HexSync, canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
 import { readReal, readingFacts } from "./realread.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const BOOK = "INFO-2026-8500-workbook", TEXT = "INFO-2026-8500-document", DECK = "INFO-2026-8500-deck";
 const hex64 = /^[0-9a-f]{64}$/;
@@ -276,7 +278,7 @@ test("R7, R8 (content-extent-arms, capture-container-extent): each level bounds 
   });
   assert.equal(code(mint(BOOK, { kind: "sheet-cell", sheet: "Nope", cell: "B14" })), "CONTENT_EXTENT_OUT_OF_RANGE");
   assert.equal(code(mint(BOOK, { kind: "sheet-cell", sheet: "Sheet1", cell: "ZZ999999" })), "OK", "no grid held: the cell is not bounded");
-  assert.match(w.content.contentContextFor(w.content.captureFor(BOOK)).container.empty_level, /every sheet's row and column extent/);
+  assert.ok(wordIn(w.content.contentContextFor(w.content.captureFor(BOOK)).container.empty_level, "content.index.every_sheet_row_column_extent"));
   assert.equal(code(mint(TEXT, { kind: "doc-para", para: 99 })), "CONTENT_EXTENT_OUT_OF_RANGE");
   /* R62: a Word file holds no slide or sheet and a workbook no paragraph, so those three are the format's refusals; the
      levels bound only themselves where the format is not held, which the pure check answers on a bare container */
@@ -391,20 +393,20 @@ test("R4, R7, R12 (fw19-extent-arms): an image part the container holds mints as
   assert.equal(read.transcription.applies, false, "the transcription axis does not apply, which is not undetermined");
   const absent = mint(TEXT, { kind: "image", part: ABSENT });
   assert.deepEqual([absent.code, absent.check], ["CONTENT_EXTENT_OUT_OF_RANGE", "C-45.1"]);
-  assert.match(absent.detail, /holds 1 image\(s\) and none of them has the content hash/);
+  assert.ok(wordIn(absent.detail, "content.text.capture_container_holds", { images: "1", want: ABSENT.slice(0, 16) }));
   const none = mint(BOOK, { kind: "image", part: PNG_SHA });
   assert.equal(none.code, "CONTENT_EXTENT_OUT_OF_RANGE");
   assert.match(none.detail, /holds 0 image\(s\)/, "an empty list is a measured zero, not a skip");
   const bytesPara = mint(TEXT, { kind: "doc-para", para: 0, cited_as: "bytes" });
   assert.deepEqual([bytesPara.code, bytesPara.check], ["CONTENT_EXTENT_UNREADABLE", "C-45.3"]);
-  assert.match(bytesPara.detail, /only an image can be cited as its bytes/);
+  assert.ok(wordIn(bytesPara.detail, "content.extent-core.only_an_image_can_be", { kind: "doc-para" }));
   /* a chainless office capture holding the image: as text refused NO_CHAIN, as bytes admitted */
   const BARE = "INFO-2026-9190-bare";
   const b = w.cap("bare"); w.doc(BARE, [b]);
   w.read(b.sha, { chain: null, captureFormat: "docx", containerExtent: { container: "docx", levels: ["images"], images: [{ part: PNG_SHA, mime: "image/png" }] } });
   const asText = w.content.mint({ bundleId: BARE, captureSha: b.sha, extent: { kind: "image", part: PNG_SHA, cited_as: "text" }, mintedBy: V("bo") });
   assert.deepEqual([asText.code, asText.check], ["CONTENT_EXTENT_NO_CHAIN", "C-45.2"]);
-  assert.match(asText.detail, /nothing in this record has read text off an embedded image/);
+  assert.ok(wordIn(asText.detail, "content.extent-core.embedded_image_text_has_no"));
   const asBytes = w.content.mint({ bundleId: BARE, captureSha: b.sha, extent: { kind: "image", part: PNG_SHA, cited_as: "bytes" }, mintedBy: V("bo") });
   assert.deepEqual([asBytes.ok, asBytes.minted], [true, true], "the image as itself needs no chain");
   assert.notEqual(contentIdFor("c", { kind: "image", page: 0, cited_as: "bytes" }, null), contentIdFor("c", { kind: "image", page: 0, cited_as: "text" }, null),
@@ -497,7 +499,7 @@ test("R12, R27, R28 (content-extent): a whole-document citation of an unread cap
   assert.equal(w.count("content"), n, "no capture: nothing minted");
   const nocapPart = w.content.citationRefusals([{ target: NOCAP, extent_kind: "pdf-page", extent_page: 0 }], (i) => `leg[${i}]`);
   assert.deepEqual(nocapPart.map((e) => [e.code, e.check]), [["CONTENT_EXTENT_NO_CHAIN", "C-45.2"]]);
-  assert.match(nocapPart[0].detail, /holds no capture of that document at all/);
+  assert.ok(wordIn(nocapPart[0].detail, "content.index.lab_cites_describeextent_of_target", { lab: "leg[0]", describeExtent: describeExtent({ kind: "pdf-page", page: 0 }), target: NOCAP }));
 });
 
 test("R22, R27, R28, R34 (content-extent): after a re-read the row a citation named still resolves as it is, stale and saying so, never re-minted; the same extent unnamed is a new address under the new chain; a narrower extent mints a new row and the old one stays", () => {
@@ -517,7 +519,7 @@ test("R22, R27, R28, R34 (content-extent): after a re-read the row a citation na
   assert.deepEqual(w.content.resolveCitation(named), { content_id: page.content_id, minted: false }, "the named row, never re-pointed");
   const row = w.content.contentRow(page.content_id);
   assert.deepEqual([row.resolves, row.stale], [true, true]);
-  assert.match(row.says, /re-read and the text may have changed/);
+  assert.ok(wordIn(row.says, "content.text.passage_cited_stood"));
   assert.deepEqual(row.chain, OLD, "the row keeps the chain it was minted under");
   /* the same extent, not named, is another address: the chain is in the id */
   const fresh = w.content.resolveCitation({ target: DOC, extent_kind: "pdf-page", extent_page: 1, extent_rect: [10, 20, 100, 200] });

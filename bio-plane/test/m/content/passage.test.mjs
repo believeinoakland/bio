@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, LAYER } from "./fixture.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const DOC = "INFO-2026-0001-a", NEW = "INFO-2026-0002-b";
 const P = (page, rect) => ({ kind: "pdf-page", page, ...(rect ? { rect } : {}) });
@@ -211,7 +213,7 @@ test("R55: passageAcross compares a row's passage with a capture held at another
     assert.deepEqual(Object.keys(k).sort(), KEYS, "R47's candidate fields, less the version chain's bundle_id and first_retrieved");
     assert.deepEqual([k.capture_sha, k.matched, k.reason, k.extent, k.grade, k.affects, k.candidate_only, k.identity],
       [c.sha, true, "extent_in_newer_capture", { kind: "pdf-page", page: 0, rect: null }, "A", "unaffected", true, "not_established"]);
-    assert.match(k.says, /CANDIDATE/); assert.match(k.says, /never evidence of identity/);
+    assert.equal(k.says, word("content.index.candidate_same_extent_compared"));
     /* B: identical text at another position, found_at named */
     const kB = ask(rowOf(P(1)));
     assert.deepEqual([kB.grade, kB.affects, kB.grade_reason, kB.found_at.extent], ["B", "unaffected", "identical_elsewhere", { kind: "pdf-page", page: 2, rect: null }]);

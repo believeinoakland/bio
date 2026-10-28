@@ -4,7 +4,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, LAYER } from "./fixture.mjs";
 import { CONTENT_READ_PARAMS, CONTENT_EARNED_MAX, STALE_GRADED_MAX, canonicalExtent } from "../../../src/content/index.mjs";
+import { TYPED_UNCHECKED_GRADE, TYPED_CHECKED_GRADE } from "../../../src/textchain.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const DOC = "INFO-2026-0001-a";
 const OCR = [{ step: "layer", tier: 1, cap: null }, { step: "ocr", engine: "t", version: "1", cap: "C", measured_by: "m" }];
@@ -67,7 +70,7 @@ test("R20: standings answers at most 200 ids in one set-based read, each without
   const many = Array.from({ length: 250 }, (_, i) => `x${i}`);
   let asked = null;
   const sql = w.content.sql;
-  w.content.sql = { exec: (q, ...a) => { if (/FROM content WHERE content_id IN/.test(q)) asked = JSON.parse(a[0]).length; return sql.exec(q, ...a); } };
+  w.content.sql = { exec: (q, ...a) => { if (/FROM\s+content\s+WHERE\s+content_id\s+IN/.test(q)) asked = JSON.parse(a[0]).length; return sql.exec(q, ...a); } };
   w.content.standings(many);
   w.content.sql = sql;
   assert.equal(asked, 200, "the 201st id is never read");
@@ -86,7 +89,7 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   const s = w.content.standings([bytes, para, page, doc]);
   assert.deepEqual([s[bytes].transcription.applies, s[bytes].transcription.ceiling], [false, null]);
   assert.equal(s[para].transcription.ceiling, null);
-  assert.match(s[para].transcription.why, /cannot yet be evaluated/);
+  assert.equal(s[para].transcription.why, word("content.why.extent_covers_evaluated", { extent_kind: "doc-para" }));
   assert.deepEqual([s[page].transcription.ceiling, s[page].transcription.determinant], ["C", "derivation"]);
   /* a page attestation raises the page and not the whole document */
   w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 } });
@@ -95,11 +98,11 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   assert.equal(s2[doc].transcription.determinant, "derivation");
   /* the capture's attestations never raise a typing, and the typist's own never counts */
   const t = w.content.transcribe({ bundleId: DOC, extent: { kind: "pdf-page", page: 1 }, text: "words", transcriber: V("ty"), viewer: V("ty") });
-  assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, null);
+  assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, TYPED_UNCHECKED_GRADE, "the typist's word");
   w.st.sql.exec(`INSERT INTO transcription_attestations (content_id,bundle_id,attestor,at) VALUES (?,?,?,?)`, t.content_id, DOC, V("ty"), "2026-09-01T00:00:00Z");
-  assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, null, "the typist's own raises nothing");
+  assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, TYPED_UNCHECKED_GRADE, "the typist's own raises nothing");
   w.content.transcriptionAttest({ note: "compared with the page", contentId: t.content_id, attestor: V("zo"), viewer: V("zo") });
-  assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.determinant, "attestation");
+  assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, TYPED_CHECKED_GRADE);
   /* ... and a typing's attestations never raise the capture's text */
   assert.equal(w.content.standings([doc])[doc].transcription.determinant, "derivation");
   /* an attestation made against another chain does not raise a row */
@@ -126,7 +129,7 @@ test("R22: a replaced chain marks every other-chain row over the capture stale, 
   assert.equal(w.count("content"), 4);
   const row = w.content.contentRow(r1);
   assert.deepEqual([row.resolves, row.stale], [true, true]);
-  assert.match(row.says, /cited as it stood under an earlier transcription/);
+  assert.ok(wordIn(row.says, "content.text.passage_cited_stood"));
   assert.equal(w.content.markStale(a.sha, OCR), 0, "one way: going back un-stales nothing");
   assert.equal(stale(r1), 1);
 });
@@ -186,7 +189,7 @@ test("R41 (N117): a re-read costs one bounded read and one update however many r
   assert.equal(n, STALE_GRADED_MAX + 3, "the count is the whole set, not the bound");
   assert.equal(seen.length, 2, "one read, one update");
   assert.match(seen[0], /^\s*SELECT[\s\S]*LIMIT \?/, "the read is bounded in SQL");
-  assert.match(seen[1], /^UPDATE content SET stale=1/);
+  assert.match(seen[1], /^UPDATE\s+content\s+SET\s+stale\s*=\s*1/);
   assert.equal(w.row(`SELECT count(*) AS c FROM content WHERE stale=1`).c, STALE_GRADED_MAX + 3, "every row is marked");
   assert.equal(told.length, 1, "one notice for the re-read");
   const t = told[0];
