@@ -1,0 +1,8 @@
+Round R1, layer 5, module observation-log, tranche T53. Your depth: 2. BOB: BOB #332 (session_018BhcedHXTmWvkcQG9t9wzP).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module observation-log`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-149 · N1219 · run log carries reads and disagreements
+- T53-150 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/observation-log.md`

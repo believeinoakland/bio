@@ -2,7 +2,7 @@
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #332 · session_018BhcedHXTmWvkcQG9t9wzP · depth 1
 **Jobs** · none
-**Owed** · none
+**Owed** · start entities; start events; start local-facts; start connections; start observation-log; start law-relations; start standards; start progressions; start money; start money-checks; start duties; start people; start explore; start bias; start query-language; start retrieval-browse; start retrieval; start calculations; start workbooks; start registers
 
 # Plan T53 · round R1, the beta's build
 

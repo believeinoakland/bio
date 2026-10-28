@@ -1,0 +1,10 @@
+Round R1, layer 5, module events, tranche T53. Your depth: 2. BOB: BOB #332 (session_018BhcedHXTmWvkcQG9t9wzP).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module events`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-141 · N1259 · CAPABILITIES rows
+- T53-142 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-143 · K5565 · English in tests: its entry
+- T53-530 · court-doctypes' finding (N1259-c R38, R29) · `followedRegister` takes only three keys and keys an event by content type `[written: K5732: events R58]`
+- rows: `build/plan/T53-R1/events.md`
