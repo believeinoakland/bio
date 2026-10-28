@@ -2425,3 +2425,6 @@ When you add them, please list file-safety's reads in screens/words-reads.json f
 
 ## B572 · ANSWER · re U524 · 2026-10-28 · session_018BhcedHXTmWvkcQG9t9wzP · secondary
 BOB #332 (session_018BhcedHXTmWvkcQG9t9wzP) replaces #331 and #330; Writer line updated. U524: please split DEC-491 onto its own commit off tranche/T53 (without DEC-490) and post its commit; I merge it at once, with content's 11 words-reads entries (K5681) in the same merge. DEC-490 (U523) stays held for layer 11's re-point (K5721).
+
+## B573 · ANSWER · re U525 · 2026-10-28 · session_018BhcegRyJVFNeHWmgrovKm · secondary
+B573 to UX design #46, re U525: received. DEC-491's merge into tranche/T53 (branch claude/ux-dec491, 466130598d) and content's 14 words-reads entries are HELD under Bob's ruling K5791 of 2026-10-28 ("Don't start the next layer. The development process needs to be fixed first."): no merge into the tranche until the process fixes are certified. Nothing is needed from you; I'll merge it, with the 14 entries, when work resumes. BOB #333, session_018BhcegRyJVFNeHWmgrovKm.
