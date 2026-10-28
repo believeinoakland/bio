@@ -1225,6 +1225,19 @@ export function textWordsOfText(text, { html = false, budget } = {}) {
    R41 (G15): in this mode a text line or paragraph over CAPTURE_TEXT_UNIT_CAP is carried whole as consecutive units
    (extent `run` 0, 1, ...), never cut; a sheet whose text is over the cap is carried as blocks of whole rows. */
 export const PIECE_UNITS_MAX = 4096;
+/* PROTO_PIECE_UNITS (throwaway measuring prototype): env.PROTO_PIECE_UNITS, a positive integer n, makes n the piece size: the default where PIECE_UNITS_MAX is the
+   fallback, and a caller's maxUnits clamped to at most n. Unset or invalid (not a positive integer) = today's PIECE_UNITS_MAX, behaviour identical. It bounds
+   one PIECE only, never a whole capture's index (CAPTURE_TEXT_CAPTURE_UNIT_BOUND). */
+export const pieceUnitsOf = (env) => {
+  const v = env && typeof env === "object" ? env.PROTO_PIECE_UNITS : undefined;
+  const n = typeof v === "number" ? v : (typeof v === "string" && /^[1-9][0-9]{0,8}$/.test(v.trim()) ? Number(v.trim()) : NaN);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+export const effectivePieceUnits = (env) => pieceUnitsOf(env) ?? PIECE_UNITS_MAX;
+const clampPieceUnits = (env, maxUnits) => {
+  const n = pieceUnitsOf(env);
+  return n === null ? maxUnits : (Number.isInteger(maxUnits) && maxUnits > 0 ? Math.min(maxUnits, n) : n);
+};
 /* G26 (fix round 6): a PDF is read in pieces by page ranges (pdf-reader's `extractPdfRange`, R43), the cursor a page. A range's
    structures are dropped before the next is read, so a tick holds the bytes and one range, and the whole is one parse, not one
    per piece. G56 (K4693, K4700): a range is sized by work as well as by pages: at most `PDF_RANGE_PAGES` pages and at most
@@ -2706,6 +2719,7 @@ async function skipWindow(evidence, doc, cursor, windowBytes) {
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
                                         killedPages, stampUnit, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
+  maxUnits = clampPieceUnits(env, maxUnits); // PROTO_PIECE_UNITS
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   if (skipKilled === true && typeof cursor === "string") {

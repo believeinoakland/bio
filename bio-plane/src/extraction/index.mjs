@@ -57,10 +57,12 @@ const roMem = () => {
   return null;
 };
 const roLog = (tag, o) => { try { console.log(JSON.stringify({ [tag]: o })); } catch { /* logged where it can be */ } };
+/* PROTO_PIECE_UNITS: the piece size in force (reading-pipeline's pieceUnitsOf: the env's positive integer, else 4096), as the log lines state it */
+const roPieceUnits = (env) => pipeline.effectivePieceUnits(env);
 const roContext = (env, storeName) => {
   const m = env && typeof env === "object" ? env.PROTO_READOUT : undefined;
   if (m !== "0" && m !== "1") return null;
-  return { mode: m, store: String(storeName || "bio"), bucket: env.CAPTURES && typeof env.CAPTURES.put === "function" ? env.CAPTURES : null, landings: [] };
+  return { mode: m, piece_units: roPieceUnits(env), store: String(storeName || "bio"), bucket: env.CAPTURES && typeof env.CAPTURES.put === "function" ? env.CAPTURES : null, landings: [] };
 };
 
 /** (G41; R96) The UTF-8 bytes of a string, counted in slices so a large string is never encoded whole (an 11 MB reading is not copied to count it). */
@@ -1839,7 +1841,7 @@ export class Extraction {
     const units = out && Array.isArray(out.text_units) ? out.text_units : [];
     let unitBytes = 0;
     for (const u of units) if (u && typeof u.text === "string") unitBytes += utf8Bytes(u.text);
-    roLog("proto_readout_read", { mode: ro.mode, step, capture: digest.slice(0, 12), file_bytes: this.#sizeOf(document), file_bytes_note: "the size the document states, not an observed fetch",
+    roLog("proto_readout_read", { mode: ro.mode, piece_units: ro.piece_units, step, capture: digest.slice(0, 12), file_bytes: this.#sizeOf(document), file_bytes_note: "the size the document states, not an observed fetch",
       units: units.length, unit_text_bytes: unitBytes, over_bound: out && out.text_units_over_bound || 0, more: !!(out && out.more === true),
       wall_ms: Date.now() - t0, wall_note: "Date.now() is frozen in synchronous work in workerd", mem_start: m0, mem_end: roMem() });
   }
@@ -1932,7 +1934,7 @@ export class Extraction {
       let textChars = 0, textBytes = 0, extentChars = 0;
       for (const u of ordered) textChars += u.text.length;
       for (const r of rows) { textBytes += r.size; extentChars += r.extent.length; }
-      const rec = { mode: ro.mode, readout_active: packing, no_bucket_fallback: ro.mode === "1" && !ro.bucket,
+      const rec = { mode: ro.mode, piece_units: ro.piece_units, readout_active: packing, no_bucket_fallback: ro.mode === "1" && !ro.bucket,
         capture: captureSha.slice(0, 12), append, units: ordered.length, text_bytes: textBytes, batches: batches.length, batches_landed: landed, batches_already: already,
         room_rows_capture_text: roRows, room_rows_fts_shadow: 0, room_rows_fts_note: "not measured: FTS5 trigger and shadow rows are 0=unknown here",
         held_proxy: { ordered_text_chars: textChars, rows_extent_chars: extentChars, rows_objects: rows.length, batches_arrays: batches.length,
