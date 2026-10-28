@@ -30476,91 +30476,91 @@
       "en": "an interlaced (Adam7) PNG is not redrawn",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 33
+      "line": 34
     },
     {
       "id": "image-cover.redraw.decoded_frame",
       "en": "decoded frame",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 111
+      "line": 77
     },
     {
       "id": "image-cover.redraw.not_a_png",
       "en": "not a PNG{note}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 30
+      "line": 31
     },
     {
       "id": "image-cover.redraw.redrawn_picture",
       "en": "redrawn picture",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 80
+      "line": 114
     },
     {
       "id": "image-cover.redraw.the_images_structure_cannot_be",
       "en": "the image's data cannot be read ({v1})",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 157
+      "line": 134
     },
     {
       "id": "image-cover.redraw.the_photo_is_length_bytes",
       "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module redraws",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 137
+      "line": 111
     },
     {
       "id": "image-cover.redraw.the_photo_is_neither_a_jpeg_nor_a_png",
       "en": "the photo is neither a JPEG nor a PNG",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 139
+      "line": 113
     },
     {
       "id": "image-cover.redraw.the_photos_bytes_are_not_a_byte_array",
       "en": "the photo's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 135
+      "line": 109
     },
     {
       "id": "image-cover.redraw.the_png_declares_more_than",
       "en": "the PNG declares more than this module redraws{v1}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 32
+      "line": 33
     },
     {
       "id": "image-cover.redraw.the_png_has_no_header",
       "en": "the PNG has no readable header",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 120
+      "line": 94
     },
     {
       "id": "image-cover.redraw.the_png_uses_a_feature",
       "en": "the PNG uses a feature that is not redrawn{note}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 34
+      "line": 35
     },
     {
       "id": "image-cover.redraw.the_what_is_size_over",
       "en": "the {what} is {size} bytes, over the {bound} this module redraws",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 24
+      "line": 25
     },
     {
       "id": "image-cover.redraw.this_jpegs_coding_is_not",
       "en": "this JPEG has {n} components; only grey or three are redrawn",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 108
+      "line": 82
     },
     {
       "id": "image-cover.strip.a_box_header_runs_past_its_container",
