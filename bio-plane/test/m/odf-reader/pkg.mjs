@@ -5,6 +5,7 @@
  * overridden, so a fixture can make the directory say what the bytes do not. */
 import { deflateRawSync, crc32 as zcrc32 } from "node:zlib";
 import { createHash } from "node:crypto";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 export const enc = (s) => (typeof s === "string" ? new TextEncoder().encode(s) : s);
 export const sha256 = (b) => createHash("sha256").update(b).digest("hex");
@@ -128,6 +129,6 @@ export function prng(seed) {
   };
 }
 
-/** The COFF-6 bound plus one: a central-directory size that trips the guard
- *  without writing 20 MiB. */
-export const OVER_BOUND = 20 * 1024 * 1024 + 1;
+/** The declared-text bound plus one (the figure sizeGuard uses, read from runtime-limits): a central-directory size that
+ *  trips the guard without writing the bound's worth of bytes. */
+export const OVER_BOUND = boundOf("office", "text_bytes") + 1;

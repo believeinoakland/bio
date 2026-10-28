@@ -7,6 +7,7 @@ import { sizeGuard } from "../../../src/ooxml.mjs";
 import { linkWrapper } from "../../../src/subresources.mjs";
 import { docParaRef, docTableRef } from "../../../src/docx.mjs";
 import { buildZip, members, pkg, withCd, OVER_BOUND } from "./pkg.mjs";
+import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
 
 const odt = (body, o = {}) => pkg("odt", { body, ...o });
 const S = (b, o) => odtEntry.structure(odt(b, o));
@@ -190,7 +191,7 @@ test("R13 text() over the guard carries the guard marker verbatim; with no reada
     active: [{ kind: "unread", part: "content.xml", why: "over_size_bound" }],
   });
   assert.deepEqual(over.undetermined[0], { ok: false, text: "undetermined", why: "over_size_bound", size: OVER_BOUND,
-    bound: 20 * 1024 * 1024, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "declared_uncompressed_text_part_bytes", final: true });
+    bound: MEASURED_OOXML_TEXT_BOUND_BYTES, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "declared_uncompressed_text_part_bytes", final: true });
   for (const [bytes, why] of [
     [buildZip(withCd(members("odt"), "content.xml", { crc: 3 })), "crc_mismatch"],
     [pkg("odt", { content: "<office:document-content><office:body/></office:document-content>" }), "no_office_text_body"],
