@@ -84,3 +84,14 @@ Size (session_018BhcedTff8SmCMqu2EScxc): test runs 1, module lines 2609
 Tests: 108/109. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Inherited reds: ["R34 evaluating the module builds none of its derived tables, and its fresh import is measured as bundler R31 measures a global scope"]
 Size (session_018BhcedTff8SmCMqu2EScxc): test runs 2, module lines 2624
+
+## Completion (2026-10-28)
+
+## ooxml · T53 · report (R39)
+
+R39 (the MS-CFB reader as a provided service, K5641) is named in every title of `cfb.test.mjs` ("R39 T53-524 …"). Checked clause by clause against R39 as written: the answer's shape and entry fields, `children` in directory order and `[]` for a stream, `stream` null for a storage, null and never throwing for any other input, every chain and every storage's tree walked at read, `hasCfbMagic` and the frozen `CFB_MAGIC`, and the allocation clause were each covered except two, now added: a stream cut short, a chain that loops and a stated size past the chain (0x7fffffff, never allocated), a loop in a storage below the root, and the entry-field shapes of a storage and a stream (2 tests, 6 in the file). The last clause's "mail-reader's MSG fixtures read the same through it" is mail-reader's own test, not this module's. No source change. The suite has one red, the inherited R34 start-up test (runtime-limits, K5637).
+
+**Met** · R39
+
+Tests: 111/111. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedTff8SmCMqu2EScxc): test runs 3, module lines 2624
