@@ -23,7 +23,7 @@ import { viewerPredicate, notAnAdmin, membershipOf } from "../membership/index.m
 import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
-import { profileOf, profileView, evidenceStorageAbsent, textTypeOf } from "./index.mjs";
+import { profileOf, profileView, evidenceStorageAbsent, textTypeOf, refusedFacts, REFUSE_HEAD_BYTES } from "./index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
@@ -225,6 +225,9 @@ export const ACQUISITION_TABLES = Object.freeze([
   Object.freeze({ name: "unpack_days", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                   version_chain: false }),
   /* R131 (T53): each call sent to a keyed outside service, so its stated limits are counted across purposes and a restart does not reset the count */
+  /* R140 (T53; K5574): how many times a host answered a fetch with a challenge or CAPTCHA page, counted for the host */
+  Object.freeze({ name: "challenge_hosts", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
+                  version_chain: false }),
   Object.freeze({ name: "keyed_calls", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                   version_chain: false }),
 ]);
@@ -239,6 +242,7 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   PRIMARY KEY (archive_sha, idx));
 CREATE INDEX IF NOT EXISTS archive_entries_sha ON archive_entries(sha256);
 CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS challenge_hosts (host TEXT PRIMARY KEY, challenges INTEGER NOT NULL, first_at INTEGER NOT NULL, last_at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS keyed_calls (service TEXT NOT NULL, purpose TEXT NOT NULL, actor TEXT NOT NULL, subject TEXT, at_ms INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS keyed_calls_service ON keyed_calls(service, at_ms)`;
 
@@ -330,6 +334,17 @@ export class Acquisition {
     this.#sql.exec(`UPDATE archive_entries SET code=?, detail=? WHERE archive_sha=? AND idx=? AND state='filed'`, code, detail, archiveSha, index);
     return { ok: true };
   }
+
+  /* ---- R140's count of the challenge or CAPTCHA pages a host answered with ---- */
+
+  /** R140: one more challenge from `host` at `atMs`; answers `{host, challenges, first_at, last_at}`. */
+  challengeNote(host, atMs) {
+    this.#sql.exec(`INSERT INTO challenge_hosts (host, challenges, first_at, last_at) VALUES (?,1,?,?)
+                    ON CONFLICT(host) DO UPDATE SET challenges=challenges+1, last_at=excluded.last_at`, host, atMs, atMs);
+    return this.#one(`SELECT host, challenges, first_at, last_at FROM challenge_hosts WHERE host=?`, host);
+  }
+  /** R140: the hosts that have answered with a challenge, most first; a read. */
+  challengeHosts() { return this.#rows(`SELECT host, challenges, first_at, last_at FROM challenge_hosts ORDER BY challenges DESC, host`); }
 
   /* ---- R131's durable count of the calls sent to a keyed service ---- */
 
@@ -809,6 +824,17 @@ async function cutOne(ctx, row, cost) {
     return;
   }
   /* END DEC-49 REGION is-entry-cut */
+  /* DEC-49 REGION is-refused-kind
+     R139 (T53; N1266, RF11): a file format-registry answers `refused` (a program, an installer, a script meant to run, a disk image, a RAR) is not filed,
+     whatever archive it came out of: its outcome is `not_filed`, with its type and reason in plain words, and no receipt or document is written. The bytes
+     stored on the way stay content-addressed and unnamed, as a corrupt member's do. */
+  const refused = await refusedMember(ev, stored, row);
+  if (refused) {
+    inst.settle(sha, row.index, { state: "not_filed", code: "FILE_TYPE_REFUSED", detail: refused.detail, at, ...counted });
+    out.not_filed.push({ index: row.index, ...rowed("FILE_TYPE_REFUSED", { detail: refused.detail, kind: refused.kind, kind_text: refused.kind_text, reason_text: refused.reason_text }) });
+    return;
+  }
+  /* END DEC-49 REGION is-refused-kind */
   const fileSha = stored.sha256;
   const p = st.provenance || inst.provenance;
   const address = h.address ? `${h.address}#zip:${row.index}` : null;
@@ -830,6 +856,20 @@ async function cutOne(ctx, row, cost) {
   inst.settle(sha, row.index, { state: "filed", sha256: fileSha, at, ...counted });
   out.documents.push(document);
   if (document.profile && document.profile.format && document.profile.format.format === "zip") out.nested.push(fileSha);
+}
+
+/** R139: the facts of a refusal when the head of a cut file (and its entry name) is a refused kind, else null. */
+async function refusedMember(ev, stored, row) {
+  try {
+    const first = stored.parts[0].sha256;
+    let o = null;
+    try { o = await ev.get(first, { range: { offset: 0, length: REFUSE_HEAD_BYTES } }); } catch { o = null; }
+    if (!o) o = await ev.get(first);
+    const head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, REFUSE_HEAD_BYTES) : null;
+    if (!head || !head.length) return null;
+    const d = detectFormat(head, null, typeof row.name === "string" ? row.name : null);
+    return d && d.format === "refused" ? refusedFacts(d) : null;
+  } catch { return null; }
 }
 
 /** R39: the provenance document of one file cut out of an archive, R16's with R39's differences. Every fact is derived

@@ -352,6 +352,22 @@ export const ARCHIVE_CHECKS = Object.freeze({
     where: at('is-for'),
     translation: word("refusal.BAD_FOR"),
   }),
+  /* R139 (T53; N1266, K5436; RF11): a file `format-registry` answers `refused` (a program, an installer, a script meant to run, a disk image, a
+     library, a RAR) is not filed, as a fetch or as an archive's entry. The answer's own `detail` states the type and the reason in the words
+     `file.kind.*` and `file.refused.reason.*` hold; the row's translation says what happened and what to do instead. New at T53 (C-139.22; BOB
+     confirms the number at the close). */
+  FILE_TYPE_REFUSED: Object.freeze({
+    check: 'C-139.22',
+    where: `${at('is-refused-kind')}; ${un('is-refused-kind')}`,
+    translation: localize("refusal.FILE_TYPE_REFUSED", "Your team's Civicsmith does not keep this kind of file, so nothing was saved. Send the document in another form, such as a PDF."),
+  }),
+  /* R140 (T53; K5574, K3656): the source answered with a challenge or CAPTCHA page in place of the document. It is never filed as the document and
+     never worked around; the refusal is counted for the host. New at T53 (C-139.23; BOB confirms the number at the close). */
+  CHALLENGE_PAGE: Object.freeze({
+    check: 'C-139.23',
+    where: at('is-challenge-page'),
+    translation: localize("refusal.CHALLENGE_PAGE", "The site asked for proof that a person is asking, so nothing was saved. Open the page yourself and add the file you get."),
+  }),
 });
 
 /* R10, R96 (C5; K4370): a capture of several parts the store could not keep whole. Nothing is filed and the parts are named by

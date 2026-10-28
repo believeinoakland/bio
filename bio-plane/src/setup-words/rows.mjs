@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19834 design words, 1181 protected; SHA-256
-   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7816 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a292a7436fe116534aca750ae208dc91cc5b8d1a57264f37e5c8104a8edf0be2) followed by 7821 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19861,6 +19861,8 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.index.bio_plane_acquire_https_fetch","bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt",null,null,false,"code"],
   ["acquisition.index.browser_is_bound_to_something","BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.",null,null,false,"code"],
   ["acquisition.index.capture_not_kept","the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again",null,null,false,"code"],
+  ["acquisition.index.challenge_page","{host} answered with a check that asks for a person ({signals}) in place of the document. Your team's Civicsmith does not get past such a check, and nothing was saved.",null,null,false,"code"],
+  ["acquisition.index.file_type_refused","A {kind} is not kept{reason}. Nothing was saved.",null,null,false,"code"],
   ["acquisition.index.first_party_https_fetch_of_the","first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment",null,null,false,"code"],
   ["acquisition.index.first_party_https_fetch_transport","first-party https fetch, hashed at receipt, transport record on this document",null,null,false,"code"],
   ["acquisition.index.google_answered_status_at_the","Google answered {status} at the OpenDocument export address {exportAddress}, which your team's Civicsmith composed from the {kind} id in {address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place — a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.",null,null,false,"code"],
@@ -19928,6 +19930,7 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.keyed.the_team_s_key_for","the team's key for this service is off or not held; the caller goes on without it",null,null,false,"code"],
   ["acquisition.keyed.there_is_no_text","there is no text to look citations up in; nothing was sent",null,null,false,"code"],
   ["acquisition.keyed.this_case_was_already_checked","this case was already checked today; nothing was fetched",null,null,false,"code"],
+  ["acquisition.profile.held_not_read","held, not read: {name}",null,null,false,"code"],
   ["acquisition.unpack.an_archive_is_opened","an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture that brought it in; nothing was opened",null,null,false,"code"],
   ["acquisition.unpack.its_document_was_offered","its document was offered {n} times and found no home in a project, so it is kept in the record and is not offered again",null,null,false,"code"],
   ["acquisition.unpack.no_acquisition_instance_holds","no acquisition instance holds this storage's archive records",null,null,false,"code"],
@@ -26783,8 +26786,10 @@ export const WORD_ROWS = Object.freeze([
   ["reevaluation.index.visible_to_chains","the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",null,null,false,"code"],
   ["reevaluation.index.work_products_unread","the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none",null,null,false,"code"],
   ["refusal.BAR_STALE","This project's bar changed after you opened it, so your change was not saved. The bar it holds now is shown. Read it, then set yours again if you still mean to.",null,null,false,"code"],
+  ["refusal.CHALLENGE_PAGE","The site asked for proof that a person is asking, so nothing was saved. Open the page yourself and add the file you get.",null,null,false,"code"],
   ["refusal.EXPORT_TOO_LARGE","This calculation's tables would make a workbook of {cells} cells, more than the {bound_cells} that can be exported.",null,null,false,"code"],
   ["refusal.EXPORT_TOO_WIDE","A table of this calculation has {columns} columns, more than the {bound_columns} a spreadsheet sheet holds.",null,null,false,"code"],
+  ["refusal.FILE_TYPE_REFUSED","Your team's Civicsmith does not keep this kind of file, so nothing was saved. Send the document in another form, such as a PDF.",null,null,false,"code"],
   ["refusal.WORKBOOK_FILE_TOO_LARGE","This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",null,null,false,"code"],
   ["retrieval-browse.browse.marks_another_shape","the registered read of watches and flags answered another shape than its contract's",null,null,false,"code"],
   ["retrieval-browse.browse.marks_not_registered","no module has registered the watches and flags, so watched and flagged are not read",null,null,false,"code"],

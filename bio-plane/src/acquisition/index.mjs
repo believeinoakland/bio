@@ -43,7 +43,8 @@ import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE
 import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS, CAPTURE_KEEP_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
-import { detectFormat } from "../formats.mjs";
+import { detectFormat, formatNameFor } from "../formats.mjs";
+import { challengeOf, CHALLENGE_HEAD_BYTES } from "./challenge.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
 import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -60,7 +61,7 @@ import { decodeText } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
-import { unpack, coArchiveStateOf } from "./unpack.mjs";
+import { unpack, coArchiveStateOf, ledgerOf } from "./unpack.mjs";
 import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
@@ -378,6 +379,28 @@ export const FOR_MAX = 200;
 const isRefusedKind = (d) => !!d && d.format === "refused";
 const isNamedKind = (d) => !!d && d.format !== "undetermined" && d.format !== "refused" && !(d.format === "unlisted" && (d.named === null || d.named === undefined));
 const isSignature = (d) => isNamedKind(d) && d.format !== "text";
+
+/* R139 (T53; N1266, RF11): the head of a body that is read to recognise a refused kind before anything is stored: the longest signature a
+   refused kind has in its head (an ISO's, at 37 KiB) is within it. */
+export const REFUSE_HEAD_BYTES = 40960;
+/* R139: the member words for a refused kind: its plain name and the reason it is not kept, `file.kind.*` and `file.refused.reason.*`, never a
+   type name built from an extension. */
+export function refusedFacts(d) {
+  const n = formatNameFor(d);
+  let reason = null;
+  try { reason = n.reason_key ? word(n.reason_key) : null; } catch { reason = null; }
+  const kind = n.text || word("file.kind.other");
+  return { kind: n.name, kind_key: n.kind_key, kind_text: kind, reason_key: n.reason_key ?? null, reason_text: reason,
+           detail: localize("acquisition.index.file_type_refused", "A {kind} is not kept{reason}. Nothing was saved.", { kind: String(kind), reason: reason ? `: ${reason}` : "" }) };
+}
+/* R138 (T53; N1266, RF10): a file `format-registry` answers `unlisted` is filed whole and its reading is stated "held, not read: {name}"; the
+   owed reading is the job table's `held-unread` verdict, re-run when the roster gains the type (reading-pipeline, GAP-1.4). */
+export function heldUnreadOf(d) {
+  const n = formatNameFor(d);
+  const name = n.text || word("file.kind.other");
+  return { state: "held-unread", named: d.named ?? null, kind_key: n.kind_key,
+           text: localize("acquisition.profile.held_not_read", "held, not read: {name}", { name: String(name) }) };
+}
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
@@ -965,6 +988,26 @@ export function evidenceStorageAbsent(op, error, { code = true } = {}) {
 /* R42 (F16, K1881): the group's own hosts this act refuses, handed in by its caller (`opts.ownHosts`, else the store's
    `ownHosts`), capture-sources' one rule (its R65) deciding each. With none given, nothing is refused on this ground. */
 const ownHostsOf = (cap, given) => (Array.isArray(given) ? given : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null);
+/* R140: the first `max` bytes of a body, read to recognise a challenge page; the rest is cancelled. */
+async function readPrefix(res, max) {
+  const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
+  if (!reader) return new Uint8Array(0);
+  const got = [];
+  let n = 0;
+  try { while (n < max) { const { done, value } = await reader.read(); if (done) break; got.push(value); n += value.length; } }
+  catch { /* a body that breaks off is read as far as it came */ }
+  try { await reader.cancel(); } catch { /* the source may already be gone */ }
+  const all = new Uint8Array(Math.min(n, max));
+  let at = 0;
+  for (const c of got) { const take = Math.min(c.length, all.length - at); all.set(c.subarray(0, take), at); at += take; if (at >= all.length) break; }
+  return all;
+}
+/** R140 (K5574): the hosts that have answered a fetch with a challenge or CAPTCHA page, and how many times each did: `[{host, challenges, first_at, last_at}]`,
+ *  the instants in milliseconds on the instance clock. A read; never throws. */
+export function challengesByHost(store) {
+  try { const inst = ledgerOf(store); return inst ? inst.challengeHosts().map((r) => ({ host: r.host, challenges: Number(r.challenges), first_at: Number(r.first_at), last_at: Number(r.last_at) })) : []; }
+  catch { return []; }
+}
 const hostnameOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return null; } };
 const onOwnHost = (u, ownHosts) => !!ownHosts && isOwnHost(hostnameOf(u), ownHosts);
 /* R42, C-139.18: the refusal, naming the host; nothing was fetched or filed. */
@@ -1355,6 +1398,33 @@ async function acquireRun(cap, body0, opts0, t) {
     }
   }
   /* END DEC-49 REGION is-drive-export */
+  /* DEC-49 REGION is-challenge-page
+     R140 (T53; K5574, K3656): a challenge or CAPTCHA page in place of the document is recognised from what the fetch received, never filed as the document
+     and never worked around; the refusal is counted for the host. A header the service sets to say it challenged settles it; an error answer that is
+     a bot-protection page is read for the page's own text, a bounded prefix of it. */
+  const challengeRefusal = async (chal, status) => {
+    const host = hostnameOf(resolvedUrl || locator);
+    let counted = null;
+    try { const inst = ledgerOf(cap); const r = inst && host ? inst.challengeNote(host, instantOf(cap)) : null; counted = r ? { host: r.host, challenges: Number(r.challenges) } : null; }
+    catch { counted = null; }
+    const row = ARCHIVE_CHECKS.CHALLENGE_PAGE;
+    return answer(403, { ok: false, reason: "CHALLENGE_PAGE", code: "CHALLENGE_PAGE", check: row.check, translation: row.translation, op, locator, host, status,
+      challenge: chal, counted,
+      detail: localize("acquisition.index.challenge_page", "{host} answered with a check that asks for a person ({signals}) in place of the document. Your team's Civicsmith does not get past such a check, and nothing was saved.", { host: String(host ?? ""), signals: chal.signals.join("; ") }) });
+  };
+  if (!driveCapture) {
+    let chal = challengeOf({ status: res.status, headers: res.headers });
+    if (!chal && !res.ok && [401, 403, 429, 503].includes(res.status)) {
+      const prefix = await readPrefix(res, CHALLENGE_HEAD_BYTES);
+      chal = challengeOf({ status: res.status, headers: res.headers, bytes: prefix, total: prefix.length });
+    }
+    if (chal) {
+      await noteOutcome("source_refused", res.status);
+      try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
+      return await challengeRefusal(chal, res.status);
+    }
+  }
+  /* END DEC-49 REGION is-challenge-page */
   if (!res.ok) {
     await noteOutcome("source_refused", res.status);
     /* R9 (fix round 4, N-slow-refuse): a source that says wait is relayed at once, with how long it said (`Retry-After`) */
@@ -1471,6 +1541,28 @@ async function acquireRun(cap, body0, opts0, t) {
   /* CAP-8: the first KiB of a DRIVE export, kept so the shell can be recognised from the BYTES. */
   const driveHead = driveCapture ? new Uint8Array(1024) : null;
   let driveHeadBytes = 0;
+  /* DEC-49 REGION is-refused-kind
+     R139 (T53; N1266, RF11; CC6): the head of the body is read for a REFUSED kind (a program, an installer, a script meant to run, a disk image, a RAR)
+     and for a challenge page served as a success, before anything is stored: the stream is cancelled and nothing is filed or recorded. The head is
+     the first `REFUSE_HEAD_BYTES`, or the whole body when it is shorter. */
+  const sniffHead = new Uint8Array(REFUSE_HEAD_BYTES);
+  let sniffBytes = 0, sniffed = false;
+  const sniffRefusal = async () => {
+    sniffed = true;
+    const head = sniffHead.subarray(0, sniffBytes);
+    const d = detectFormat(head, null, fetchedName(documentAddress));
+    if (isRefusedKind(d)) {
+      try { await reader.cancel(); } catch { /* the source may already be gone */ }
+      const f = refusedFacts(d);
+      const row = ARCHIVE_CHECKS.FILE_TYPE_REFUSED;
+      return answer(415, { ok: false, reason: "FILE_TYPE_REFUSED", code: "FILE_TYPE_REFUSED", check: row.check, translation: row.translation, op, locator,
+        refused: { format: d.format, kind: d.kind ?? null, reason: d.reason ?? null, signals: d.signals ?? [] }, kind: f.kind, kind_text: f.kind_text, reason_text: f.reason_text, detail: f.detail });
+    }
+    const chal = driveCapture ? null : challengeOf({ status: res.status, headers: res.headers, bytes: head, total: declared ?? (sniffBytes < sniffHead.length ? sniffBytes : null) });
+    if (chal) { try { await reader.cancel(); } catch { /* the source may already be gone */ } return await challengeRefusal(chal, res.status); }
+    return null;
+  };
+  /* END DEC-49 REGION is-refused-kind */
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
   stageBegin(t, "read");
@@ -1506,8 +1598,15 @@ async function acquireRun(cap, body0, opts0, t) {
       driveHeadBytes += take;
     }
     held.push(value); heldBytes += value.length; ledger.hold(value.length, "chunk");
+    if (sniffBytes < sniffHead.length) {
+      const take = Math.min(value.length, sniffHead.length - sniffBytes);
+      sniffHead.set(value.subarray(0, take), sniffBytes);
+      sniffBytes += take;
+      if (sniffBytes === sniffHead.length && !sniffed) { const early = await sniffRefusal(); if (early) return early; }
+    }
     if (heldBytes >= PART) await flush(false);
   }
+  if (!sniffed && !oversize) { const early = await sniffRefusal(); if (early) return early; }
   /* DEC-49 REGION is-drive-bytes — C-48.7: Google said it was a document and it was a web page. Detection is
      bytes-first and certain; a non-HTML export of another flavour is FILED with the disagreement on the hop. */
   if (driveCapture && driveHeadBytes > 0) {
@@ -2168,6 +2267,8 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
         : declared || profile.format;
     }
   }
+  /* R138: an unlisted type is held and named, its reading owed */
+  if (profile.format && profile.format.format === "unlisted") profile.held_unread = heldUnreadOf(profile.format);
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
   if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) containerBytes = readWhole;
