@@ -47,6 +47,22 @@ export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
+/* ---- PROTO_READOUT (throwaway measuring prototype; see build/plan/beta/platform/study/s1-results.md) ----
+   Env PROTO_READOUT: unset = nothing new; "0" = the normal write, with the measuring lines logged (the control arm); "1" = the units of a landing are
+   written NOT as capture_text rows (so no FTS rows either) but as ONE packed object in R2 (env.CAPTURES, `proto-readout/<store>/<capture_sha>`:
+   newline-delimited JSON units in seq order, plus `<key>.manifest.json`), the skipped and state rows still written as now. NOTHING READS THE PACKED OBJECT
+   BACK: this measures the WRITE side only, and a screen reading capture_text shows such a document as unread. Acceptable on the study copy only. */
+const roMem = () => {
+  try { if (typeof process !== "undefined" && typeof process.memoryUsage === "function") { const m = process.memoryUsage(); return { rss: m.rss ?? null, heapUsed: m.heapUsed ?? null }; } } catch { /* none */ }
+  return null;
+};
+const roLog = (tag, o) => { try { console.log(JSON.stringify({ [tag]: o })); } catch { /* logged where it can be */ } };
+const roContext = (env, storeName) => {
+  const m = env && typeof env === "object" ? env.PROTO_READOUT : undefined;
+  if (m !== "0" && m !== "1") return null;
+  return { mode: m, store: String(storeName || "bio"), bucket: env.CAPTURES && typeof env.CAPTURES.put === "function" ? env.CAPTURES : null, landings: [] };
+};
+
 /** (G41; R96) The UTF-8 bytes of a string, counted in slices so a large string is never encoded whole (an 11 MB reading is not copied to count it). */
 function utf8Bytes(s) {
   let n = 0;
@@ -534,6 +550,7 @@ export function extractionOf(ctx, opts = {}) {
 }
 
 export class Extraction {
+  #roNow = null; // PROTO_READOUT: the call's readout context, set only around the synchronous first-piece write in readHeld
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
   #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null; #serials = new WeakMap();
   #owe = null; #repairRun = null; #reader = readDocument;
@@ -959,11 +976,14 @@ export class Extraction {
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
+    const ro = roContext(e, storeName);
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved, stamp });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
+    const roT0 = Date.now(), roM0 = ro ? roMem() : null;
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
                                           ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages, stampUnit: stamp });
+    if (ro) this.#roReadLog(ro, digest, document, out, roT0, roM0, "first");
     if (out.refused) return left(out.refused.code);
     if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
@@ -972,7 +992,9 @@ export class Extraction {
     const via = this.#oweVia(call);
     const entry = this.#ocrEntry(digest, out.reading, out.more === true ? null : out.text_units, out.text_units);
     let owing = null;
-    const wrote = this.core.transact(() => {
+    this.#roNow = ro;
+    let wrote;
+    try { wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
       if (now && (!held || now.reading !== held.reading)) return null;
       if (!now && held) return null;
@@ -983,7 +1005,8 @@ export class Extraction {
         composed: true, more: pieceOf(out) });
       if (entry && !w.stated) owing = via.owe(entry);
       return w;
-    });
+    }); } finally { this.#roNow = null; }
+    if (ro) await this.flushReadout(ro);
     if (!wrote) return left("READING_HELD");
     const oweAnswer = owing ? owedAnswer(entry, await owing) : null;
     await via.arm();
@@ -1042,8 +1065,11 @@ export class Extraction {
     /* (fix round 9, G129c; K4904 (1); R101) the window at the stored cursor that killed its reader three times (the ledger's `killedCursor`) is stepped
        past, stated, and the read goes on from the next */
     const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
+    const ro = roContext(env, storeName);
+    const roT0 = Date.now(), roM0 = ro ? roMem() : null;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
                                             ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, skipKilled: skip, stampUnit: stamp });
+    if (ro) this.#roReadLog(ro, digest, document, out, roT0, roM0, "piece");
     /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
        cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
     const rd = out.reading && typeof out.reading === "object" ? out.reading : null;
@@ -1085,7 +1111,7 @@ export class Extraction {
     const unitChain = pieceChain || (rd && Array.isArray(rd.text_source) ? rd.text_source : storedChain);
     const folded = pieceChain && !restart ? foldPieceChain(storedChain, pieceChain, piecePagesOf(out, units)) : null;
     const wrote = await this.indexUnitsYielding(bundleId, digest, units, unitChain ?? null,
-      { append: !restart, more: pieceOf(out), batchKey: `p:${restart ? "start" : st.cursor}`, guard: cursorStands,
+      { append: !restart, more: pieceOf(out), batchKey: `p:${restart ? "start" : st.cursor}`, guard: cursorStands, readout: ro,
         after: () => {
           /* (fix round 9, G128c; reading-pipeline R57) the stored reading is completed, never rewritten, by what the piece adds: its glyphs, the image placements
              its pages hold (when its answer carries them), and at the last piece the document's words (the words the pieces read) */
@@ -1104,6 +1130,7 @@ export class Extraction {
           }
           if (entry) owing = via.owe(entry);
         } });
+    if (ro) await this.flushReadout(ro);
     if (!wrote) return left("READING_HELD");
     if (stated) {
       const st2 = { stated };
@@ -1577,7 +1604,7 @@ export class Extraction {
       this.#sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
       this.#writeTextSource(bundleId, sha, reading.text_source);
       const indexed = this.indexUnits(bundleId, sha, textUnits, reading.text_source,
-        { wireOverBound: textUnitsOverBound, wireSkipped: textUnitsSkipped, more });
+        { wireOverBound: textUnitsOverBound, wireSkipped: textUnitsSkipped, more, readout: this.#roNow });
       /* (fix round 6, G13; R90) a text whose units the index holds only in part, written by a read that was not in pieces (the acquire wire,
          a promotion): it is read in pieces from its start, so no text is left silently partial. The reading itself stands. */
       if (!more && textReading(reading) && indexed.over_bound > 0) {
@@ -1783,9 +1810,46 @@ export class Extraction {
     }
   }
 
+  /** PROTO_READOUT: puts the packed objects of the landings just made (the landing is synchronous, so the R2 put follows it, outside the transaction) and
+   *  logs one `{"proto_readout": {...}}` line per landing. A failed put is logged and swallowed: the state rows already say what was written. */
+  async flushReadout(ro) {
+    if (!ro) return;
+    const list = ro.landings.splice(0);
+    for (const rec of list) {
+      const pack = rec.pack, sha = rec.sha;
+      delete rec.pack; delete rec.t0; delete rec.sha;
+      if (pack && rec.readout_active) {
+        try {
+          const base = `proto-readout/${ro.store}/${sha}${rec.append ? `.${rec.key}` : ""}`;
+          const body = pack.lines.join("");
+          const manifest = JSON.stringify({ capture_sha: sha, store: ro.store, units: pack.index.length, bytes: pack.offset, object: base, index: pack.index });
+          await ro.bucket.put(base, body);
+          await ro.bucket.put(`${base}.manifest.json`, manifest);
+          rec.r2_objects = 2; rec.r2_bytes = pack.offset + utf8Bytes(manifest);
+        } catch (e) { rec.r2_error = String(e && e.message || e).slice(0, 160); }
+      }
+      delete rec.key;
+      roLog("proto_readout", rec);
+    }
+  }
+
+  /** PROTO_READOUT: the `{"proto_readout_read": {...}}` line of the reading step (before landing). `file_bytes` is the size the document states for the held file
+   *  (the reader's own fetch is not observable from here); the rest is taken from the reader's answer. */
+  #roReadLog(ro, digest, document, out, t0, m0, step) {
+    const units = out && Array.isArray(out.text_units) ? out.text_units : [];
+    let unitBytes = 0;
+    for (const u of units) if (u && typeof u.text === "string") unitBytes += utf8Bytes(u.text);
+    roLog("proto_readout_read", { mode: ro.mode, step, capture: digest.slice(0, 12), file_bytes: this.#sizeOf(document), file_bytes_note: "the size the document states, not an observed fetch",
+      units: units.length, unit_text_bytes: unitBytes, over_bound: out && out.text_units_over_bound || 0, more: !!(out && out.more === true),
+      wall_ms: Date.now() - t0, wall_note: "Date.now() is frozen in synchronous work in workerd", mem_start: m0, mem_end: roMem() });
+  }
+
   /** The body of `indexUnits`, a generator that yields after each batch landed (the synchronous runner ignores it). */
   *#landSteps(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null, more = null, append = false, batchKey = "w", guard = null,
-                                                    after = null } = {}) {
+                                                    after = null, readout = null } = {}) {
+    const ro = readout && readout.mode ? readout : null;
+    const packing = !!(ro && ro.mode === "1" && ro.bucket);
+    const t0 = Date.now(), mem0 = ro ? roMem() : null;
     /* (fix round 6, G13; R90) `append`: the next piece of a text read in pieces. The capture's earlier units, named gaps and counts stay and this
        piece's are added to them. */
     const before = append ? this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, captureSha) : null;
@@ -1829,6 +1893,8 @@ export class Extraction {
     }
     let landed = 0, already = 0, stopped = false;
     const held = new Set();
+    const pack = packing ? { lines: [], index: [], offset: 0, chars: 0 } : null;
+    let roRows = 0;
     for (let k = 0; k < batches.length && !stopped; k++) {
       const b = batches[k], id = `${batchKey}:${k}`;
       this.core.transact(() => {
@@ -1840,6 +1906,15 @@ export class Extraction {
             unaddressable++; held.add(u); unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue;
           }
           const chainKind = kindOf(u.extent);
+          if (pack) {
+            const line = JSON.stringify({ seq: u.seq, extent_kind: kind, extent, ref: describeExtent(u.extent), text: u.text, truncated: u.wireCut ? 1 : 0, chain_kind: chainKind,
+                                          kind: u.kind, line_rows: u.lineRows, undetermined: u.undetermined }) + "\n";
+            const n = utf8Bytes(line);
+            pack.index.push({ seq: u.seq, extent_kind: kind, extent, offset: pack.offset, bytes: n });
+            pack.lines.push(line); pack.offset += n; pack.chars += line.length;
+            continue;
+          }
+          roRows++;
           this.#sql.exec(
             `INSERT INTO capture_text (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind,kind,line_rows,undetermined)
              VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -1850,6 +1925,23 @@ export class Extraction {
         landed++;
       });
       if (k < batches.length - 1 && !stopped) yield k;
+    }
+    const memPeak = ro ? roMem() : null;
+    if (ro) {
+      /* the proxy: UTF-16 string lengths of what this function holds at this point (ordered's texts once: rows and batches share the same strings) */
+      let textChars = 0, textBytes = 0, extentChars = 0;
+      for (const u of ordered) textChars += u.text.length;
+      for (const r of rows) { textBytes += r.size; extentChars += r.extent.length; }
+      const rec = { mode: ro.mode, readout_active: packing, no_bucket_fallback: ro.mode === "1" && !ro.bucket,
+        capture: captureSha.slice(0, 12), append, units: ordered.length, text_bytes: textBytes, batches: batches.length, batches_landed: landed, batches_already: already,
+        room_rows_capture_text: roRows, room_rows_fts_shadow: 0, room_rows_fts_note: "not measured: FTS5 trigger and shadow rows are 0=unknown here",
+        held_proxy: { ordered_text_chars: textChars, rows_extent_chars: extentChars, rows_objects: rows.length, batches_arrays: batches.length,
+                      packed_chars: pack ? pack.chars : 0, packed_bytes: pack ? pack.offset : 0,
+                      total_chars: textChars + extentChars + (pack ? pack.chars : 0), note: "proxy: JS string lengths of ordered/rows/batches/packed; not heap bytes" },
+        r2_objects: 0, r2_bytes: 0, r2_error: null, wall_ms: null, wall_note: "Date.now() is frozen in synchronous work in workerd",
+        mem_start: mem0, mem_peak: memPeak, mem_end: null };
+      rec.t0 = t0; rec.pack = pack; rec.key = batchKey; rec.sha = captureSha;
+      ro.landings.push(rec);
     }
     /* what the index holds of this write (a batch an earlier try landed counts as written: its units are in the index) */
     for (const { u, size } of rows) {
@@ -1904,6 +1996,7 @@ export class Extraction {
       if (typeof after === "function") after();
       return state;
     });
+    if (ro) { const rec = ro.landings[ro.landings.length - 1]; rec.wall_ms = Date.now() - rec.t0; rec.mem_end = roMem(); }
     if (wrote === null) return null;
     return { offered, written, bytes, truncated: truncatedUnits, over_bound: over, wire_over_bound: wire,
              unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state: wrote,
