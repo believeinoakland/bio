@@ -19,3 +19,7 @@
 | layer | module | literal A / B files | regex A / B / C sites (files) | |
 |---|---|---|---|---|
 | 4 | content | 0 / 0 | 24 / 7 / 20 (12) |  |
+
+## K5629: layer-1 findings folded (BOB #327)
+
+- T53-529 · text-chain's finding (R107, DEC-464) · seven tests pin the old typed grading. Detail: `bio-plane/test/m/content/` holds seven tests (R21, R22, R24, R25, R26 transcription cases) that go red on text-chain R107: `content.transcribe` mints a typed row graded "undetermined" and `transcriptionAttest` reads `gradeCeiling` as B, but a typed passage now has two grades only (`TYPED_UNCHECKED_GRADE`, determinant "typist"; `TYPED_CHECKED_GRADE` after a second member's attestation). The tests are re-stated by content's own requirements (R21: the transcription axis for a typed row; R24: fidelity of a new typing; R25: the ceilings before and after an attestation), with T53-133 (A8, "a typing graded as its typist's word"); the new grades are read from text-chain's constants, never a letter. `[owed: content R63-R64 (A8, planning/lines-A8-typed-page.md) are not in build/requirements/content.md yet (it ends at R62); BOB writes them first]`

@@ -8919,6 +8919,13 @@
       "line": 241
     },
     {
+      "id": "calc-grammar.no_resolver_space",
+      "en": "no resolver for the space \"{space}\"",
+      "module": "calc-grammar",
+      "file": "bio-plane/src/calc-grammar/recipe.mjs",
+      "line": 535
+    },
+    {
       "id": "calc-grammar.recipe.field_shape",
       "en": "each field states its name and its type, the type one of {types}",
       "module": "calc-grammar",
@@ -8938,6 +8945,13 @@
       "module": "calc-grammar",
       "file": "bio-plane/src/calc-grammar/recipe.mjs",
       "line": 475
+    },
+    {
+      "id": "calc-grammar.rows_first_pass",
+      "en": "it answered {size} rows on its first pass and {n} on a later one",
+      "module": "calc-grammar",
+      "file": "bio-plane/src/calc-grammar/tables.mjs",
+      "line": 84
     },
     {
       "id": "calc-grammar.tables.the_input_name_why",
@@ -30462,91 +30476,91 @@
       "en": "an interlaced (Adam7) PNG is not redrawn",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 33
+      "line": 34
     },
     {
       "id": "image-cover.redraw.decoded_frame",
       "en": "decoded frame",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 111
+      "line": 77
     },
     {
       "id": "image-cover.redraw.not_a_png",
       "en": "not a PNG{note}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 30
+      "line": 31
     },
     {
       "id": "image-cover.redraw.redrawn_picture",
       "en": "redrawn picture",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 80
+      "line": 114
     },
     {
       "id": "image-cover.redraw.the_images_structure_cannot_be",
       "en": "the image's data cannot be read ({v1})",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 157
+      "line": 134
     },
     {
       "id": "image-cover.redraw.the_photo_is_length_bytes",
       "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module redraws",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 137
+      "line": 111
     },
     {
       "id": "image-cover.redraw.the_photo_is_neither_a_jpeg_nor_a_png",
       "en": "the photo is neither a JPEG nor a PNG",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 139
+      "line": 113
     },
     {
       "id": "image-cover.redraw.the_photos_bytes_are_not_a_byte_array",
       "en": "the photo's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 135
+      "line": 109
     },
     {
       "id": "image-cover.redraw.the_png_declares_more_than",
       "en": "the PNG declares more than this module redraws{v1}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 32
+      "line": 33
     },
     {
       "id": "image-cover.redraw.the_png_has_no_header",
       "en": "the PNG has no readable header",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 120
+      "line": 94
     },
     {
       "id": "image-cover.redraw.the_png_uses_a_feature",
       "en": "the PNG uses a feature that is not redrawn{note}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 34
+      "line": 35
     },
     {
       "id": "image-cover.redraw.the_what_is_size_over",
       "en": "the {what} is {size} bytes, over the {bound} this module redraws",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 24
+      "line": 25
     },
     {
       "id": "image-cover.redraw.this_jpegs_coding_is_not",
       "en": "this JPEG has {n} components; only grey or three are redrawn",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/redraw.mjs",
-      "line": 108
+      "line": 82
     },
     {
       "id": "image-cover.strip.a_box_header_runs_past_its_container",
@@ -36030,6 +36044,13 @@
       "line": 455
     },
     {
+      "id": "legistar-reader.index.the_address_is_not_a_legistar",
+      "en": "the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)",
+      "module": "legistar-reader",
+      "file": "legistar-reader/index.mjs",
+      "line": 70
+    },
+    {
       "id": "legistar-reader.index.the_address_names_a_client",
       "en": "the address names a Legistar client but no endpoint",
       "module": "legistar-reader",
@@ -36056,6 +36077,13 @@
       "module": "legistar-reader",
       "file": "legistar-reader/index.mjs",
       "line": 138
+    },
+    {
+      "id": "legistar-reader.index.the_bytes_are_json_but_not",
+      "en": "the bytes are JSON but not an object or an array of objects",
+      "module": "legistar-reader",
+      "file": "legistar-reader/index.mjs",
+      "line": 137
     },
     {
       "id": "legistar-reader.index.the_bytes_are_not_json",
@@ -37021,98 +37049,98 @@
       "en": "This message has no attachment {index}.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 46
+      "line": 45
     },
     {
       "id": "mail-reader.refusal.attachment_not_cut",
       "en": "Attachment {index} is a message kept inside this Outlook message; it is read with the message, not on its own.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 47
+      "line": 46
     },
     {
       "id": "mail-reader.refusal.boundary_bad",
       "en": "This message's parts are not separated the way it declares, so it cannot be read. Ask the sender for a fresh copy.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 39
+      "line": 38
     },
     {
       "id": "mail-reader.refusal.empty",
       "en": "This file is empty, so there is no message to read.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 41
+      "line": 40
     },
     {
       "id": "mail-reader.refusal.is_mailbox",
       "en": "This file is a mailbox of messages, not one message; it is read as a mailbox.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 43
+      "line": 42
     },
     {
       "id": "mail-reader.refusal.mailbox_malformed",
       "en": "This file does not begin like a mailbox, so its messages cannot be found.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 44
+      "line": 43
     },
     {
       "id": "mail-reader.refusal.mailbox_too_large",
       "en": "This mailbox is {size} bytes, more than the {bound} bytes a mailbox may be. Split it into smaller mailboxes and bring each in.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 38
+      "line": 37
     },
     {
       "id": "mail-reader.refusal.mailbox_too_many",
       "en": "This mailbox holds more than {bound} messages, so it is not read. Split it into smaller mailboxes and bring each in.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 37
+      "line": 36
     },
     {
       "id": "mail-reader.refusal.malformed",
       "en": "This message is damaged in a way that stops it being read. Ask the sender for a fresh copy.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 48
+      "line": 47
     },
     {
       "id": "mail-reader.refusal.msg_container_bad",
       "en": "This Outlook message is damaged or cut short, so it cannot be read. Save it again from Outlook and bring it in.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 40
+      "line": 39
     },
     {
       "id": "mail-reader.refusal.not_a_message",
       "en": "This file is not an email message, so it is not read as one.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 42
+      "line": 41
     },
     {
       "id": "mail-reader.refusal.source_unreadable",
       "en": "This message could not be read from storage. Try again in a moment.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 45
+      "line": 44
     },
     {
       "id": "mail-reader.refusal.too_large",
       "en": "This message is {size} bytes, more than the {bound} bytes a message may be. Save its attachments separately and bring them in one by one.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 35
+      "line": 34
     },
     {
       "id": "mail-reader.refusal.too_nested",
       "en": "This message is nested more than {max} levels deep (it reached {depth}); nothing deeper is opened. Open the inner message and bring it in on its own.",
       "module": "mail-reader",
       "file": "bio-plane/src/mail-reader/index.mjs",
-      "line": 36
+      "line": 35
     },
     {
       "id": "member-roster.declared.adminendorse",
@@ -40318,7 +40346,14 @@
       "en": "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it",
       "module": "ocr-worker",
       "file": "ocr-worker/src/tessengine.mjs",
-      "line": 64
+      "line": 63
+    },
+    {
+      "id": "ocr-worker.tessengine.the_wasm_core_did_not_arrive",
+      "en": "the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, and this member must be installed with its `assets/tesseract-core.wasm` part",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/tessengine.mjs",
+      "line": 61
     },
     {
       "id": "odf-reader.odf.content_xml_byte_identical_across",
@@ -40377,6 +40412,13 @@
       "line": 2894
     },
     {
+      "id": "odf-reader.odf.no_byte_rewritten",
+      "en": ", no byte rewritten",
+      "module": "odf-reader",
+      "file": "bio-plane/src/odf.mjs",
+      "line": 2901
+    },
+    {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
@@ -40403,6 +40445,13 @@
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
       "line": 2758
+    },
+    {
+      "id": "odf-reader.odf.normalised_by",
+      "en": ", normalised by {name}",
+      "module": "odf-reader",
+      "file": "bio-plane/src/odf.mjs",
+      "line": 2901
     },
     {
       "id": "odf-reader.odf.part_odf_mimetype_part_is",
@@ -46124,6 +46173,27 @@
       "line": 147
     },
     {
+      "id": "record-grammar.acts.no_basis.entities",
+      "en": "held identifier and grade-D testimony",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 56
+    },
+    {
+      "id": "record-grammar.acts.no_basis.progressions",
+      "en": "first declaration and revision of a declared flow",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 54
+    },
+    {
+      "id": "record-grammar.acts.no_citation.progressions",
+      "en": "revision of a declared flow and exception document",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/acts.mjs",
+      "line": 65
+    },
+    {
       "id": "record-grammar.bundle.adjust_the_later_record_timestamp_suffix",
       "en": "adjust the later record timestamp suffix by one second, logged",
       "module": "record-grammar",
@@ -46836,6 +46906,13 @@
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/frontmatter.mjs",
       "line": 161
+    },
+    {
+      "id": "record-grammar.labels.unknown_subject",
+      "en": "proposalLabel: '{subject}' is not a proposal subject; one of {subjects}",
+      "module": "record-grammar",
+      "file": "bio-plane/src/record-grammar/labels.mjs",
+      "line": 203
     },
     {
       "id": "reevaluation.checks.only_a_named_member_can",

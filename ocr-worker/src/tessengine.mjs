@@ -58,8 +58,7 @@ const locateFile = (path) => path;
  *  Returns null when everything agrees, or a REASON string. */
 export function engineCheck() {
   if (!(wasmModule instanceof WebAssembly.Module))
-    return "the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, "
-         + "and this member must be installed with its `assets/tesseract-core.wasm` part";
+    return localize("ocr-worker.tessengine.the_wasm_core_did_not_arrive", "the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, and this member must be installed with its `assets/tesseract-core.wasm` part");
   if (!MODEL || typeof MODEL.byteLength !== "number" || MODEL.byteLength !== MODEL_BYTES)
     return localize("ocr-worker.tessengine.the_language_model_is_v1", "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it", { v1: String(MODEL && MODEL.byteLength), MODEL_BYTES: String(MODEL_BYTES) });
   return null;

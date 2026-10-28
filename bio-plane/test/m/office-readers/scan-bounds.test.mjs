@@ -218,7 +218,7 @@ test("R12 docx: the declared bytes of every part inflated for text count, the fo
   assert.equal(t.undetermined[0].why, "over_size_bound");
   assert.equal(t.undetermined[0].final, true);
   /* the ceiling is the table's figure, quoted not copied */
-  assert.equal(t.undetermined[0].bound, 32 * 1048576);
+  assert.equal(t.undetermined[0].bound, boundOf("office", "streamed_text_bytes"));
   /* control: the same package with a small footnotes part is read */
   const ok = await docxEntry.text(F.docx({ body: F.wp(F.wr("small")), rels, extra: [{ name: "word/footnotes.xml", data: `<w:footnotes ${W}/>` }] }));
   assert.equal(ok.document, "small");

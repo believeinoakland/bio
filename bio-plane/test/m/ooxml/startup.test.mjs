@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { crc32 as zcrc32 } from "node:zlib";
 import * as M from "../../../src/ooxml.mjs";
 import { makeZip } from "../../make-zip.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 import { makeVbaProject } from "./cfb.mjs";
 
 const MODULE_URL = new URL("../../../src/ooxml.mjs", import.meta.url).href;
@@ -79,14 +80,19 @@ const T47_FUNCTIONS = {
  * in pieces. R34 pins every name T47 held, and these. */
 const T51_FUNCTIONS = { cutAfterTag: 1, cutBefore: 1, decodeText: 2, pieceWhy: 1, readPartPieces: 5, textPlan: 1 };
 /* What fix round 9 added (R3, R5, R30, R36): the office entries, the directory, the name and the structural part limits. */
+/* What T53-524 added: the compound-file reader, its signature test and its signature. */
+const T53_FUNCTIONS = { hasCfbMagic: 1, readCfb: 1 };
 const T51_CONSTANTS = {
-  STREAMED_TEXT_BOUND_BYTES: 33554432, OFFICE_ENTRIES_MAX: 100000, ARCHIVE_DIRECTORY_MAX: 16777216, ARCHIVE_NAME_MAX: 4096,
-  STRUCTURAL_PART_MAX: 8388608,
+  STREAMED_TEXT_BOUND_BYTES: boundOf("office", "streamed_text_bytes"), OFFICE_ENTRIES_MAX: boundOf("office", "entries"),
+  ARCHIVE_DIRECTORY_MAX: boundOf("archive", "directory"), ARCHIVE_NAME_MAX: boundOf("archive", "name"),
+  STRUCTURAL_PART_MAX: boundOf("office", "structural_part_bytes"),
 };
 const T47_CONSTANTS = {
-  ARCHIVE_DEPTH_MAX: 3, ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_RATIO_MAX: 1100, ARCHIVE_TOTAL_MAX: 268435456,
-  ARCHIVE_TREE_ENTRIES_MAX: 10000, ARCHIVE_TREE_TOTAL_MAX: 268435456, CONTENT_TYPES_PART: "[Content_Types].xml",
-  CORE_PROPERTIES_PART: "docProps/core.xml", MEASURED_OOXML_TEXT_BOUND_BYTES: 20971520, MEMBER_MAX: 268435456,
+  ARCHIVE_DEPTH_MAX: boundOf("archive", "depth"), ARCHIVE_ENTRIES_MAX: boundOf("archive", "members"),
+  ARCHIVE_RATIO_MAX: boundOf("archive", "ratio"), ARCHIVE_TOTAL_MAX: boundOf("archive", "unpacked_bytes"),
+  ARCHIVE_TREE_ENTRIES_MAX: boundOf("archive", "members"), ARCHIVE_TREE_TOTAL_MAX: boundOf("archive", "unpacked_bytes"),
+  CONTENT_TYPES_PART: "[Content_Types].xml", CORE_PROPERTIES_PART: "docProps/core.xml",
+  MEASURED_OOXML_TEXT_BOUND_BYTES: boundOf("office", "text_bytes"), MEMBER_MAX: boundOf("archive", "member_bytes"),
   ODF_MANIFEST_PART: "META-INF/manifest.xml", ODF_MIMETYPE_MAX_BYTES: 128, ODF_MIMETYPE_PART: "mimetype",
 };
 const OPC = (flavour, mainContentType, conventionalMainPart, variant) =>
@@ -124,9 +130,11 @@ const T47_IMAGE_MIME_BY_EXT = {
   emz: "image/x-emz", wmz: "image/x-wmz",
 };
 const T47_ARCHIVE_LIMITS = {
-  ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_TOTAL_MAX: 268435456, MEMBER_MAX: 268435456,
-  OFFICE_ENTRIES_MAX: 100000, ARCHIVE_DIRECTORY_MAX: 16777216, ARCHIVE_NAME_MAX: 4096, ARCHIVE_RATIO_MAX: 1100,
-  ARCHIVE_DEPTH_MAX: 3, ARCHIVE_TREE_TOTAL_MAX: 268435456, ARCHIVE_TREE_ENTRIES_MAX: 10000,
+  ARCHIVE_ENTRIES_MAX: boundOf("archive", "members"), ARCHIVE_TOTAL_MAX: boundOf("archive", "unpacked_bytes"),
+  MEMBER_MAX: boundOf("archive", "member_bytes"), OFFICE_ENTRIES_MAX: boundOf("office", "entries"),
+  ARCHIVE_DIRECTORY_MAX: boundOf("archive", "directory"), ARCHIVE_NAME_MAX: boundOf("archive", "name"),
+  ARCHIVE_RATIO_MAX: boundOf("archive", "ratio"), ARCHIVE_DEPTH_MAX: boundOf("archive", "depth"),
+  ARCHIVE_TREE_TOTAL_MAX: boundOf("archive", "unpacked_bytes"), ARCHIVE_TREE_ENTRIES_MAX: boundOf("archive", "members"),
 };
 /* The two VBA tables are olevba's (R33's own test reads them against
  * oletools where it is installed); here each is pinned by its length, its
@@ -137,11 +145,11 @@ const T47_VBA = {
 };
 
 function assertT47Exports(ns) {
-  const names = [...Object.keys(T47_FUNCTIONS), ...Object.keys(T51_FUNCTIONS), ...Object.keys(T47_CONSTANTS),
-    ...Object.keys(T51_CONSTANTS), "ARCHIVE_LIMITS", "CONTAINER_FLAVOURS",
+  const names = [...Object.keys(T47_FUNCTIONS), ...Object.keys(T51_FUNCTIONS), ...Object.keys(T53_FUNCTIONS), ...Object.keys(T47_CONSTANTS),
+    ...Object.keys(T51_CONSTANTS), "CFB_MAGIC", "ARCHIVE_LIMITS", "CONTAINER_FLAVOURS",
     "IMAGE_MIME_BY_EXT", "OOXML_FLAVOURS", "ODF_FLAVOURS", ...Object.keys(T47_VBA)].sort();
   assert.deepEqual(Object.keys(ns).sort(), names);
-  for (const [name, arity] of Object.entries({ ...T47_FUNCTIONS, ...T51_FUNCTIONS })) {
+  for (const [name, arity] of Object.entries({ ...T47_FUNCTIONS, ...T51_FUNCTIONS, ...T53_FUNCTIONS })) {
     assert.equal(typeof ns[name], "function", name);
     assert.equal(ns[name].length, arity, name);
   }

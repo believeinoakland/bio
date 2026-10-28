@@ -15,6 +15,7 @@ import { combine, list } from "../../jurisdictions/index.mjs";
 import { PORT_ALDER, LAKEMONT, view, HELD, PA_BYLAW, PA_CODE, withCodeSections, PA_SECTIONS } from "./fixtures.mjs";
 import { servedDocuments, textOf, CODIFIER } from "./codifier.mjs";
 import { word } from "../../bio-plane/src/setup-words/index.mjs";
+import { codeHeadingsIn } from "../sections.mjs";
 
 const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/codifier-answers.json", import.meta.url), "utf8")).documents;
 const FW18 = JSON.parse(fs.readFileSync(new URL("./fixtures/fw18-doctypes.json", import.meta.url), "utf8")).documents;
@@ -42,11 +43,12 @@ test("R9 form is instrument or code; a code section is CERTAIN only on a heading
     assert.equal(c.parsed.form, "code", c.doc.Title);
     assert.equal(c.detect.match, true, c.doc.Title);
     assert.equal(c.detect.confidence, "certain", c.doc.Title);
-    assert.ok(c.detect.signals.some((s) => /section heading/.test(s)), c.doc.Title);
+    const heads = codeHeadingsIn(c.text, { view: CODE_VIEW });
+    assert.ok(c.detect.signals.includes(word("doctypes.regulation.code_headings", { count: String(heads.count), label: String(heads.label) })), c.doc.Title);
     // the same document under a view naming no section form: not a code section, not a regulation
     const bare = read(textOf(c.doc), NO_FORMS);
     assert.equal(bare.parsed.form === "code", false, `${c.doc.Title}: no form, no code`);
-    assert.ok(!(bare.detect.signals || []).some((x) => /section heading/.test(x)), `${c.doc.Title}: no heading without the code's forms`);
+    assert.equal(codeHeadingsIn(bare.text, { view: NO_FORMS }).count, 0, `${c.doc.Title}: no heading without the code's forms`);
   }
   // an instrument stays an instrument, as before
   assert.equal(regulation.parse({ text: PA_BYLAW, view: PA }).form, "instrument");

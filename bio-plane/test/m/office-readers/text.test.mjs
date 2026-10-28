@@ -8,10 +8,11 @@ import { pptxEntry } from "../../../src/pptx.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 import { textPlan, STREAMED_TEXT_BOUND_BYTES, MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
 import * as F from "./fixtures.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 const sha = (s) => createHash("sha256").update(F.enc(s)).digest("hex");
 const MiB = 1024 * 1024;
-const BOUND = 20 * MiB;
+const BOUND = boundOf("office", "text_bytes");
 /* The ceiling of a read in pieces (R35): over it, and only over it, the text is refused. */
 const CEIL = STREAMED_TEXT_BOUND_BYTES;
 
