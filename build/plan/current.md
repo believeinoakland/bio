@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 CLOSED · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #332 · session_018BhcedHXTmWvkcQG9t9wzP · depth 1
-**Jobs** · entities: ENTITIES #1 session_018BhcegLAJHLFmviGpxX2jK; events: EVENTS #1 session_018BhcegSHPdmVWCkrzGKZwR; local-facts: LOCAL-FACTS #1 session_018BhcedSE6M2T5swdLzFC13; connections: CONNECTIONS #1 session_018BhcegFwJCkdsgDuz48E3E; observation-log: OBSERVATION-LOG #1 session_018BhcecurEFLMTnAtT6vbUk; law-relations: LAW-RELATIONS #1 session_018Bhcef45tY22jRGKXzGfRR; standards: STANDARDS #1 session_018BhceeaibBmzLUp9ntjA2V; progressions: PROGRESSIONS #1 session_018BhcefkfuJhoEDmxX32LxQ; money: MONEY #1 session_018Bhcedpyp5s6ggLLpKC8dX; money-checks: MONEY-CHECKS #1 session_018BhceeqTMutDs3sqW7g4pV
-**Owed** · start duties; start people; start explore; start bias; start query-language; start retrieval-browse; start retrieval; start calculations; start workbooks; start registers
+**Jobs** · entities: ENTITIES #1 session_018BhcegLAJHLFmviGpxX2jK; events: EVENTS #1 session_018BhcegSHPdmVWCkrzGKZwR; local-facts: LOCAL-FACTS #1 session_018BhcedSE6M2T5swdLzFC13; connections: CONNECTIONS #1 session_018BhcegFwJCkdsgDuz48E3E; observation-log: OBSERVATION-LOG #1 session_018BhcecurEFLMTnAtT6vbUk; law-relations: LAW-RELATIONS #1 session_018Bhcef45tY22jRGKXzGfRR; standards: STANDARDS #1 session_018BhceeaibBmzLUp9ntjA2V; progressions: PROGRESSIONS #1 session_018BhcefkfuJhoEDmxX32LxQ; money: MONEY #1 session_018Bhcedpyp5s6ggLLpKC8dX; money-checks: MONEY-CHECKS #1 session_018BhceeqTMutDs3sqW7g4pV; duties: DUTIES #1 session_018BhcefuyFQ7MjUduiZCHQX
+**Owed** · start people; start explore; start bias; start query-language; start retrieval-browse; start retrieval; start calculations; start workbooks; start registers
 
 # Plan T53 · round R1, the beta's build
 
