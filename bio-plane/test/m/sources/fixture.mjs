@@ -141,7 +141,8 @@ export function world({ gradeAs = null } = {}) {
      *  whose `data/provenance.json` carries the document; `via` writes the plane's receipt (`direct`, `archive.org`,
      *  `doorbell`; provenance R13) or none; `authored` makes the row a member's own observation (provenance R27).
      *  Answers `{sha, bundleId}`. */
-    captured({ actor = "bob", actorClass = "member", text = `a result page ${++b}`, via = "direct", authored = false } = {}) {
+    captured({ actor = "bob", actorClass = "member", text = `a result page ${b + 1}`, via = "direct", authored = false } = {}) {
+      b++;
       const bundleId = `INFO-2026-${String(1000 + b).padStart(4, "0")}`;
       const path = `snapshots/result-${b}.html`;
       const digest = sha(text);
