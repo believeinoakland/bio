@@ -76,7 +76,7 @@ test("R107 controls: a declaration never contradicts the bytes", async () => {
   /* bytes that are not text (a NUL in the head), declared text/csv: judged by its bytes */
   const bin = csvOf(9 * MiB); bin[10] = 0;
   const b = await upload(bin, { type: "text/csv" });
-  assert.equal(formatOf(b), "undetermined", "non-text bytes declared text/csv stay undetermined");
+  assert.equal(formatOf(b), "unlisted", "non-text bytes declared text/csv are held and named, never csv");
   assert.equal(b.profile.source_content_type, "text/csv", "the declaration is still recorded as the uploader's");
   /* bytes `acquisition` does not decode as text, declared text/html, are not html: a run of NULs in a file that is no UTF-16 */
   const h = csvOf(9 * MiB); h[3] = 0; h[4] = 0; h[5] = 0; h[7] = 0;
@@ -97,6 +97,6 @@ test("R107 controls: a declaration never contradicts the bytes", async () => {
   assert.equal(formatOf(named), "csv");
   assert.equal(named.profile.source_content_type, "application/octet-stream", "still recorded as the uploader's declaration");
   /* a multipart upload with neither type nor text name is as before */
-  assert.equal(formatOf(await upload(csvOf(9 * MiB))), "undetermined");
-  assert.equal(formatOf(await upload(csvOf(9 * MiB), { name: "x.bin" })), "undetermined");
+  assert.equal(formatOf(await upload(csvOf(9 * MiB))), "text");
+  assert.equal(formatOf(await upload(csvOf(9 * MiB), { name: "x.bin" })), "text");
 });

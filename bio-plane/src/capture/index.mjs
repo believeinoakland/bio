@@ -64,8 +64,7 @@ import { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
-import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs";
-import * as provenanceExports from "../provenance/index.mjs";
+import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA, EMAIL_VIA } from "../provenance/index.mjs";
 import { readMessage } from "../mail-reader/index.mjs";
 import { attest, attestationOf } from "../attestation/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../membership/index.mjs";
@@ -105,8 +104,6 @@ const DECLARED = Object.freeze({ ok: true, module: "capture", declared: true });
 const NOT_YET_DECLARED = Object.freeze({ ok: true, module: "capture", declared: false });
 const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declared: false, reason: "NO_DECLARATION_SEAM" });
 
-/* R116: the receipt route of a message brought in by email is `provenance`'s `EMAIL_VIA` (its R82, the one spelling); until that export is merged the spelling is the requirement's own. */
-const EMAIL_VIA = provenanceExports.EMAIL_VIA ?? "email";
 /* R76 (K2455; T53, R116): the routes by which a capture is received, never fetched (provenance R51, R63, R82). */
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA, EMAIL_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
