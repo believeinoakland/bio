@@ -1,6 +1,6 @@
 # office-readers (T53)
 
-**Status** · session_018BhcegdvdcHawV5kVZ1wKW · depth 2 · WORKING
+**Status** · session_018BhcegdvdcHawV5kVZ1wKW · depth 2 · NEEDS BOB: R46 sizing: the child imports plane's shape harness and probe (later module, architecture check refuses); choose how the probe takes a row count
 **Sessions** · 1
 
 ## Completion (2026-10-27)
