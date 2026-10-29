@@ -3,6 +3,7 @@
    request header and is never printed, logged or written to a result file). It refuses a base URL whose host does not start with plat-s1 (set PROBE_ALLOW_LOCAL=1 to allow 127.0.0.1 for the local self-test).
    Results: one JSON line per measurement appended to --out (default ../results/remote-<scenario>-<UTC timestamp>.jsonl). Wall times are CLIENT-side (the spec asks for client wall time).
    node run-remote.mjs --scenario=health
+   node run-remote.mjs --scenario=state --inst=NAME [--which=reader]                             one read of an instance's state and start/stop events (does not touch the container)
    node run-remote.mjs --scenario=wipe                                                          deletes every object in the probe's bucket (before teardown.mjs)
    node run-remote.mjs --scenario=seed [--sizes=10,50,100] [--upload=DIR --only=REGEX]         R2 objects r<N>mib (made in the Worker) and/or generated fixtures put through /put (<= the zone's body cap)
    node run-remote.mjs --scenario=coldstart [--which=min,reader] [--n=5]                        first request to NEW container instances (never run) then warm repeats
@@ -38,6 +39,7 @@ const manifest = () => (a.manifest ? readFileSync(a.manifest, "utf8").split("\n"
 const base = (f) => f.split("/").pop(); const only = a.only ? new RegExp(a.only) : null;
 
 const S = {
+  async state() { if (!a.inst) refuse("--inst=NAME is required"); const s = await call(`/state?which=${a.which || "min"}&inst=${a.inst}`); log({ phase: "state", inst: a.inst, state: s.body && s.body.state, events: s.body && s.body.events, status: s.status }); },
   async wipe() { log({ what: "wipe the probe bucket", ...(await call("/wipe", { method: "POST" })) }); },
   async health() { log({ ...(await call("/health")) }); },
   async seed() {
@@ -100,8 +102,9 @@ const S = {
     log({ phase: "ended", sigterm_seen_at: sig, last_line_at: last, seconds_from_sigterm_to_last_line: sig ? Math.round((last - sig) / 1000) : null, lines: lines.length, state: await call(`/state?which=${which}&inst=${inst}`) });
   },
   async idle() {
-    const which = a.which || "min", inst = `id-${stamp.slice(11, 19).replace(/-/g, "")}`, until = Date.now() + Number(a.hours || 24) * 3600000, every = Number(a["every-min"] || 10) * 60000;
-    log({ phase: "first-ping", which, inst, note: "record the wall-clock time; read the account's Containers usage/billing for this period afterwards", ...(await call(`/ping?which=${which}&inst=${inst}&path=/ping`)) });
+    /* --hours=0 pings once and returns (a session's background command ends within 2 h); read the object's start/stop events later with --scenario=state --inst=<the inst logged here> */
+    const which = a.which || "min", inst = a.inst || `id-${stamp.slice(11, 19).replace(/-/g, "")}`, until = Date.now() + Number(a.hours ?? 24) * 3600000, every = Number(a["every-min"] || 10) * 60000;
+    log({ phase: "first-ping", which, inst, note: "record the wall-clock time; read the account's Containers usage/billing for this period afterwards", ...(await call(`/ping?which=${which}&inst=${inst}&path=${which === "reader" ? "/version" : "/ping"}`)) });
     while (Date.now() < until) { await sleep(every); const s = await call(`/state?which=${which}&inst=${inst}`); log({ phase: "state", inst, state: s.body && s.body.state, events: s.body && s.body.events, status: s.status }); }
   },
   async printwrangler() {
