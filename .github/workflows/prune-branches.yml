@@ -1,7 +1,7 @@
 # Deletes branches that hold nothing `main` lacks (bio K5300, Bob: "A").
 # Sessions cannot delete refs (their git proxy answers 403), so they accumulated: 2,473 by T51.
 # Starts itself on every push to `main` and weekly (bio K5308, Bob's approval K5317): it builds its own list of every
-# branch whose tip `main` holds, untouched for 3+ days, and not `tranche/*`, `claude/*` or an open tranche's `job/*`
+# branch whose tip `main` holds, untouched for 3+ days, and not `tranche`, `tranche/*`, `state/*`, `onboard`, `shims`, `claude/*` or an open tranche's `job/*`
 # (one whose `tranche/T<n>` still exists); the list is kept as the run's artifact.
 # Also started by pushing a branch `prune/<anything>` whose tree holds `build/plan/prune-request.json`:
 #   {"list": "<path to a TSV of <ref>\t<sha>[\t...] lines>", "limit": <max deletions>, "dry_run": true|false}
@@ -43,7 +43,7 @@ jobs:
             list=prune-auto.tsv; limit=0; dry=false; cutoff=$(( $(date +%s) - 3*86400 ))
             git for-each-ref --format='%(refname:lstrip=3)%09%(objectname)%09%(committerdate:unix)' refs/remotes/origin |
             while IFS=$'\t' read -r ref sha when; do
-              case "$ref" in HEAD|tranche/*|claude/*) continue;; esac
+              case "$ref" in HEAD|tranche|tranche/*|state/*|onboard|shims|claude/*) continue;; esac   # neoProcess's fixed branches (its ruleset refuses deleting `tranche`)
               case "$ref" in job/*) t=${ref#job/}; t=${t%%/*}; git rev-parse -q --verify "refs/remotes/origin/tranche/$t" >/dev/null && continue;; esac
               [ "$when" -lt "$cutoff" ] || continue
               git merge-base --is-ancestor "$sha" refs/remotes/origin/main || continue

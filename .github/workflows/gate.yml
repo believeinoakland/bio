@@ -1,0 +1,21 @@
+name: gate
+on:
+  pull_request:
+    branches: [tranche]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: neobobkrause/neoprocess
+          ref: main
+          path: .neoprocess
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: the gate (artifacts, ownership, the module's tests and its users', the checks, the sizes, the shims), against the merge ref's own base
+        run: node .neoprocess/tools/proc.mjs gate --product "." --process "/home/user/neoprocess" --repo "neobobkrause/neoprocess" --ref "main" --base HEAD^1
