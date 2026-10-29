@@ -3,7 +3,7 @@
    It never runs wrangler unless --go is given; without --go it writes wrangler.generated.json (git-ignored) and prints the commands it WOULD run. It never prints a secret.
    Usage (from proto-mem/1f/probe, on a machine with docker running, network, and `npm install` done here):
      export CLOUDFLARE_ACCOUNT_ID=20b533579290b9b93168345edd3b7f72        # the guard compares this to the permitted account; a different value is refused
-     node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 [--which=reader] [--sleep-after=5m] [--go]
+     node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 [--which=reader] [--max-instances=3] [--sleep-after=5m] [--go]
    Steps the --go run performs, in order, each stopping the script on failure:
      1. npx wrangler r2 bucket create <bucket>                          (skipped with --bucket-exists)
      2. npx wrangler deploy --config wrangler.generated.json            (with --which=reader: no image is built; the Worker and ReaderProbe on the published digest)
@@ -34,10 +34,12 @@ if (which === "reader") {
   parsed.migrations = parsed.migrations.map((m) => ({ ...m, new_sqlite_classes: m.new_sqlite_classes.filter((c) => c === "ReaderProbe") }));
   if (parsed.containers.some((c) => !/^docker\.io\/civicsmith\/reader-container@sha256:[0-9a-f]{64}$/.test(c.image))) refuse("ReaderProbe must name the published reader digest.");
 }
+/* --max-instances=N (1-10): the cap on RUNNING instances (wrangler: "Stopped containers do not count towards this"); a cap, not a cost: billing is per awake instance */
+if (a["max-instances"]) { const n = Number(a["max-instances"]); if (!(Number.isInteger(n) && n >= 1 && n <= 10)) refuse("--max-instances must be 1..10."); parsed.containers = parsed.containers.map((c) => ({ ...c, max_instances: n })); }
 if (parsed.account_id !== PERMITTED) refuse("the template's account_id is not the permitted account.");
 writeFileSync(join(here, "wrangler.generated.json"), JSON.stringify(parsed, null, 2) + "\n");
 const steps = [...(a["bucket-exists"] ? [] : [["npx", "wrangler", "r2", "bucket", "create", bucket]]), ["npx", "wrangler", "deploy", "--config", "wrangler.generated.json"]];
-console.log(`account ${PERMITTED} ok; Worker ${name}; bucket ${bucket}; instance type ${itype}; containers ${parsed.containers.map((c) => c.class_name).join(", ")}; config written to wrangler.generated.json`);
+console.log(`account ${PERMITTED} ok; Worker ${name}; bucket ${bucket}; instance type ${itype}; containers ${parsed.containers.map((c) => `${c.class_name} (max_instances ${c.max_instances})`).join(", ")}; config written to wrangler.generated.json`);
 for (const s of steps) {
   console.log((a.go ? "RUN  " : "WOULD RUN  ") + s.join(" "));
   if (a.go) { try { execFileSync(s[0], s.slice(1), { cwd: here, stdio: "inherit", env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: PERMITTED } }); } catch { refuse(`step failed: ${s.join(" ")}`); } }
