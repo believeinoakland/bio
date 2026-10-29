@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { wordHolesRx } from "./words.mjs";
 
 const FIXTURE = new URL("./fixture.mjs", import.meta.url).href;
 const BIG = new URL("./bigpdf.mjs", import.meta.url).href;
@@ -62,7 +63,7 @@ for (const mode of ["single", "parts"]) {
     console.log(`c5b-memory ${mode}: ${out.fileMb} MB file, sampled peak ${out.peakAboveIdleMb} MB above idle (a figure, not a gate)`);
     if (mode === "parts") assert.equal(out.failedBefore, true, "the real chain failed the reading for want of the whole");
     assert.deepEqual([out.read, out.found], [true, true], JSON.stringify(out));
-    assert.doesNotMatch(out.basis, /parts, over the/, "the reading is no longer the failed one");
+    assert.doesNotMatch(out.basis, wordHolesRx("reading-pipeline.why.capture_bytes_parts", ["total", "parts", "multipart_read_max"]), "the reading is no longer the failed one");
     assert.ok(out.pages >= 1000, `read ${out.pages} pages`);
     assert.ok(out.units >= 1 && out.words, "R-STOP: the words are in text_units");
   });

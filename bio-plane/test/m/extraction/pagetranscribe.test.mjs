@@ -15,7 +15,7 @@ import { REEXTRACT_CHECKS, extractionOps } from "../../../src/extraction/index.m
 import { pageTranscribeOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
-import { WORD } from "./words.mjs";
+import { WORD, wordHolesRx } from "./words.mjs";
 import { notAPdf } from "../pdf-reader/fixtures.mjs";
 import { keptAwayProject } from "../ai-accounts/fixtures.mjs";
 
@@ -201,8 +201,8 @@ test("R71 R72 R34 R19 R23 R24 R44 (the whole chain, the bar held on a one-matter
   assert.deepEqual([x.performed, x.written, x.pages, x.engine, x.version, x.staled, x.observed.written, x.label],
                    [true, true, [1], "claude-test", "2026-01", 3, 1, WORD("transcribe.label")]);
   assert.match(x.act, /^transcribe:abc:/);
-  assert.match(x.note, /transcribed by the AI \(claude-test 2026-01\) at a member's request/);
-  assert.match(x.note, /page 3 the AI did not transcribe, and it stays unread/);
+  assert.match(x.note, wordHolesRx("reading-pipeline.civicsmith_text_recognition", ["filled", "filled_2", "ai_reading_label"], "", { engine: "claude-test", version: " 2026-01" }));
+  assert.match(x.note, wordHolesRx("reading-pipeline.transcribe_unread", ["unanswered", "unanswered_2"]));
   assert.ok(x.units && x.units.written === 2, "pages 0 and 1 indexed");
   assert.equal(typeof x.chain, "string");
   /* the asks: tier 4 was asked for the two picture pages, for the acting member */

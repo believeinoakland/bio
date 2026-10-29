@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { seeded, V, BYLAW, REASON, profile, src } from "./fixture.mjs";
 import { STANDARDS_CHECKS, instrumentKey, COPY_STATES } from "../../../src/standards/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
+import { WORD } from "./words.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 const testView = () => combine(["test-port-ellery"]).view;
@@ -19,12 +21,12 @@ test("R18 instrumentKey composes an ELI-shaped key only from profile data (the v
   assert.equal(instrumentKey({ cite: "PEBL § 14(a)(2)", view }).key, "/eli/xx-port-ellery/selectboard/14");
   const noKey = instrumentKey({ cite: "MCBC 2024-7", view });
   assert.deepEqual([noKey.state, noKey.key], ["undetermined", null]);
-  assert.match(noKey.why, /states no key segment/);
-  assert.match(instrumentKey({ cite: "Some Code § 4", view }).why, /matches the citation form of no source/);
-  assert.match(instrumentKey({ cite: "PEBL § 12", view: null }).why, /no active jurisdiction profile/);
+  assert.equal(noKey.why, WORD("standards.why.source_states_key", { source: "'Marlow County Budget Commitments' " }));
+  assert.match(instrumentKey({ cite: "Some Code § 4", view }).why, wordRx("standards.why.citation_matches_citation"));
+  assert.match(instrumentKey({ cite: "PEBL § 12", view: null }).why, wordRx("standards.why.active_jurisdiction_profile"));
   /* a profile with sources keyed but no instrument_key segment */
   const p = profile("pk", [src("Act K", "\\bAK\\s+\\d+", { key: "assembly" })]);
-  assert.match(instrumentKey({ cite: "AK 4", view: combine([p]).view }).why, /no instrument_key segment/);
+  assert.match(instrumentKey({ cite: "AK 4", view: combine([p]).view }).why, wordRx("standards.why.active_jurisdiction_profiles_state"));
   const q = { ...p, id: "pk2", instrument_key: { jurisdiction: "zz-elsewhere", basis: "TEST" } };
   assert.equal(instrumentKey({ cite: "AK 4", view: combine([q]).view }).key, "/eli/zz-elsewhere/assembly/4", "another profile, its own segment");
   /* never throws, whatever it is handed */
@@ -48,7 +50,7 @@ test("R18 a declaration composes and keeps its instrument key; a declared instru
   const before = w.snapshot();
   const wrong = w.declare({ text: [a], instrument: "/eli/elsewhere/x/12" });
   assert.deepEqual([wrong.reason, wrong.field, wrong.check], ["STANDARD_FIELD_INVALID", "instrument", STANDARDS_CHECKS.STANDARD_FIELD_INVALID.check]);
-  assert.match(w.declare({ text: [a], cite: "MCBC 2024-1", kind: "commitment", instrument: "/eli/x/y/1" }).detail, /cannot be given/);
+  assert.ok(w.declare({ text: [a], cite: "MCBC 2024-1", kind: "commitment", instrument: "/eli/x/y/1" }).detail.includes(WORD("standards.index.instrument_cannot_be_given", { why: "" })));
   /* portions */
   const notText = w.declare({ text: [a], portion: { path: "12(b)", content_id: other } });
   assert.deepEqual([notText.reason, notText.check], ["STANDARD_PORTION_NOT_IN_TEXT", STANDARDS_CHECKS.STANDARD_PORTION_NOT_IN_TEXT.check]);

@@ -33,7 +33,7 @@ test("R63: its one row is this module's: C-51.6, carrying C-100.19's translation
   assert.deepEqual(Object.keys(EXTRACTION_CHECKS), ["NO_SHA"]);
   const row = EXTRACTION_CHECKS.NO_SHA;
   assert.deepEqual([row.check, row.translation], ["C-51.6", TRANSLATION]);
-  assert.match(row.where, /^src\/extraction\/checks\.mjs noSha > is-capture-named$/);
+  assert.deepEqual(row.where.split(" "), ["src/extraction/checks.mjs", "noSha", ">", "is-capture-named"]);
   assert.equal(Object.isFrozen(EXTRACTION_CHECKS) && Object.isFrozen(row), true, "no caller can change the row");
   assert.equal("NO_SHA" in REEXTRACT_CHECKS, false);
   assert.ok(!Object.values(REEXTRACT_CHECKS).some((r) => r.check === row.check), "no other row of this module holds its number");

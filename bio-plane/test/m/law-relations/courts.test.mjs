@@ -3,7 +3,7 @@
    R44), driven over the test's host. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, REASON, codeOf } from "./fixture.mjs";
+import { seeded, V, MACHINE, REASON, codeOf, wordRx, wordTextRx } from "./fixture.mjs";
 import { COURT_LINKS, TREATMENTS, LINK_TARGET_KINDS, CONNECTION_KINDS, LAW_RELATIONS_CHECKS } from "../../../src/law-relations/index.mjs";
 
 const rowOf = (r, code) => assert.deepEqual([r.check, r.translation], [LAW_RELATIONS_CHECKS[code].check,
@@ -96,7 +96,7 @@ test("R6 R20 stillStanding answers not_standing on a held reversed, vacated, dep
   const ask = (decision, date, viewer = V("carol")) => w.law.stillStanding({ decision, date, viewer });
   const none = ask(lower.id, "2020-01-01");
   assert.deepEqual([none.ok, none.state, none.by, none.treatments], [true, "undetermined", [], []], "no later history held");
-  assert.match(none.why, /later history is not read/);
+  assert.match(none.why, wordTextRx("law-relations.why.record_holds_treatment", { id: lower.id, date: "2020-01-01" }));
   const good = { decision: lower.id, treatment: "affirmed", by_decision: affirm.id, citation: affirm.t, reason: REASON, author: V("bob") };
   const aff = w.law.courtTreat(good).treatment.id;
   assert.deepEqual(["2010-12-31", "2011-01-01", "2011-06-01"].map((date) => ask(lower.id, date).state), ["undetermined", "standing", "standing"]);
@@ -118,7 +118,7 @@ test("R6 R20 stillStanding answers not_standing on a held reversed, vacated, dep
   const v = w.law.courtTreat({ ...good, decision: affirm.id, treatment: "vacated", by_decision: undated.id, citation: undated.t }).treatment.id;
   const u = ask(affirm.id, "2030-01-01");
   assert.deepEqual([u.state, u.by], ["undetermined", [v]]);
-  assert.match(u.why, /does not state when/);
+  assert.match(u.why, wordTextRx("law-relations.why.record_state", { by_decision: undated.id, treatment: "vacated" }));
   /* a treatment whose passage the viewer may not read is not read */
   const P = w.project("alice");
   const hidden = w.passage({ project: P });
@@ -168,12 +168,12 @@ test("R4 R20 resolveCourtCitation answers verified only when a held capture the 
   assert.equal((await w.law.resolveCourtCitation({ citation: "9 Cal. 4th 9", viewer: V("carol") })).state, "not verified", "a statute's text is not a court's capture");
   for (const citation of ["no citation here", "", null, 7, {}])
     assert.deepEqual((await w.law.resolveCourtCitation({ citation, viewer: V("carol") })).state, "not verified", JSON.stringify(citation));
-  assert.match((await w.law.resolveCourtCitation({ citation: "no citation here", viewer: V("carol") })).why, /no court citation/);
+  assert.match((await w.law.resolveCourtCitation({ citation: "no citation here", viewer: V("carol") })).why, wordRx("law-relations.why.court_citation_volume"));
   /* the keyed lookup */
   w.on = false;
   const off = await w.law.resolveCourtCitation({ citation: "6 Cal. 4th 100", viewer: V("carol"), lookup: true });
   assert.deepEqual([off.state, off.lookup.on, off.lookup.reason], ["not verified", false, "KEYED_SERVICE_OFF"]);
-  assert.match(off.lookup.says, /stands without it/);
+  assert.match(off.lookup.says, wordRx("law-relations.says.keyed_citation_lookup"));
   w.on = true;
   const on = await w.law.resolveCourtCitation({ citation: "6 Cal. 4th 100", viewer: V("carol"), lookup: true });
   assert.deepEqual([on.state, on.verified, on.lookup.on, on.lookup.verified, on.lookup.service, on.lookup.citations[0].matches[0].case_name],
@@ -186,10 +186,10 @@ test("R4 R20 resolveCourtCitation answers verified only when a held capture the 
   const x = seeded();
   for (let i = 0; i < 2000; i++) x.standards.set(`STD-2026-${String(i).padStart(5, "0")}-court`, { id: `STD-2026-${String(i).padStart(5, "0")}-court`, kind: "court", texts: [] });
   const at = await x.law.resolveCourtCitation({ citation: "5 Cal. 4th 100", viewer: V("carol") });
-  assert.doesNotMatch(at.why, /only the first/);
+  assert.doesNotMatch(at.why, wordTextRx("law-relations.why.first_court_standards", { scan_max: "2000" }));
   x.standards.set("STD-2026-99999-court", { id: "STD-2026-99999-court", kind: "court", texts: [] });
   const past = await x.law.resolveCourtCitation({ citation: "5 Cal. 4th 100", viewer: V("carol") });
-  assert.match(past.why, /only the first 2000 court standards were read/);
+  assert.match(past.why, wordTextRx("law-relations.why.first_court_standards", { scan_max: "2000" }));
 });
 
 test("R4 a lookup that throws is answered as a lookup that did not answer, and the resolver's own answer stands", async () => {

@@ -1,0 +1,9 @@
+Round R1, layer 5, module connections, tranche T53. Your depth: 2. BOB: BOB #332 (session_018BhcedHXTmWvkcQG9t9wzP).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module connections`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-147 · N1260 (K1469) · `named_in` hop end and hub `[waits: M-F1]`
+- T53-148 · K5565 · English in tests: its entry
+- T53-587 · N1200 (K5747) · registers its reader of a project's reach (the records it cites) through `membership.registerProjectReach`, so a run fenced to its project (N1186) also reads them
+- rows: `build/plan/T53-R1/connections.md`

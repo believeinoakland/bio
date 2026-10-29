@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordLike } from "./wordlike.mjs";
 import { IDSPACE_CHECKS, Entities } from "../../../src/entities/index.mjs";
 
 const PE = ["test-port-ellery"];
@@ -38,7 +39,7 @@ test("R21 R25 (DEC-149) C-91.2 IDSPACE_VALUE_NOT_IN_SPACE's translation names yo
   assert.equal(r.translation, IDSPACE_CHECKS.IDSPACE_VALUE_NOT_IN_SPACE.translation);
   assert.equal(r.detail, "a has the shape of no form of the works order number", "with forms held, the detail names none");
   const none = world().e.idMatch({ space: "enactment", a: "12345" });
-  assert.match(none.detail, /; your team's active jurisdiction profiles give this space no form$/);
+  assert.match(none.detail, wordLike("entities.index.your_team_s_active_jurisdiction_profiles_give"));
 });
 
 test("R43 (DEC-149) UNKNOWN_SCHEME's detail says an identifier is held in a scheme your group's active jurisdiction profiles name, listing them, or that they name none", () => {
@@ -46,7 +47,7 @@ test("R43 (DEC-149) UNKNOWN_SCHEME's detail says an identifier is held in a sche
   const pat = w.e.createEntity({ note: NOTE, kind: "person", label: "Pat Quill" }).entity_id;
   const r = w.e.addIdentifier({ entityId: pat, scheme: "nope", id: "1", basis: "b", by: "member:ann" });
   assert.equal(r.reason, "UNKNOWN_SCHEME");
-  assert.equal(r.detail, `an identifier is held in a scheme your team's active jurisdiction profiles name: one of ${r.schemes.join(", ")}. Nothing was written.`);
+  assert.equal(r.detail, word("entities.index.an_identifier_is_held_in", { v1: `: one of ${r.schemes.join(", ")}` }));
   const bare = world();
   const lee = bare.e.createEntity({ note: NOTE, kind: "person", label: "Lee Quill" }).entity_id;
   assert.equal(bare.e.addIdentifier({ entityId: lee, scheme: "nope", id: "1", basis: "b" }).detail,
@@ -58,7 +59,7 @@ test("R45 (DEC-149) PROCEEDING_KIND_UNKNOWN's detail says a proceeding's kind is
   const court = w.e.createEntity({ note: NOTE, kind: "institution", label: "Marlow County Court" }).entity_id;
   const k = w.e.createEntity({ note: NOTE, kind: "proceeding", proceeding: { forum: court, kind: "nope", number: "MC-26-0001" } });
   assert.equal(k.reason, "PROCEEDING_KIND_UNKNOWN");
-  assert.equal(k.detail, `a proceeding's kind is one your team's active jurisdiction profiles name: one of ${k.kinds.join(", ")}. Nothing was written.`);
+  assert.equal(k.detail, word("entities.index.a_proceedings_kind_is_one", { v1: `: one of ${k.kinds.join(", ")}` }));
   const bare = world();
   const forum = bare.e.createEntity({ note: NOTE, kind: "institution", label: "A Court" }).entity_id;
   assert.equal(bare.e.createEntity({ note: NOTE, kind: "proceeding", proceeding: { forum, kind: "suit", number: "1" } }).detail,

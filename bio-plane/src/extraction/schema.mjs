@@ -441,4 +441,56 @@ CREATE TABLE IF NOT EXISTS reading_repairs (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reading_repairs_bundle ON reading_repairs(bundle_id);
+
+-- extraction R114, R118 (T53; N1272; K4636, K5445): INTERPRETATION IS A RECORDED ACT ON A PART, FOR AN INVESTIGATION. One row for each
+-- act (appended, never changed): the part of a held capture (part, a range of a kind the reading names as an extent; part_key its
+-- canonical text, so one part has one key), the project it was interpreted for, who and when, how it came to be (how), its acceptance
+-- basis (accepted naming the proposal, or unaided; DEC-77 3b, c) and the proposals standing at that instant. A withdrawal (R118) is
+-- its own row in interpretation_withdrawals, so the act row stays as it was. Keyed to the bundle of the capture's reading, so a purge
+-- clears them with it.
+CREATE TABLE IF NOT EXISTS interpretations (
+  id          TEXT    PRIMARY KEY,
+  seq         INTEGER NOT NULL,
+  capture_sha TEXT    NOT NULL,
+  bundle_id   TEXT    NOT NULL,
+  part_key    TEXT    NOT NULL,
+  part        TEXT    NOT NULL,
+  project     TEXT    NOT NULL,
+  by          TEXT    NOT NULL,
+  at          TEXT    NOT NULL,
+  how         TEXT    NOT NULL,
+  basis       TEXT    NOT NULL,
+  proposal    TEXT,
+  matched     TEXT,
+  began_from  TEXT,
+  standing    TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS interpretations_seq ON interpretations(seq);
+CREATE INDEX IF NOT EXISTS interpretations_capture ON interpretations(capture_sha, part_key, project);
+CREATE INDEX IF NOT EXISTS interpretations_project ON interpretations(project);
+CREATE INDEX IF NOT EXISTS interpretations_bundle ON interpretations(bundle_id);
+CREATE TABLE IF NOT EXISTS interpretation_withdrawals (
+  interpretation_id TEXT PRIMARY KEY,
+  capture_sha       TEXT NOT NULL,
+  bundle_id         TEXT NOT NULL,
+  project           TEXT NOT NULL,
+  by                TEXT NOT NULL,
+  at                TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS interpretation_withdrawals_bundle ON interpretation_withdrawals(bundle_id);
+
+-- extraction R114 (T53): THE INTERPRETED CONTENT, MADE ONCE FOR EACH (CAPTURE, PART). What reading-pipeline.interpretUnits made from the
+-- part's units (entities, facts, cells), kept so a second investigation interpreting the same part reuses it; derived from the held file,
+-- so it is never the only copy (R118: it goes when no live row uses it). content is null for a content over READING_ROW_MAX_BYTES, whose
+-- size is stated in content_bytes; it is made again when it is next needed.
+CREATE TABLE IF NOT EXISTS interpreted_content (
+  capture_sha   TEXT NOT NULL,
+  bundle_id     TEXT NOT NULL,
+  part_key      TEXT NOT NULL,
+  content       TEXT,
+  content_bytes INTEGER NOT NULL,
+  made_at       TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, part_key)
+);
+CREATE INDEX IF NOT EXISTS interpreted_content_bundle ON interpreted_content(bundle_id);
 `;

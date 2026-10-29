@@ -76,3 +76,15 @@ session_018Bhcef6MZXe2rVPpsmTu8D,job,file-safety,82684148,535209,414,168737,,2,3
 session_018BhcecgyadihJwzejgvKmY,job,doorbell,25692122,231615,1752,54044,,1,1367
 session_018Bhced233u828vot13hTyX,job,mail-door,25484160,557782,214,88573,,1,785
 session_018BhcegmVJVqgECaQJcGU5q,job,sources,3627095,168698,60,13307,,1,1156
+session_018BhcedfM8dV8rPodwgBjD3,BOB-cleared,reply: ROUTINES DELETED (trig_01224pGRzbKyiF5u6QyNHZAj  my refresh check; my backstops had already fired),,,,,,,
+session_018BhcedfM8dV8rPodwgBjD3,BOB-final,,85967901,1076372,755,168833,,,
+session_018Bhcec6UfHC9x41Jwa7guR,job,calibration,2933872,112228,62,14157,,1,1052
+session_018BhcecocgNyjm49Xi6Ji1S,job,reading-pipeline,55540196,337298,436,119105,,1,4716
+session_018Bhcee68Pp8u6nsGStpw6e,job,extraction,69177960,459548,392,142225,,3,5505
+session_018BhcefiNFG9xKziP2ibeWL,job,content,23737017,249543,224,65156,,2,4132
+session_018Bhcee7YUBNqPYvGL6riYK,BOB-cleared,reply: ROUTINES DELETED (trig_01VWocfEb9v9VwXUh4ZheJPr; trig_01C64Lobv6fcCU3qqbrCDoi3 already fired),,,,,,,
+session_018Bhcee7YUBNqPYvGL6riYK,BOB-final,,126294736,959978,2283,245828,,,
+session_018BhcedHXTmWvkcQG9t9wzP,BOB-cleared,reply: ROUTINES DELETED (trig_01JtW69vWUZEZCRx8scuwkbt),,,,,,,
+session_018BhcedHXTmWvkcQG9t9wzP,BOB-final,,94685097,1006717,1988,150529,,,
+session_018BhcegRyJVFNeHWmgrovKm,BOB-cleared,reply: ROUTINES DELETED (trig_01MDkReUaBdct6Kcc6o2dAmi  BOB #333's backstop). My earlier backstops were one-shot and have already fired. No enabled routine into session_018BhcegRyJVFNeHWmgrovKm remains (list_triggers  enabled  has_more false). Nothing of mine is running or unpushed: the tranche is at 8a2716643 with the handoff. BOB #333 does nothing more.,,,,,,,
+session_018BhcegRyJVFNeHWmgrovKm,BOB-final,,92720922,1126476,1775,251038,,,

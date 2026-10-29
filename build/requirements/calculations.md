@@ -94,6 +94,10 @@ Terms. A **recipe** is `calc-grammar`'s (`bio-calc/1`), evaluated only by it. A 
 - **R51** (K5157; walk-T51-final 06 §8) `declareTable`'s `source` is a content id, or a found passage `{capture_sha, extent}` whose content row is minted as money's `source` is (money R2), so a table may be declared from a passage nobody has cited yet (R1).
 - **R52** (T51 fix round 10; SCREENS-DAILY #24 J30; K5195; amends R4, R21; `retrieval` R19; `screens-daily` R4) **A held selection is a `set` input.** An input `{name, set}` whose `set` is a selection handle (`sel-…`, `retrieval`) is resolved through `retrieval.selectionResolve` under the asking member and its ids frozen as a record set with its sha (as R21 freezes a query's ids), so a count over the held set is reproducible from the frozen set; the input then binds as a frozen set's does. A handle that does not resolve is refused as `retrieval` R19 answers it (`NO_SUCH_SELECTION`, `SELECTION_NOT_YOURS`), naming the input; nothing is written. Test: a member holds two documents (`select`), `create` with `{name: "held", set: <handle>}` counts 2 and `read` names the frozen set's sha; another member's handle is refused `SELECTION_NOT_YOURS`; a released one `NO_SUCH_SELECTION`.
 
+**A selection a member made (T53; JOURNEYS W7)**
+
+- **R53** *(not yet met: T53)* (T53; JOURNEYS R-65 (BLOCKS), D2 calculations R?1; placement K5476: the job finds the cause; `retrieval` R18, R19 as the control; amends R52) **A member can use a selection she made.** A Count a member found is usable by her in a calculation: `retrieval.selectionResolve` is asked with the identity that created the selection (the member who made it), so the selection resolves for her, the calculation is made, and the calculation page and the project's "Calculation" row open it. The cause (CALCULATIONS #1, K5786): the door stamps `select`'s owner with the session's identity but `calculationcreate` and `calculationevaluate` only the viewer; this module reads an `owner` stamp on both, from the address and never the body, and asks `retrieval` as that owner; `op-declarations`' calculations family carries `owner` in `extra` for both (its T53-603). Test: member M selects through Find and presses Count: the calculation is made, `/app/calculation/<id>` and the project's row open it; M2 asking with M's handle is still refused `SELECTION_NOT_YOURS` (`retrieval` R19). Control: `retrieval` R18 and R19 answer as before.
+
 ## Private
 
 ### Uses
@@ -130,6 +134,7 @@ Terms. A **recipe** is `calc-grammar`'s (`bio-calc/1`), evaluated only by it. A 
 - `docs/architecture/BIO_Capability_Ladders_v0_1.md` §6B.5 and §6C.5 (the patterns of application: held acts, R32; rates by decider, subject and class, time, stated reason, relationship and outcome, missing or repeated reasons, waiver share, R33; consistency and before and after, R34), §6B.6 POLICIES L4 (PO11 policy against practice, R36), §6C STANDARDS L3 (ST6 targets, R35; ST7 benchmarks, R35, R37) and L4 (ST9 conformance across acts, R33, R36) (T35-38).
 - Bob's rulings K1713 (2) (patterns measured for both constructs), K1723 (a benchmark says "below", never "nonconforming"), K1740; DEC-145 (2) (R35, R37). N676 and K1799 (R9's engine marks).
 - DEC-178 (the design session, 2026-10-08; K2171): a spot-check visit's photo is optional and the testimony stands without it (R38's `exhibits?`); the estimate counts every drawn visit (R39, R40).
+- (T53) JOURNEYS R-65 (BLOCKS; K5476): R53.
 
 ### Suggestions
 

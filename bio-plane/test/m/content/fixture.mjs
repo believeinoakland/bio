@@ -105,7 +105,7 @@ export function readings() {
 
 export const V = (id) => `member:${id}`;
 
-export function world({ now = "2026-09-27T03:00:00.000Z", evidence = null } = {}) {
+export function world({ now = "2026-09-27T03:00:00.000Z", evidence = null, creditOf = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -122,7 +122,7 @@ export function world({ now = "2026-09-27T03:00:00.000Z", evidence = null } = {}
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   const ex = readings();
-  const content = contentOf(host, { record, membership, provenance: prov, extraction: ex.provider, now: () => clock.now });
+  const content = contentOf(host, { record, membership, provenance: prov, extraction: ex.provider, now: () => clock.now, ...(creditOf ? { creditOf } : {}) });
   content.migrate();
   const w = {
     st, host, record, membership, promotion, prov, content, clock, ex,

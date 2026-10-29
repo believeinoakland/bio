@@ -56,7 +56,7 @@ test("R35 the read contract: entities(entity_id key, kind the entity's kind (K15
 test("R36 noSuchEntity answers the one refusal: reason and code NO_SUCH_ENTITY, its row's check and translation, the id as asked, one fixed detail; extra adds and never replaces; writes nothing, never throws", () => {
   const row = ENTITY_CHECKS.NO_SUCH_ENTITY;
   assert.ok(row.check && row.translation);
-  assert.match(row.where, /^src\/entities\/index\.mjs noSuchEntity > is-entity-registered$/);
+  assert.ok(row.where.endsWith("index.mjs noSuchEntity > is-entity-registered"));
   assert.ok(!/oakland|alameda|legistar/i.test(row.translation), "R31");
   const a = noSuchEntity("ENT-2026-0404");
   assert.deepEqual(Object.keys(a).sort(), ["check", "code", "detail", "entity_id", "ok", "reason", "translation"]);

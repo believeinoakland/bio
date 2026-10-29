@@ -41,6 +41,16 @@ Terms. A **leg**, **registry**, **grade**, **axis** and **source** are as `inqui
 - **R16** (K538; K2457, K2472) When no capture of a document came by a route that measures a capture grade, `earned` states its legs as authored (`stated_as: "authored"`, `route_basis` the routes, sorted) with a `why` naming each route in words: a doorbell's receipt (`CAPTURE_RECEIVED_NOT_FETCHED`, its receipt's `via` the doorbell) "received through the doorbell"; a member's upload (`via: "upload"`, `provenance` R63) "uploaded by a member"; no route recorded "no fetch route recorded"; the letter its author gave stays, under the ceiling, never stated as measured.
 - **R17** (T52 R1; T52-105; W11, C-K5; `citation` R25; K5357; amends R4, R5) **A leg is severed or live of its own.** On an inquiry, `restingOn` (R4) answers each leg's own status, `severed` or `confirmed`, as `citation` R25 records it per passage (the leg's `status: "severed"`; absent, live; K5407), and `restsOnLive` (R5) skips a severed passage while another passage of the same document still rests on the target live. A project's citer is read as today, by its document edge. Test: an inquiry citing one document in two passages, one severed: `restingOn` answers one `severed` and one `confirmed` leg, `restsOnLive` answers the live one; control: both severed, none live; a project's severed edge reads as before.
 
+**A typed passage's ceiling, and "no subject named" (T53; A8 DEC-464, A1 DEC-457)**
+
+- **R18** *(not yet met: T53)* (T53; DEC-464; sibling of leg-earning R15) **A typed passage's capture ceiling is its own.** [decided: K5524, L10 as recommended] The capture ceiling `earned` answers for a content row cited as text whose chain's derivation step is a typed step (content R24) is at the passage's own grain, replacing the pointer to the document: the weaker of the document's own capture letter (R1's route rule for the capture, with no text chain, so a machine reading of the page does not bind a typing) and content `content` R63's grade (D, or C once a second member has checked). An undetermined document letter makes it undetermined, with the route's reason. The entry carries `grain: "passage"`, the determinant (typist or second member) and `content` R64's typed block so `earnedBasis` (R3) shows who typed and who checked. It is never the capture's machine-chain bound and never stronger than C. Test: byte grade B: unchecked D, checked C; byte grade C: checked C; unruled: undetermined. Control: an attested AI passage keeps R15's grade.
+
+- **R19** *(not yet met: T53)* (T53; DEC-464; amends leg-earning R2, R10) **A leg on a typed passage is graded by the record without a member's act.** (decided, K5549, L24 = A: the record grades it) A leg on a typed passage counts on the capture axis at R18's grade, or at its stated letter when that is weaker; it needs no stated letter, and none above R18's grade is taken. The grade follows a check without any member re-stating it; R10 names this exception, for this kind alone. Test: a typed leg stating no letter reads D, then C after the check; stating A reads D with why. Control: a document leg stating nothing is inert.
+
+Needs from earlier modules: `text-chain` `text-chain` R107, `content` `content` R63 and `content` R64 only.
+
+- **R20** *(not yet met: T53)* (T53; DEC-457; amends leg-earning R1) **"No subject named" is a reason of its own.** When the document declares no `subject_entity` (`earnedForDoc`), or `earned` is given none, a target's connection grade is answered as `earned` answers it today, and its `why` states that no subject is named; no other case (a D resolution, an unresolved capture, an unreadable registry) answers that reason. The capture ceiling and the testimony grade, which need no subject, are unchanged. Test: a document with no `subject_entity` answers each target's connection `why` as "no subject named"; after A1-R1 names one, the `why` is the resolution's own. Controls: a subject with a D resolution answers its old `why`; the capture and testimony answers are the same with and without a subject.
+
 ## Private
 
 ### Uses
@@ -54,14 +64,14 @@ Terms. A **leg**, **registry**, **grade**, **axis** and **source** are as `inqui
 - `content`: `standings`, the citation rows (R1, R3).
 - `connections`: `portionGrades`, `edgeSevered`, the `refs` read contract (R1, R4, R5, R7).
 - `entities`: `strongestByCapture` (R1).
-- `text-chain`: `captureBound`, `isTranscribed` (R1).
+- `text-chain`: `captureBound`, `isTranscribed` (R1). (T53) `TYPED_UNCHECKED_GRADE`, `TYPED_CHECKED_GRADE` and `gradeCeiling`'s typed answer (its R107; R18, R19); `content`: a typed row's `typed` block (its R63, R64; R18).
 - `standards`: a standard's version and its captured text (R8).
 - `duties`: `occurrencesOf` (R9).
 - The projected basis `inquiry_basis`: see Suggestions (the seam).
 
 ### Invariants
 
-- **R10** (copied from inquiry R32) Nothing here gives a leg a grade the record did not earn or a member did not author; an ungraded leg is inert and always named (DEC-18, DEC-24).
+- **R10** *(not yet met: T53)* (copied from inquiry R32) Nothing here gives a leg a grade the record did not earn or a member did not author; an ungraded leg is inert and always named (DEC-18, DEC-24). (T53; DEC-464) The one exception is a leg on a typed passage, which the record grades by R19, for that kind alone.
 - **R11** (copied from inquiry R33) Every read naming an inquiry or project the viewer may not see answers exactly as an absent one.
 
 ### Satisfies
@@ -69,6 +79,7 @@ Terms. A **leg**, **registry**, **grade**, **axis** and **source** are as `inqui
 - As `inquiry` for R13–R17 and R39: `docs/architecture/BIO_Case_Making_v0_1.md` R1–R3; `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §3; `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §14.4 (REC-220); DEC-18, DEC-21, DEC-112 (6).
 - `docs/architecture/BIO_Capability_Ladders_v0_1.md` §2 LAW ("`standards` moves whole to layer 5 now", the inquiry legs) and §3 (the occurrence as a leg); BOB's K1447 (i), (iii).
 - K617 (split for size, no change of meaning).
+- (T53) DEC-464 (K5524, K5549): R18, R19; DEC-457: R20.
 
 ### Suggestions
 

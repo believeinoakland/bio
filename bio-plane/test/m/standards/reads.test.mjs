@@ -9,6 +9,8 @@ import { STANDARDS_TABLES, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD, 
 import { ownerConformance, createRegistry, derivedId, kindOf as defaultKindOf, neighbours as defaultNeighbours }
   from "../../../src/connection-grammar/index.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
+import { WORD } from "./words.mjs";
 
 const EV = (s) => `EVT-2026-${s.padEnd(16, "0").slice(0, 16)}`;
 const KEY = "/eli/xx-port-ellery/selectboard/12";
@@ -45,7 +47,7 @@ test("R21 standardsFor: for a held standard (or an instrument key) every documen
   assert.deepEqual([d.of, d.items.map((i) => [i.standard, i.references[0].how])], ["document", [[std, "code_section"]]]);
   assert.deepEqual(w.s.standardsFor({ target: byCite.bundleId, viewer: V("carol") }).items.map((i) => i.standard), [std], "by bundle");
   assert.deepEqual(w.s.standardsFor({ target: hidden.capSha, viewer: V("carol") }).items, [], "a hidden document answers nothing");
-  assert.match(w.s.standardsFor({ target: hidden.capSha, viewer: V("carol") }).says, /no document you may see/);
+  assert.match(w.s.standardsFor({ target: hidden.capSha, viewer: V("carol") }).says, wordRx("standards.says.document_see_answers"));
   /* the limit */
   for (let i = 0; i < 3; i++) doc(`more${i}`, [{ ref: "code_section:pebl:12", ref_kind: "code_section", ref_key: "pebl:12" }]);
   const one = w.s.standardsFor({ target: std, viewer: V("carol"), limit: 1 });
@@ -85,14 +87,14 @@ test("R48 resolveCourtCitation, delegated to law-relations (its R4), answers ver
   assert.deepEqual([no.ok, no.state, no.verified], [true, "not verified", false], "refusing nothing");
   assert.equal((await w.s.resolveCourtCitation({ citation: "410 U.S. 113", viewer: V("carol") })).state, "not verified", "a capture the viewer may not see");
   assert.equal((await w.s.resolveCourtCitation({ citation: "410 U.S. 113", viewer: V("alice") })).state, "verified");
-  assert.match((await w.s.resolveCourtCitation({ citation: "no citation here", viewer: V("carol") })).why, /no court citation/);
+  assert.match((await w.s.resolveCourtCitation({ citation: "no citation here", viewer: V("carol") })).why, wordRx("law-relations.why.court_citation_volume"));
   /* the member's own typing of the cite is not a capture: a court standard whose cite alone states it is not verification */
   assert.equal((await w.s.resolveCourtCitation({ citation: "7 Cal. 4th 7", viewer: V("carol") })).state, "not verified");
   /* the keyed lookup */
   w.on = false;
   const off = await w.s.resolveCourtCitation({ citation: "6 Cal. 4th 100", viewer: V("carol"), lookup: true });
   assert.deepEqual([off.state, off.lookup.on, off.lookup.reason], ["not verified", false, "KEYED_SERVICE_OFF"]);
-  assert.match(off.lookup.says, /stands without it/);
+  assert.match(off.lookup.says, wordRx("law-relations.says.keyed_citation_lookup"));
   w.on = true;
   const on = await w.s.resolveCourtCitation({ citation: "6 Cal. 4th 100", viewer: V("carol"), lookup: true });
   assert.deepEqual([on.state, on.verified, on.lookup.on, on.lookup.verified, on.lookup.citations[0].matches[0].case_name],
@@ -151,7 +153,7 @@ test("R48 the module registers once at load as the connection owner `standards` 
   const byId = new Map(a.items.map((i) => [i.id, i]));
   assert.deepEqual([...byId.keys()].sort(), [ids.in, ids.undetermined, ids.link].sort());
   assert.deepEqual([byId.get(ids.in).kind, byId.get(ids.link).kind, byId.get(ids.in).grade.assertion], ["law_refers_to", "court_interprets", "D"]);
-  assert.match(byId.get(ids.in).grade_why, /lowest grade/);
+  assert.ok(byId.get(ids.in).grade_why.startsWith(WORD("law-relations.why.lowest_grade", { whys: "" })));
   assert.ok(byId.get(ids.undetermined).undetermined.why);
   /* before the amendment took effect the amending relation is out too: valid from its effective date */
   assert.ok(!w.s.neighbours({ node, at: "2022-06-01T12:00:00Z", viewer: V("carol") }).items.some((i) => i.id === ids.out));

@@ -6,6 +6,7 @@ import test from "node:test";
 import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW, REASON, sha } from "./fixture.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { WORD } from "./words.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS, STANDARDS_TABLES, COPY_STATES, ACCESS_STATES, HELD_STATES, FORCES, POLICY_FORCES,
          familyKey, standardsOps, IN_FORCE_STATES } from "../../../src/standards/index.mjs";
@@ -30,7 +31,7 @@ test("R1 R12 the kinds are jurisdictions' seven STANDARD_SOURCE_KINDS (standard 
   const r = w.declare({ kind: "guideline" });
   refusalRow(r, "STANDARD_KIND_UNKNOWN");
   assert.deepEqual(r.kinds, [...STANDARD_SOURCE_KINDS]);
-  assert.match(STANDARDS_CHECKS.STANDARD_KIND_UNKNOWN.translation, /standards body, a profession, a regulator or an accreditor/);
+  assert.match(STANDARDS_CHECKS.STANDARD_KIND_UNKNOWN.translation, wordRx("refusal.STANDARD_KIND_UNKNOWN"));
   assert.equal(w.declare({ cite: MHS, kind: "standard", issuer: "Marlow Harbour Safety Institute" }).ok, true);
 });
 
@@ -100,7 +101,7 @@ test("R33 family: read from the cite's series (id-spaces.recogniseSeries over th
   assert.equal(familyKey(null), null);
   const d = policy(w, { family: { key: "harbour-master", series: "hso", number: "HSO-9/99" } });
   assert.deepEqual([d.family.state, d.family.number], ["declared", "HSO-9/99"]);
-  assert.match(d.family.differs.says, /recorded as declared/);
+  assert.equal(d.family.differs.says, WORD("standards.says.recorded_declared_citation", { key: "harbour-master", series: "hso", number: "HSO-4/21" }));
   refusalRow(policy(w, { family: { key: "harbour-master", series: "nope", number: "1" } }), "FAMILY_UNKNOWN");
   assert.equal(codeOf(policy(w, { family: { key: "x" } })), "STANDARD_FIELD_INVALID");
   const none = w.declare();
@@ -306,7 +307,7 @@ test("R7 R38 overrides: a portion of this standard displaces a held standard's p
   policy(w, { text: [o], period: { from: "2024-01-01", to: "2040-12-31" }, overrides: [{ target: base2, portion: "50", until: nowhen }] });
   const u = w.s.inForceAt({ standard: base2, date: "2025-06-01" });
   assert.equal(u.state, "undetermined");
-  assert.match(u.why, /no when the record can read/);
+  assert.ok(u.why.includes(WORD("standards.why.event_record_read", { event_id: nowhen, words: "placed nowhere" })));
   for (const force_source of [{ kind: "edict", citation: o }, { kind: "contract", citation: t }, { kind: "contract" }])
     refusalRow(policy(w, { text: [o], force_source }), "FORCE_SOURCE_INVALID");
 });
@@ -317,7 +318,7 @@ test("R39 designation and edition are read from the cite (recogniseSeries' numbe
   assert.deepEqual([r.designation, r.edition, r.edition_read.read], ["MHSI Standard 101", "2020", "2020"]);
   const noEd = w.declare({ cite: "MHS 101", kind: "standard", issuer: "Marlow Harbour Safety Institute" });
   assert.equal(noEd.edition, null, "never defaulted");
-  assert.match(noEd.edition_read.why, /none is assumed/);
+  assert.match(noEd.edition_read.why, wordRx("standards.why.edition_stated_none"));
   const d = w.declare({ cite: MHS, kind: "standard", issuer: "MHSI", edition: "2018", designation: "MHS 101" });
   assert.deepEqual([d.edition, d.designation], ["2018", "MHS 101"]);
   assert.match(d.edition_read.says, /recorded as declared; the citation reads 2020/);

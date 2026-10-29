@@ -1,0 +1,10 @@
+Round R1, layer 5, module explore, tranche T53. Your depth: 2. BOB: BOB #332 (session_018BhcedHXTmWvkcQG9t9wzP).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module explore`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-162 · N1260 (DEC-409) · every chain, shorter paths, time stop
+- T53-163 · N1260 (DEC-447) · `followfrom`
+- T53-164 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-165 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/explore.md`

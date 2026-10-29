@@ -12,7 +12,7 @@
    the AI's reading of the pages Civicsmith could not read (R71), through the one transcriber the composition root
    registers (R72), so nothing above this layer is imported; R58's contract names `capture_text`. */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER, noSuchProject, notAParticipant } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { docxRenumbering } from "../docx.mjs";
@@ -30,7 +30,9 @@ import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL
          pagesSaid, AGENT_WORKER_REASONS } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { readRange } from "../acquisition/index.mjs";
-import { boundOf } from "../read-bounds.mjs";
+import { boundOf, READ_BOUNDS, levelOf } from "../read-bounds.mjs";
+import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { INTERPRET_HOW, STANDING_RECORDED_MAX, RANGE_KINDS, normalPart, samePart, refusals, uncovered } from "./interpret.mjs";
 import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { say } from "./words.mjs";
 import { driftObligations } from "./drift.mjs";
@@ -95,6 +97,11 @@ const overBytes = (s, limit) => typeof s === "string" && s.length > limit / 3 &&
    index grows to the last line, in batches of LAND_BATCH_BYTES. */
 export const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 export const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
+/** (T53; R122; PLATFORM P-32, K5736) The most a run of `readHeld` for the owed-work ledger's `reading` job holds in memory before it writes and yields: units, and the UTF-8
+ *  bytes of their text. A run offers the index at most this much and says `more`; the next tick resumes from the stored cursor, and the reading it lands is the same as one
+ *  uninterrupted run's. A document within it is read in one run, as before. `runtime-limits` takes both as rows in the completion round. */
+export const READ_RUN_UNITS_MAX = 4096;
+export const READ_RUN_BYTES_MAX = 1024 * 1024;
 /** (fix round 9, G128; R99; K4838 (4); R-GATE) The most UTF-8 bytes of unit text one batch lands in one transaction: runtime-limits' `PLATFORM_FIGURES`
  *  entry, 1 MiB until BOB records P-M9 (far below the 2,098,176-byte value bound; a 10,000-row write blocks the object about 2.8 s). A unit over it lands
  *  alone in its own batch, never cut. */
@@ -143,7 +150,8 @@ export const OCCURRENCES_PER_REF = 256;
    `capture_text`, kept by triggers) and `composed_readings` (no bundle) whole-store only. `capture_text` is
    declared before its index so the triggers keep the index true on the per-bundle arm. */
 export const EXTRACTION_TABLES = Object.freeze(["readings", "reading_refs", "reading_ref_terms", "reading_text_source",
-  "reading_history", "capture_text", "capture_text_skipped", "capture_text_state", "reading_repairs"]);
+  "reading_history", "capture_text", "capture_text_skipped", "capture_text_state", "reading_repairs",
+  "interpretations", "interpretation_withdrawals", "interpreted_content"]);
 export const EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings"]);
 /* R66, R68 (T38; N786): exempt from both purges. A migration's row holds its cutoff; cleared by a whole-store purge, it
    would be taken again at the next start over the readings written since the purge (the history's rowids restart),
@@ -447,6 +455,9 @@ export const PART_MIGRATION = "g33-part-readings";
 export const OWED_MIGRATION = "r105-owed-work";
 /* R105 (b) (fix round 9, G128j): stored readings in the old shapes, re-registered as reading jobs; its own row. */
 export const SHAPE_MIGRATION = "r105-reading-shapes";
+/* R120 (T53; N1266; RF10): the held-and-named readings a reader has since arrived for, owed once for each release: its row is named for the release (`r120-held-unread:<VERSION>`),
+   so a release whose roster lists more types scans them again, and one that does not changes nothing. */
+export const HELD_MIGRATION = "r120-held-unread";
 
 /* R92: every table that keeps a reading against a capture, for the repair that takes a part's reading away. */
 const PART_KEPT_IN = Object.freeze(["readings", "reading_history", "reading_refs", "reading_ref_terms", "reading_text_source", "capture_text",
@@ -464,11 +475,11 @@ const MIGRATIONS = Object.freeze({
     oldWalk: (reading, map) => {
       const ce = reading.container_extent;
       return !(ce && typeof ce === "object" && Number.isInteger(ce.paragraphs) && ce.paragraphs !== map.paragraphs.length)
-        || "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk";
+        || localize("extraction.index.n26_not_old_walk", "its paragraph count is not the pre-N26 walk's, so it was not read by the old walk");
     },
     migrated: n26MigratedReading,
-    after: "read after N26 (its reading was written after the migration's cutoff)",
-    noLayer: "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs" }),
+    after: localize("extraction.index.n26_read_after", "read after N26 (its reading was written after the migration's cutoff)"),
+    noLayer: localize("extraction.index.n26_no_layer", "the reading carries no docx text layer to mark, so nothing it holds was read from the paragraphs") }),
   [N439_MIGRATION]: Object.freeze({
     name: N439_MIGRATION, format: "pptx", key: "n439", marked: n439Marked, isLayer: isPptxLayer,
     renumber: (parts) => pptxRenumbering(parts), moves: pptxRenumberingMoves,
@@ -479,11 +490,11 @@ const MIGRATIONS = Object.freeze({
       if (!Array.isArray(sl)) return true;
       const differs = map.slides.some((s) => Number.isInteger(s.slide) && sl[s.slide - 1]
         && Number.isInteger(sl[s.slide - 1].shapes) && sl[s.slide - 1].shapes !== s.shapes.length);
-      return !differs || "its slides' shape counts are not the pre-N439 walk's, so it was not read by the old walk";
+      return !differs || localize("extraction.index.n439_not_old_walk", "its slides' shape counts are not the pre-N439 walk's, so it was not read by the old walk");
     },
     migrated: n439MigratedReading,
-    after: "read after N439 (its reading was written after the migration's cutoff)",
-    noLayer: "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides" }),
+    after: localize("extraction.index.n439_read_after", "read after N439 (its reading was written after the migration's cutoff)"),
+    noLayer: localize("extraction.index.n439_no_layer", "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides") }),
 });
 
 const instances = new WeakMap();
@@ -536,12 +547,16 @@ export function extractionOf(ctx, opts = {}) {
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
   #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null; #serials = new WeakMap();
-  #owe = null; #repairRun = null; #reader = readDocument;
+  #owe = null; #repairRun = null; #reader = readDocument; #interpreter = null; #ceiling; #heldAs = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
-                         env = {}, readHooks = null, reader = null } = {}) {
+                         env = {}, readHooks = null, reader = null, interpreter = null, interpretationCeiling = undefined } = {}) {
     /* the reader (reading-pipeline's `read`); a test hands a stand-in of its contract where the real one has not merged (R-SEAM) */
     this.#reader = typeof reader === "function" ? reader : readDocument;
+    /* R114, R119: reading-pipeline's `interpretUnits` (a test hands a stand-in of its contract where the real one has not merged, as `reader` is) and the
+       team's interpretation ceiling (a number, or a function answering one; absent, the service level's, which is none until PLATFORM records it) */
+    this.#interpreter = typeof interpreter === "function" ? interpreter : null;
+    this.#ceiling = interpretationCeiling;
     this.#storage = storage;
     this.#sql = storage.sql;
     this.#host = host;
@@ -732,8 +747,13 @@ export class Extraction {
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
   async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null,
-                         skipKilled = false, stampUnit = null } = {}) {
+                         skipKilled = false, stampUnit = null, run = false } = {}) {
     const e = env || this.env || {};
+    /* R122: a ledger run is held to READ_RUN_UNITS_MAX units and READ_RUN_BYTES_MAX bytes of text, the rest being the next tick's */
+    if (run === true && pieces !== undefined) budget = READ_RUN_BYTES_MAX;
+    /* R113: a register segment is handed to no reader and no reading is made */
+    const asRegister = this.#heldAsRegister(document && document.capture && document.capture.sha256);
+    if (asRegister) return { reading: null, held_as_register: asRegister };
     const out = await this.#reader(document, {
       /* (fix round 9, K4904 (1); plan 2c item 8) the window at this cursor killed its reader three times: the reader steps past it, stated */
       ...(skipKilled === true ? { skipKilled: true } : {}),
@@ -751,7 +771,8 @@ export class Extraction {
         /* (fix round 10, cause 24 (b); R111) the first piece lands inside the reading's own transaction, which cannot give the turn back between batches:
            of a capture past the first tick's budget (it cannot be read at once) it offers one batch, and the pieces that follow, landed by
            `indexUnitsYielding`, read the rest; a capture within the budget is read at once, as R90 states */
-        maxUnits: (pieces.cursor ?? null) === null && (this.#sizeOf(document) ?? 0) > CAPTURE_TEXT_CAPTURE_BOUND ? LAND_BATCH_UNITS : CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
+        maxUnits: (pieces.cursor ?? null) === null && (this.#sizeOf(document) ?? 0) > CAPTURE_TEXT_CAPTURE_BOUND ? LAND_BATCH_UNITS
+          : run === true ? READ_RUN_UNITS_MAX : CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
     /* (fix round 9, G128c; reading-pipeline R57) the first piece of a PDF read in ranges states what the whole file's reading states, so far as its pieces
        can: the glyphs of the text it carries, and, when it is also the last, the document's words; a later piece completes them (`#continueText`) */
     if (pieces !== undefined && out && out.reading && typeof out.reading === "object") completeFirstPiece(out);
@@ -915,6 +936,8 @@ export class Extraction {
     };
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
+    /* R113: a register segment is not read; nothing is written */
+    { const reg = this.#heldAsRegister(digest); if (reg) return left("HELD_AS_REGISTER", { held_as_register: reg }); }
     const stored = this.#storedDocument(home.bundleId, digest);
     let document = stored || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
@@ -926,8 +949,16 @@ export class Extraction {
        document was not read as text is read again once the held bytes now say what they are. */
     const fmt0 = document.profile && document.profile.format && typeof document.profile.format.format === "string"
       ? document.profile.format.format : null;
-    const repair = ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
+    /* (T53; R120) a held-and-named reading is read again when its held bytes now detect a LISTED type: the reader has arrived */
+    const heldUnread = !!held && !ocr && !!ev && this.#heldUnread(digest, heldReading);
+    const repair = heldUnread ? await this.#nowListed(digest)
+      : ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
       ? await this.#nowDetected(document, digest, ev) : null;
+    /* (T53; R120) a held-and-named reading whose type is still on no list is left as it is, and not owed again under this release (as R89's `reading_repairs`) */
+    if (heldUnread && !repair) {
+      this.#markRepairTried(home.bundleId, digest, "unlisted");
+      return left("READING_HELD", { held_unread: true });
+    }
     /* (fix round 6, G13; R90) a held reading of a text read in pieces that has more to read is not held: the next piece is read. */
     if (held && !ocr && stored && this.#moreOf(digest)) {
       if (defer === true) return left("READING_PENDING");
@@ -935,7 +966,7 @@ export class Extraction {
     }
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
-    if (held && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)
+    if (held && !ocr && !(repair && (notReadAsText(heldReading) || heldUnread)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)
         && !(heldReading && heldReading.odsTooLarge === true) && !this.#oldShapeOf(digest))
       return left("READING_HELD");
     /* (fix round 6, G6; R88) a digest that no stored document names (a bare stub) is read as no document: it has no parts, size or
@@ -962,10 +993,10 @@ export class Extraction {
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved, stamp });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
-    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
+    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null }, run: ledger,
                                           ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages, stampUnit: stamp });
     if (out.refused) return left(out.refused.code);
-    if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
+    if (repair && held && (notReadAsText(out.reading) || (heldUnread && out.reading && out.reading.found === false && out.reading.held_unread))) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     /* (fix round 9, G126a; R102) the OCR pages the read left are owed in the same transaction as the reading (the registrar's row commits or rolls back
        with it), before the answer */
@@ -1042,7 +1073,7 @@ export class Extraction {
     /* (fix round 9, G129c; K4904 (1); R101) the window at the stored cursor that killed its reader three times (the ledger's `killedCursor`) is stepped
        past, stated, and the read goes on from the next */
     const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
-    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
+    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor }, run: ledger,
                                             ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, skipKilled: skip, stampUnit: stamp });
     /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
        cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
@@ -1398,15 +1429,34 @@ export class Extraction {
               json_type(reading, '$.basis') AS bt, json_extract(reading, '$.basis') AS basis,
               json_type(reading, '$.entities') AS et, json_array_length(reading, '$.entities') AS en,
               json_type(reading, '$.tier3_candidate') AS tt, json_extract(reading, '$.too_large.key') AS tlk,
-              json_extract(reading, '$.text_container') AS tc, capture_format AS cf
+              json_extract(reading, '$.text_container') AS tc, capture_format AS cf, json_extract(reading, '$.held_unread') AS hu
          FROM readings WHERE capture_sha=? AND json_valid(reading) AND json_type(reading)='object'`, sha);
     if (!r) return null;
+    const heldUnread = r.hu ? safeJson(r.hu) : null;
     return { found: r.ft === "true" ? true : r.ft === "false" ? false : undefined,
              failure: r.ut === "text" ? r.failure : undefined, basis: r.bt === "text" ? r.basis : undefined,
              entities: r.et === "array" ? new Array(r.en) : undefined,
              tier3_candidate: r.tt === "true" ? true : r.tt === "false" ? false : undefined,
              /* (fix round 9, R105 (c)) an ODS reading stated too large for its cells, which odf-reader R49 now holds: read again once */
-             ...(r.tlk === "cells" && (r.cf === "ods" || r.tc === "ods") ? { odsTooLarge: true } : {}) };
+             ...(r.tlk === "cells" && (r.cf === "ods" || r.tc === "ods") ? { odsTooLarge: true } : {}),
+             /* (T53; R120) a held-and-named reading states `held_unread` (reading-pipeline R67): the type's plain name, no units, no failure */
+             ...(heldUnread && typeof heldUnread === "object" && !Array.isArray(heldUnread) ? { held_unread: heldUnread } : {}) };
+  }
+
+  /** R120 (T53; N1266; RF10): whether the stored reading of a capture is a held-and-named one still: it found nothing, states `held_unread` (a type on no
+   *  list, reading-pipeline R67) and no unit of it is indexed. A reading with units is never one, whatever else it says. */
+  #heldUnread(sha, facts = null) {
+    const f = facts ?? this.#readingFacts(sha);
+    return !!f && f.found === false && !!f.held_unread && !this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? LIMIT 1`, sha);
+  }
+
+  /** R120: the format the held bytes now detect when it is a LISTED one (a reader is registered for it): judged by the bytes' head alone, never by the name or the declared
+   *  type (`detectFormat(head, null)`); null for `unlisted`, `undetermined`, `refused` and for bytes not held. */
+  async #nowListed(digest) {
+    const head = await this.#heldHead(digest);
+    if (!head) return null;
+    const f = detectFormat(head, null);
+    return f && typeof f.format === "string" && !["unlisted", "undetermined", "refused"].includes(f.format) ? f : null;
   }
 
   /** R80 (fix round 4, C5b): whether a stored reading is a failed one that failed for want of the whole bytes: it found
@@ -1940,7 +1990,10 @@ export class Extraction {
          FROM readings WHERE capture_sha=?`, captureSha);
     /* (fix round 9, G127a; R104, restating R88) a part's digest is no capture: it is answered as any digest whose reading is not held, and is never
        resolved to a whole (a part shared by two wholes names neither). */
-    if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
+    if (!row) {
+      const reg = this.#heldAsRegister(captureSha);
+      return { ok: true, found: false, capture_sha: captureSha, reading: null, ...(reg ? { held_as_register: reg } : {}) };
+    }
     /* (fix round 6, G38; R94) the stored reading is read through SQL's JSON, so a bulky key never enters the object: it is named in
        `reading_omitted` and left out of `reading`. */
     const { reading: stored, omitted } = this.#readingBounded(row.capture_sha);
@@ -2000,6 +2053,10 @@ export class Extraction {
              /* R89 (fix round 6, G8): a reading that says the document was not read as text, and that no read has found nothing to
                 repair it by under this release, states it may be repaired (the member's press, "Read it", is offered for it). */
              ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
+             /* R120 (T53; N1266): a reading held and named states it, with the type's name as the reading carries it (reading-pipeline R67), and whether a read under this
+                release has found its type still on no list; absent for any other reading, and once a reading with units replaces it. */
+             ...(reading && typeof reading.held_unread === "object" && reading.held_unread && this.#heldUnread(row.capture_sha)
+                 ? { held_unread: { ...reading.held_unread, still_unlisted: this.#repairTried(row.capture_sha) } } : {}),
              ...(omitted.length ? { reading_omitted: omitted } : {}),
              ...(text_units ? { text_units, next } : {}),
              ...(completeness ? { completeness, units_total: unitsTotal } : {}),
@@ -2170,6 +2227,221 @@ export class Extraction {
              captureFormat: typeof row.capture_format === "string" ? row.capture_format : null };
   }
 
+  /* ---- interpretation (R114-R119; T53; N1272; K4636, K5445, K5496) ---- */
+
+  /** R119: the most interpretation rows a team may hold live: `opts.interpretationCeiling` (a number, or a function answering one or null) when
+   *  handed, else the service level's `interpretation_rows` (`runtime-limits`, null until PLATFORM records it); null is no ceiling yet. */
+  #interpretationCeiling() {
+    let v = this.#ceiling;
+    try { if (typeof v === "function") v = v(); } catch { v = null; }
+    if (v === undefined) {
+      const names = ["team", "institution", "enterprise"];
+      try { v = READ_BOUNDS.level[names[levelOf({ design_stage: this.env.DESIGN_STAGE, cf_plan: this.env.CF_PLAN }) - 1]].interpretation_rows; } catch { v = null; }
+    }
+    return Number.isInteger(v) && v >= 0 ? v : null;
+  }
+
+  /** R114: the member a stamp names, or null for none or a machine identity. */
+  static #memberOf(by) {
+    const id = typeof by === "string" ? by.replace(/^member:/, "").trim() : "";
+    return id && !isMachineIdentity(by) ? id : null;
+  }
+
+  /* R114: an interpretation row as it is answered. */
+  static #interpretationOut(r, withdrawn = false) {
+    return { id: r.id, capture: r.capture_sha, part: safeJson(r.part), project: r.project, by: r.by, at: r.at, how: r.how, basis: r.basis,
+             ...(r.proposal ? { proposal: r.proposal } : {}), ...(r.matched ? { matched: safeJson(r.matched) } : {}),
+             ...(r.began_from ? { began_from: r.began_from } : {}), withdrawn };
+  }
+
+  #liveRow(sha, partKey, project) {
+    return this.#one(
+      `SELECT i.* FROM interpretations i LEFT JOIN interpretation_withdrawals w ON w.interpretation_id = i.id
+        WHERE i.capture_sha=? AND i.part_key=? AND i.project=? AND w.interpretation_id IS NULL ORDER BY i.seq LIMIT 1`, sha, partKey, project);
+  }
+
+  /** R114, R117 (T53; N1272): `interpretPart({capture, part, project, how, by, proposal?, standing?, began_from?, viewer?, content?, env?})`, the one recorded act of
+   *  interpreting: one part of a held capture, for one project, by a signed-in member. `how` is `opened`, `cited`, `marked` or `accepted_proposal`; with
+   *  `accepted_proposal`, `proposal` names (its id, and what it matched) a proposal in `standing`, the proposals standing for the project and capture at
+   *  this instant as the caller (`investigation`, a layer above) lists them: one not in it is refused `PROPOSAL_NOT_STANDING`, one whose part is not
+   *  this part is recorded `unaided` with `began_from`, never `accepted`. Written once for `(capture, part, project)`: a second act on a part with a live
+   *  row records nothing and answers that row (`recorded: false`). The part's facts are made once for `(capture, part)` (`reading-pipeline.interpretUnits`,
+   *  or the `content` the caller already made, `cellsOf`'s), the second project reusing them. A team at its ceiling (R119) is refused, nothing recorded.
+   *  Never throws. Nothing here is called by `read`, intake or any batch path (K4636). */
+  async interpretPart({ capture = null, part = null, project = null, how = null, by = null, proposal = null, standing = null, began_from = null,
+                        viewer = null, content = null, env = null } = {}) {
+    try {
+      return await this.#interpretPart({ capture, part, project, how, by, proposal, standing, began_from, viewer, content, env });
+    } catch (e) {
+      return refusals.failed(e && e.message ? e.message : "an unexpected error");
+    }
+  }
+
+  async #interpretPart({ capture, part, project, how, by, proposal, standing, began_from, viewer, content, env }) {
+    const memberId = Extraction.#memberOf(by);
+    if (!memberId) return refusals.memberSession();
+    const asViewer = typeof viewer === "string" ? viewer : `member:${memberId}`;
+    const sha = typeof capture === "string" ? capture.trim().toLowerCase() : "";
+    const held = /^[0-9a-f]{64}$/.test(sha) ? this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha) : null;
+    if (!held || !this.#sees(held.bundle_id, asViewer)) return refusals.notFound();
+    if (typeof project !== "string" || !project.trim()) return refusals.noProject();
+    if (!this.membership || !this.membership.inSight(project, asViewer)) return noSuchProject(project);
+    const mine = this.membership.participation(project, memberId);
+    if (!mine || !(mine.state === "joined" || mine.state === "leaving")) return notAParticipant(project, by);
+    if (!INTERPRET_HOW.includes(how)) return refusals.badHow();
+    const p = normalPart(part);
+    if (!p) return refusals.badPart();
+
+    /* R117: the basis. An accepted proposal must stand; the member's own part, or a changed one, is unaided (a changed one remembers what it began from). */
+    const named = proposal && typeof proposal === "object" && !Array.isArray(proposal) ? proposal : typeof proposal === "string" && proposal ? { id: proposal } : null;
+    let basis = "unaided", proposalId = null, matched = null, from = typeof began_from === "string" && began_from ? began_from : null, actHow = how;
+    const list = Array.isArray(standing) ? standing.filter((s) => s && typeof s === "object" && typeof s.id === "string") : [];
+    if (how === "accepted_proposal") {
+      if (!named || typeof named.id !== "string" || !named.id) return refusals.notStanding(named && named.id ? named.id : null);
+      const live = this.#liveRow(sha, p.key, project);
+      if (live) return { ok: true, recorded: false, id: live.id, interpretation: Extraction.#interpretationOut(live) };
+      const s = list.find((x) => x.id === named.id && (x.capture === undefined || x.capture === sha));
+      if (!s) return refusals.notStanding(named.id);
+      if (samePart(s.part, p.part)) { basis = "accepted"; proposalId = s.id; matched = named.matched ?? s.why ?? null; }
+      else { actHow = "marked"; from = s.id; }
+    }
+
+    const live = this.#liveRow(sha, p.key, project);
+    if (live) return { ok: true, recorded: false, id: live.id, interpretation: Extraction.#interpretationOut(live) };
+
+    /* R119: a mark that would pass the team's ceiling is refused with the figure and the number held. */
+    const ceiling = this.#interpretationCeiling();
+    const heldNow = this.#one(
+      `SELECT count(*) AS n FROM interpretations i LEFT JOIN interpretation_withdrawals w ON w.interpretation_id = i.id WHERE w.interpretation_id IS NULL`).n;
+    if (ceiling !== null && heldNow + 1 > ceiling) return refusals.limit(ceiling, heldNow);
+
+    /* the part's facts, made once for (capture, part) */
+    const kept = this.#one(`SELECT content_bytes FROM interpreted_content WHERE capture_sha=? AND part_key=?`, sha, p.key);
+    let json = null, bytes = 0;
+    if (!kept) {
+      let made = content;
+      if (made === null || made === undefined) {
+        const interpreter = this.#interpreter ?? (typeof pipeline.interpretUnits === "function" ? pipeline.interpretUnits : null);
+        const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+        if (!interpreter) return refusals.notRead();
+        const document = this.#storedDocument(held.bundle_id, sha) || { capture: { sha256: sha } };
+        let got;
+        try { got = await interpreter(document, p.part, { evidence: ev, env: env || this.env, view: this.view() }); }
+        catch (e) { return refusals.failed(e && e.message ? e.message : "the reader stopped", { transient: true }); }
+        if (!got || got.ok === false) return refusals.failed(got && got.reason ? got.reason : "no facts were made", { transient: !!(got && got.transient) });
+        made = got;
+      }
+      json = JSON.stringify(made);
+      bytes = utf8Bytes(json);
+      if (bytes > READING_ROW_MAX_BYTES) json = null;
+    }
+
+    const at = stampInstant("second");
+    const recorded = this.core.transact(() => {
+      const again = this.#liveRow(sha, p.key, project);
+      if (again) return { row: again, wrote: false };
+      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM interpretations`).n;
+      const id = `INT-${sha256HexSync(`${seq}|${sha}|${p.key}|${project}|${at}`).slice(0, 12)}`;
+      const row = { id, seq, capture_sha: sha, bundle_id: held.bundle_id, part_key: p.key, part: p.key, project, by: memberId, at, how: actHow, basis,
+                    proposal: proposalId, matched: matched === null ? null : JSON.stringify(matched), began_from: from,
+                    standing: list.length ? JSON.stringify(list.slice(0, STANDING_RECORDED_MAX).map((s) => s.id)) : null };
+      this.#sql.exec(
+        `INSERT INTO interpretations (id,seq,capture_sha,bundle_id,part_key,part,project,by,at,how,basis,proposal,matched,began_from,standing)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        row.id, row.seq, row.capture_sha, row.bundle_id, row.part_key, row.part, row.project, row.by, row.at, row.how, row.basis, row.proposal,
+        row.matched, row.began_from, row.standing);
+      if (!kept) this.#sql.exec(
+        `INSERT OR IGNORE INTO interpreted_content (capture_sha,bundle_id,part_key,content,content_bytes,made_at) VALUES (?,?,?,?,?,?)`,
+        sha, held.bundle_id, p.key, json, bytes, at);
+      return { row, wrote: true };
+    });
+    return { ok: true, recorded: recorded.wrote, id: recorded.row.id, interpretation: Extraction.#interpretationOut(recorded.row) };
+  }
+
+  /** R118 (T53; N1272; K5445 B): `interpretationWithdraw({id, by, viewer?})` appends a withdrawal for an interpretation row of a project the member
+   *  is in; the row stays in the log, "interpreted for" is no longer stated for the part while no live row stands for it, and the part's facts go only when
+   *  no live row of any project uses them (they are derived, and made again). A citation already made is not touched here. A second withdrawal changes
+   *  nothing. Never throws. */
+  interpretationWithdraw({ id = null, by = null, viewer = null } = {}) {
+    try {
+      const memberId = Extraction.#memberOf(by);
+      if (!memberId) return refusals.memberSession();
+      const asViewer = typeof viewer === "string" ? viewer : `member:${memberId}`;
+      const row = typeof id === "string" && id ? this.#one(`SELECT * FROM interpretations WHERE id=?`, id) : null;
+      if (!row || !this.#sees(row.bundle_id, asViewer) || !this.membership || !this.membership.inSight(row.project, asViewer)) return refusals.noRow();
+      const mine = this.membership.participation(row.project, memberId);
+      if (!mine || !(mine.state === "joined" || mine.state === "leaving")) return notAParticipant(row.project, by);
+      const at = stampInstant("second");
+      return this.core.transact(() => {
+        if (this.#one(`SELECT 1 AS x FROM interpretation_withdrawals WHERE interpretation_id=?`, id))
+          return { ok: true, withdrawn: true, already: true, id };
+        this.#sql.exec(`INSERT INTO interpretation_withdrawals (interpretation_id,capture_sha,bundle_id,project,by,at) VALUES (?,?,?,?,?,?)`,
+          id, row.capture_sha, row.bundle_id, row.project, memberId, at);
+        const used = this.#one(
+          `SELECT 1 AS x FROM interpretations i LEFT JOIN interpretation_withdrawals w ON w.interpretation_id = i.id
+            WHERE i.capture_sha=? AND i.part_key=? AND w.interpretation_id IS NULL LIMIT 1`, row.capture_sha, row.part_key);
+        if (!used) this.#sql.exec(`DELETE FROM interpreted_content WHERE capture_sha=? AND part_key=?`, row.capture_sha, row.part_key);
+        return { ok: true, withdrawn: true, already: false, id, content_kept: !!used };
+      });
+    } catch (e) {
+      return refusals.failed(e && e.message ? e.message : "an unexpected error");
+    }
+  }
+
+  /** R116: the capture's extent, from the reading's own units, as `{kind, ...range}` universes in the extent's numbering: PDF pages (0-based, to the
+   *  stored page count when it is a whole number), paragraphs (0-based), slides (from 1) and each sheet's rows (from 1). Counted by SQL; no unit's
+   *  text is loaded. */
+  #extentOf(sha) {
+    const out = [];
+    const pages = this.#one(`SELECT MAX(CAST(json_extract(extent,'$.page') AS INTEGER)) AS hi FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page'`, sha);
+    const pc = this.#one(`SELECT CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading,'$.page_count') END AS n FROM readings WHERE capture_sha=?`, sha);
+    const pageTop = Math.max(Number.isInteger(pages && pages.hi) ? pages.hi : -1, Number.isInteger(pc && pc.n) && pc.n > 0 ? pc.n - 1 : -1);
+    if (pageTop >= 0) out.push({ kind: "pdf-page", from: 0, to: pageTop });
+    const paras = this.#one(`SELECT MAX(CAST(json_extract(extent,'$.para') AS INTEGER)) AS hi FROM capture_text WHERE capture_sha=? AND extent_kind='doc-para'`, sha);
+    if (paras && Number.isInteger(paras.hi)) out.push({ kind: "doc-para", from: 0, to: paras.hi });
+    const slides = this.#one(`SELECT MAX(CAST(json_extract(extent,'$.slide') AS INTEGER)) AS hi FROM capture_text WHERE capture_sha=? AND extent_kind='slide-shape'`, sha);
+    if (slides && Number.isInteger(slides.hi) && slides.hi >= 1) out.push({ kind: "slide", from: 1, to: slides.hi });
+    const seen = new Map();
+    for (const r of this.#rows(`SELECT json_extract(extent,'$.sheet') AS sheet, json_extract(extent,'$.range') AS range FROM capture_text WHERE capture_sha=? AND extent_kind='sheet-range'`, sha)) {
+      if (typeof r.sheet !== "string" || typeof r.range !== "string") continue;
+      const rows = [...r.range.matchAll(/[A-Za-z]*\$?([1-9][0-9]*)/g)].map((m) => Number(m[1]));
+      if (!rows.length) continue;
+      const cur = seen.get(r.sheet) ?? { lo: Infinity, hi: 0 };
+      seen.set(r.sheet, { lo: Math.min(cur.lo, ...rows), hi: Math.max(cur.hi, ...rows) });
+    }
+    for (const [sheet, v] of [...seen].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) out.push({ kind: "sheet-range", sheet, from_row: 1, to_row: v.hi });
+    return out;
+  }
+
+  /** R116 (T53; N1272; K4571; K5495): `interpretationOf({capture, project?, viewer})` answers what was and was not interpreted, so it is always answerable:
+   *  `read` (`progressOf`'s state for the capture, so a reading still being read says so), `parts` (every live row of a project the viewer may see),
+   *  `for_this` (the rows of `project`) and `for_others` (the others), and `not_interpreted`, the capture's extent less the parts (`project`'s own when
+   *  one is named, else every visible one) as ranges of the reading's own extent, never the word "rest". A project the viewer may not see is never
+   *  answered, not even that it holds a row. Interpretation narrows nothing: every unit stays indexed and found by search. Read-only; never throws. */
+  interpretationOf({ capture = null, project = null, viewer = null } = {}) {
+    const sha = typeof capture === "string" ? capture.trim().toLowerCase() : "";
+    const held = /^[0-9a-f]{64}$/.test(sha) ? this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha) : null;
+    if (!held || !this.#sees(held.bundle_id, viewer)) return refusals.notFound();
+    const sees = new Map();
+    const visible = (p) => { if (!sees.has(p)) sees.set(p, !!this.membership && this.membership.inSight(p, viewer)); return sees.get(p); };
+    const rows = this.#rows(
+      `SELECT i.* FROM interpretations i LEFT JOIN interpretation_withdrawals w ON w.interpretation_id = i.id
+        WHERE i.capture_sha=? AND w.interpretation_id IS NULL ORDER BY i.seq`, sha).filter((r) => visible(r.project));
+    const out = rows.map((r) => Extraction.#interpretationOut(r));
+    const mineRows = typeof project === "string" && project ? rows.filter((r) => r.project === project) : null;
+    const counted = (mineRows ?? rows).map((r) => safeJson(r.part)).filter(Boolean);
+    const notInterpreted = [];
+    for (const u of this.#extentOf(sha)) {
+      const r = RANGE_KINDS[u.kind];
+      const ranges = counted.filter((q) => q.kind === u.kind && (u.kind !== "sheet-range" || q.sheet === u.sheet)).map((q) => [q[r.from], q[r.to]]);
+      for (const [a, b] of uncovered([[u[r.from], u[r.to]]], ranges))
+        notInterpreted.push({ kind: u.kind, ...(u.kind === "sheet-range" ? { sheet: u.sheet } : {}), [r.from]: a, [r.to]: b });
+    }
+    return { ok: true, capture: sha, read: this.progressOf([sha])[sha], parts: out,
+             for_this: mineRows ? out.filter((r) => r.project === project) : [], for_others: mineRows ? out.filter((r) => r.project !== project) : out,
+             not_interpreted: notInterpreted, not_interpreted_for: mineRows ? project : null };
+  }
+
   /** (fix round 6, G41; R98; Bob, K4636, K4639) The typed cells of rows of one sheet, in row then column order, made when a member opens or cites a
    *  range. `{cells, interpreted, next_row}`: `interpreted` is `{sheet, from_row, to_row}`, the rows these cells cover, or null when the cells are
    *  the reading's own (a sheet small enough to be listed in it); `next_row` the row to ask from when the answer stopped before `toRow`, else null.
@@ -2179,7 +2451,25 @@ export class Extraction {
    *  `{cells: null, reason, why}` for a capture with no reading, a sheet that is not named, a sheet whose cells are neither listed nor held, bytes
    *  not held (`transient: true`) and a format that cannot make them. Nothing reads a whole stored cell array: the reading's cells are read only as
    *  the one small key they are when a sheet is listed. */
-  async cellsOf(captureSha, sheet, { fromRow = null, toRow = null, fromCol = null, toCol = null, env = null } = {}) {
+  async cellsOf(captureSha, sheet, { fromRow = null, toRow = null, fromCol = null, toCol = null, env = null, interpret = null } = {}) {
+    const made = await this.#cellsMade(captureSha, sheet, { fromRow, toRow, fromCol, toCol, env });
+    if (!interpret || typeof interpret !== "object" || !Array.isArray(made.cells)) return made;
+    /* R115 (T53; N1272; K5445 A): a member who opens or cites a range of a sheet interprets exactly the block answered, `interpret` naming `{project, by, how,
+       viewer?}` (`how` `opened` unless `cited`): the part is the rows returned (never the range asked, a cut answer's `next_row` ending it), and its cells are
+       the content, so they are made once. A refusal is answered in place of the cells; a read that made none records nothing (R98's `{cells: null}`). */
+    const rowsOf = made.cells.map(cellAddress).filter(Boolean).map((a) => a.row);
+    const asked = (v) => (Number.isInteger(v) && v >= 1 ? v : null);
+    const from = made.interpreted ? made.interpreted.from_row : (asked(fromRow) !== null && asked(toRow) !== null ? Math.min(asked(fromRow), asked(toRow)) : asked(fromRow) ?? (rowsOf.length ? Math.min(...rowsOf) : 1));
+    const toWanted = made.interpreted ? made.interpreted.to_row : (asked(fromRow) !== null && asked(toRow) !== null ? Math.max(asked(fromRow), asked(toRow)) : asked(toRow) ?? (rowsOf.length ? Math.max(...rowsOf) : from));
+    const to = Number.isInteger(made.next_row) ? Math.max(from, Math.min(toWanted, made.next_row - 1)) : toWanted;
+    const how = interpret.how === "cited" ? "cited" : "opened";
+    const act = await this.interpretPart({ capture: captureSha, part: { kind: "sheet-range", sheet, from_row: from, to_row: to }, project: interpret.project, how,
+      by: interpret.by, viewer: interpret.viewer ?? null, content: { sheet, from_row: from, to_row: to, cells: made.cells }, env });
+    if (act.ok !== true) return { cells: null, ...act };
+    return { ...made, interpreted: { sheet, from_row: from, to_row: to, interpretation: act.id }, interpretation: { id: act.id, recorded: act.recorded, how: act.interpretation.how } };
+  }
+
+  async #cellsMade(captureSha, sheet, { fromRow = null, toRow = null, fromCol = null, toCol = null, env = null } = {}) {
     const none = (reason, why, more = {}) => ({ cells: null, reason, why, ...more });
     const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
     const row = sha ? this.#one(`SELECT bundle_id, capture_format FROM readings WHERE capture_sha=?`, sha) : null;
@@ -2465,7 +2755,7 @@ export class Extraction {
    *  `first_range`, `cut_units`, `pages_unread`, `stated_bare`, with `registered` and `existed`; R105 (a), (c)'s `ocr`, `ods` and `existed`; R92's
    *  `superseded`). It writes nothing and creates no row: a migration that has not run states zeros. Never throws. */
   migrationCounts() {
-    const names = [N26_MIGRATION, N439_MIGRATION, REPAIR_MIGRATION, PART_MIGRATION, OWED_MIGRATION, SHAPE_MIGRATION];
+    const names = [N26_MIGRATION, N439_MIGRATION, REPAIR_MIGRATION, PART_MIGRATION, OWED_MIGRATION, SHAPE_MIGRATION, `${HELD_MIGRATION}:${String(this.env.VERSION ?? "")}`];
     const shapes = { first_range: 0, cut_units: 0, pages_unread: 0, stated_bare: 0, registered: 0, existed: 0 };
     return {
       ok: true,
@@ -2582,6 +2872,7 @@ export class Extraction {
       this.#repairRun = (async () => {
         for (let n = 0; n < 10_000; n++) { const r = await this.migrateRepairs(); if (!r || r.done || !r.examined) break; }
         for (let n = 0; n < 10_000; n++) { const r = await this.migratePartReadings(); if (!r || r.done || !r.examined) break; }
+        for (let n = 0; n < 10_000; n++) { const r = await this.migrateHeldUnread(); if (!r || r.done || !r.examined) break; }
       })().catch(() => null);
       host.waitUntil(this.#repairRun);
     }
@@ -2644,6 +2935,48 @@ export class Extraction {
         out.done = shapes.done;
         out.examined += shapes.examined;
       }
+    }
+    return out;
+  }
+
+  /** R120 (T53; N1266, N1267; RF10): once for each release, each stored reading that is held and named (`held_unread`, no unit) whose held bytes now detect a LISTED type (a
+   *  reader has arrived: `detectFormat` over the bytes' head, never the name or the declared type) is owed to the ledger as a `reading` entry, so `readHeld` replaces it with the
+   *  new reading. A reading whose type is still on no list is not owed, and its release's `reading_repairs` row says so, so it is not looked at again under the same release; a
+   *  reading whose bytes are not held is left for the next call. In digest order from the release's own cursor (its row, `r120-held-unread:<VERSION>`), in batches; counted
+   *  (`owed`, `unlisted`, `existed`, `not_held`), idempotent (a second run in the same release changes nothing); with no registrar handed in it owes nothing and stays undone;
+   *  a refusing registrar stops it where it was. It writes no bundle, register row, promotion or upload. */
+  async migrateHeldUnread({ limit = REPAIR_BATCH } = {}) {
+    const name = `${HELD_MIGRATION}:${String(this.env.VERSION ?? "")}`;
+    const st = this.#migrationState(name);
+    const out = { migration: name, done: !!st.done, examined: 0, owed: 0, unlisted: 0, existed: 0, not_held: 0, refused: null };
+    if (st.done || !this.#owe) return out;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id FROM readings WHERE capture_sha > ? AND found = 0 AND json_valid(reading) AND json_type(reading, '$.held_unread') = 'object'
+        ORDER BY capture_sha LIMIT ?`, st.after || "", cap + 1);
+    for (const r of page.slice(0, cap)) {
+      let moved = 0;
+      if (this.#heldUnread(r.capture_sha) && !this.#repairTried(r.capture_sha)) {
+        const head = await this.#heldHead(r.capture_sha).catch(() => null);
+        if (!head) { out.not_held++; this.#bumpCounts(name, { not_held: 1 }); }
+        else if (await this.#nowListed(r.capture_sha)) {
+          const a = await this.#oweVia(null).owe({ kind: "reading", sha: r.capture_sha });
+          if (!a || a.ok !== true) { out.refused = (a && a.reason) || "REGISTRAR_REFUSED"; return out; }
+          out.owed++; moved = 1;
+          if (a.existed === true) out.existed++;
+          this.#bumpCounts(name, { owed: 1, existed: a.existed === true ? 1 : 0 });
+        } else {
+          this.#markRepairTried(r.bundle_id, r.capture_sha, "unlisted");
+          out.unlisted++; this.#bumpCounts(name, { unlisted: 1 });
+        }
+      }
+      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                     r.capture_sha, moved, stampInstant("second"), name);
+      out.examined++;
+    }
+    if (page.length <= cap) {
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), name);
+      out.done = true;
     }
     return out;
   }
@@ -2833,7 +3166,7 @@ export class Extraction {
       doc = { capture: { sha256: sha, ...(size === null ? {} : { bytes: size }) } };
     }
     const got = await bytesOf(this.#evidenceOf(sha), doc).catch(() => ({ bytes: null }));
-    if (!got.bytes) return { waiting: "the capture's bytes are not held in the evidence store" };
+    if (!got.bytes) return { waiting: localize("extraction.index.migrate_bytes_not_held", "the capture's bytes are not held in the evidence store") };
     const entry = getFormat(m.format);
     if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")
       return `no ${m.format} entry is registered`;
@@ -2861,7 +3194,7 @@ export class Extraction {
         author: composed ? null : row.asserted_by ?? null, justification: composed ? null : safeJson(row.justification) ?? row.justification,
         composed });
     });
-    if (!wrote) return "the stored reading changed while it was being read again, and the newer one stands";
+    if (!wrote) return localize("extraction.index.migrate_reading_changed", "the stored reading changed while it was being read again, and the newer one stands");
     if (composed) this.recordComposed(next, sha);
     return { migrated: true, moved: next.migrated[m.key].moved };
   }
@@ -3014,7 +3347,7 @@ export class Extraction {
    *  it"), which the ledger reads by R34's rule; the answer's `reextraction` says nothing was performed or written here, which pages are owed and whether
    *  the registrar holds them. A reading with no page left owes nothing (R33). */
   async #pressOwes({ sha, basis, op, author = null }) {
-    const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
+    const cost = localize("extraction.index.press_cost", "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)");
     const pages = this.#pagesLeft(sha, basis);
     if (!pages.length)
       return { status: 200, body: { ok: true, op, sha256: sha, reextraction: { performed: false, written: false, cost, candidate: [],
@@ -3075,6 +3408,27 @@ export class Extraction {
    *  reading-pipeline R29's `{member, project?, credentials, useCheck, transcribe, at, act}`. A malformed registration
    *  is refused LISTENER_MALFORMED and a second, by any module, LISTENER_DECLARED (membership's `listenerRefusal`, its
    *  R81: the slot takes one registration whoever makes it). Everything above this layer arrives through it. */
+  /** R113 (T53; N1259; K4403 (2), (5)): `registerHeldAs(module, provider)`, once (a second is refused `LISTENER_DECLARED`, a malformed one `LISTENER_MALFORMED`):
+   *  `provider.holds(sha)` answers `{register, import}` (or `true`) for a capture it holds, a register segment. Such a capture is handed to no reading-pipeline and no
+   *  reading is written: `read`, `readHeld` and `readingFor` state its reading as `held_as_register`, never a failure and never "unread". With no provider every
+   *  capture is read as before. */
+  registerHeldAs(module, provider) {
+    const refused = listenerRefusal(this.#heldAs, module, provider && typeof provider.holds === "function" ? provider.holds : null);
+    if (refused) return refused;
+    this.#heldAs = { module, provider };
+    return { ok: true, module };
+  }
+
+  /* R113: what the provider says of a capture it holds, `{register, import}`; null for none, for no provider, and for a provider that throws. */
+  #heldAsRegister(sha) {
+    if (!this.#heldAs || typeof sha !== "string" || !sha) return null;
+    try {
+      const h = this.#heldAs.provider.holds(sha);
+      if (!h) return null;
+      return h === true ? { register: null, import: null } : { register: h.register ?? null, import: h.import ?? null };
+    } catch { return null; }
+  }
+
   registerTranscriber(module, t) {
     const refused = listenerRefusal(this.#transcriber, module, isTranscriber(t) ? t.transcription : null);
     if (refused) return refused;
@@ -3492,7 +3846,7 @@ export const DECLARED_OPS = Object.freeze({
   /* R76 amended (fix round 6, G13; K4577; K4208): `reading` takes `after`, a unit's `seq`, to page a capture's units. */
   reading: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("extraction.declared.reading", "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing"),
     fields: { accepts: ["sha256","after"], requires: ["sha256"] } },
-  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
+  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "reversible", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
     fields: { accepts: ["sha","defer"], requires: ["sha"] } },
   pdfstructure: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.pdfstructure.label.document",
     fields: { accepts: ["sha256","ocr"], requires: ["sha256"] } },

@@ -16,6 +16,7 @@ import { tier2Escalate, decodeView, LAYER_FIDELITY_SOURCE, NAMED_ENGINE_SOURCE }
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { said } from "./said.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -55,7 +56,7 @@ test("R3 R10 R11 (tier2-wire): the reading of the mixed legistar-73545 carries a
   assert.deepEqual(r.text_source, [layer(1, [6]), layer(2, [0, 1, 2, 3, 4, 5])]);
   const note = tier2Note(mergeTier2Text(await tier1(MIXED), pw.calls[0].answer.text));
   assert.ok(r.basis.includes(note), "the basis names the tier-2 note");
-  assert.match(r.basis, /merge of two decodes and its chain names the tier per page/);
+  assert.match(r.basis, said("textchain.say.push.document_text_layer"));
   assert.match(r.basis, /\(tier 2\)/);
 });
 
@@ -71,8 +72,8 @@ test("R3 R10 (tier2-wire): one tier throughout gives one unscoped layer part: le
   assert.equal(pw.calls.length, 1);
   assert.equal(rec.text_tier, 2);
   assert.deepEqual(rec.text_source, [layer(2)]);
-  assert.match(rec.basis, /3 page\(s\) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other 0 page\(s\) kept tier 1's reading/);
-  assert.doesNotMatch(rec.basis, /merge of two decodes/, "one provenance is not called a merge");
+  assert.match(rec.basis, said("textchain.say.push.page_re_read", { replaced: 3, kept: 0 }));
+  assert.doesNotMatch(rec.basis, said("textchain.say.push.document_text_layer"), "one provenance is not called a merge");
 });
 
 test("R3 (tier2-wire): the real legistar-73618 does not escalate: its undetermined markers do not outnumber its glyphs, the member is never asked, and the reading is tier 1's own layer", async () => {
@@ -202,7 +203,8 @@ test("R6 R3 R5 (tier3-layer-parts): a document reaching both merges gets the fou
   assert.deepEqual(env.OCR_WORKER.calls.map((c) => c.body.pages), [[1]], "merge two was reached, for the scan only");
   assert.equal(r.text_tier, 3);
   assert.deepEqual(r.text_source, [layer(1, [2]), layer(2, [0]), ...OCR_PART([1])]);
-  assert.match(r.basis, /1 page\(s\) were re-read by the tier-2 decoder, .*; the other 2 page\(s\) kept tier 1's reading; this document's text layer is a merge of two decodes/);
+  assert.match(r.basis, said("textchain.say.push.page_re_read", { replaced: 1, kept: 2 }));
+  assert.match(r.basis, said("textchain.say.push.document_text_layer"));
   assert.ok(r.basis.includes(scanned(1, "pages")), "R9: two pages kept their text");
 });
 
@@ -252,7 +254,7 @@ test("R3 (tier3-layer-parts): the escalation weighs glyphs, never raw characters
   const asked8 = member(() => ({ status: 500, body: { ok: false } }));
   const r8 = await readPdf(w, m8, { PDF_WORKER: asked8 });
   assert.equal(asked8.calls.length, 1);
-  assert.match(r8.basis, /the pdf-worker member answered without improving it/);
+  assert.match(r8.basis, said("reading-pipeline.tier_read_essentially_nothing"));
   const asked7 = member(() => { throw new Error("tier 2 must not be asked"); });
   await readPdf(w, m7, { PDF_WORKER: asked7 });
   assert.equal(asked7.calls.length, 0);

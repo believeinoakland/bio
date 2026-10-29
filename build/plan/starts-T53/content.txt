@@ -1,0 +1,11 @@
+Round R1, layer 4, module content, tranche T53. Your depth: 2. BOB: BOB #330 (session_018BhcedfM8dV8rPodwgBjD3).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module content`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-133 · A8 · typing graded as typist's word
+- T53-134 · DEC-454 · `content.extent` part key in words
+- T53-135 · N1259, K4403 · CAPABILITIES rows
+- T53-136 · K5565 · English in tests: its entry
+- T53-529 · text-chain's finding (R107, DEC-464) · seven tests pin the old typed grading `[owed: BOB writes its requirement line before START]`
+- rows: `build/plan/T53-R1/content.md`

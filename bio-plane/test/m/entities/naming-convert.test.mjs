@@ -9,6 +9,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 /* The one real captured document the repository holds (`test/fixtures/legistar-agenda-1425405.pdf`), as the plane's
    own Tier-1 extraction and the `meeting_agenda` reader read it: its 41 references (kind, key, label), written once
@@ -64,8 +66,7 @@ test("R17 (readingname.test.mjs) a subject nothing names answers ok with no cand
   const nobody = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Nobody At All" }).entity_id;
   const r = e.namingDocuments({ entityId: nobody, viewer: MACHINE });
   assert.deepEqual([r.ok, r.count, r.documents, r.truncated], [true, 0, [], false]);
-  assert.match(r.detail, /says nothing about whether it exists/);
-  assert.match(r.detail, /CANDIDATES, not resolutions/);
+  assert.equal(r.detail, word("entities.index.these_are_candidates_not_resolutions", { v1: "" }), "what the absence does not mean, and the answer was not cut");
 });
 
 test("R17 R9 (readingname.test.mjs) grade_if_resolved equals what resolve mints, for every candidate of every subject, the cascade that does not fall through included", () => {
@@ -100,7 +101,7 @@ test("R17 R9 (readingname.test.mjs) grade_if_resolved equals what resolve mints,
   for (const [k, g] of minted) assert.equal(predicted.get(k), g, `${k}: every minted grade was offered with that prediction`);
   const fifth = e.namingDocuments({ entityId: ids[4], viewer: MACHINE }).documents[0];
   assert.deepEqual([fifth.correspondence, fifth.grade_if_resolved], ["name", null]);
-  assert.match(fifth.detail, /stronger identifier on this same reference resolves first/);
+  assert.match(fifth.detail, wordRx("entities.index.resolving_this_document_would_record"));
 });
 
 test("R17 (readingname.test.mjs) reference-source partials on the real corpus: an alias reaching every reference is withheld and reported with its arithmetic; the one-of-41 identifier is offered, ungraded, its selectivity computed", () => {
@@ -174,7 +175,7 @@ test("R19 (readingname.test.mjs) the plan is of the joined statement R17 runs: t
   assert.match(plan, /USING (COVERING )?INDEX reading_ref_terms_term/);
   assert.ok(/reading_refs/.test(plan) && /reading_ref_terms/.test(plan), plan);
   assert.ok(!/SCAN reading_ref_terms\b/.test(plan) && !/SCAN reading_refs\b/.test(plan), plan);
-  assert.match(p.sql, /GROUP BY t\.capture_sha, t\.ref, t\.src/);
+  assert.ok(p.sql.includes("GROUP BY t.capture_sha, t.ref, t.src"));
 });
 
 test("R35 R14 R15 (meaningquery.test.mjs) the read contract's rows are what resolutionsFor and concerns answer: a grade filter over resolutions and a subject's capture set over it agree with the module's reads", () => {

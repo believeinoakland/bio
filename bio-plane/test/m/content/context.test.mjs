@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { noSha } from "../../../src/extraction/index.mjs";
 import { ATTEST_NOTE_MAX, TRANSCRIBE_CHECKS, contentOps } from "../../../src/content/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordIn } from "./wordin.mjs";
 
 const DOC = "INFO-2026-0001-a";
 
@@ -16,7 +18,7 @@ test("R42: contentContextFor: the chain, the page set (stored count first, else 
   const c = w.content.contentContextFor(a.sha);
   assert.deepEqual([c.pageCount, c.pageBoxes.of_page, Array.isArray(c.chain)], [5, [0], true]);
   assert.equal(c.container.held, false);
-  assert.match(c.container.why, /does not hold/);
+  assert.equal(c.container.why, word("content.why.record_hold_capture", { missing: c.container.empty_level, short: `${a.sha.slice(0, 12)}…` }));
   assert.equal(c.container.office, null);
   /* no stored count: the highest page a scoped step or an attestation names, plus one */
   const b = w.cap("b"); w.doc("INFO-2026-0002-b", [b]);

@@ -12,6 +12,8 @@ import { pdfStructureOp, extractionOp, EXTRACTION_OPS } from "../../../src/extra
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { unregisterFormat, registerFormat, getFormat } from "../../../src/formats.mjs";
 import { notAPdf } from "../pdf-reader/fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { wordHolesRx } from "./words.mjs";
 import { memberRefusal } from "../../../../ocr-worker/test/fixtures.mjs";
 
 /* the real OCR member declining a page it cannot read (its published fixture, K5044) */
@@ -178,8 +180,8 @@ test("R33 R103: the press reads nothing and calls no engine: a reading with no p
   const ocr = member(() => ocrAnswer([0]));
   const r = await withEntry(pdf(i2([{ page: 0, text: "all text" }])), () => f.w.x.pdfStructure({ ocr: "1", sha: f.d, viewer: "class:admin", env: { OCR_WORKER: ocr } }));
   assert.deepEqual([r.body.reextraction.performed, r.body.reextraction.written, r.body.reextraction.candidate, r.body.reextraction.owed], [false, false, [], undefined]);
-  assert.match(r.body.reextraction.cost, /per image-only page/);
-  assert.match(r.body.reextraction.why, /no page of this document lacks a text layer/);
+  assert.equal(r.body.reextraction.cost, word("extraction.index.press_cost"));
+  assert.equal(r.body.reextraction.why, word("extraction.why.page_document_lacks"));
   assert.deepEqual([ocr.calls.length, f.jobs.rows().length], [0, 0]);
   const g = await held(i2([{ page: 0, text: "", undetermined: [noText(0)] }]));
   const before2 = writes(g.w);
@@ -228,8 +230,8 @@ test("R34 R24: a re-read whose write a listener refuses is rolled back whole and
   const run = async () => (await pressThenPass(f, { OCR_WORKER: member(() => ocrAnswer([1])) })).x;
   const x = await run();
   assert.deepEqual([x.performed, x.written], [true, false]);
-  assert.match(x.why, /rolled back whole/);
-  assert.doesNotMatch(x.why, /no longer held/);
+  assert.match(x.why, wordHolesRx("extraction.why.record_reading_capture", ["act"]));
+  assert.doesNotMatch(x.why, wordHolesRx("extraction.why.record_reading_capture_written"));
   assert.equal(writes(w), before, "nothing of the refused write is kept");
   refuse = false;
   const ok = await run();

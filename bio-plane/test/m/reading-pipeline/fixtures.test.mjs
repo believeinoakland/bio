@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { storeFailedTransient } from "./fixtures.mjs";
 import { read } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc } from "./fixture.mjs";
+import { said } from "./said.mjs";
 
 test("R37 R53 R24: the published fixture storeFailedTransient is a failed reading, transient, no units, from the module's real read", async () => {
   const out = await storeFailedTransient();
@@ -13,7 +14,7 @@ test("R37 R53 R24: the published fixture storeFailedTransient is a failed readin
   assert.equal(out.text_units, undefined);
   assert.equal(out.counters.failed, 1);
   assert.equal(out.next, null);
-  assert.match(out.reading.basis, /evidence store/);
+  assert.match(out.reading.basis, said("acquisition.why.evidence_store_read"));
 });
 
 test("R37 R53 R24: control: the same capture over a store that answers is read, not failed", async () => {

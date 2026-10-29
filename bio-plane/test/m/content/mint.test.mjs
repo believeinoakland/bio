@@ -56,7 +56,7 @@ test("R12: mint refuses as R7 against the capture's context, else writes the row
     content_id: m.content_id, capture_sha: a.sha, bundle_id: DOC, extent_kind: "pdf-page",
     extent: { kind: "pdf-page", page: 2, rect: [1, 1, 5, 5] }, ref: "page 3, a region of it", chain,
     derivation_cap: "C", page_count: 4, minted_by: V("bo"), at: "2026-09-01T00:00:00Z", stale: 0, cited_as: "text",
-    chain_kind: "ocr" });
+    chain_kind: "ocr", register: null });
   /* the cap is asked of the extent: a mixed chain's text-layer page is undetermined, stated as NULL */
   const b = w.cap("b"); w.doc("INFO-2026-0002-b", [b]); w.read(b.sha, { chain: MIXED, pageCount: 3 });
   const p0 = w.content.mint({ bundleId: "INFO-2026-0002-b", captureSha: b.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: "plane" });

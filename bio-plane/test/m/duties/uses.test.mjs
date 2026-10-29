@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, E, BOB, CAROL, MACHINE, ZONE, evt } from "./fixture.mjs";
 import { DUTIES_CHECKS, NEVER_SAID, noSuchDuty, dutiesOps } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const day = (value) => ({ value, precision: "day", zone: ZONE });
 const AT = day("2026-03-01");
@@ -43,9 +44,9 @@ test("R27 usesOfPower answers the uses linked by provision (the source's portion
   /* the decider: the office itself; a person with no holding of the office held; no decider */
   assert.equal(r.items[0].decider_is_obligor, true);
   assert.equal(r.items[1].decider_is_obligor, "undetermined");
-  assert.match(r.items[1].decider_why, /^the decider is a person, and no holding of the office at the event's date is held/);
+  assert.ok(r.items[1].decider_why.startsWith(word("duties.text.decider_person_holding", { undetermined: "" })));
   assert.equal(r.placed_nowhere[0].decider_is_obligor, false, "the auditor's office is not the clerk's");
-  assert.match(r.says, /a population, not a census/);
+  assert.equal(r.says, word("duties.says.held_uses_power"));
   const text = JSON.stringify(r).toLowerCase();
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
   /* a person decider is the obligor's holder where a holding of the office at the event's date is held (lines.holderAt) */

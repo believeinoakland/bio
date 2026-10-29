@@ -84,6 +84,10 @@ Terms.
 - **R19** The module publishes `dutiesOps(duties, url, body)`, one route arm per act and read above; one append site, stamped by the control plane.
 - **R20** The duties table (`duty_id`, `modality`, `obligor`, `obligee`, `arising_in`: the capture the duty's source item rests on, else null (K1563), version, withdrawal) and the transitions table are a stated read contract on the terms of `record-core` R37 (`query-language`'s `obligor:`/`owed_to:`, `action-plans`, `strength`'s occurrence legs); every write stays this module's.
 
+**A duty keeps the layer of its rule (T53; N1257, K5458)**
+
+- **R35** (T53; N1257; K5458; amends R5, R2) **A duty from a rule keeps the rule's layer.** `proposeFromRule` (R5, `duties/index.mjs:570-580`, which takes the first deadline whose `rule` and `applies_to` match) resolves `rule` with `jurisdictions` R121 and refuses `NAME_AMBIGUOUS` with the layers; the proposal and the adopted `clause` (`time.rule`, `index.mjs:337`; stored in `duties.clause`, JSON text) keep `time.layer`, so no new column is needed. A duty adopted before the change has no `time.layer` and its rule is read over the layers active on its `adopted_at` (`jurisdictions` R121); a recorded transition is never rewritten (R14). Test: a duty adopted from the Oakland layer's rule keeps `time.layer` and its occurrences' states after a second layer gives a rule of the same name. Control: a duty adopted before the change derives the same occurrences.
+
 ## Private
 
 ### Uses
@@ -105,6 +109,8 @@ Terms.
 - `money`: cited money facts and `moneyOf` (R1, R17).
 - `jurisdictions` (not in the plan's list): the response-status vocabulary and profile deadlines (R1, R5). *(a new edge; BOB's)*
 
+- (T53) `jurisdictions`: `nameResolve` (its R121), for R35.
+
 ### Invariants
 
 - **R21** One home per fact, checked at the store's gate: a duty holds no amount; no `HYP-` id in any field; no due date is stored; a transition row is never updated or deleted.
@@ -118,6 +124,7 @@ Terms.
 - K1713 (2), (3), K1740 (T35-34). N675 and K1799 (R24's import-free file).
 - `BIO_Action_v0_2.md` rules 6, 16, 17 and §3 Standard (K2780; T45, N893): duties proposed from a reply's promises and a report's required responses (R30); the read for the once-only watch question (R31; K2781 (2)); the group's own deadlines never a body's duties (R23); a group's confirmed rule governing (R5). DEC-194 (the refusals' words by key; N913): R32.
 - Bob's rulings K1431 (basis kinds), K1466 (recorded occurrence states); BOB's K1440 as amended by K1453 (obligors; adoption), K1442 (powers), K1443 (duties always proposed), K1444 (i)–(ii), K1470.
+- (T53) N1257 (K5458): R35.
 
 ### Suggestions
 

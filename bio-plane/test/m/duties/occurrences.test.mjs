@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { world, E, BOB, CAROL, MACHINE, evt, ZONE } from "./fixture.mjs";
 import { DUTIES_CHECKS, Duties, NEVER_SAID, LEVEL_SEARCHED } from "../../../src/duties/index.mjs";
 import { OBSERVATION_LEVELS } from "../../../src/observation-log/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const row = (r, code) => {
   assert.equal(r.ok, false, `${code}: ${JSON.stringify(r).slice(0, 300)}`);
@@ -84,7 +84,7 @@ test("R10 the states: met, met_late, discharged, pending, overdue and undetermin
   const nowhere = w.declare({ trigger: { kind: "source", source: "actions" } });
   const u = occ(w, nowhere.duty_id).occurrences[0];
   assert.equal(u.state, "undetermined");
-  assert.match(u.why, /placed nowhere/);
+  assert.equal(u.why, word("duties.why.trigger_date_placed"));
   for (const o of Object.values(r)) assert.ok(typeof o.why === "string" && o.why.length > 10, o.state);
   /* pending and overdue, on the day asked */
   const fresh = world();
@@ -124,8 +124,7 @@ test("R10 a missed dependency date is a fact about sequence, never a legal deadl
   assert.deepEqual(o.due.date, day("2026-03-07"));
   assert.equal(o.due.law_set, false);
   assert.equal(o.state, "overdue");
-  assert.match(o.question, /^A fact about sequence/);
-  assert.match(o.question, /not a deadline the law sets/);
+  assert.equal(o.question, word("duties.question.fact_sequence_record", { due_words: o.due.date.value }));
   assert.equal(o.derivation.law_set, false);
   const nr = w.declare({ time: { basis: "rule", rule: "no_such_rule" } });
   const u = occ(w, nr.duty_id).occurrences[0];
@@ -148,8 +147,7 @@ test("R11 overdue is answered as a question with its derivation; met with the sa
     assert.equal(o.derivation.source_in_force.state, "in_force");
     assert.deepEqual(o.derivation.trigger_date, o.trigger.date);
   }
-  assert.match(r[X.req2].question, /^Was "respond to the records request" done by 2026-02-26\?/);
-  assert.match(r[X.req2].question, /a question, not a finding/);
+  assert.equal(r[X.req2].question, word("duties.question.record_holds_matching", { act: "respond to the records request", due_words: "2026-02-26", as_of: AS_OF.slice(0, 10) }));
   assert.equal(r[X.req1].question, undefined);
   assert.equal(over.state, "pending");
   const text = JSON.stringify(occ(w, id)).toLowerCase();

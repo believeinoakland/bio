@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
 import { kinds, phases, stages, bases } from "../../../src/money/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 import { compile, savedForm, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, DEFAULT_FACETS }
   from "../../../src/query.mjs";
 
@@ -31,7 +31,7 @@ test("R17 due and overdue are cached columns: a plan reaching either names it wi
   for (const n of notes) {
     assert.equal(n.as_of, "each action's LAST WRITE");
     assert.equal(n.authority, FIELDS[n.field].authority);
-    assert.ok(n.detail.includes(FIELDS[n.field].why) && /not the authority/.test(n.detail), n.detail);
+    assert.equal(n.detail, word("query-language.query.field_this_is_the_value", { field: n.field, asOf: n.as_of, why: FIELDS[n.field].why, authority: n.authority, via: n.via.join(" and "), v1: n.via.length > 1 ? "are" : "is" }), n.detail);
   }
   /* Every route into either column is caught: under NOT, in a range, through has:, as a sort token. */
   for (const [q, col, via] of [["-overdue:false", "overdue", "filter"], ["has:due", "due", "filter"],
@@ -294,7 +294,7 @@ test("R28 a money field's word outside money's closed list is dropped with a war
     }
     for (const bad of ["nope", "revenue!", "paid ", list]) {
       const p = compile({ q: `water ${f}:"${bad}"`, viewer: V }, second);
-      assert.deepEqual(p.warnings, [`${f}: ${JSON.stringify(bad)} is not one of money's ${list} (${MONEY[list]().join(", ")}); dropped`], bad);
+      assert.deepEqual(p.warnings, [word("query-language.query.name_stringify_is_not_one", { name: f, stringify: JSON.stringify(bad), words: list, words_2: MONEY[list]().join(", ") })], bad);
       assert.deepEqual(p.drops, p.warnings);
       assert.deepEqual(everyStatement(p), everyStatement(compile({ q: "water", viewer: V }, second)), `${f}:${bad} widens`);
       assert.deepEqual(runIds(w, { q: `water ${f}:"${bad}"` }, second), ["B1", "B2", "B3", "PR"]);

@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, entry } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { OBSERVATION_AUTHORITY_KINDS, checkObservation } from "../../../src/observation-log/index.mjs";
 
 const look = (over = {}) => entry({ authority_kind: "step", authority: "STP-2026-0001", level: "internet",
@@ -11,8 +12,9 @@ const found = (over = {}) => look({ authority_kind: "acquire", authority: "INFO-
   state: "PRESENT", result_kind: "capture", result_ref: "c".repeat(64), ...over });
 
 test("R1 R2 authority kind `step` is in the vocabulary with its sentence and is appended; a kind outside it is still refused C-22.9 (negative control)", () => {
-  assert.match(OBSERVATION_AUTHORITY_KINDS.step, /step .* question/);
-  assert.doesNotMatch(OBSERVATION_AUTHORITY_KINDS.step, /the plane|this instance|the instance|copy|server/);
+  assert.equal(OBSERVATION_AUTHORITY_KINDS.step, word("observation-log.step"));
+  for (const banned of ["the plane", "this instance", "the instance", "copy", "server"])
+    assert.equal(OBSERVATION_AUTHORITY_KINDS.step.includes(banned), false, banned);
   assert.equal(checkObservation(look()), null);
   const w = world();
   assert.equal(w.obs.observe(look()), null);
@@ -20,7 +22,7 @@ test("R1 R2 authority kind `step` is in the vocabulary with its sentence and is 
   for (const k of ["steps", "STEP", "stp"]) {
     const r = w.obs.observe(look({ authority_kind: k }));
     assert.equal(r.check, "C-22.9", k);
-    assert.match(r.translation, /a step taken for a question/);
+    assert.equal(r.translation, word("refusal.OBS_AUTHORITY_UNNAMED"), k);
   }
   assert.equal(w.count("observation_log"), 1, "a refused entry writes nothing");
 });

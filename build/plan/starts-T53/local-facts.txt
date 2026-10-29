@@ -1,0 +1,10 @@
+Round R1, layer 5, module local-facts, tranche T53. Your depth: 2. BOB: BOB #332 (session_018BhcedHXTmWvkcQG9t9wzP).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module local-facts`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-144 · N1257 (K5451) · a team writes its own layers
+- T53-145 · A2 (K5468) · member states a government's year
+- T53-146 · N1257, K5458 · CAPABILITIES rows
+- T53-542 · K5650, jurisdictions R99, R114 · read a fact's `layer` as well as `profile`
+- rows: `build/plan/T53-R1/local-facts.md`

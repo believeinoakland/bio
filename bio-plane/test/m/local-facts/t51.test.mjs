@@ -207,7 +207,7 @@ test("R19 the confirmer's statement is in no other read, and no row of a viewer 
   confirm(r, { statement: QUAL });
   const row = w.lf.groupRules({ viewer: V("dan") }).rules[0];
   assert.equal(row.statement, QUAL, "answered with the rule, to a member");
-  assert.deepEqual(Object.keys(row).sort(), ["applies_to", "confirmed_at", "confirmer", "drafted_at", "drafter", "entry", "reason", "rule", "section", "source", "state", "statement", "tier"]);
+  assert.deepEqual(Object.keys(row).sort(), ["applies_to", "confirmed_at", "confirmer", "drafted_at", "drafter", "entry", "layer", "reason", "rule", "section", "source", "state", "statement", "tier"]);
   for (const viewer of ["nobody", "class:ai", undefined]) assert.deepEqual(w.lf.groupRules({ viewer }), { ok: true, rules: [], count: 0 });
   const other = [w.lf.governingView(), w.lf.ruleOffer({ rule: r, viewer: V("dan") }), w.lf.factStatus({ viewer: V("dan") }), w.lf.factsDue({ viewer: V("dan") }),
                  w.lf.ruleFields({ section: "deadlines", viewer: V("dan") }), w.lf.ruleFields({ section: "legal_facts", viewer: V("dan") }),

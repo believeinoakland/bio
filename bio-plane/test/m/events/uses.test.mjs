@@ -203,7 +203,7 @@ test("R46 usesOf answers held uses not withdrawn, filtered by provision (any por
   assert.deepEqual(all.items.map((e) => e.event_id), [jan, feb, mar], "R31's order; the withdrawn use and the plain event left out");
   assert.deepEqual(all.placed_nowhere.map((e) => e.event_id), [nowhere]);
   assert.equal(all.count, 4);
-  assert.match(all.population, /never every use made: a population, not a census/);
+  assert.equal(all.population, word("events.population"));
   assert.ok(all.items.every((e) => e.use && Array.isArray(e.participants)), "each item the event with its facet and participants");
   assert.deepEqual(ids(q({ provision: { standard: "STD-2026-0001" } })), [jan, feb, nowhere], "no portion: every portion");
   assert.deepEqual(ids(q({ provision: { standard: "STD-2026-0001", portion: "§9" } })), [feb]);

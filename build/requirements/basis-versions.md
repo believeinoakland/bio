@@ -82,6 +82,11 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 
   A refusal from `fn` refuses the act unchanged and nothing is written. A `fn` that throws or answers anything else is refused through `inquiry.machinePassageUnchecked` (its R62). A machine's own `suggested` version (R28; `run-productions` R4) is never asked. (K2652) Each leg is handed as inquiry R62's shape plus its `version` (`ord` its row in `basis_version_legs`, a field absent when the row lacks it); the accept arm is any promotion by a non-machine that moves a held machine-authored version to `accepted` (so a raw `op=promote` is asked as `versionAccept` is), and a `preview` (R14) asks `fn` directly; only a machine identity is exempt, a blank author is asked, and a replay is not asked. With nothing registered, no leg is refused by this rule.
 
+#### T53 additions
+
+- **R59** (T53; DEC-464; amends R9, R10) *(not yet met: T53)* **A leg on a typing says who typed and checked it, as of the reading and as of now.** In `basisVersions` each leg whose content row is a member's typing carries `typed_at_freeze: {typist, checked_by: [{checker, at}], label_key}` and `typed` (content R64's block now). The first is the state at the version's `at`: only members other than the typist whose attestation is at or before it; `label_key` is `content.typed.frozen.unchecked` or `.checked`, keys this module owns (the words are the design stream's), read by `case-disclosures` R39 (a later module), and for `typed` R64's live keys. Names are the team's handles (inside the team no credit choice applies; case-disclosures R38 does so in a published edition). Derived at the read from content; nothing stored in the version (R29, R7 unchanged). Test: version written, then a check: `typed_at_freeze.checked_by` `[]`, `typed` lists her; a version written after lists her in both. Control: a machine-read leg has neither; `composition` unchanged by the check.
+- **R60** (T53; DEC-464; amends R10, R55) *(not yet met: T53)* **A later check changes no frozen composition and is no difference between readings.** The leg's grade in `legs[]` follows the record (leg-earning R19); `composition_grades` stays `authored`; R55's `legs` dimension compares as before, so a check between two readings makes no dimension differ. Test: two readings citing one typing, before and after its check: `legs` `same: true`, `typed_at_freeze` differ. Control: another typing or extent differs.
+
 ## Private
 
 ### Uses
@@ -97,6 +102,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - `extraction`: the `readings` and `reading_refs` read contract (R25). *(not declared)*
 - `entities`: the `resolutions` read contract (R25). *(not declared)*
 - `accepted-work` (N522): `acceptedLegRefusals` (its R3), for R3. Index 44 is before 47.
+- `content` (T53; A8): R64's block (the typist, each checker and the first instant of each checker's attestation, kept), for R59: `typed_at_freeze` is derived at the read from it; if the instant is not kept, it is undetermined for that checker and says so, never filled. `leg-earning` (T53): R19, the record's grade of a typed leg, for R60.
 
 ### Invariants
 

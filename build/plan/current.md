@@ -1,7 +1,7 @@
-**Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
+**Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 4 CLOSED · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
-**Status** · OPEN · BOB #330 · session_018BhcedfM8dV8rPodwgBjD3 · depth 1
-**Jobs** · none
+**Status** · OPEN · BOB #334 · session_018BhcegbvLHhXeZARZh5PyC · depth 1
+**Jobs** · entities: ENTITIES #1 session_018BhcegLAJHLFmviGpxX2jK; events: EVENTS #1 session_018BhcegSHPdmVWCkrzGKZwR; local-facts: LOCAL-FACTS #1 session_018BhcedSE6M2T5swdLzFC13; connections: CONNECTIONS #1 session_018BhcegFwJCkdsgDuz48E3E; observation-log: OBSERVATION-LOG #1 session_018BhcecurEFLMTnAtT6vbUk; law-relations: LAW-RELATIONS #1 session_018Bhcef45tY22jRGKXzGfRR; standards: STANDARDS #1 session_018BhceeaibBmzLUp9ntjA2V; progressions: PROGRESSIONS #1 session_018BhcefkfuJhoEDmxX32LxQ; money: MONEY #1 session_018Bhcedpyp5s6ggLLpKC8dX; money-checks: MONEY-CHECKS #1 session_018BhceeqTMutDs3sqW7g4pV; duties: DUTIES #1 session_018BhcefuyFQ7MjUduiZCHQX; people: PEOPLE #1 session_018BhceeUeyPyw2FjATLUTpr; explore: EXPLORE #1 session_018BhcecCDCpuTthEgNRVFXA; bias: BIAS #1 session_018Bhceenr6bqqxmUZKHmLrE; query-language: QUERY-LANGUAGE #1 session_018BhcegBwStEWaxuJ9S9vfM; retrieval-browse: RETRIEVAL-BROWSE #1 session_018BhcegVXrafdQJ57Sgph3h; retrieval: RETRIEVAL #1 session_018BhcecFW8tvVxtjMi8XpWv; calculations: CALCULATIONS #1 session_018BhceeSbhNof9BnUV5osj4; workbooks: WORKBOOKS #1 session_018BhcedNCFBDfPRY1SLbuns; registers: REGISTERS #1 session_018BhcefB3LYfRFSuNnkEkMu
 **Owed** · none
 
 # Plan T53 · round R1, the beta's build
@@ -24,31 +24,8 @@ Closed (layer close 67352bb1ba); its entries moved whole to `build/plan/archive/
 Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/T53-R1-layer3-merged.md`.
 
 ## Layer 4
+Closed (layer close a2af7e83bf); its entries moved whole to `build/plan/archive/T53-R1-layer4-merged.md`.
 
-**calibration**
-- T53-123 · K5565 · English in tests: its entry
-- rows: `build/plan/T53-R1/calibration.md`
-**reading-pipeline**
-- T53-124 · N1266, N1267 · 100 MB text bound, held-unread re-run `[owed: BOB writes the 100 MB line, RF10's]`
-- T53-125 · N1272 · CAPABILITIES rows
-- T53-126 · DEC-479 (51) · count of words below the reader's own clarity
-- T53-127 · K5565 · English in tests: its entry
-- T53-528 · format-registry's finding · the 14 tests and their five sites
-- rows: `build/plan/T53-R1/reading-pipeline.md`
-**extraction**
-- T53-128 · N1272 (K5445) · interpretation, own proposals (no AI)
-- T53-129 · N1266, N1267 · 100 MB text bound, held-unread re-run `[owed: BOB writes the 100 MB line, RF10's]`
-- T53-130 · N1272, K4636, K5445 · CAPABILITIES rows
-- T53-131 · DEC-479 (61) · `readheld` weighs Reversible, no reason
-- T53-132 · K5565 · English in tests: its entry
-- rows: `build/plan/T53-R1/extraction.md`
-**content**
-- T53-133 · A8 · typing graded as typist's word
-- T53-134 · DEC-454 · `content.extent` part key in words
-- T53-135 · N1259, K4403 · CAPABILITIES rows
-- T53-136 · K5565 · English in tests: its entry
-- T53-529 · text-chain's finding (R107, DEC-464) · seven tests pin the old typed grading `[owed: BOB writes its requirement line before START]`
-- rows: `build/plan/T53-R1/content.md`
 ## Layer 5
 
 **entities**
@@ -61,7 +38,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-141 · N1259 · CAPABILITIES rows
 - T53-142 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-143 · K5565 · English in tests: its entry
-- T53-530 · court-doctypes' finding (N1259-c R38, R29) · `followedRegister` takes only three keys and keys an event by content type `[owed: BOB confirms N1259-c R38's keys before START]`
+- T53-530 · court-doctypes' finding (N1259-c R38, R29) · `followedRegister` takes only three keys and keys an event by content type `[written: K5732: events R58]`
 - rows: `build/plan/T53-R1/events.md`
 **local-facts**
 - T53-144 · N1257 (K5451) · a team writes its own layers
@@ -72,6 +49,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 **connections**
 - T53-147 · N1260 (K1469) · `named_in` hop end and hub `[waits: M-F1]`
 - T53-148 · K5565 · English in tests: its entry
+- T53-587 · N1200 (K5747) · registers its reader of a project's reach (the records it cites) through `membership.registerProjectReach`, so a run fenced to its project (N1186) also reads them
 - rows: `build/plan/T53-R1/connections.md`
 **observation-log**
 - T53-149 · N1219 · run log carries reads and disagreements
@@ -104,7 +82,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/people.md`
 **explore**
 - T53-162 · N1260 (DEC-409) · every chain, shorter paths, time stop
-- T53-163 · N1260 (DEC-447) · `followfrom`
+- T53-163 · N1260 (DEC-447) · `followfrom` `[moved: affordances T53-605, K5786]`
 - T53-164 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-165 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/explore.md`
@@ -173,6 +151,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 **run-rules**
 - T53-192 · K5457 · bar per AI and part, `GATE_PART_OF`
 - T53-193 · K5565 · English in tests: its entry
+- T53-601 · observation-log's report (K5786) · its tests pin the C-22 set: add C-22.32 `OBSERVATION_FIELD_MALFORMED` and C-22.33 `OBSERVATION_FIELD_NOT_ALLOWED` (table.test.mjs R11, t46.test.mjs:120 R30)
 - rows: `build/plan/T53-R1/run-rules.md`
 **agent-harness**
 - T53-194 · K5457 · `ROLE_NEEDS`, `needOf`, `partOf`
@@ -192,8 +171,9 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 **ai-runs**
 - T53-203 · K5457 · `principal_ai`, Gate 1 per part, segments, hops, ops
 - T53-204 · N1219, DEC-466 · reads passed through, `airunparts`
-- T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick `[owed: BOB writes]`
+- T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick `[written: K5748: ai-runs R106]`
 - T53-206 · K5565 · English in tests: its entry
+- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; R29's column list names them
 - rows: `build/plan/T53-R1/ai-runs.md`
 **run-productions**
 - T53-207 · K5571 · agent-steps R54's idem obligations get lines (6)
@@ -208,7 +188,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-212 · N1257 · guides side by side per layer
 - T53-213 · N1257, N858, K5508 · CAPABILITIES rows
 - T53-214 · K5565 · English in tests: its entry
-- T53-531 · jurisdictions R126 (N858) · check that the guide offer calls `attributionLacks` `[owed: BOB writes its requirement line before START]`
+- T53-531 · jurisdictions R126 (N858) · check that the guide offer calls `attributionLacks` `[written: K5748: reading-guides R19]`
 - rows: `build/plan/T53-R1/reading-guides.md`
 **skills**
 - T53-215 · K5565 · English in tests: its entry
@@ -387,10 +367,10 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/action-replies.md`
 **filing-templates**
 - T53-300 · N1257 · R36 places may name layers
-- T53-301 · K5528 · `attributionLacks`, `second_approval` `[owed: BOB writes]`
+- T53-301 · K5528 · `attributionLacks`, `second_approval` `[written: K5748: filing-templates R38]`
 - T53-302 · K5528 · CAPABILITIES rows
 - T53-303 · K5565 · English in tests: its entry
-- T53-532 · jurisdictions R126 · R15 and R35 against R126 `[owed: BOB rewords R15 and R35 to cite R126 before START]`
+- T53-532 · jurisdictions R126 · R15 and R35 against R126 `[written: K5748: R15, R35 cite R126]`
 - rows: `build/plan/T53-R1/filing-templates.md`
 **filings**
 - T53-304 · K5527 (4) · R29 template `sha` equals counted review
@@ -440,18 +420,20 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - C T52-36
 - T53-320 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-321 · K5565 · English in tests: its entry
+- T53-607 · money's report (K5786) · t47.test.mjs:143 names `money_flow`: read as money's five `money_*` kinds
 - rows: `build/plan/T53-R1/wizard-scripts.md`
 **op-grades**
 - T53-559 · K5693, doorbell R31 · `inboxview` graded (a read)
 - T53-322 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-323 · N1220 · every machine result labelled with its AI
-- T53-324 · BOB · R57 AI op grades confirmed `[owed: BOB writes]`
+- T53-324 · BOB · R57 AI op grades confirmed `[written: K5748: op-grades R57 checked against draft §4]`
 - C T52-37
 - C T52-38
 - T53-325 · K4168, N824, N858 · CAPABILITIES rows
 - T53-326 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-327 · K5565 · English in tests: its entry
 - T53-565 · mail-door R12 · the member acts `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` graded from mail-door's `DECLARED_OPS`
+- T53-604 · K5786 · grades for `eventwithdraw`, `moneyby` and `moneyfiscalyears`
 - rows: `build/plan/T53-R1/op-grades.md`
 **affordances**
 - T53-328 · N1260 (DEC-447) · "Follow from here" in this module
@@ -459,6 +441,8 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-329 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-330 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-331 · K5565 · English in tests: its entry
+- T53-605 · DEC-447 (moved from explore T53-163, K5786) · `followfrom`
+- T53-606 · money's report (K5786) · `money_flow` in words.mjs:39 and :57, R72 and t48.test.mjs read as money's five `money_*` kinds; `moneyby` and `moneyfiscalyears` carried (t33 R12 R24)
 - rows: `build/plan/T53-R1/affordances.md`
 **tasks**
 - C T52-40
@@ -512,13 +496,14 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-355 · K4599 · `screenread`, budget class per op
 - T53-356 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
 - T53-357 · N1220 · every machine result labelled with its AI
-- T53-358 · BOB · R90 AI op grades confirmed `[owed: BOB writes]`
+- T53-358 · BOB · R90 AI op grades confirmed `[written: K5748: op-declarations R90 checked against draft §4]`
 - C T52-42
 - T53-359 · K4168, N824, N858 · CAPABILITIES rows
 - T53-360 · K4354, P24 · `heldcaptures` out of each screen's first wave
 - T53-361 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-362 · K5565 · English in tests: its entry
 - T53-567 · mail-door R12 · mail-door's five member acts declared from its `DECLARED_OPS` (member session only)
+- T53-603 · events R61, money R39-R40, calculations R53 (K5786) · rows for `eventwithdraw`, `moneyby` and `moneyfiscalyears`; the calculations family's `extra` becomes `{ spotcheckvisit: ["by"], calculationcreate: ["owner"], calculationevaluate: ["owner"] }`
 - rows: `build/plan/T53-R1/op-declarations.md`
 **admission**
 - T53-363 · N1264 · `admit` in the room, parity
@@ -553,6 +538,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-534 · court-doctypes' finding · `wiring.mjs:28` registers the court API types
 - T53-576 · K5705, file-safety R1, R60 · the `safe_view` job is registered for `.png`/`.jpg` names, as file-safety R1's name rule reads them
 - T53-578 · K5715, capture R119 · `r9-jobs.test.mjs`:481 (R75 R2) uploads a 200 MiB file named `.pdf`, now `TOO_LARGE` under a document's 100 MB bound: its input is a kind with the archive bound (a `.zip`)
+- T53-593 · connections' report (T53-587) · drop the plane's own `connections` project-reach registration (`assemble.mjs` R58, `wiring.mjs` `projectReachReaders`): `connections` now registers itself through `membership.registerProjectReach`, and a second registration is refused `LISTENER_DECLARED`
 - rows: `build/plan/T53-R1/store-assembly.md`
 **store-request**
 - C T52-48
@@ -602,6 +588,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-399 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-400 · K5457 · off the retired AI ops (FOLD-AI §2.8)
 - T53-401 · K5565 · English in tests: its entry
+- T53-608 · local-facts' report (R29, K5786) · R45's test reads `factStatus` by the layer's path, as local-facts R29 now names it, not `factStatus({})` for `<package>/time_zone`
 - rows: `build/plan/T53-R1/screens-settings.md`
 **screens-ai**
 - T53-402 · N1220 (DEC-420) · seven AI screens `[waits: UX-DESIGN's rows, B555]`
@@ -609,10 +596,11 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-404 · DEC-466 · labels name the AI; Setup states
 - T53-405 · K5459 · `aiusebymember`
 - T53-406 · DEC-475, DEC-476 · results, health share, re-test, wait-then-switch
-- T53-407 · BOB · a drawer for `aiuseovertime`'s bars `[owed: BOB writes]`
+- T53-407 · BOB · a drawer for `aiuseovertime`'s bars `[written: K5748: screens-ai R15]`
 - rows: `build/plan/T53-R1/screens-ai.md`
 **screens-intake**
 - T53-408 · N1269 (K5446) · largest file stated; over-limit refused, a way in
+- T53-585 · PLATFORM P-29, P-30 (K5733, K5735) · after a failed upload or promote (a quick 5xx) the Add door says whether the file was kept (after a promote failure it is held, no document made) and offers a retry; today it names the fault only
 - T53-409 · K5425 (b) · fixtures-run line 27 orphan: marker or delete
 - T53-410 · A3, DEC-454-456 · R72, R73, display rows `[waits: design's row, r9-states R65]`
 - T53-411 · K5574, K5575 · hand-off: Queue item with the link; her file matched by address
@@ -646,7 +634,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-425 · A1 · subject at opening and its change
 - T53-426 · A7 · the pickers
 - T53-427 · N1260 · "Follow from here" outside Document
-- T53-428 · BOB · retire its `projectai` mention, follow screens-settings R9 (a CHANGE) `[owed: BOB writes]`
+- T53-428 · BOB · retire its `projectai` mention, follow screens-settings R9 (a CHANGE) `[written: K5748: R14, R37 retired, R153]`
 - C T52-66
 - C T52-67
 - C T52-68
@@ -665,7 +653,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-436 · N1260 · "Follow from here"
 - T53-437 · DEC-454, DEC-467 · display rows; held, refused, converted
 - T53-438 · DEC-474 · chips drawn on `ceiling`
-- T53-439 · BOB · R1-R57 marked not yet met (T53), tests moved by its job `[owed: BOB writes]`
+- T53-439 · BOB · R1-R57 marked not yet met (T53), tests moved by its job `[written: K5748: screens-document R1-R57 marked]`
 - C T52-66
 - C T52-67
 - C T52-70
@@ -740,6 +728,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-546 · K5655 · `g41.probe.mjs` sizes its xlsx cases from `boundOf('xlsx', 'declared_text')` (25 MB), not 150,000/200,000 rows
 - T53-569 · mail-door R12 and its composition note · composes `mailDoorOf(ctx, {capture, settings})`, `settings()` from instance-setup R114 (the mail domain and switch); the `email()` export waits on M1 (K5692 (3))
 - T53-579 · K5715, acquisition R130, R136; capture R117 · wires `store.followStanding`, a `member` row's tick calling `fileMember(store, row.detail)`, and `emailCapture`'s attachments registered with `memberRow(...)`
+- T53-584 · K5726, content R64 · composes content's `creditOf({member, row})` resolver from the module that holds the attribution levels (DEC-102), so a typed row names its typist only as credited
 - rows: `build/plan/T53-R1/plane.md`
 **installer-steps**
 - T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
@@ -759,7 +748,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - T53-482 · K5443 · whole-record import, the one way to move
 - T53-483 · DEC-466 U5, K5471 (2) · AI gateway's two permissions `[first: settle "AI Gateway - Edit" or "Read", Secrets Store scope]`
 - T53-484 · K5471 (5) · read-only Logs scope `[first: Bob's act registering it]`
-- T53-485 · N1265 · check and gate; R2 scopes `[owed: BOB settles the count]`
+- T53-485 · N1265 · check and gate; R2 scopes `[written: K5748: installer R2, installer-steps R45]`
 - C T52-93
 - C T52-94
 - C T52-95
@@ -794,6 +783,7 @@ Closed (layer close d78afbef0b); its entries moved whole to `build/plan/archive/
 - rows: `build/plan/T53-R1/journey-check.md`
 **load-check**
 - T53-501 · N1274 · `runProfile`, `seedCopy`, `report`
+- T53-590 · K5350, K5747 · `deploy-test.yml` refuses a copy without a store and never re-points the shared `agent-worker`; a fresh copy goes through the installer (`seedCopy`'s route)
 - rows: `build/plan/T53-R1/load-check.md`
 
 ## Measurements

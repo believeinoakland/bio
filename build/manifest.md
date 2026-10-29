@@ -68,6 +68,10 @@ Bob's design of the investigation engine and the project as an investigation (K1
 
 AI-DESIGN, PLATFORM (which carries the former PERFORMANCE lane's scope), CAPABILITIES, FILES, JOURNEYS, TESTS-SWEEP and PLANNING: their rules, scopes, branches, folders and current sessions are in `build/plan/beta/LANES.md` (§3 the sessions), the needs between them in `build/plan/beta/MAP.md`. BOB reads each lane's `HANDOFF.md` section 0 at takeover and at every backstop check and merges each lane's folder into the tranche. The earlier lane sessions (AI-DESIGN #1, JOURNEYS #3, PERFORMANCE #3) are superseded by these.
 
+## Parallel work: the process repair (Bob, 2026-10-28; K5791)
+
+The PROCESS-REPAIR lane builds and certifies the fixes of Bob's analysis "Civicsmith Merge Slowdown" with his four answers (K5791): first aid, then a GitHub merge queue, generated files and screenshots out of git (screenshots to R2, deleted once a walk is analyzed). Its charter and `HANDOFF.md` are in `lane-process-repair/` on civicos-process branch `lane/process-repair`; BOB reads section 0 at takeover and each backstop check and merges each certified phase. Product work waits on it. Current: **PROCESS-REPAIR #1**, `session_018Bhced86RzzxLW63fnTCmx` (started by BOB #333).
+
 ## Parallel work: the process redesign (Bob, 2026-10-26; K5334; ended K5351)
 
 The PROCESS-REDESIGN lane designed, built and certified the redesigned process, now in use (civicos-process `main`); its record is `lane-process-redesign/HANDOFF.md` there (R1-R17). It ended once T51b R1 ran clean on the process (#3 `session_016AUJRfwhxT75qBeN33AT57` archived; #2 left idle, K5344). Its last work, R14 (test runs that name a missing result's cause, the memory watch, `proc tests`), is civicos-process PR #13, merged by BOB at T52's open (`next.md`). A new process fault goes to BOB, or to a lane BOB restarts.

@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, infoMd } from "./fixture.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { SELECTION_CHECKS, SELECTION_TTL_MS, SELECTION_MAX_ITEMS, SELECTION_MAX_PER_OWNER, SELECTION_ID_CHUNK, answerChanged }
   from "../../../src/retrieval/index.mjs";
 import { listenerRefusal, MODULE_ORDER, hiddenBundles } from "../../../src/membership/index.mjs";
@@ -119,7 +120,7 @@ test("R19: an enumeration is re-resolved under the current viewer — hidden and
   const swapped = w2.retrieval.selectionResolve({ handle: q.handle, owner: "o", viewer: V("vera") });
   assert.deepEqual([swapped.n, swapped.snapshotN, swapped.moved, swapped.drift.added, swapped.drift.removed, swapped.drift.digestChanged],
     [2, 2, false, 0, 0, true]);
-  assert.match(swapped.drift.detail, /which rows moved is not recoverable/);
+  assert.equal(swapped.drift.detail, WORD("retrieval.index.drift_criterion_moved"));
 });
 
 test("R20, R31: with weight refuse an answer that changed is SET_MOVED (C-33.32) with no members — a moved row, or a query whose digest changed at a constant count; with report the members are given with the drift", async () => {

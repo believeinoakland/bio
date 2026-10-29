@@ -119,7 +119,7 @@ test("R3 declareRelation refuses in order UNKNOWN_RELATION, NO_ENDS, SELF_RELATI
   const b = e.createEntity({ note: "a subject the test registers", kind: "body", label: "B" }).entity_id;
   const u = e.declareRelation({ relation: "A", fromEntity: a, toEntity: b, justification: "j", citation: "c" });
   assert.equal(u.reason, "UNKNOWN_RELATION");
-  assert.match(u.detail, /grade is NOT a relation/i);
+  assert.equal(u.detail, word("entities.index.a_declared_relation_is_one", { RELATION_KINDS: RELATION_KINDS.join(", ") }));
   for (const k of RELATION_KINDS) assert.ok(u.detail.includes(k));
   assert.equal(e.declareRelation({ relation: "member_of", fromEntity: a }).reason, "NO_ENDS");
   assert.equal(e.declareRelation({ relation: "member_of", fromEntity: a, toEntity: a }).reason, "SELF_RELATION");
@@ -173,8 +173,8 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   const got = e.readEntity({ entityId: a });
   assert.equal(got.found, true);
   const ent = got.entity;
-  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "confirmed_at", "confirmed_by", "contact", "declared_by", "defect_count", "defects",
-    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "law", "limit", "named_by_member", "note", "proceeding",
+  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "body", "built_in", "confirmed_at", "confirmed_by", "contact", "declared_by", "defect_count", "defects",
+    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "law", "law_layer", "layer", "limit", "named_by_member", "note", "proceeding",
     "relations", "relations_limit", "relations_truncated", "sector", "sector_history", "sector_history_truncated"]);
   assert.deepEqual([ent.sector, ent.sector_history, ent.identifiers, ent.proceeding, ent.forum_kind], [null, [], [], null, null], "an office: no sector, no identifier, no facet, no forum kind");
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { read } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry, i2, folio } from "./fixture.mjs";
+import { said } from "./said.mjs";
 
 const line = (i) => `line ${String(i).padStart(6, "0")} ` + "council-minutes ".repeat(5).padEnd(87, ".");
 const readOf = (b, document, o = {}) => read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", ...o });
@@ -106,9 +107,9 @@ test("R29 R6 (K4909): the transcription sentence counts only the pages that gain
   await withEntry({ format: "pdf", detect: () => null, structure: async () => ({ ok: true, pages: 3, text: i2(pages) }) }, async () => {
     const out = await readOf(b, doc({ digest: d, bytes: 13, ct: "application/pdf", format: "pdf" }), { env: { OCR_WORKER: ocr } });
     const basis = out.reading.basis;
-    assert.match(basis, /\b2 scanned page\(s\) were transcribed/);
-    assert.doesNotMatch(basis, /\b3 scanned page\(s\) were transcribed/);
-    assert.match(basis, /1 page\(s\) \(2\) could not be read by text recognition|1 page\(s\) \(page 2\) could not be read by text recognition/);
+    assert.match(basis, said("reading-pipeline.scanned_page_transcribed", { filled: 2 }));
+    assert.doesNotMatch(basis, said("reading-pipeline.scanned_page_transcribed", { filled: 3 }));
+    assert.match(basis, said("reading-pipeline.index.pages_not_read_text_recognition", { count: 1 }));
   });
 });
 

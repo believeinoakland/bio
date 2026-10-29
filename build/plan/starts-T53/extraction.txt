@@ -1,0 +1,11 @@
+Round R1, layer 4, module extraction, tranche T53. Your depth: 2. BOB: BOB #330 (session_018BhcedfM8dV8rPodwgBjD3).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module extraction`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-128 · N1272 (K5445) · interpretation, own proposals (no AI)
+- T53-129 · N1266, N1267 · 100 MB text bound, held-unread re-run `[owed: BOB writes the 100 MB line, RF10's]`
+- T53-130 · N1272, K4636, K5445 · CAPABILITIES rows
+- T53-131 · DEC-479 (61) · `readheld` weighs Reversible, no reason
+- T53-132 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/extraction.md`

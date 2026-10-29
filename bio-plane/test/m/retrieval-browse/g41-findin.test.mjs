@@ -10,6 +10,7 @@
  * fit in a row. The rest drive the reading's `cells_held` as the readers state it (reading-pipeline R28's emitted field). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { world, V, sha } from "./fixture.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
 import { bucket, doc } from "../extraction/fixture.mjs";
@@ -58,7 +59,7 @@ test("R8 (G41, K4636) through the op over the real extraction: a term in the las
   assert.equal(it.extent.kind, "sheet-range");
   assert.equal(it.extent.sheet, it.sheet);
   assert.equal(it.cells, null);
-  assert.match(it.cells_why, /interpreted for a range when the sheet is opened or cited/);
+  assert.equal(it.cells_why, WORD("retrieval-browse.findin.cells_held_why"));
   assert.ok(it.words.includes("LASTROWMARK"));
 });
 
@@ -70,7 +71,7 @@ test("R2 (G41, K4636) through the op over the real extraction: `money` over a he
   const hit = money.items.find((i) => i.as_read === "$42");
   assert.ok(hit, "the amount in the last row is found in the sheet's text");
   assert.equal(hit.cells, null);
-  assert.match(hit.cells_why, /interpreted for a range/);
+  assert.equal(hit.cells_why, WORD("retrieval-browse.findin.cells_held_why"));
 });
 
 test("R8 (G41) control, through the op over the real extraction: a small CSV's cells are listed, so a term hit names its row and cells as before", async () => {
@@ -104,11 +105,11 @@ test("R8 (G41): a term hit in a held sheet's block of many rows names the block,
   const items = (term) => kindOf(find(w, { scope: { capture: cap.sha }, kinds: ["term"], term }), "term").items;
   const [block] = items("alpha");
   assert.deepEqual([block.sheet, block.extent, block.cells, block.row], ["data", range("data", "A1:D500"), null, null]);
-  assert.match(block.cells_why, /interpreted for a range when the sheet is opened or cited/);
-  assert.doesNotMatch(block.cells_why, /holds no typed cells/);
+  assert.equal(block.cells_why, WORD("retrieval-browse.findin.cells_held_why"));
+  assert.notEqual(block.cells_why, WORD("retrieval-browse.findin.no_cells_named"));
   const [one] = items("omega");
   assert.deepEqual([one.extent, one.cells, one.row], [range("data", "A501:D501"), null, 501]);
-  assert.match(one.cells_why, /opened or cited/);
+  assert.equal(one.cells_why, WORD("retrieval-browse.findin.cells_held_why"));
 });
 
 test("R8 R2 (G41): a held sheet is read whole by `money` and `dates` from its rendered text, each hit saying its cells are not listed; a sheet the reading lists cells for is still read by its cells", () => {
@@ -119,7 +120,7 @@ test("R8 R2 (G41): a held sheet is read whole by `money` and `dates` from its re
   const dates = kindOf(find(w, { scope: { capture: cap.sha }, kinds: ["dates"] }), "dates");
   assert.deepEqual([money.not_read, money.items.map((i) => i.as_read)], [[], ["$42"]]);
   assert.deepEqual(dates.items.map((i) => [i.date, i.cells, i.row]), [["2026-03-05", null, null]]);
-  assert.ok([...money.items, ...dates.items].every((i) => /opened or cited/.test(i.cells_why)));
+  assert.ok([...money.items, ...dates.items].every((i) => i.cells_why === WORD("retrieval-browse.findin.cells_held_why")));
   /* Control: a listed sheet beside a held one in one workbook keeps its columns and cells. */
   const w2 = world();
   const x = w2.cap("book.xlsx", "book bytes");
@@ -138,8 +139,8 @@ test("R8 R2 (G41): a held sheet is read whole by `money` and `dates` from its re
 test("R8 (G41) control: a sheet the reading does not name in `cells_held` and lists no cells for keeps its earlier why; a malformed `cells_held` names no sheet", () => {
   const { w, cap } = held([], [{ text: "Item Amount Paving 1200 Total", extent: range("Big", "A1:B9") }]);
   const it = kindOf(find(w, { scope: { capture: cap.sha }, kinds: ["term"], term: "total" }), "term").items[0];
-  assert.deepEqual([it.cells, it.row, /holds no typed cells/.test(it.cells_why)], [null, null, true]);
+  assert.deepEqual([it.cells, it.row, it.cells_why === WORD("retrieval-browse.findin.no_cells_named")], [null, null, true]);
   const bad = held("Big", [{ text: "Item Total", extent: range("Big", "A1:B9") }]);
   const b = kindOf(find(bad.w, { scope: { capture: bad.cap.sha }, kinds: ["term"], term: "total" }), "term").items[0];
-  assert.match(b.cells_why, /holds no typed cells/);
+  assert.equal(b.cells_why, WORD("retrieval-browse.findin.no_cells_named"));
 });

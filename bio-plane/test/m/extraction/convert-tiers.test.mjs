@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fresh, hold } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import pdfWorker from "../../../../pdf-worker/src/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
 import { mergeTier2Text, tier2Note, glyphCount } from "../../../src/textchain.mjs";
@@ -53,9 +54,7 @@ test("R31 (reading-pipeline R3, R18) (tier2-wire): op=pdfstructure over the mixe
   /* the note is text-chain's own statement of this merge, carried; it counts both parts */
   const note = tier2Note(mergeTier2Text(t1, t2));
   assert.ok(out.body.notes.includes(note));
-  assert.match(note, /6 page\(s\) were re-read by the tier-2 decoder/);
-  assert.match(note, /the other 1 page\(s\) kept tier 1's reading/);
-  assert.match(note, /this document's text layer is a merge of two decodes/);
+  assert.equal(note, [word("textchain.say.push.page_re_read", { replaced: "6", kept: "1" }), word("textchain.say.push.document_text_layer")].join("; "));
   /* reading-pipeline R18: provenance credits each page to its own tier and member */
   assert.deepEqual(out.body.provenance.pages.map((p) => [p.page, p.tier, p.member]),
                    [0, 1, 2, 3, 4, 5].map((n) => [n, 2, "pdf-worker"]).concat([[6, 1, "plane"]]));
