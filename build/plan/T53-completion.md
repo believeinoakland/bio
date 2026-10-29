@@ -32,6 +32,8 @@
 
 **jurisdictions**
 - T53-609 · local-facts' report (R29, K5786) · `validate` judges a team layer's holidays per government (R99, R115: names are unique within a government), so the same holiday list for two cities is accepted; local-facts R29's two-cities case then written
+**reader-container**
+- T53-625 · K5800, PLATFORM P-52 (lane/platform 53e09c0b4b; `proto/levels-2-3-1f` a28847e91e) · no archive member reaches the caller whole beyond what one Worker isolate can hold: `reader.mjs` `readRecords` delivers each payload "whole, as one Uint8Array" while `read-bounds.mjs`'s `archive.member_bytes` allows 2 GiB (a 400 MiB member came back as one 419,430,400-byte payload, caller peak 941 MB, local); a member over the window is passed on in windows (or the bound set to what an isolate holds, a runtime-limits row, by K1881's pattern), test: a 400 MiB member read with the caller's peak bounded; FILES and reading-pipeline told at START
 
 ## Layer 2
 **member-roster**
