@@ -1,0 +1,3 @@
+{"ts":"2026-10-29T01:32:02.726Z","scenario":"stop","phase":"begin","base_host":"plat-s1-probe.believeinoakland.workers.dev","out":"/home/user/wt-1f/proto-mem/1f/results/remote-stop-2026-10-29T01-32-02-725Z.jsonl"}
+{"ts":"2026-10-29T01:32:03.396Z","scenario":"stop","phase":"stop","inst":"sleeptest","status":200,"client_wall_ms":669,"body":{"ok":true,"signal":"SIGTERM","at":1793237523327},"error":null}
+{"ts":"2026-10-29T01:32:05.607Z","scenario":"stop","phase":"state-after-stop","inst":"sleeptest","state":{"status":"healthy","lastChange":1793236300066},"events":[{"t":1793236295111,"kind":"onStop","exitCode":0,"reason":"exit"},{"t":1793236300066,"kind":"onStart"},{"t":1793237523327,"kind":"stop-called","signal":"SIGTERM"}]}
