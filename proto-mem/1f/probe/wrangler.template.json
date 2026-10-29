@@ -11,7 +11,7 @@
   "r2_buckets": [{ "binding": "PROBE_R2", "bucket_name": "__BUCKET__" }],
   "containers": [
     { "class_name": "MinProbe", "image": "./image-min/Dockerfile", "image_build_context": "./image-min", "instance_type": "__ITYPE__", "max_instances": 3 },
-    { "class_name": "ReaderProbe", "image": "../vendor/reader-container/Dockerfile", "image_build_context": "../vendor/reader-container", "instance_type": "__ITYPE__", "max_instances": 3 }
+    { "class_name": "ReaderProbe", "image": "docker.io/civicsmith/reader-container@sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b", "instance_type": "__ITYPE__", "max_instances": 3 }
   ],
   "durable_objects": { "bindings": [{ "name": "MIN_PROBE", "class_name": "MinProbe" }, { "name": "READER_PROBE", "class_name": "ReaderProbe" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MinProbe", "ReaderProbe"] }],

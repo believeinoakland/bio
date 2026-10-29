@@ -1,0 +1,32 @@
+{
+ "when": "2026-10-29T00:06:15.810Z",
+ "label": "LOCAL, not platform",
+ "command": "node proto-mem/1f/local/run-caller-local.mjs --lp=/tmp/claude-0/-home-user-bio/421f74a5-2887-5e76-83c1-cf602c495e6f/scratchpad/lp --fix=/home/user/fix1f --only=^(zip-random-400mib) --out=/tmp/claude-0/-home-user-bio/421f74a5-2887-5e76-83c1-cf602c495e6f/scratchpad/caller-rerun.json",
+ "note": "caller = Node, not a Worker isolate; process HWM is cumulative across cases in this one process (a fresh process per case is NOT used here), so read `caller_hwm_mb` as a running maximum",
+ "results": [
+  {
+   "file": "zip-random-400mib-1m.zip",
+   "set": "l5",
+   "kind": "zip",
+   "file_bytes": 419430518,
+   "plan": {
+    "ok": true,
+    "route": "archive",
+    "bound": 524288000
+   },
+   "depths": [
+    {
+     "depth": 1,
+     "ok": true,
+     "members": 1,
+     "member_bytes_total": 419430400,
+     "max_member_bytes": 419430400,
+     "refusal_mid_stream": null,
+     "ms": 10216
+    }
+   ],
+   "total_ms": 10216,
+   "caller_hwm_mb": 941
+  }
+ ]
+}
