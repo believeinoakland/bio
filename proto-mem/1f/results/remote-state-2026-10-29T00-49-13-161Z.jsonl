@@ -1,0 +1,2 @@
+{"ts":"2026-10-29T00:49:13.161Z","scenario":"state","phase":"begin","base_host":"plat-s1-probe.believeinoakland.workers.dev","out":"/home/user/wt-1f/proto-mem/1f/results/remote-state-2026-10-29T00-49-13-161Z.jsonl"}
+{"ts":"2026-10-29T00:49:13.738Z","scenario":"state","phase":"state","inst":"r0","state":{"status":"running","lastChange":1793234949405},"events":[],"status":200}
