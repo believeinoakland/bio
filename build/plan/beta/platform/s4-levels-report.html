@@ -1,0 +1,117 @@
+<title>Levels Study Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Public+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column in the questions page's own system (QUESTIONS.html, K5426): findings first, then the three decisions as cards, then what is not yet measured. */
+:root{
+  --bg:#f7f8f6; --surface:#ffffff; --fg:#1d2321; --muted:#5b6662; --line:#d9dfdb; --accent:#1f6b52; --accent-soft:#e3f0ea; --open:#9a5b13; --open-soft:#fbf1e3;
+  --serif:"Source Serif 4", Georgia, serif; --sans:"Public Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--surface:#1c2320;--fg:#e6ebe8;--muted:#9aa7a1;--line:#2f3a35;--accent:#6fcba4;--accent-soft:#1f3a2f;--open:#e9b46a;--open-soft:#3a2d1a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917;--surface:#1c2320;--fg:#e6ebe8;--muted:#9aa7a1;--line:#2f3a35;--accent:#6fcba4;--accent-soft:#1f3a2f;--open:#e9b46a;--open-soft:#3a2d1a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--sans);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 56px}
+main{max-width:44rem;margin:0 auto;display:grid;gap:32px}
+section{display:grid;gap:14px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2rem;line-height:1.2} h2{font-size:1.4rem;line-height:1.3} h3{font-size:1.15rem;line-height:1.35}
+p{margin:0}
+.lede{color:var(--muted);font-size:1.05rem}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+ul.plain{margin:0;padding-left:1.2rem;display:grid;gap:8px}
+.src{font-size:.82rem;color:var(--muted)}
+.m{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:1px 8px;vertical-align:1px;white-space:nowrap}
+.m.yes{background:var(--accent-soft);color:var(--accent)}
+.m.no{background:var(--open-soft);color:var(--open)}
+article.q{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--open);border-radius:10px;padding:20px;display:grid;gap:14px}
+.opts{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.opts li{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:4px}
+.opts li.rec{border-color:var(--accent);background:var(--accent-soft)}
+.tag{font-size:.75rem;font-weight:600;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.opts li:not(.rec) .tag{color:var(--muted)}
+.why{border-left:3px solid var(--accent);padding-left:12px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.8rem;letter-spacing:.04em;text-transform:uppercase}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <span class="eyebrow">For Bob · from PLATFORM #4 through BOB · 29 October 2026</span>
+    <h1>What the study of Team and Institution found, and three decisions</h1>
+    <p class="lede">You asked for a study of how to support the Institution and Enterprise levels (K5444), and said Institution is built in T53 once the study reports and you decide (K5570). This is that report. Every figure says whether it was measured on the test copy or not yet measured. The test copy is <em>plat-s1</em>, running the alpha's code (0.87.0) at the Team level, with test prototypes added.</p>
+  </header>
+
+  <section>
+    <h2>What we found</h2>
+    <ul class="plain">
+      <li><strong>The errors members saw come from one cause.</strong> The team's record lives in one "room" (one Cloudflare Durable Object). When the room runs out of memory, Cloudflare restarts it, and every request in progress at that moment fails. We counted 227 such restarts in 36 hours of testing. <span class="m yes">measured</span></li>
+      <li><strong>It is not caused by having many members.</strong> With 5, 10, 15, 20, 25 and 30 members, each repeated three times, the restarts happened at every level, from 5 members up, with no point where things break. More members only means each restart catches more requests in progress: 1 to 10 at 5 to 25 members, 17.5 at 30 (averages). <span class="m yes">measured</span></li>
+      <li><strong>What uses up the memory is reading newly added documents</strong>, which happens inside the same room that answers members. Most of that memory is short-lived scrap the reading leaves behind: when the scrap is cleared, memory falls back to where it started, so it is not data the room keeps. <span class="m yes">measured, on our own machine</span></li>
+      <li><strong>Five code changes are already decided (K5798)</strong>. They cut that scrap by about half for a typical reading step (9.6 to 5.3 MB), and by three quarters for the first step of an 8 MB file (158 to 40 MB), with identical results. Whether that is enough to stop the restarts is <span class="m no">not yet measured</span>. The load test after the build will show it.</li>
+      <li><strong>Enterprise would not fix it.</strong> Cloudflare's pages give every plan the same 128 MB of memory for the room and the same 10 GB of storage. They give no separate Enterprise figure and no way to raise either. Enterprise adds uploads up to 5 GB, the US government (FedRAMP) data region, control over where requests are processed, and a contract. <span class="m no">stated by Cloudflare, not measured by us</span></li>
+      <li><strong>Members' screens are fast; administrators' screens are not.</strong> A member's screens appear in 0.5 to 0.65 seconds. With 500 documents waiting for review, the administrator's Home, Queue, Add and Project screens took 2.8 to 4.8 seconds. The cause is heavy lists, and the fixes are already in the drafts. <span class="m yes">measured</span></li>
+      <li><strong>A correction.</strong> Keeping a team's stored data in one region (Europe or the US) is available on the ordinary paid plan, not only on Enterprise. Your earlier decision to offer "keep my data in this region" (K5440) is unaffected. Only where requests are <em>processed</em> needs Enterprise.</li>
+    </ul>
+    <p class="src">Sources: the study files on the PLATFORM lane (s1-results, s1-upload-and-resets, s1-b-ramp-memory, s1-n-determination, enterprise-s3-draft), each with its commands and logs.</p>
+  </section>
+
+  <section>
+    <h2>Three decisions</h2>
+
+    <article class="q" id="S4-1">
+      <span class="eyebrow">Architecture · S4-1</span>
+      <h3>Where should files be read: inside the team's room, or beside it?</h3>
+      <p>Today a file added to the record is read into text inside the same room that answers every member. Reading a large file needs a lot of memory for a short time, and when that tips the room over its 128 MB, everyone's requests in progress fail.</p>
+      <ul class="opts">
+        <li><span class="tag">A · Keep reading in the room</span>Rely on the five decided code changes and on load management (below). This is the least work, but it is not yet shown to stop the restarts. A large file can still tip the room, because the memory a reading needs grows with the file.</li>
+        <li class="rec"><span class="tag">B · Read beside the room · recommended</span>A separate reader takes the file, turns it into text, and hands only the finished text to the room. The room's memory then no longer depends on how large a file is, and a reader that runs out of memory fails one reading, not everyone's work. The five code changes stay. Cost: an extra step for each document read, of a size <span class="m no">not yet measured</span>, and some reading code moves. It is built and proven by the load test.</li>
+        <li><span class="tag">C · Decide after the load test</span>Build the code changes first, run the load test, and choose A or B from its restart count. This is cheaper if A turns out to be enough, but Institution would wait for the result.</li>
+      </ul>
+      <p class="why"><strong>Why B:</strong> the restarts happen from 5 members up and come from the reading, not from the number of members. So no member limit removes them; only taking the reading's memory out of the room does. B does that for both levels whatever the file size.</p>
+    </article>
+
+    <article class="q" id="S4-2">
+      <span class="eyebrow">Architecture · S4-2 · Institution (Level 2)</span>
+      <h3>How should an Institution's larger record be held?</h3>
+      <p>At Team level all of a team's text and its search index sit in the one room, and they are 96 % of everything the room holds. They are what grows as documents are added. We tried three ways to make room for a bigger record.</p>
+      <ul class="opts">
+        <li><span class="tag">A · A room per project</span>Each project gets its own room, with a directory linking them. It splits the load, but screens that look across projects need several rooms, and you noted it would be "non-trivial" (K4747). Costed on paper only; <span class="m no">not yet measured</span>.</li>
+        <li class="rec"><span class="tag">B · Text and search index in file storage, packed · recommended</span>The bulk text and its index move to Cloudflare's file storage (R2), packed into one file per document. Measured: a screen reads text about 0.1 s slower (136 against 29 ms for 100 passages), search takes the same time (about 0.26 s), and storage is 1.24 times the text. The room keeps its small working tables. The room's own search read 341,131 rows for one common word and slows as the record grows; the packed index needed 6 small reads. Whether it stays that fast at a much larger size is <span class="m no">not yet measured</span>. <span class="m yes">measured on a small sample</span></li>
+        <li><span class="tag">C · A cache of shared screens</span>Keep frequently read answers near the member. It made no visible difference to the screens, and its effect under load could not be measured.</li>
+      </ul>
+      <p class="why"><strong>Why B, together with S4-1's B:</strong> the two answer different limits. Moving the reading out stops the restarts; moving the bulk text out stops the room filling up. A stays on paper in case the measured Institution still falls short; C is set aside for now. Institution's figures (record size, members at once) stay <span class="m no">not yet measured</span> until its load test, and the install shows them that way.</p>
+    </article>
+
+    <article class="q" id="S4-3">
+      <span class="eyebrow">Architecture · S4-3 · load management</span>
+      <h3>What sets how much work runs at once, and where does the waiting line live?</h3>
+      <p>You asked that a busy copy queue requests and tell the member, never "try again", and that it sense the risk of a restart (K5760). The tests show the limit cannot be a number of members: restarts came at 5 members as at 30. What fills the room's memory is the work in progress: files being read and large uploads.</p>
+      <ul class="opts">
+        <li><span class="tag">A · A waiting line inside the room</span>Simplest, but a restart empties the line at exactly the moment it is needed, and the waiting requests fail.</li>
+        <li class="rec"><span class="tag">B · A small gatekeeper in front of the room · recommended</span>A gatekeeper holds the line and lets work into the room by its size, so that heavy work runs one or two at a time. After a restart it halves the amount it lets through and raises it slowly. Waiting requests survive a restart. Cost: one more step per request, about 50 ms by the hop we measured, plus the gatekeeper's own time, which is <span class="m no">not yet measured</span>.</li>
+      </ul>
+      <p class="why"><strong>Why B:</strong> it keeps your rule that nothing a member asked for is lost, even when the room restarts. The short, non-modal "a bit slow" sign you asked for is with the design lane as a need; it shows when a request waits longer than its screen's time budget.</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>What is not yet measured</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>What</th><th>Why not yet</th></tr></thead>
+        <tbody>
+          <tr><td>Whether the five code changes stop the restarts</td><td>Measured by the load test after the build (K5798)</td></tr>
+          <tr><td>A long run at steady load, and records of 1, 5 and 25 GB</td><td>Nothing new is run on the test copy now (K5798)</td></tr>
+          <tr><td>Institution's figures: members at once, record size</td><td>Its design is not built yet</td></tr>
+          <tr><td>Everything Enterprise adds</td><td>No Enterprise account (K5454)</td></tr>
+          <tr><td>The file reader's idle cost on Cloudflare, and whether it stops when idle</td><td>A test deployment on 29 October measured its start-up (4 to 18 seconds for a new reader) and its reading times (a 48 MP photo takes about 65 seconds). Its idle cost could not be settled: the readers were not recorded as stopping when idle, and the bill for the period was not read.</td></tr>
+          <tr><td>Uploads of 100 to 500 MB in parts</td><td>Not run on the test copy</td></tr>
+          <tr><td>The cache (C) under load; a room per project (A)</td><td>No way to read the cache's hits; A is on paper</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

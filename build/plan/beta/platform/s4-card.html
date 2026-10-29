@@ -1,0 +1,12 @@
+<!-- S4 card for QUESTIONS.html (K5426), written by PLATFORM #4 for BOB to place in QUESTIONS-open-platform.html; the full report is https://claude.ai/artifact/65HB4zpHHXfE5fdycgkMTy (source: build/plan/beta/platform/s4-levels-report.html). -->
+<article class="q" id="S4">
+  <span class="eyebrow">Service levels · from PLATFORM #4 through BOB</span>
+  <h3>S4-1 to S4-3 · The levels study: where files are read, how an Institution holds its record, and where the waiting line lives</h3>
+  <p class="lede">The errors members saw on the test copy all come from the team's room running out of memory while it reads new documents, and restarting. That happens from 5 members up, and Enterprise would not change it: every plan has the same 128 MB. The findings and the reasons are in <a href="https://claude.ai/artifact/65HB4zpHHXfE5fdycgkMTy" target="_blank" rel="noopener">the levels study report</a>. Three decisions:</p>
+  <ul class="opts">
+    <li class="rec"><span class="tag">S4-1 · Where files are read · recommended B</span>Read files in a separate reader beside the room, so the room's memory no longer depends on file size (A: keep reading in the room with the decided code changes; C: decide after the load test).</li>
+    <li class="rec"><span class="tag">S4-2 · Institution's record · recommended B</span>Bulk text and search index packed in file storage (R2): measured about 0.1 s slower to read, search the same, 1.24 times the text (A: a room per project, paper only; C: a cache, no gain shown).</li>
+    <li class="rec"><span class="tag">S4-3 · The waiting line · recommended B</span>A small gatekeeper in front of the room holds the line and lets work in by its size, so waiting requests survive a restart (A: a line inside the room, lost at a restart).</li>
+  </ul>
+  <p class="meta">Every Institution and Enterprise figure stays "not yet measured" until its load test; the report lists what is still open.</p>
+</article>

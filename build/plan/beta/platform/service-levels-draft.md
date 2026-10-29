@@ -12,7 +12,8 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 |---|---|---|---|
 | Design stage | one room per team (today's) | the record split across rooms, bulk tables in R2 (N1271) | Level 2 with very busy tables split further and reads cached |
 | Cloudflare plan | Workers Paid ($5); any domain | Workers Paid; a Business zone optional (uptime guarantee, 200 MB uploads) | Enterprise contract |
-| Record | about 50 GB of captured files, 8,000-12,000 documents; the room's own shelf 10 GB (gauge warns at 70 % and 90 %, G42) | about 10 GB of database per project, hundreds of GB in all | as Level 2, with region-held data |
+| Record | about 50 GB of captured files, 8,000-12,000 documents; the room's own shelf 10 GB (gauge warns at 70 % and 90 %, G42) | about 10 GB of database per project, hundreds of GB in all | as Level 2 |
+| Region (corrected 2026-10-29, K5800; `enterprise-s3-draft.md` §2.3) | storage held in the `eu` or `us` jurisdiction, room and files (Cloudflare: no plan named for either) | as Level 1 | as Level 1, plus FedRAMP storage and Regional Services (where requests are processed; not on `workers.dev`), both Enterprise-only |
 | Members working at once | about 15-25 today; about 2-4 times that after the fold and kept counts | grows with the active projects (one line each) | as Level 2, plus caching |
 | Upload | to 100 MB through the Worker; larger by direct-to-R2 | 200 MB with Business; larger by direct-to-R2 | to 5 GB |
 | Cost to the team | $5 to about $25 a month | about $10-60, plus $200-250 with Business | by quote |
@@ -51,7 +52,7 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 
 ## 4. What must be measured, and on what copy
 
-Per level, on a scratch copy at that design stage, never biosmoke8: record bound (writes fail at the shelf, the gauge's 70 % and 90 % hold), members-at-once at the budget (`time-budgets-draft.md`), upload size through the Worker and direct-to-R2, and the cost at the rated load (rows written is the first charge past the $5, P17: about $20 a month on the test copy's busiest day, sustained). Level 3 differs from Level 2 only by what Enterprise adds; those parts (5 GB uploads, region-held data) are measured on a copy whose owner holds the contract, so they are *stated, not measured*, until one does: the words say so (a figure from Cloudflare's published limit carries its source).
+Per level, on a scratch copy at that design stage, never biosmoke8: record bound (writes fail at the shelf, the gauge's 70 % and 90 % hold), members-at-once at the budget (`time-budgets-draft.md`), upload size through the Worker and direct-to-R2, and the cost at the rated load (rows written is the first charge past the $5, P17: about $20 a month on the test copy's busiest day, sustained). Level 3 differs from Level 2 only by what Enterprise adds; those parts (5 GB uploads, FedRAMP storage, Regional Services: where requests are processed; storage held in the `eu` or `us` jurisdiction is not among them, it is on any paid plan, corrected 2026-10-29, K5800) are measured on a copy whose owner holds the contract, so they are *stated, not measured*, until one does: the words say so (a figure from Cloudflare's published limit carries its source).
 
 ## 5. Decided, and what is left (P4, K5444)
 
