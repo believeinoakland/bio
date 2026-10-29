@@ -4,6 +4,7 @@
    Results: one JSON line per measurement appended to --out (default ../results/remote-<scenario>-<UTC timestamp>.jsonl). Wall times are CLIENT-side (the spec asks for client wall time).
    node run-remote.mjs --scenario=health
    node run-remote.mjs --scenario=state --inst=NAME [--which=reader]                             one read of an instance's state and start/stop events (does not touch the container)
+   node run-remote.mjs --scenario=stop --inst=NAME[,NAME] [--which=reader]                      stops named instances (SIGTERM through the object), then reads each one's state
    node run-remote.mjs --scenario=wipe                                                          deletes every object in the probe's bucket (before teardown.mjs)
    node run-remote.mjs --scenario=seed [--sizes=10,50,100] [--upload=DIR --only=REGEX]         R2 objects r<N>mib (made in the Worker) and/or generated fixtures put through /put (<= the zone's body cap)
    node run-remote.mjs --scenario=coldstart [--which=min,reader] [--n=5]                        first request to NEW container instances (never run) then warm repeats
@@ -40,6 +41,9 @@ const base = (f) => f.split("/").pop(); const only = a.only ? new RegExp(a.only)
 
 const S = {
   async state() { if (!a.inst) refuse("--inst=NAME is required"); const s = await call(`/state?which=${a.which || "min"}&inst=${a.inst}`); log({ phase: "state", inst: a.inst, state: s.body && s.body.state, events: s.body && s.body.events, status: s.status }); },
+  async stop() { /* stops named instances through their object (Container.stop, SIGTERM); the leftovers of a run otherwise stay awake (BOB, K5800: cs-0..2 awake 12 min past sleepAfter 5m) */
+    if (!a.inst) refuse("--inst=NAME[,NAME...] is required"); const which = a.which || "min";
+    for (const inst of String(a.inst).split(",")) { log({ phase: "stop", inst, ...(await call(`/stop?which=${which}&inst=${inst}&signal=SIGTERM`)) }); await sleep(2000); const s = await call(`/state?which=${which}&inst=${inst}`); log({ phase: "state-after-stop", inst, state: s.body && s.body.state, events: s.body && s.body.events }); } },
   async wipe() { log({ what: "wipe the probe bucket", ...(await call("/wipe", { method: "POST" })) }); },
   async health() { log({ ...(await call("/health")) }); },
   async seed() {
