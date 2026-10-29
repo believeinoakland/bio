@@ -1,0 +1,2 @@
+{"ts":"2026-10-29T01:09:04.156Z","scenario":"wipe","phase":"begin","base_host":"plat-s1-probe.believeinoakland.workers.dev","out":"/home/user/wt-1f/proto-mem/1f/results/remote-wipe-2026-10-29T01-09-04-155Z.jsonl"}
+{"ts":"2026-10-29T01:09:05.118Z","scenario":"wipe","what":"wipe the probe bucket","status":200,"client_wall_ms":960,"body":{"ok":true,"deleted":31},"error":null}
