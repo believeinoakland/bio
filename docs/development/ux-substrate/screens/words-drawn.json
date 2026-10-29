@@ -1111,12 +1111,6 @@
    "note": "DEC-259: {state} on or off"
   },
   {
-   "key": "screen.projectai.state.signin",
-   "en": "Your own Claude sign-in serves {project} while you are its only member · {state} · set by you, {date}. It is your own use of your own subscription.",
-   "protected": false,
-   "note": "DEC-259"
-  },
-  {
    "key": "screen.projectai.state.member",
    "en": "{project} pays for the assistant's work here with its own API key, {state}. Its owners set what it pays for and its limits; they see how much it is used in total, never what you ask or who asked.",
    "protected": true,
@@ -1125,12 +1119,6 @@
   {
    "key": "screen.projectai.paidby.key",
    "en": "An Anthropic API key for this project",
-   "protected": false,
-   "note": "DEC-259"
-  },
-  {
-   "key": "screen.projectai.paidby.signin",
-   "en": "My own Claude sign-in, while I am the project's only member",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1173,12 +1161,6 @@
   {
    "key": "screen.projectai.meter.explore",
    "en": "Exploring this month, on top of it: {used} of the {limit} limit",
-   "protected": false,
-   "note": "DEC-259"
-  },
-  {
-   "key": "screen.projectai.limits.signin",
-   "en": "Limits on your sign-in here",
    "protected": false,
    "note": "DEC-259"
   },
@@ -2132,7 +2114,7 @@
   },
   {
    "key": "screen.ceremony.tip.bar",
-   "en": "the least capture and connection a finding needs to be relied on",
+   "en": "the least copy and connection grades a finding needs to be relied on",
    "protected": false,
    "note": "DEC-275: the project's bar, its card"
   },
@@ -3914,7 +3896,7 @@
   },
   {
    "key": "screen.project.tip.bar",
-   "en": "{grade} on capture and {grade_2} on connection",
+   "en": "copy {grade}, connection {grade_2}",
    "protected": false,
    "note": "DEC-276: the project's bar, its card"
   },
@@ -4466,7 +4448,7 @@
   },
   {
    "key": "screen.published.tip.capture",
-   "en": "how well a document is held, A to D",
+   "en": "how well a document could be captured, A to D",
    "protected": false,
    "note": "DEC-276: a capture grade, its card"
   },
@@ -5180,7 +5162,7 @@
   },
   {
    "key": "screen.teamai.use.why",
-   "en": "Summed over members; nobody is named.",
+   "en": "What the team's key was used for, month by month.",
    "protected": false,
    "note": "DEC-284"
   },
@@ -5348,7 +5330,7 @@
   },
   {
    "key": "document.held.says",
-   "en": "Awaiting review: held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
+   "en": "Awaiting review. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
    "protected": false,
    "note": "DEC-289: a copy the viewer captured, not yet vouched for (release)"
   },
@@ -5924,7 +5906,7 @@
   },
   {
    "key": "ceremony.gate.other",
-   "en": "This stops the signing: {what}. Put it right above, then check again.",
+   "en": "This stops the signing: {what}. Fix it above, then check again.",
    "protected": false,
    "note": "DEC-299: any other gate, {what} its own plain sentence"
   },
@@ -13892,7 +13874,7 @@
   },
   {
    "key": "screen.members.a.lone.administrator.can.never",
-   "en": "A lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
+   "en": "A lone administrator can never remove anyone by vote, at any size; removal by vote only gets easier as the team grows.",
    "protected": false,
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
@@ -19322,7 +19304,7 @@
   },
   {
    "key": "refusal.IMPOSSIBLE_AT_TWO",
-   "en": "With only two administrators, a removal can never carry, so neither can remove the other. Nothing was written.",
+   "en": "With only two administrators, a removal by vote can never carry, so only the team's founder can remove an administrator. Nothing was written.",
    "protected": false,
    "note": "DEC-342: administrator removal vote with two administrators"
   },
@@ -29162,7 +29144,7 @@
   },
   {
    "key": "screen.doorbell.consent.refused.secret",
-   "en": "That secret was not recognised, so nothing was recorded.",
+   "en": "That secret was not recognized, so nothing was recorded.",
    "protected": false,
    "note": "DEC-375: B398 C17 (knockerconsent): refusal, first sentence (the plane answers every failure alike)"
   },
@@ -30698,7 +30680,7 @@
   },
   {
    "key": "screen.project.a.question.this.project.holds.has",
-   "en": "A question this project holds has a leg in its basis.",
+   "en": "A question this project holds has a source behind it.",
    "protected": false,
    "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
   },
@@ -33770,9 +33752,9 @@
   },
   {
    "key": "screen.doorbell.after.head",
-   "en": "After you hand it over",
+   "en": "What to keep",
    "protected": false,
-   "note": "DEC-384: B411 I-20"
+   "note": "DEC-384: B411 I-20; DEC-479: heads the receipt, the reference first, then fingerprint, size, pseudonym and phrase"
   },
   {
    "key": "screen.document.cite.option",
@@ -33842,13 +33824,13 @@
   },
   {
    "key": "strength.arithmetic.unrated_no_leg_on_any_set",
-   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}. Grade at least one of them to count it.",
    "protected": false,
    "note": "DEC-384: B411 I-23/A8: strength sentence in plain words; the code draws each document by its title, once"
   },
   {
    "key": "strength.arithmetic.unrated_no_leg_on_this_axis",
-   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}. Grade at least one of them to count it.",
    "protected": false,
    "note": "DEC-384: B411 I-23/A8: strength sentence in plain words"
   },
@@ -37948,7 +37930,7 @@
    "key": "screen.registers.import.go",
    "en": "Bring in this register",
    "protected": false,
-   "note": "DEC-407: button (registerimport)"
+   "note": "DEC-407: button (registerfileimport, K5471)"
   },
   {
    "key": "screen.registers.search.head",
@@ -39536,13 +39518,13 @@
   },
   {
    "key": "screen.aichecks.origin.name",
-   "en": "Not made by an organization based in China",
+   "en": "Not developed by a Chinese organization",
    "protected": false,
    "note": "DEC-420: B488 aichecks: origin name"
   },
   {
    "key": "screen.aichecks.origin.line",
-   "en": "The organization that makes the AI is not based in China.",
+   "en": "Judged by who developed the model, whichever company serves it.",
    "protected": false,
    "note": "DEC-420: B488 aichecks: origin line"
   },
@@ -39788,7 +39770,7 @@
   },
   {
    "key": "screen.aiproviders.use.note",
-   "en": "Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account, the member is shown the switch and may decline it. A use that is switched off is refused, and is never moved to another account.",
+   "en": "Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account the member is shown the move and can stop it, and when that account has another payer the member is asked first. A use that is switched off is refused, and is never moved to another account.",
    "protected": false,
    "note": "DEC-420: B488 aiproviders: use note"
   },
@@ -39949,12 +39931,6 @@
    "note": "DEC-420: B488 aiproviders: refused personal"
   },
   {
-   "key": "screen.aiproviders.refused.origin",
-   "en": "Not offered while the team requires the check “Not made by an organization based in China”.",
-   "protected": false,
-   "note": "DEC-420: B488 aiproviders: refused origin"
-  },
-  {
    "key": "screen.aiproviders.held.head",
    "en": "Held until confirmed",
    "protected": false,
@@ -40058,7 +40034,7 @@
   },
   {
    "key": "screen.aiproviders.bud.note",
-   "en": "Each cost sums everyone's use and names no member. A member sees their own cost on Your AI.",
+   "en": "Each cost sums everyone's use. A member sees their own cost on Your AI.",
    "protected": false,
    "note": "DEC-420: B488 aiproviders: bud note"
   },
@@ -40412,7 +40388,7 @@
   },
   {
    "key": "screen.aiconnect.s3.why",
-   "en": "Four ways. Choose one.",
+   "en": "Five ways. Choose one.",
    "protected": false,
    "note": "DEC-420: B488 aiconnect: s3 why"
   },
@@ -40616,7 +40592,7 @@
   },
   {
    "key": "screen.aiconnect.s4.recorded",
-   "en": "Your acceptance is recorded with your name and the date. The terms are accepted once for this account, and shown again if they change.",
+   "en": "Your acceptance is recorded with your name and the date.",
    "protected": false,
    "note": "DEC-420: B488 aiconnect: s4 recorded"
   },
@@ -40988,7 +40964,7 @@
   },
   {
    "key": "screen.aimine.use.note",
-   "en": "Only you see this: your own use across every account that served you.",
+   "en": "Your own use across every account that served you.",
    "protected": false,
    "note": "DEC-420: B488 aimine: use note"
   },
@@ -41228,7 +41204,7 @@
   },
   {
    "key": "screen.aimoments.a.note",
-   "en": "The order is set by the team's administrators. You may decline the switch, and the answer waits until you choose.",
+   "en": "Your team's administrators set the order. Both accounts are your team's, so the answer goes on by itself; you can stop it here.",
    "protected": false,
    "note": "DEC-420: B488 aimoments: a note"
   },
@@ -41720,7 +41696,7 @@
   },
   {
    "key": "screen.document.sheet.read",
-   "en": "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.",
+   "en": "Every line of this sheet is read, and can be searched and cited.",
    "protected": false,
    "note": "DEC-422: B491 (2) G41 (K4636): on the Document page of a sheet"
   },
@@ -41948,7 +41924,7 @@
   },
   {
    "key": "money.ingest.partial",
-   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Reading reference: {ingest}",
    "protected": false,
    "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; DEC-451: {ingest} kept while money R31's test pins the key in this sentence; {ingest} the ingest's key"
   },
@@ -42401,12 +42377,6 @@
    "en": "{n} scheduled jobs",
    "protected": false,
    "note": "DEC-431: B514 J27 R84 (3): the cron-trigger count in the limit stop; {n} a number"
-  },
-  {
-   "key": "act.captureuploadabort.does",
-   "en": "Stops sending a large document in parts. Nothing of it is kept.",
-   "protected": false,
-   "note": "DEC-431: affordances act-help.mjs:153 (T51 K4900, capture R113), word for word its default, so the reads list regenerates"
   },
   {
    "key": "act.captureuploadbegin.does",
@@ -43550,7 +43520,7 @@
   },
   {
    "key": "screen.question.leggrade.help",
-   "en": "Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.",
+   "en": "Grade how well the copy your team holds shows this passage, up to how well it could be captured ({ceiling}), and say why.",
    "protected": false,
    "note": "DEC-439: D-M1, C-M4: {ceiling} the record's ceiling, a letter"
   },
@@ -44546,9 +44516,2133 @@
   },
   {
    "key": "ceremony.gate.name.c12_2",
-   "en": "The record's history is complete",
+   "en": "The completeness of the record's history",
    "protected": false,
    "note": "DEC-453: the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "screen.capture.finish.pending",
+   "en": "The page as a visitor saw it is still being made. It is filed as a second document when it is ready; look again in a moment.",
+   "protected": false,
+   "note": "DEC-454: Add, finishing a capture: in place of acquisition.index.render_pending_note (capture.mjs:496)"
+  },
+  {
+   "key": "screen.capture.finish.files",
+   "en": "Nothing new was filed: the page itself was already captured.",
+   "protected": false,
+   "note": "DEC-454: Add, finishing a capture that files no new document: in place of acquisition.note.continuation_files_new"
+  },
+  {
+   "key": "screen.capture.finish.done",
+   "en": "Finished: {title}, the page as a visitor saw it, is filed as a second document. It waits in Held captures until a member vouches for it.",
+   "protected": false,
+   "note": "DEC-454: Add, a finished capture; {title} the second document's title"
+  },
+  {
+   "key": "screen.capture.address.reading.pending",
+   "en": "Your team already holds a copy of this page. It hasn't been read yet, so its words can't be found or cited until it is.",
+   "protected": false,
+   "note": "DEC-454: Add, an address your team already holds, its reading not done"
+  },
+  {
+   "key": "screen.capture.address.reading.done",
+   "en": "Your team already holds a copy of this page, and it has been read.",
+   "protected": false,
+   "note": "DEC-454: Add, an address your team already holds, read"
+  },
+  {
+   "key": "screen.capture.fetch.done.noproject",
+   "en": "Fetched. {document} waits in Held captures until a member vouches for it.",
+   "protected": false,
+   "note": "DEC-454: Add, a fetch done with no project; {document} the document, as a link"
+  },
+  {
+   "key": "screen.document.text.partial.one",
+   "en": "Partial: page {pages} has no text",
+   "protected": false,
+   "note": "DEC-454: the singular of screen.document.text.partial (one page without text)"
+  },
+  {
+   "key": "screen.document.reading.beingread",
+   "en": "The rest of this file is still being read. Look again in a few minutes; a search covers what has been read so far.",
+   "protected": false,
+   "note": "DEC-454: Document, in place of state.loading while pages are still being read (document.mjs:377)"
+  },
+  {
+   "key": "document.read.more",
+   "en": "More passages",
+   "protected": false,
+   "note": "DEC-454: Document's passage pager (document.mjs:573), apart from document.read.next 'Next page', the page bar's"
+  },
+  {
+   "key": "screen.document.reading.firstn",
+   "en": "Showing {n} of {m} passages",
+   "protected": false,
+   "note": "DEC-454: Document, the passage count, in place of passages.head plus 'n / m'; {n} {m}"
+  },
+  {
+   "key": "screen.capture.file.parts.hashing",
+   "en": "Checking the file before it is sent.",
+   "protected": false,
+   "note": "DEC-454: Add, a parted upload being hashed (in place of state.loading)"
+  },
+  {
+   "key": "screen.capture.file.parts.sending",
+   "en": "Sending part {n} of {m}.",
+   "protected": false,
+   "note": "DEC-454: Add, a parted upload being sent; {n} {m}"
+  },
+  {
+   "key": "screen.capture.read.fetching",
+   "en": "Fetching the file.",
+   "protected": false,
+   "note": "DEC-454: Add, the reading's first step"
+  },
+  {
+   "key": "screen.capture.read.reading",
+   "en": "Being read.",
+   "protected": false,
+   "note": "DEC-454: Add, the reading under way"
+  },
+  {
+   "key": "screen.capture.read.about",
+   "en": "About {minutes} more minutes.",
+   "protected": false,
+   "note": "DEC-454: Add, the reading's estimate; {minutes}"
+  },
+  {
+   "key": "screen.capture.read.about.one",
+   "en": "About a minute more.",
+   "protected": false,
+   "note": "DEC-454: the singular of screen.capture.read.about"
+  },
+  {
+   "key": "screen.capture.read.refused.ENCRYPTED",
+   "en": "The file is locked with a password, so its words can't be read. Add a copy that isn't locked.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused ENCRYPTED (in place of refusal.ENCRYPTED's 'The document is encrypted.')"
+  },
+  {
+   "key": "screen.capture.read.refused.TOO_LARGE",
+   "en": "This file is {size}, more than the {bound} your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused TOO_LARGE; {size} {bound} in MB (size.mb)"
+  },
+  {
+   "key": "screen.capture.read.refused.STRUCTURE_OVER_BOUND",
+   "en": "{part} is over the {bound} your team's Civicsmith can read. The file is kept whole and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused STRUCTURE_OVER_BOUND; {part} a plain part name (code owed), {bound}"
+  },
+  {
+   "key": "screen.capture.read.refused.ENCODING_UNSUPPORTED",
+   "en": "This file's text is written in a character set ({name}) that isn't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused ENCODING_UNSUPPORTED; {name} the encoding's name"
+  },
+  {
+   "key": "screen.capture.refusal.upload.TOO_LARGE.figures",
+   "en": "That file is {size}, more than the {bound} that can be brought in this way. Nothing was written.",
+   "protected": false,
+   "note": "DEC-454: Add, an upload refused TOO_LARGE, with its figures (in place of the bare 'size · bound', capture.mjs:1436); {size} {bound} in MB"
+  },
+  {
+   "key": "screen.document.unsupported.ico",
+   "en": "Icon files (.ico) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_ico sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "capture.index.job_not_registered",
+   "en": "Your team's Civicsmith couldn't set up the reading for this file, so it wasn't added. Nothing was saved. Try adding it again.",
+   "protected": false,
+   "note": "DEC-454: capture: a file whose reading job could not be registered"
+  },
+  {
+   "key": "capture.index.body_over_request_ceiling",
+   "en": "This file is larger than the {bound} bytes one request can carry, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture: over the request ceiling; {bound} in bytes as the code passes it"
+  },
+  {
+   "key": "capture.ops.body_over_request_ceiling",
+   "en": "This file is larger than the {bound} bytes one request can carry, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture ops: the same as capture.index.body_over_request_ceiling"
+  },
+  {
+   "key": "capture.ops.body_over_capture_ceiling",
+   "en": "This file is larger than the {bound} bytes your team's Civicsmith keeps as one capture, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture ops: over the capture ceiling; {bound} bytes"
+  },
+  {
+   "key": "doorbell.index.job_not_registered",
+   "en": "The reading for this knock couldn't be set up, so the knock was left as it was and nothing was filed. Try again.",
+   "protected": false,
+   "note": "DEC-454: doorbell: a knock whose reading job could not be registered"
+  },
+  {
+   "key": "capture.index.upload_unknown",
+   "en": "Your team's Civicsmith has no file being sent under that name for you. Add the file again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload (1 of 18)"
+  },
+  {
+   "key": "capture.index.upload_expired",
+   "en": "This upload was left open too long, so it was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.upload_not_open",
+   "en": "This file has already been sent in full. Look for it in Held captures.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_conflict",
+   "en": "Something went wrong while sending this file, so it was stopped and nothing was kept. Add the file again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_out_of_order",
+   "en": "Sending this file got out of step, so it was stopped and nothing was kept. Add the file again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.upload_lost",
+   "en": "Your team's Civicsmith lost track of the parts sent so far, so the upload was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_in_progress",
+   "en": "Sending this file got out of step, so it was stopped and nothing was kept. Add the file again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_size",
+   "en": "This file couldn't be sent, so nothing was stored. Add it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload; {bound} bytes"
+  },
+  {
+   "key": "capture.index.part_not_read",
+   "en": "This part couldn't be read, so nothing was stored. Send it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_digest_mismatch",
+   "en": "This part doesn't match the fingerprint sent with it, so nothing was stored. Send it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_not_stored",
+   "en": "Your team's file storage wouldn't accept this part, so nothing was recorded. Send it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parts_missing",
+   "en": "Not all of this file arrived, so it wasn't added. Nothing was saved. Add the file again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parts_out_of_order",
+   "en": "The pieces of this file didn't arrive as they were sent, so it wasn't added. Nothing was saved. Add the file again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.whole_digest_mismatch",
+   "en": "The parts put together don't match the fingerprint sent for the whole file, so the upload was stopped and nothing was kept.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_completed",
+   "en": "Your team's file storage wouldn't finish the upload, so it was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_unavailable",
+   "en": "Your team's Civicsmith can't take a file in parts right now, so nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_begun",
+   "en": "Your team's file storage wouldn't start an upload in parts, so nothing was saved. Try again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_aborted",
+   "en": "Your team's file storage wouldn't cancel the upload. It stays open until it runs out of time, then it is stopped.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload (18 of 18)"
+  },
+  {
+   "key": "refusal.WORKBOOK_TOO_LARGE",
+   "en": "This workbook has {cells} cells, more than the {bound_cells} your team's Civicsmith can hold and read, so it wasn't added. Nothing was written.",
+   "protected": false,
+   "note": "DEC-454: workbooks: the refusal (until now only the code's stand-in); {cells} {bound_cells}"
+  },
+  {
+   "key": "file-safety.index.the_file_is_encrypted_so_no_safe_view",
+   "en": "This file is locked with a password, so no safe view can be made of it.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a safe view refused for an encrypted file"
+  },
+  {
+   "key": "file-safety.checks.the_file_scanner_could_not_read",
+   "en": "The file scanner couldn't read all of this file, so it counts as not checked.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a partial scan (the reason beside it is still a code: owed)"
+  },
+  {
+   "key": "file-safety.index.reading_is_not_gated",
+   "en": "Your team's Civicsmith reads this file without waiting for its safety scan. The scan is a separate check; if it finds a threat, the file stays readable and searchable for now.",
+   "protected": false,
+   "note": "DEC-454: file-safety: drawn on Document once this row is held (document.mjs:399)"
+  },
+  {
+   "key": "file-safety.index.safe_view_first_pages",
+   "en": "This shows the first {pages} of the document's {source_pages} pages.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a safe view of the first pages; {pages} {source_pages}"
+  },
+  {
+   "key": "file-safety.index.safe_view_is_a_view",
+   "en": "This is a view of the document, not a reading of it.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a safe view"
+  },
+  {
+   "key": "queue.kind.reading-ended",
+   "en": "Files you added, now read, partly read, or not read",
+   "protected": false,
+   "note": "DEC-454: the Queue's list of kinds (screens-daily reads every queue.kind.* row); beside the fetch-done kind's"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.pending",
+   "en": "This page is still being made in the background, so its supporting files haven't been looked for yet. Look again in a few minutes.",
+   "protected": false,
+   "note": "DEC-454: Document: supporting files not walked, RENDER_PENDING"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.toolarge",
+   "en": "This page is too large to look through for supporting files, so none were looked for.",
+   "protected": false,
+   "note": "DEC-454: Document: supporting files not walked, TOO_LARGE_TO_PARSE or PRIMARY_TOO_LARGE"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.unavailable",
+   "en": "Your team's Civicsmith couldn't look through this page for supporting files, so none were looked for.",
+   "protected": false,
+   "note": "DEC-454: Document: supporting files not walked, any other reason"
+  },
+  {
+   "key": "screen.capture.preview.cut",
+   "en": "Showing rows 1 to {shown} of {total}.",
+   "protected": false,
+   "note": "DEC-455: Add, a spreadsheet or CSV preview cut at a row (screens-intake R5, next_row); {shown} {total}"
+  },
+  {
+   "key": "screen.capture.file.parts.cancelled",
+   "en": "Sending was canceled. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
+  },
+  {
+   "key": "screen.aiproviders.origin.notoffered",
+   "en": "Not offered while your team requires the origin check.",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)"
+  },
+  {
+   "key": "screen.aiproviders.optin",
+   "en": "Projects and members may add this account to their own lists",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the owner opt-in on a team account row, off by default"
+  },
+  {
+   "key": "screen.aiproviders.optin.note",
+   "en": "Off until an administrator turns it on. Until then, only your team's own list uses this account.",
+   "protected": false,
+   "note": "DEC-465: aiproviders: the opt-in note"
+  },
+  {
+   "key": "screen.aimine.optin",
+   "en": "Projects I've joined may add this account to their lists",
+   "protected": false,
+   "note": "DEC-465: aimine: the opt-in on a member's own API-key account, off by default"
+  },
+  {
+   "key": "screen.aimine.subscription.ownlist",
+   "en": "A personal subscription is only ever on your own list, never on your team's or a project's. It does your team's work only with an AI on your team's allowed list.",
+   "protected": false,
+   "note": "DEC-465: aimine: the line on a member's personal subscription row"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed",
+   "en": "Keep it sealed in your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the fifth way a key is held"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed.line",
+   "en": "Your team's Civicsmith keeps the key sealed, readable only by its own programs, until you remove it.",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the sealed way, its line"
+  },
+  {
+   "key": "screen.aimoments.checksapply",
+   "en": "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.",
+   "protected": false,
+   "note": "DEC-465: aimoments: whose checks apply; {project}"
+  },
+  {
+   "key": "screen.aiconnect.s3.sealgo",
+   "en": "Keep it sealed",
+   "protected": false,
+   "note": "DEC-465: aiconnect step 3: the sealed way, its button"
+  },
+  {
+   "key": "screen.aimoments.mock.i",
+   "en": "whose checks apply",
+   "protected": false,
+   "note": "DEC-465: aimoments: the mock choice for the new moment"
+  },
+  {
+   "key": "screen.aimoments.continued.crossowner",
+   "en": "Your administrators let projects use this team account.",
+   "protected": false,
+   "note": "DEC-465: aimoments a: the continued account belongs to another owner"
+  },
+  {
+   "key": "screen.machine.draft.ai",
+   "en": "Draft · the assistant's ({ai})",
+   "protected": false,
+   "note": "DEC-466: machine label: a draft by the assistant, with the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.draft.asked.ai",
+   "en": "Draft · the assistant's ({ai}), asked by {handle}",
+   "protected": false,
+   "note": "DEC-466: machine label: a draft, the AI named, who asked (U1)"
+  },
+  {
+   "key": "screen.machine.proposed.ai",
+   "en": "Proposed by the assistant ({ai})",
+   "protected": false,
+   "note": "DEC-466: machine label: a proposal, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.date.ai",
+   "en": "Suggested by the assistant ({ai}), {date} · not yet weighed",
+   "protected": false,
+   "note": "DEC-466: machine label: a suggested version, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.plan.ai",
+   "en": "Suggested by the assistant ({ai}) · for a fixing project · not yet in the plan",
+   "protected": false,
+   "note": "DEC-466: machine label: a suggested plan option, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.judgment.ai",
+   "en": "The assistant's judgment ({ai}), not a finding: a conflict in the world",
+   "protected": false,
+   "note": "DEC-466: machine label: the contradiction judgment, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.proposes.tier.ai",
+   "en": "The assistant ({ai}) proposes tier 1 · file freely",
+   "protected": false,
+   "note": "DEC-466: machine label: a proposed risk tier, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.ai.tip",
+   "en": "Which AI did this work. On a long job the AI can change; the run's record lists each part.",
+   "protected": false,
+   "note": "DEC-466: tooltip on every machine label that names an AI (U1)"
+  },
+  {
+   "key": "screen.run.parts.head",
+   "en": "How this run went",
+   "protected": false,
+   "note": "DEC-466: a finished run: the parts list head (U2)"
+  },
+  {
+   "key": "screen.run.part",
+   "en": "Part {n} · {ai} on {account} · {from} to {to}",
+   "protected": false,
+   "note": "DEC-466: a finished run: one part (U2)"
+  },
+  {
+   "key": "screen.run.switch",
+   "en": "Went on to {ai} on {account}, because {reason}",
+   "protected": false,
+   "note": "DEC-466: a finished run: the change of AI between parts (U2)"
+  },
+  {
+   "key": "screen.run.declined",
+   "en": "{member} stopped the run instead of letting it go on with another account.",
+   "protected": false,
+   "note": "DEC-466: a run that stopped because the member declined the change (U2)"
+  },
+  {
+   "key": "screen.ai.ready",
+   "en": "The assistant is ready: {n} accounts on.",
+   "protected": false,
+   "note": "DEC-466: setup: the ready state, several accounts (U3); AI providers says it with screen.aiproviders.stands.on (DEC-469)"
+  },
+  {
+   "key": "screen.ai.ready.one",
+   "en": "The assistant is ready: one account on.",
+   "protected": false,
+   "note": "DEC-466: setup: the ready state, one account (U3)"
+  },
+  {
+   "key": "screen.ai.notready",
+   "en": "The assistant isn't ready: no account is on yet. Add one in AI providers.",
+   "protected": false,
+   "note": "DEC-466: AI providers: not ready (U3)"
+  },
+  {
+   "key": "screen.ai.projectonly",
+   "en": "Your team has no account of its own. The assistant works in {project} only, on that project's account.",
+   "protected": false,
+   "note": "DEC-466: AI providers: a project-only account (U3, interface-shell R20)"
+  },
+  {
+   "key": "screen.aiproviders.mock.e",
+   "en": "no account of the team's own, one project's only",
+   "protected": false,
+   "note": "DEC-466: aiproviders: the mock choice for the project-only state (U3)"
+  },
+  {
+   "key": "installer.cf.asks.gateway",
+   "en": "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them.",
+   "protected": false,
+   "note": "DEC-466: installer: the Cloudflare ask for the gateway (U5, AIR45)"
+  },
+  {
+   "key": "screen.document.held.kind",
+   "en": "This {kind} is kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind.",
+   "protected": false,
+   "note": "DEC-467: Document and Add, a file of a kind not read yet (K5436); {kind} a plain name, such as \"A Visio drawing\""
+  },
+  {
+   "key": "screen.capture.refused.type",
+   "en": "This {kind} can't be added: {reason}. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
+  },
+  {
+   "key": "screen.document.macros",
+   "en": "This file contains macros. Its text is read; the macros were never run.",
+   "protected": false,
+   "note": "DEC-467: Document, a .docm, .xlsm or .pptm (K5435)"
+  },
+  {
+   "key": "screen.capture.types.head",
+   "en": "What can be added",
+   "protected": false,
+   "note": "DEC-467: Add, the fold before choosing a file (K5435-K5437)"
+  },
+  {
+   "key": "screen.capture.types.read",
+   "en": "Read: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types read, each with its size limit; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.held",
+   "en": "Kept, not read yet: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types kept whole and named; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.refused",
+   "en": "Not kept: {kinds}",
+   "protected": false,
+   "note": "DEC-467: Add, the types not kept; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.size",
+   "en": "Each kind's size limit is shown beside it.",
+   "protected": false,
+   "note": "DEC-467: Add, under the list of types"
+  },
+  {
+   "key": "screen.capture.refused.limit",
+   "en": "This {kind} is {size}, over the {limit} allowed for this kind of file, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file over its kind's size limit (K5439); {kind} {size} {limit}"
+  },
+  {
+   "key": "screen.capture.refused.limit.count",
+   "en": "This {kind} holds {n} {units}, over the {limit} allowed, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-467: Add, a file over a count limit, such as a mailbox's messages (K5439); {kind} {n} {units} {limit}"
+  },
+  {
+   "key": "screen.photo.taken",
+   "en": "Taken {date}, near {place}.",
+   "protected": false,
+   "note": "DEC-467: open-file, a photo's carried data beside the safe picture (DEC-460)"
+  },
+  {
+   "key": "screen.photo.taken.noplace",
+   "en": "Taken {date}. The photo holds no place.",
+   "protected": false,
+   "note": "DEC-467: a photo with a date and no place"
+  },
+  {
+   "key": "screen.photo.none",
+   "en": "This photo holds no date or place.",
+   "protected": false,
+   "note": "DEC-467: a photo with neither"
+  },
+  {
+   "key": "screen.photo.beside",
+   "en": "Shown beside the safe picture, read from the original; not carried in the picture.",
+   "protected": false,
+   "note": "DEC-467: the line saying where the data is read from"
+  },
+  {
+   "key": "screen.photo.dropped",
+   "en": "Left out of the safe picture: {what}.",
+   "protected": false,
+   "note": "DEC-467: what was dropped for safety; {what}"
+  },
+  {
+   "key": "screen.archive.mailbox.count",
+   "en": "{n} messages: {read} read, {held} kept but not read yet, {refused} not kept.",
+   "protected": false,
+   "note": "DEC-467: Archive, a mailbox opened (K5437); {n} {read} {held} {refused}"
+  },
+  {
+   "key": "screen.archive.from",
+   "en": "From {parent}",
+   "protected": false,
+   "note": "DEC-467: Document, a member of an archive or mailbox: its parent"
+  },
+  {
+   "key": "screen.document.cite.page",
+   "en": "Page {n} of {m}, {file}",
+   "protected": false,
+   "note": "DEC-467: Document, the citation line of a multi-page file"
+  },
+  {
+   "key": "screen.document.converted",
+   "en": "Read from a converted copy of {file}; the original is kept.",
+   "protected": false,
+   "note": "DEC-467: Document, a file read from a converted copy"
+  },
+  {
+   "key": "screen.document.encrypted",
+   "en": "Needs a password. Civicsmith never asks for it or keeps it.",
+   "protected": false,
+   "note": "DEC-467: Document, an encrypted file (K4831 (6))"
+  },
+  {
+   "key": "screen.aiproviders.bymember.head",
+   "en": "Use by member, this month",
+   "protected": false,
+   "note": "DEC-468: aiproviders, Limits and alerts: the heading of a team-paid account's by-member table (K5459)"
+  },
+  {
+   "key": "screen.aiproviders.bymember.note",
+   "en": "Your team pays for this account, so its administrators see each member's use. A member's own subscription isn't shown here.",
+   "protected": false,
+   "note": "DEC-468: aiproviders: the line under the by-member table (K5459)"
+  },
+  {
+   "key": "screen.aiproviders.bymember.th.member",
+   "en": "Member",
+   "protected": false,
+   "note": "DEC-468: aiproviders and aiproject: the by-member table, the member column (K5459)"
+  },
+  {
+   "key": "screen.aiproviders.bymember.th.runs",
+   "en": "Runs",
+   "protected": false,
+   "note": "DEC-468: aiproviders and aiproject: the by-member table, the runs column (K5459)"
+  },
+  {
+   "key": "screen.aiproject.bymember.note",
+   "en": "This project pays for this account, so its owners see each member's use on it.",
+   "protected": false,
+   "note": "DEC-468: aiproject: the line under the by-member table (K5459)"
+  },
+  {
+   "key": "screen.aimine.seenby",
+   "en": "Your use on accounts your team or a project pays for is shown to your team's administrators or that project's owners. Your own subscription's use is yours alone.",
+   "protected": false,
+   "note": "DEC-468: aimine, Your use and cost (K5459)"
+  },
+  {
+   "key": "screen.layers.head",
+   "en": "The rules each place brings",
+   "protected": false,
+   "note": "DEC-468: places: the heading of the layers, each with its information mark (K5450, DEC-404)"
+  },
+  {
+   "key": "screen.layers.info.label",
+   "en": "How current this is",
+   "protected": false,
+   "note": "DEC-468: places: the information mark's name for assistive technology (K5450)"
+  },
+  {
+   "key": "screen.layers.info.entry",
+   "en": "Read from {source} on {date}. Its calendars reach {reach}.",
+   "protected": false,
+   "note": "DEC-468: places: the information mark beside a layer; {source} {date} {reach} (K5450)"
+  },
+  {
+   "key": "screen.layers.info.past",
+   "en": "After {reach}, not known.",
+   "protected": false,
+   "note": "DEC-468: places: the information mark beside a layer, a count past the calendars is never guessed; {reach} (K5450)"
+  },
+  {
+   "key": "screen.layers.info.promise",
+   "en": "Civicsmith promises the date it read this, not that the law hasn't changed since. Not legal advice.",
+   "protected": false,
+   "note": "DEC-468: places: the information mark beside a layer (K5450)"
+  },
+  {
+   "key": "screen.layers.info.page",
+   "en": "This page's rules come with each Civicsmith update. The newest was read on {date}.",
+   "protected": false,
+   "note": "DEC-468: places: the information mark by the page title; {date} (K5450)"
+  },
+  {
+   "key": "queue.kind.rules-changed",
+   "en": "Rules that changed in this update",
+   "protected": false,
+   "note": "DEC-468: queue: the kind, for an administrator (K5450; the style of queue.kind.*)"
+  },
+  {
+   "key": "screen.queue.ruleschanged",
+   "en": "{n} rules your team uses changed in this update: {list}. You're told once.",
+   "protected": false,
+   "note": "DEC-468: queue: an administrator item after an update (K5450); {n} {list}"
+  },
+  {
+   "key": "screen.aimoments.mock.j",
+   "en": "you stopped instead of switching",
+   "protected": false,
+   "note": "DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)"
+  },
+  {
+   "key": "act.owed_registerimport.does",
+   "en": "Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",
+   "protected": false,
+   "note": "DEC-470: held under the old op name while the code still reads it (screens-settings keys.mjs and the L11 modules); dropped when they read act.owed_registerfileimport.does"
+  },
+  {
+   "key": "screen.aimoments.mock.k",
+   "en": "the next account has another payer",
+   "protected": false,
+   "note": "DEC-471: aimoments: the mock option for a move to another payer (K5477)"
+  },
+  {
+   "key": "screen.aimoments.k.what",
+   "en": "This project's {from} account reached its monthly limit at {time}. The next account on the list is {to}, which your team pays for.",
+   "protected": false,
+   "note": "DEC-471: aimoments k: the move the member is asked about (K5477)"
+  },
+  {
+   "key": "screen.aimoments.k.ask",
+   "en": "The answer waits until you choose.",
+   "protected": false,
+   "note": "DEC-471: aimoments k (K5477)"
+  },
+  {
+   "key": "screen.aiproviders.mock.f",
+   "en": "an account stopped after a charge to Cloudflare's credits",
+   "protected": false,
+   "note": "DEC-471: aiproviders: the mock option (K5478)"
+  },
+  {
+   "key": "screen.aiproviders.stands.credits",
+   "en": "{account}'s answer at {time} was charged to Cloudflare's own credits instead of your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.",
+   "protected": false,
+   "note": "DEC-471: aiproviders: the stopped account, also the administrators' Queue item (K5478)"
+  },
+  {
+   "key": "screen.aiproviders.credits.clear",
+   "en": "Clear it and turn the account back on",
+   "protected": false,
+   "note": "DEC-471: aiproviders: the administrator clears the stop (K5478; owed op aicreditsclear)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.head",
+   "en": "Revoke your signing key?",
+   "protected": false,
+   "note": "DEC-472: account: the question before revoking one's own signing key (R-1)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.body",
+   "en": "Cases you already signed keep their signatures, marked as withdrawn from today. You can't sign again until you make a new key.",
+   "protected": false,
+   "note": "DEC-472: account: what revoking does (R-1)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.go",
+   "en": "Revoke it",
+   "protected": false,
+   "note": "DEC-472: account: the button that revokes (act signerrevokeown) (R-1)"
+  },
+  {
+   "key": "screen.account.revoke.confirm.keep",
+   "en": "Keep it",
+   "protected": false,
+   "note": "DEC-472: account and members: the button that keeps the key (R-1)"
+  },
+  {
+   "key": "screen.members.keywithdraw.confirm.head",
+   "en": "Withdraw {member}'s signing key?",
+   "protected": false,
+   "note": "DEC-472: members: the question before an administrator withdraws a signing key (R-2)"
+  },
+  {
+   "key": "screen.members.keywithdraw.confirm.body",
+   "en": "Cases {member} already signed keep their signatures, marked as withdrawn from today. {member} can't sign again until they make a new key.",
+   "protected": false,
+   "note": "DEC-472: members: what withdrawing does (R-2)"
+  },
+  {
+   "key": "screen.members.keywithdraw.confirm.go",
+   "en": "Withdraw it",
+   "protected": false,
+   "note": "DEC-472: members: the button that withdraws (act signerset) (R-2)"
+  },
+  {
+   "key": "screen.notes.deleted",
+   "en": "Your note was deleted: {title}",
+   "protected": false,
+   "note": "DEC-472: notes: the line after a note is deleted (R-3)"
+  },
+  {
+   "key": "screen.group.copy.done",
+   "en": "Your copy is ready to download. It's on the list below with the time and the counts.",
+   "protected": false,
+   "note": "DEC-472: group: the line after a copy of the record is taken (R-4)"
+  },
+  {
+   "key": "screen.security.usual.none",
+   "en": "none",
+   "protected": false,
+   "note": "DEC-472: security: a usual of zero in the totals table (R-5)"
+  },
+  {
+   "key": "screen.security.usual.floor",
+   "en": "When your team usually has none of something, up to {floor} in a day still counts as near your usual; more is marked above it.",
+   "protected": false,
+   "note": "DEC-472: security: how a usual of zero is read, under the totals table (R-5)"
+  },
+  {
+   "key": "screen.security.tip.hour_usual_none",
+   "en": "Usual for an hour: none",
+   "protected": false,
+   "note": "DEC-472: security: an hour square whose usual is zero (R-5)"
+  },
+  {
+   "key": "screen.ai.notready.here",
+   "en": "The assistant can help here once an administrator turns on an AI account.",
+   "protected": false,
+   "note": "DEC-472: question: where the assistant would be offered and no account is on (R-6)"
+  },
+  {
+   "key": "screen.front.signedin",
+   "en": "You're signed in as {name}.",
+   "protected": false,
+   "note": "DEC-472: front: the team's page seen by a signed-in member (R-7)"
+  },
+  {
+   "key": "screen.front.home",
+   "en": "Go to Home",
+   "protected": false,
+   "note": "DEC-472: front: the link to Home for a signed-in member (R-7)"
+  },
+  {
+   "key": "form.choose.widen.documents",
+   "en": "Show documents from your other projects",
+   "protected": false,
+   "note": "DEC-472: the document picker: widens the list beyond this document's project (DEC-463)"
+  },
+  {
+   "key": "form.choose.inproject",
+   "en": "in {project}",
+   "protected": false,
+   "note": "DEC-472: the document picker: the project a widened row belongs to (DEC-463)"
+  },
+  {
+   "key": "form.choose.noproject",
+   "en": "in no project",
+   "protected": false,
+   "note": "DEC-472: the document picker: a widened row in no project (DEC-463)"
+  },
+  {
+   "key": "file.kind.pdf",
+   "en": "PDF",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.docx",
+   "en": "Word document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pptx",
+   "en": "PowerPoint presentation",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xlsx",
+   "en": "Excel workbook",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xls",
+   "en": "older Excel workbook (97-2003)",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.odt",
+   "en": "OpenDocument text",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.odp",
+   "en": "OpenDocument presentation",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.ods",
+   "en": "OpenDocument spreadsheet",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.rtf",
+   "en": "Rich Text document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.csv",
+   "en": "CSV table",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.tsv",
+   "en": "TSV table",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.text",
+   "en": "text file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.html",
+   "en": "web page",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.json",
+   "en": "JSON data file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xml",
+   "en": "XML file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.svg",
+   "en": "SVG drawing",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.map",
+   "en": "map data file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.ics",
+   "en": "calendar file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.vcf",
+   "en": "contact file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.captions",
+   "en": "caption file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.picture",
+   "en": "picture",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.tiff",
+   "en": "multi-page picture (TIFF)",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.email",
+   "en": "email message",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.mbox",
+   "en": "mailbox",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.archive",
+   "en": "archive",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pst",
+   "en": "Outlook mailbox",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.access",
+   "en": "Access database",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.sqlite",
+   "en": "SQLite database",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.parquet",
+   "en": "Parquet data file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xlsb",
+   "en": "Excel binary workbook",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.maplayer",
+   "en": "map layer",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.wpd",
+   "en": "WordPerfect document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pages",
+   "en": "Pages document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.numbers",
+   "en": "Numbers spreadsheet",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.key",
+   "en": "Keynote presentation",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.visio",
+   "en": "Visio drawing",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pub",
+   "en": "Publisher file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.one",
+   "en": "OneNote file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.mpp",
+   "en": "Project file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.cad",
+   "en": "CAD drawing",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.epub",
+   "en": "e-book",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.audio",
+   "en": "audio recording",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.video",
+   "en": "video",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.other",
+   "en": "file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.rar",
+   "en": "RAR archive",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.program",
+   "en": "program or installer",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.script",
+   "en": "script",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.diskimage",
+   "en": "disk image",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.refused.reason.runs",
+   "en": "files like it can run on a device",
+   "protected": false,
+   "note": "DEC-473: why a kind is not kept, {reason}"
+  },
+  {
+   "key": "file.refused.reason.rar",
+   "en": "files like it can't be unpacked safely here",
+   "protected": false,
+   "note": "DEC-473: why a kind is not kept, {reason}"
+  },
+  {
+   "key": "file.refused.reason.diskimage",
+   "en": "a disk image can hold programs, and it isn't unpacked here",
+   "protected": false,
+   "note": "DEC-473: why a kind is not kept, {reason}"
+  },
+  {
+   "key": "screen.photo.dropped.thumbnail",
+   "en": "a small preview picture",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind thumbnail, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.maker_note",
+   "en": "the camera maker's notes",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind maker_note, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.profile",
+   "en": "a color profile that failed its safety check",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind profile, {what}; DEC-482: only a profile that failed the structural check (K5546 keeps a sound one, K5555)"
+  },
+  {
+   "key": "screen.photo.dropped.extra_picture",
+   "en": "another picture inside the file",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind extra_picture, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.after_end",
+   "en": "data after the end of the picture",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind after_end, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.xmp",
+   "en": "editing notes (XMP)",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind xmp, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.credentials",
+   "en": "a content credential (who made or edited it)",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind credentials, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.other_metadata",
+   "en": "other details the file carried",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind other_metadata, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.unreadable",
+   "en": "parts that couldn't be read",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind unreadable, {what}"
+  },
+  {
+   "key": "screen.question.leggrade.choice",
+   "en": "Your team's grade for the copy",
+   "protected": false,
+   "note": "DEC-474: A5: the label of the grade chooser in the fold 'What this passage earns'"
+  },
+  {
+   "key": "screen.question.leggrade.pointer",
+   "en": "To grade a passage, open it and use “What this passage earns”.",
+   "protected": false,
+   "note": "DEC-474: A5: under the question's strength box, pointing to the grading fold"
+  },
+  {
+   "key": "screen.ceremony.ungraded.head",
+   "en": "Passages not graded yet",
+   "protected": false,
+   "note": "DEC-474: A5: the signing section; never blocks"
+  },
+  {
+   "key": "screen.ceremony.ungraded.lead",
+   "en": "{n} passages this edition rests on have no grade from your team yet. You can grade them here, or sign without grading them.",
+   "protected": false,
+   "note": "DEC-474: A5: {n} how many"
+  },
+  {
+   "key": "screen.ceremony.ungraded.row",
+   "en": "{passage}, in finding {n}",
+   "protected": false,
+   "note": "DEC-474: A5: one ungraded passage, at signing and in the published edition; {passage} its document and place, {n} the finding"
+  },
+  {
+   "key": "screen.ceremony.ungraded.grade",
+   "en": "Grade it",
+   "protected": false,
+   "note": "DEC-474: A5: the button on that row (leggrade)"
+  },
+  {
+   "key": "screen.ceremony.ungraded.note",
+   "en": "If you sign without grading them, the published edition says so.",
+   "protected": false,
+   "note": "DEC-474: A5: under the list at signing"
+  },
+  {
+   "key": "screen.published.ungraded",
+   "en": "Published with {n} passages not yet graded by the team.",
+   "protected": false,
+   "note": "DEC-474: A5: near the top of a published edition; {n} how many; what 'not graded' means is screen.published.strength.unrated's"
+  },
+  {
+   "key": "screen.published.ungraded.one",
+   "en": "Published with one passage not yet graded by the team.",
+   "protected": false,
+   "note": "DEC-474: A5: the same line when exactly one"
+  },
+  {
+   "key": "screen.published.ungraded.which",
+   "en": "Which passages",
+   "protected": false,
+   "note": "DEC-474: A5: the fold listing them"
+  },
+  {
+   "key": "screen.strength.pair",
+   "en": "copy {capture}, connection {connection}",
+   "protected": false,
+   "note": "DEC-474: a question or finding strength pair in running text (the team grade, DEC-461)"
+  },
+  {
+   "key": "screen.airesults.notlisted",
+   "en": "Tested, not on your team's list",
+   "protected": false,
+   "note": "DEC-475: airesults: meta line on an AI tested but not on the team's list (K5482)"
+  },
+  {
+   "key": "screen.airesults.combined",
+   "en": "Combined from {n} results reported in the last six months; Civicsmith confirmed {confirmed} of them.",
+   "protected": false,
+   "note": "DEC-475: airesults: per AI and part; {n} results, {confirmed} confirmed (K5482)"
+  },
+  {
+   "key": "screen.airesults.reported",
+   "en": "Reported by teams, not confirmed",
+   "protected": false,
+   "note": "DEC-475: airesults: a result Civicsmith has not repeated (K5482)"
+  },
+  {
+   "key": "screen.airesults.own",
+   "en": "Reported by your team, not yet confirmed",
+   "protected": false,
+   "note": "DEC-475: airesults: the team's own just-sent result, at the top (K5482)"
+  },
+  {
+   "key": "screen.airesults.own.prelim",
+   "en": "Preliminary figures from your test, until it is scored: {figures}",
+   "protected": false,
+   "note": "DEC-475: airesults: under the own result; {figures} the parts and counts (K5482)"
+  },
+  {
+   "key": "screen.airesults.own.open",
+   "en": "Open your team's result",
+   "protected": false,
+   "note": "DEC-475: airesults: the button on the own result (owed op airesultown, K5482)"
+  },
+  {
+   "key": "screen.aiproviders.health.switch",
+   "en": "Share daily counts of errors and refusals with Civicsmith",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the switch for sharing health counts (K5487)"
+  },
+  {
+   "key": "screen.aiproviders.health.note",
+   "en": "Off until an administrator turns it on. For each AI and day it sends calls, refusals, no answer and errors by kind; never what was asked, who asked or which account.",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the health-counts note (K5487)"
+  },
+  {
+   "key": "screen.aiproviders.health.preview",
+   "en": "See exactly what would be sent",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the button that previews what would be sent (owed op aihealthpreview, K5487)"
+  },
+  {
+   "key": "screen.aiproviders.health.row",
+   "en": "{ai} · {date}: {calls} calls, {refusals} refusals, {noanswer} no answer, errors: {errors}",
+   "protected": false,
+   "note": "DEC-475: aiproviders: one sample row of the preview (K5487)"
+  },
+  {
+   "key": "screen.aiproviders.retest.switch",
+   "en": "Re-test the AIs your team uses, each month",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the monthly re-test switch, on (owed op airetestset, K5480)"
+  },
+  {
+   "key": "screen.aiproviders.retest.note",
+   "en": "Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your queue.",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the re-test note (K5480)"
+  },
+  {
+   "key": "queue.retesting-off.summary",
+   "en": "Re-testing is off for your team's AIs. An administrator can turn it back on in AI providers.",
+   "protected": false,
+   "note": "DEC-475: the Queue item administrators see while re-testing is off (K5480); not drawn"
+  },
+  {
+   "key": "screen.aimoments.d.waitfor",
+   "en": "Wait for",
+   "protected": false,
+   "note": "DEC-475: aimoments d: the label of the wait-time chooser (K5489)"
+  },
+  {
+   "key": "screen.aimoments.d.waitswitch",
+   "en": "Wait, then switch to {account} if it's still down",
+   "protected": false,
+   "note": "DEC-475: aimoments d: wait, then switch (owed op aiwaitswitch, K5489); {account}"
+  },
+  {
+   "key": "screen.aiproviders.mock.g",
+   "en": "an account stopped: another gateway recorded the call",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the mock option (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.stands.othergateway",
+   "en": "{account}'s answer at {time} was recorded by a gateway that isn't your team's, so Civicsmith can't tell it was paid with your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the stopped account, also the administrators' Queue item (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.mock.h",
+   "en": "an account stopped: the gateway log couldn't be read",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the mock option (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.stands.logunreadable",
+   "en": "Civicsmith couldn't read your team's gateway log for {account}'s answer at {time}, even after trying again, so it can't confirm who paid. The answer was kept, and {account} takes no more work until an administrator clears it.",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the stopped account, also the administrators' Queue item (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.mock.i",
+   "en": "the list of AIs is out of date",
+   "protected": false,
+   "note": "DEC-475: aiproviders: the mock option (K5483)"
+  },
+  {
+   "key": "screen.aiproviders.list.old",
+   "en": "Civicsmith hasn't been able to fetch the list of AIs since {date}, so it is offering the last list it had, which may be out of date.",
+   "protected": false,
+   "note": "DEC-475: aiproviders, Add an AI: the list is stale; {date} (K5483)"
+  },
+  {
+   "key": "screen.aimoments.mock.l",
+   "en": "a new AI with no estimate yet",
+   "protected": false,
+   "note": "DEC-475: aimoments: the mock option (K5488)"
+  },
+  {
+   "key": "screen.aimoments.h.noestimate",
+   "en": "No estimate yet for {ai}: Civicsmith hasn't measured it.",
+   "protected": false,
+   "note": "DEC-475: aimoments l: no estimate before a run; {ai} (K5488)"
+  },
+  {
+   "key": "screen.aiconnect.s4.none",
+   "en": "This plan carries no warning, so there is nothing to accept.",
+   "protected": false,
+   "note": "DEC-476: aiconnect step 4: a plan with no warning (K5493); the terms are no longer accepted here"
+  },
+  {
+   "key": "screen.aiconnect.terms.link",
+   "en": "Read {provider}'s terms for this use",
+   "protected": false,
+   "note": "DEC-476: aiconnect: the optional fold beside Switch it on; never a required step or a tick box (K5493)"
+  },
+  {
+   "key": "screen.aiconnect.terms.quoted",
+   "en": "From {provider}'s {page}, as of {date}:",
+   "protected": false,
+   "note": "DEC-476: aiconnect: the line above the quoted terms; {page} and {date} the provider's own (K5493)"
+  },
+  {
+   "key": "ai.notice.termschange",
+   "en": "{provider} changes its terms on {date}. Read what changes before then.",
+   "protected": false,
+   "note": "DEC-476: the notice when a provider announces new terms (K5493); not drawn"
+  },
+  {
+   "key": "screen.document.interp.label",
+   "en": "Interpreted",
+   "protected": false,
+   "note": "DEC-476: document: the label of the head fact row (K5495)"
+  },
+  {
+   "key": "screen.document.interp.tip",
+   "en": "Interpreting turns a part into the figures, dates and connections the record relies on. It happens only for the parts a member opens, cites or marks, for one investigation at a time; the whole document is searchable either way.",
+   "protected": false,
+   "note": "DEC-476: document: the label's tip (K5495); finding names for search is reading, not interpreting (K5496), so no marker for it"
+  },
+  {
+   "key": "screen.document.interp.for",
+   "en": "For {investigation}:",
+   "protected": false,
+   "note": "DEC-476: document: the heading of one investigation's entry in the fact row, then a line per member and date (K5495; DEC-478)"
+  },
+  {
+   "key": "screen.document.interp.none",
+   "en": "Nothing yet for {investigation}.",
+   "protected": false,
+   "note": "DEC-476: document: the fact value before any part is interpreted; not drawn (K5495)"
+  },
+  {
+   "key": "screen.document.interp.recorded",
+   "en": "Interpreted for {investigation}: {part}.",
+   "protected": false,
+   "note": "DEC-476: document: the history line when a part is interpreted; not drawn (K5495)"
+  },
+  {
+   "key": "screen.document.interp.offer",
+   "en": "Interpret parts of this for {investigation}",
+   "protected": false,
+   "note": "DEC-476: document: the act, owed op interpretmark (K5495)"
+  },
+  {
+   "key": "screen.document.interp.chooser.will",
+   "en": "This interprets the parts you choose for {investigation}.",
+   "protected": false,
+   "note": "DEC-476: document: the legend of the chooser (K5495)"
+  },
+  {
+   "key": "screen.document.interp.chooser.whole",
+   "en": "The whole document",
+   "protected": false,
+   "note": "DEC-476: document: the first option of the chooser, then page ranges, none pre-ticked (K5495)"
+  },
+  {
+   "key": "screen.document.interp.legend.this",
+   "en": "Interpreted for {investigation}",
+   "protected": false,
+   "note": "DEC-476: document: the legend under the page text, once per bar (K5495)"
+  },
+  {
+   "key": "screen.finder.notinterp",
+   "en": "not interpreted for {investigation}",
+   "protected": false,
+   "note": "DEC-476: finder: on a document or passage hit whose document is not interpreted for the current investigation (K5495)"
+  },
+  {
+   "key": "screen.document.interp.group",
+   "en": "{parts}, by {member}, {date}",
+   "protected": false,
+   "note": "DEC-478: document: one line per member and date under an investigation (B563 1)"
+  },
+  {
+   "key": "screen.document.interp.notyet",
+   "en": "Not yet: {ranges}.",
+   "protected": false,
+   "note": "DEC-478: document: what is not interpreted for this investigation, as ranges (B563)"
+  },
+  {
+   "key": "screen.document.interp.all",
+   "en": "Every part is interpreted.",
+   "protected": false,
+   "note": "DEC-478: document: in place of Not yet when nothing is left (B563 2)"
+  },
+  {
+   "key": "part.page",
+   "en": "page {n}",
+   "protected": false,
+   "note": "DEC-478: a part: one page (B563 4)"
+  },
+  {
+   "key": "part.pages",
+   "en": "pages {from} to {to}",
+   "protected": false,
+   "note": "DEC-478: a part: a page range (B563 4)"
+  },
+  {
+   "key": "part.rows",
+   "en": "rows {from} to {to} of the sheet “{sheet}”",
+   "protected": false,
+   "note": "DEC-478: a part: a sheet's row range (B563 4)"
+  },
+  {
+   "key": "part.paragraphs",
+   "en": "paragraphs {from} to {to}",
+   "protected": false,
+   "note": "DEC-478: a part: a text's paragraph range (B563 4)"
+  },
+  {
+   "key": "part.slides",
+   "en": "slides {from} to {to}",
+   "protected": false,
+   "note": "DEC-478: a part: a presentation's slide range (B563 4)"
+  },
+  {
+   "key": "part.section",
+   "en": "the section “{heading}”",
+   "protected": false,
+   "note": "DEC-478: a part: a headed section (B563 4)"
+  },
+  {
+   "key": "text.sourcechanged",
+   "en": "A source this text rests on changed on {date}. It is waiting to be reviewed again, and is still offered.",
+   "protected": false,
+   "note": "DEC-478: a reviewed text the link check flagged (B564, K5512, K5529)"
+  },
+  {
+   "key": "screen.doorbell.preview.head",
+   "en": "What you get back",
+   "protected": false,
+   "note": "DEC-479: doorbell: the sample receipt shown before sending, folded (25)"
+  },
+  {
+   "key": "screen.inbox.view.nokind",
+   "en": "This kind of file has no safe view yet. Its name and type are above: move it into the record, or discard it with a reason.",
+   "protected": false,
+   "note": "DEC-479: inbox: inboxview refused, the kind has no safe view (45)"
+  },
+  {
+   "key": "screen.inbox.view.changed",
+   "en": "What is stored no longer matches what was handed in, so it is not shown. Nothing was changed; tell an administrator.",
+   "protected": false,
+   "note": "DEC-479: inbox: inboxview refused, the bytes do not match the knock's digest (45)"
+  },
+  {
+   "key": "screen.inbox.view.refused.summary",
+   "en": "When it cannot be shown safely",
+   "protected": false,
+   "note": "DEC-479: inbox: the folded list of why a safe view is not shown (45)"
+  },
+  {
+   "key": "screen.document.text.unsure",
+   "en": "{unsure} of them were hard to make out and are marked on the page. Check a marked word against the original before you cite it.",
+   "protected": false,
+   "note": "DEC-479: document: after the reading line, only when the reader measured how clearly each character resolved; never a model's own opinion of itself (51)"
+  },
+  {
+   "key": "screen.document.text.unsure.tip",
+   "en": "hard to make out",
+   "protected": false,
+   "note": "DEC-479: document: a marked word, its card title (51)"
+  },
+  {
+   "key": "screen.document.text.unsure.tip_why",
+   "en": "The reader could not make this word out clearly. Check it against the original.",
+   "protected": false,
+   "note": "DEC-479: document: a marked word, its card (51)"
+  },
+  {
+   "key": "screen.ceremony.emails.head",
+   "en": "Emails in this case",
+   "protected": false,
+   "note": "DEC-480: ceremony: the section, after Photos in this case"
+  },
+  {
+   "key": "screen.ceremony.emails.by",
+   "en": "forwarded by {member}, {date}",
+   "protected": false,
+   "note": "DEC-480: ceremony: an email row, who brought it in and when"
+  },
+  {
+   "key": "screen.ceremony.emails.counts",
+   "en": "{count} names: {shown} shown, {withheld} withheld",
+   "protected": false,
+   "note": "DEC-480: ceremony: an email row, its names counted"
+  },
+  {
+   "key": "screen.ceremony.emails.withheld",
+   "en": "withheld",
+   "protected": false,
+   "note": "DEC-480: ceremony and the published copy: what an unshown name reads (K5534)"
+  },
+  {
+   "key": "screen.ceremony.emails.shown",
+   "en": "shown: {reason}",
+   "protected": false,
+   "note": "DEC-480: ceremony: a shown name, with the reason it is material"
+  },
+  {
+   "key": "screen.ceremony.emails.preview",
+   "en": "As it will be published",
+   "protected": false,
+   "note": "DEC-480: ceremony: the folded preview of the published copy"
+  },
+  {
+   "key": "screen.ceremony.emails.note",
+   "protected": true,
+   "note": "DEC-480: ceremony: what the published copy carries (K5534, DEC-408)",
+   "en": "Each person's name in an email is withheld unless you show it, with the reason it is material to the case. The published copy carries the text, the attachments, and From, To, Cc, Date and Subject; never an email address, and never the technical headers that came with the message. A home address or phone in the text is removed, as from every published document."
+  },
+  {
+   "key": "screen.ceremony.emails.why",
+   "en": "Why this name is material",
+   "protected": false,
+   "note": "DEC-480: ceremony: the reason asked before a name is shown"
+  },
+  {
+   "key": "screen.ceremony.emails.after",
+   "en": "If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.",
+   "protected": false,
+   "note": "DEC-480: ceremony: as for a photo mark"
+  },
+  {
+   "key": "screen.published.subjectchanged.named",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding is now about {subject}.",
+   "protected": false,
+   "note": "DEC-481: published: under a finding whose question's subject changed after the edition, the new subject publicly nameable (K5540)"
+  },
+  {
+   "key": "screen.published.subjectchanged.unnamed",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding is now about someone this page does not name.",
+   "protected": false,
+   "note": "DEC-481: published: as .named, the new subject not publicly nameable (K5540)"
+  },
+  {
+   "key": "screen.published.subjectchanged.removed",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding no longer names who it is about.",
+   "protected": false,
+   "note": "DEC-481: published: the subject removed (K5541)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.named",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about {subject}.",
+   "protected": false,
+   "note": "DEC-481: published: one part of a divided question, each part shown on its own (K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.unnamed",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about someone this page does not name.",
+   "protected": false,
+   "note": "DEC-481: published: as .part.named, not nameable (K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.removed",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding no longer names who it is about.",
+   "protected": false,
+   "note": "DEC-481: published: a part's subject removed (K5541, K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.forms",
+   "en": "When the subject cannot be named, was removed, or changed for one part",
+   "protected": false,
+   "note": "DEC-481: published: the design page's fold of the line's other forms"
+  },
+  {
+   "key": "screen.question.about.head",
+   "en": "Who it is about",
+   "protected": false,
+   "note": "DEC-481: question: the section with the subject and its changes (K5540)"
+  },
+  {
+   "key": "screen.question.subjectchanged",
+   "en": "{member} changed who this question is about, from {old} to {new}, on {date}.",
+   "protected": false,
+   "note": "DEC-481: question: the team's note of a change (K5540)"
+  },
+  {
+   "key": "screen.question.subjectremoved",
+   "en": "{member} removed {old} as who this question is about, on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-481: question: the team's note of a removal, with its reason (K5541)"
+  },
+  {
+   "key": "screen.question.part.subjectchanged",
+   "en": "{member} changed who part “{part}” is about, from {old} to {new}, on {date}.",
+   "protected": false,
+   "note": "DEC-481: question: a part's change, noted on its own (K5551)"
+  },
+  {
+   "key": "screen.question.part.subjectremoved",
+   "en": "{member} removed {old} as who part “{part}” is about, on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-481: question: a part's removal (K5541, K5551)"
+  },
+  {
+   "key": "screen.question.subjectchanged.published",
+   "en": "This question is in {case}, edition {n}. Its public page now says the subject changed after that edition.",
+   "protected": false,
+   "note": "DEC-481: question: under a change, when a published case carries the question (K5540)"
+  },
+  {
+   "key": "screen.members.invite.nolink",
+   "en": "No invitation link exists yet. It appears here once {names} have endorsed, or once the team's founder has.",
+   "protected": false,
+   "note": "DEC-483: members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen"
+  },
+  {
+   "key": "screen.members.invite.waiting.summary",
+   "en": "When a new administrator waits on endorsements",
+   "protected": false,
+   "note": "DEC-483: members: the design page's fold for the nolink line"
+  },
+  {
+   "key": "screen.members.founder.removes",
+   "en": "The team's founder can remove any other administrator alone, with a reason everyone on the team sees. Other administrators still need a majority vote, and no one can remove the founder.",
+   "protected": false,
+   "note": "DEC-484: members: in What removing an administrator takes, at every size (K5562)"
+  },
+  {
+   "key": "screen.members.founder.remove.summary",
+   "en": "When the founder removes an administrator",
+   "protected": false,
+   "note": "DEC-484: members: the fold with the founder's own removal (K5562)"
+  },
+  {
+   "key": "screen.members.removed.byfounder",
+   "en": "{founder}, the team's founder, removed {handle} as an administrator on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-484: members, and the team's updates: the removal and its reason, shown to the team (K5562)"
+  },
+  {
+   "key": "screen.members.endorse.founder",
+   "en": "{handle} is proposed as an administrator. As the team's founder, your endorsement alone makes them one.",
+   "protected": false,
+   "note": "DEC-484: members: endorse.what's line for the founder (K5563)"
+  },
+  {
+   "key": "screen.members.proposal.summary",
+   "en": "When the founder endorses, or the proposal is canceled",
+   "protected": false,
+   "note": "DEC-484: members: the design page's fold for a proposed administrator's two outcomes"
+  },
+  {
+   "key": "screen.members.proposal.cancelled",
+   "en": "{handle}'s proposal is canceled. They stay a member, without an administrator's powers; the endorsements given so far stay in the history.",
+   "protected": false,
+   "note": "DEC-484: members: after Cancel this proposal (K5563)"
+  },
+  {
+   "key": "screen.members.removals.head",
+   "en": "Administrators removed",
+   "protected": false,
+   "note": "DEC-485: members: the team's list of every administrator removal, the founder's and by vote (K5568)"
+  },
+  {
+   "key": "screen.members.removals.none",
+   "en": "No administrator has been removed.",
+   "protected": false,
+   "note": "DEC-485: members: the list, empty"
+  },
+  {
+   "key": "screen.members.removed.byvote",
+   "en": "{handle} was removed as an administrator by vote on {date}.",
+   "protected": false,
+   "note": "DEC-485: members: a removal by vote, then each voter's reason (K5568)"
+  },
+  {
+   "key": "screen.members.removed.voter",
+   "en": "{member}: “{reason}”",
+   "protected": false,
+   "note": "DEC-485: members: one voter's reason under a removal by vote (K5568)"
+  },
+  {
+   "key": "screen.members.founder.remove.now",
+   "en": "Remove {member} now, as the founder",
+   "protected": false,
+   "note": "DEC-485: members: the founder's act inside a removal vote under way; it removes at once (K5562; members.mjs:284 drew Agree)"
+  },
+  {
+   "key": "screen.members.founder.seen",
+   "en": "Seen by the team's founder",
+   "protected": false,
+   "note": "DEC-485: members: the design page's fold for the founder's act inside a vote"
+  },
+  {
+   "key": "screen.members.founder.remove.now.what",
+   "en": "As the team's founder, you can remove {member} now, without waiting for the vote. Your reason is shown to the team.",
+   "protected": false,
+   "note": "DEC-485: members: above the founder's act inside a vote"
+  },
+  {
+   "key": "refusal.NO_WAITING_PROPOSAL",
+   "en": "There is no waiting proposal to cancel: it was already accepted or canceled. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-485: adminproposalcancel (K5566)"
+  },
+  {
+   "key": "refusal.NOT_YOUR_PROPOSAL",
+   "en": "Only the team's founder or the member who proposed it can cancel this proposal. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-485: adminproposalcancel (K5566)"
+  },
+  {
+   "key": "screen.capture.person.refused",
+   "en": "The site asked for a person, not a program, so nothing was captured. A Queue item lets you bring the page in yourself.",
+   "protected": false,
+   "note": "DEC-486: add: the fetch met a challenge or CAPTCHA page (K5574 (1)); never filed as the document"
+  },
+  {
+   "key": "screen.capture.person.refused.following",
+   "en": "The site asked for a person, not a program, so nothing was captured. The members following this address have a Queue item to bring the page in themselves.",
+   "protected": false,
+   "note": "DEC-486: add, or the address's page: a request no member asked, such as a scheduled re-fetch (K5575)"
+  },
+  {
+   "key": "screen.capture.person.never",
+   "en": "Civicsmith never passes the check for you and never carries your pass to its own server: the page comes from your browser.",
+   "protected": false,
+   "note": "DEC-486: add and queue: the rule beneath K5574 (2), K3656"
+  },
+  {
+   "key": "queue.kind.capture-person",
+   "en": "Pages that asked for a person",
+   "protected": false,
+   "note": "DEC-486: queue: the kind (K5575)"
+  },
+  {
+   "key": "queue.capture.person.item",
+   "en": "{site} asked for a person before handing over {address}. Open it in your own browser, pass the check, save the file, then add it here.",
+   "protected": false,
+   "note": "DEC-486: queue: the item to the member who asked, or to those following (K5575)"
+  },
+  {
+   "key": "queue.capture.person.open",
+   "en": "Open the page in your browser",
+   "protected": false,
+   "note": "DEC-486: queue: the link, opened in a new tab of the member's own browser"
+  },
+  {
+   "key": "queue.capture.person.add",
+   "en": "Add the file you saved",
+   "protected": false,
+   "note": "DEC-486: queue: to Add, the request waiting"
+  },
+  {
+   "key": "screen.capture.person.matched",
+   "en": "Matched to the request for {address}. Recorded as brought in by you from that address, on {date}, after the site asked for a person.",
+   "protected": false,
+   "note": "DEC-486: add: after the file is matched by its address (K5575)"
+  },
+  {
+   "key": "capture.basis.person",
+   "en": "{member} brought it in from {address} on {date}, after the site asked for a person. It rests on {member}'s word, as any file a member hands in.",
+   "protected": false,
+   "note": "DEC-486: the record's line under the document (K5575)"
+  },
+  {
+   "key": "screen.capture.person.summary",
+   "en": "If the site asks for a person",
+   "protected": false,
+   "note": "DEC-486: add: the fold"
+  },
+  {
+   "key": "ai.refused.catalogueevidencemissing",
+   "en": "The list of AIs was refused because one of its claims doesn't say where it was found. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.1 CATALOGUE_EVIDENCE_MISSING"
+  },
+  {
+   "key": "ai.refused.catalogueentryinvalid",
+   "en": "The list of AIs was refused because one of its AIs is described wrongly or incompletely. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.2 CATALOGUE_ENTRY_INVALID"
+  },
+  {
+   "key": "ai.refused.catalogueplaninvalid",
+   "en": "The list of AIs was refused because one of its plans is described wrongly or incompletely. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.3 CATALOGUE_PLAN_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguepayloadinvalid",
+   "en": "The list of AIs was refused because part of it couldn't be read. One wrong part refuses the whole list. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.4 CATALOGUE_PAYLOAD_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguepathinvalid",
+   "en": "The list of AIs wasn't fetched: it pointed somewhere other than where the list is published. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.5 CATALOGUE_PATH_INVALID"
+  },
+  {
+   "key": "ai.refused.cataloguerollbackunknown",
+   "en": "Your team's Civicsmith doesn't hold that earlier list of AIs, so it can't go back to it. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.6 CATALOGUE_ROLLBACK_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.catalogueunavailable",
+   "en": "Your team's Civicsmith holds no checked list of AIs yet, so it can offer none. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.7 CATALOGUE_UNAVAILABLE"
+  },
+  {
+   "key": "ai.refused.digestmismatch",
+   "en": "The list of AIs that arrived isn't the one that was announced, so it was refused. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.8 DIGEST_MISMATCH"
+  },
+  {
+   "key": "ai.refused.notnewer",
+   "en": "The list of AIs that arrived is no newer than the one your team holds, so it wasn't applied. Your team's copy is unchanged.",
+   "protected": false,
+   "note": "DEC-488: C-156.9 NOT_NEWER: a replayed old list changes nothing"
+  },
+  {
+   "key": "ai.refused.advisorybadmove",
+   "en": "A notice about an AI asked for a change the list doesn't allow, such as bringing back a retired AI, so it was refused. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.10 ADVISORY_BAD_MOVE"
+  },
+  {
+   "key": "ai.refused.advisoryreasonunknown",
+   "en": "A notice about an AI gave a reason Civicsmith doesn't recognize, so it was refused. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.11 ADVISORY_REASON_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.partunknown",
+   "en": "The list of AIs doesn't cover that kind of work, so no AIs were listed for it. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.12 PART_UNKNOWN"
+  },
+  {
+   "key": "ai.refused.checkunknown",
+   "en": "That isn't one of the checks an AI must pass, so it can't be required. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-488: C-156.13 CHECK_UNKNOWN: also a shown-only value (terms, breach notice) asked as a requirement"
+  },
+  {
+   "key": "ai.catalogue.state.unavailable",
+   "en": "Your team's Civicsmith has no checked list of AIs yet, so it can't offer any AI.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: nothing verified held"
+  },
+  {
+   "key": "ai.catalogue.state.needs_newer_release",
+   "en": "A newer list of AIs exists, but this version of your team's Civicsmith can't read it. It offers the list it has until Civicsmith is updated.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: a signed list of a schema this copy cannot read"
+  },
+  {
+   "key": "ai.catalogue.state.stale",
+   "en": "The list of AIs may be out of date.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: no successful check within the policy's days; the date is screen.aiproviders.list.old's"
+  },
+  {
+   "key": "ai.catalogue.state.current",
+   "en": "The list of AIs is up to date.",
+   "protected": false,
+   "note": "DEC-488: the copy's state: current"
+  },
+  {
+   "key": "refusal.BYTES_CHANGED",
+   "en": "What is stored no longer matches the file that was sent, so it isn't shown. Nothing was changed; tell an administrator.",
+   "protected": false,
+   "note": "DEC-489: file-safety R71 safeViewOfBytes: the bytes no longer match the digest they were offered under; as screen.inbox.view.changed (DEC-479)"
+  },
+  {
+   "key": "screen.ai.notice.atsend",
+   "en": "You are shown this once, with the first question that goes to the provider, and nothing goes before you send it.",
+   "protected": false,
+   "note": "DEC-490: under connect's and projectai's notice: when the notice is acknowledged, by aisend's recipientNoticeSeen (ai-accounts R51)"
+  },
+  {
+   "key": "screen.queue.ai.signinremoved",
+   "en": "Your sign-in no longer serves {project}: a personal subscription never pays for a project's work. Members' acts there now use their own accounts, or the team's.",
+   "protected": false,
+   "note": "DEC-490: the owner's one notice when a project's sign-in account is removed by migration (ai-accounts R59, R62)"
+  },
+  {
+   "key": "content.extent.part_name.footnote",
+   "en": "footnote",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.footnote names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.endnote",
+   "en": "endnote",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.endnote names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.header",
+   "en": "page header",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.header names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.footer",
+   "en": "page footer",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.footer names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.comment",
+   "en": "comment",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.comment names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.speaker_note",
+   "en": "speaker notes",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.speaker_note names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.master_text",
+   "en": "slide master",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.master_text names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_name.text_box",
+   "en": "text box",
+   "protected": false,
+   "note": "DEC-491: a part's plain name, as content.part_kind.text_box names it after 'in a'"
+  },
+  {
+   "key": "content.extent.part_named",
+   "en": "{name} {n}",
+   "protected": false,
+   "note": "DEC-491: a part named with its number in the document: \"footnote 3\""
+  },
+  {
+   "key": "content.extent.part_unnamed",
+   "en": "a part of the document outside its body text",
+   "protected": false,
+   "note": "DEC-491: a part whose kind the reader did not name"
+  },
+  {
+   "key": "content.part_kind.body",
+   "en": "in the body text",
+   "protected": false,
+   "note": "DEC-491: the unmarked kind, worded as content.part_kind.footnote \"in a footnote\" is"
+  },
+  {
+   "key": "content.typed.checked",
+   "en": "typed by {typist}, checked by {checkers}",
+   "protected": false,
+   "note": "DEC-491: content R64; as screen.document.attest.row and .checked"
+  },
+  {
+   "key": "content.typed.unchecked",
+   "en": "typed by {typist}, not yet checked",
+   "protected": false,
+   "note": "DEC-491: content R64; as screen.document.attest.status"
+  },
+  {
+   "key": "content.typed.anonymous_member",
+   "en": "a member of the team",
+   "protected": false,
+   "note": "DEC-491: content R64: a typist or checker credited without their name, as case-grammar.text.attested_member_group"
   }
  ],
  "rewrite": {
@@ -44599,8 +46693,8 @@
   "screen.places.wanted.help": "Kept in your team's Civicsmith and never sent anywhere. When an update brings its rules and offices, administrators are told once in their queue and can choose it above.",
   "screen.plan.opened": "opened {date} by {name}",
   "screen.proceeding.login.note": "The court's register needs a login, so new filings come only by a member's own capture.",
-  "screen.published.meets": "meets this project's bar (capture {capture}, connection {connection})",
-  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the team's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
+  "screen.published.meets": "meets this project's bar (copy {capture}, connection {connection})",
+  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A personal subscription never pays for a project's work. Members' acts here now use their own accounts, or the team's. Add an API key to give the project its own account.",
   "screen.projectai.notice.head": "Before your first question here",
   "screen.projectai.key.field": "The project's API key",
   "screen.recovery.held": "You hold recovery codes: {remaining} of {total} unused, issued {date}.",
@@ -44698,7 +46792,7 @@
   "stake.none": "No stake of its own beyond the team's",
   "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
   "refusal.ACCOUNT_MEMBER_NOT_ACTIVE": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
-  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
+  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets, plain text and ordinary JPEG or PNG photographs (a photograph is shown redrawn). This file is none of them, so it has no safe view.",
   "refusal.MACHINE_CANNOT_MARK": "Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written.",
   "screen.held.archivefiles": "Open its files",
   "screen.proceeding.kind.help": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
@@ -44707,7 +46801,7 @@
   "find.query.placeholder": "Words to find",
   "screen.held.ineligible.alone": "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
   "screen.inbox.ladder.basis": "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
-  "screen.doorbell.received": "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  "screen.doorbell.received": "Received on {at}. A member of the team will read it. Keep what this receipt shows: this page does not know who you are, so that is all you have to ask about it.",
   "screen.capture.address.existed": "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
   "screen.document.cite.question": "Cite in which question",
   "screen.finder.widen": "Documents holding at least one of the words: {n}.",
@@ -44770,6 +46864,21 @@
   "project-stage.why.edition_case_ratified": "this case has not been signed",
   "refusal.BAD_PERIOD": "A follow needs a first day, and a last day that isn't before it, or no last day. Nothing was written.",
   "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE": "Your team's Civicsmith already holds this document, filed in another place, so it wasn't filed again here: a document has one home. Nothing was written. If you found it at a new address, that address is already noted with the copy your team holds.",
-  "attestation.register_row_names": "no register row names this capture under a record that exists, so the record states no attestation for it"
+  "attestation.register_row_names": "no register row names this capture under a record that exists, so the record states no attestation for it",
+  "screen.panel.usage.group": "Summed over members, and nothing asked is shown. Whoever pays for the account, administrators or owners, also sees each member's use. A member sees their own use on Settings › The assistant.",
+  "mark.scale.capture.name": "Copy",
+  "mark.scale.capture.means": "your team's grade for the copy: how well the copy your team holds shows the passage it cites, never above how well it could be captured",
+  "screen.group.bar.capture": "Copy",
+  "screen.group.bar.now": "Copy at least {capture}, connection at least {connection}, set on {date}:",
+  "filings.floors_capture_connection": "Floors: copy {capture}, connection {connection}. {detail}",
+  "standard.source.capture": "could be captured: {capture}, {extent}",
+  "standard.source.capture.whole": "could be captured: {capture}",
+  "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}",
+  "screen.doorbell.happens.court": "A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them.",
+  "refusal.CONSENSUS_REQUIRED": "Your endorsement is recorded. Still to endorse: {awaiting}.",
+  "screen.members.founder": "the team's founder",
+  "screen.members.remove.reason": "Why remove their administrator's powers? (everyone on the team will see this)",
+  "session.reauth": "For this, enter your password again: signing or publishing a case, changing administrators and connecting an AI account always ask.",
+  "refusal.REAUTH_DUE": "Type your password again to do this. Signing or publishing a case, changing administrators and connecting an AI account always ask for it. Nothing was changed."
  }
 }

@@ -252,20 +252,14 @@
      ]
     },
     {
-     "op": "groupkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Hold the team's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "groupkeyswitch",
+     "op": "owed:aiaccountswitch DEC-420",
      "label": "Switch the team's key on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "ailimitset",
@@ -420,7 +414,7 @@
    "acts": [
     {
      "op": "release",
-     "label": "Vouch for photos",
+     "label": "Vouch for copies",
      "status": "declared",
      "modules": [
       "capture",
@@ -625,6 +619,11 @@
      ]
     },
     {
+     "op": "owed:adminproposalcancel K5563",
+     "label": "Cancel this proposal",
+     "status": "owed"
+    },
+    {
      "op": "expertiseconfirm",
      "label": "Confirm declared expertise",
      "status": "declared",
@@ -810,14 +809,6 @@
    "purpose": "The member's own API key or subscription token, or the team's key where it offers one, or none; which account pays for an act; their own account's uses and limits; their own use across every payer (K1547, K1755, DEC-188). In the first beta, Your AI takes its place (DEC-420).",
    "acts": [
     {
-     "op": "groupkeynoticeseen",
-     "label": "Read what the team's key means",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
      "op": "disclosureshown",
      "label": "Read what connecting means",
      "status": "function",
@@ -843,12 +834,9 @@
      ]
     },
     {
-     "op": "accountreferenceset",
+     "op": "owed:aiownadd DEC-420",
      "label": "Connect with your own API key",
-     "status": "declared",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "subscriptiondisconnect",
@@ -875,12 +863,9 @@
      ]
     },
     {
-     "op": "accountreferenceremove",
+     "op": "owed:aiaccountremove DEC-420",
      "label": "Disconnect",
-     "status": "declared",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -895,20 +880,14 @@
    "purpose": "Administrators: the team's API key and whether it is on; what it pays for; its limits, overall and for each member; its use, summed over members and naming none; keeping the team's material away from AI; every change (moved from Members, DEC-284; the walk's D2). In the first beta, AI providers takes its place (DEC-420).",
    "acts": [
     {
-     "op": "groupkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Hold the team's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "groupkeyswitch",
+     "op": "owed:aiaccountswitch DEC-420",
      "label": "Switch the team's key on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "accountusesset",
@@ -927,12 +906,9 @@
      ]
     },
     {
-     "op": "groupkeyremove",
+     "op": "owed:aiaccountremove DEC-420",
      "label": "Remove the team's key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "aikeepaway",
@@ -1626,7 +1602,7 @@
    "acts": [
     {
      "op": "release",
-     "label": "Vouch for photos",
+     "label": "Vouch for copies",
      "status": "declared",
      "modules": [
       "capture",
@@ -1771,12 +1747,9 @@
      ]
     },
     {
-     "op": "projectkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Add an API key for a project",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "exploreapprove",
@@ -2100,6 +2073,19 @@
      ]
     },
     {
+     "op": "owed:previewmore DEC-455",
+     "label": "Show more rows",
+     "status": "owed"
+    },
+    {
+     "op": "captureuploadabort",
+     "label": "Cancel sending",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
      "op": "owed:capturecredentiallist DEC-381",
      "label": "Show the stored logins",
      "status": "owed"
@@ -2290,6 +2276,11 @@
       "op-declarations",
       "ratification"
      ]
+    },
+    {
+     "op": "owed:interpretmark K5495",
+     "label": "Interpret parts of this for an investigation",
+     "status": "owed"
     },
     {
      "op": "cite",
@@ -3037,47 +3028,22 @@
    "id": "projectai",
    "name": "AI for this project",
    "frame": "working",
-   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
+   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, and by member for its owners; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
    "acts": [
     {
-     "op": "projectkeyset",
+     "op": "owed:aiaccountadd DEC-420",
      "label": "Hold the project's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "projectsigninset",
-     "label": "Use your own sign-in for the project",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "projectaccountswitch",
+     "op": "owed:aiaccountswitch DEC-420",
      "label": "Switch the project's account on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
-     "op": "projectaccountremove",
+     "op": "owed:aiaccountremove DEC-420",
      "label": "Remove the project's account",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "projectkeynoticeseen",
-     "label": "Read what the project's key means",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
+     "status": "owed"
     },
     {
      "op": "accountusesset",
@@ -5441,6 +5407,16 @@
      ]
     },
     {
+     "op": "owed:mailnameshow K5534",
+     "label": "Show a name, with why it is material",
+     "status": "owed"
+    },
+    {
+     "op": "owed:mailnamewithhold K5534",
+     "label": "Withhold a name again",
+     "status": "owed"
+    },
+    {
      "op": "signerregisterown",
      "label": "Register a signing key in this browser",
      "status": "function",
@@ -5478,6 +5454,14 @@
      "op": "owed:casedetails K4169",
      "label": "See the details of this work",
      "status": "owed"
+    },
+    {
+     "op": "leggrade",
+     "label": "Record this grade",
+     "status": "declared",
+     "modules": [
+      "citation"
+     ]
     }
    ],
    "journeys": [
@@ -5709,6 +5693,11 @@
    "frame": "working",
    "purpose": "Material handed in through the doorbell.",
    "acts": [
+    {
+     "op": "owed:inboxview DEC-479",
+     "label": "Show it safely",
+     "status": "owed"
+    },
     {
      "op": "inboxpull",
      "label": "Move into the record",
@@ -5965,7 +5954,7 @@
    "purpose": "The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.",
    "acts": [
     {
-     "op": "owed:registerimport DEC-406",
+     "op": "owed:registerfileimport DEC-406",
      "label": "Bring in a register",
      "status": "owed"
     },
@@ -6084,6 +6073,26 @@
      "status": "owed"
     },
     {
+     "op": "owed:aicreditsclear K5478",
+     "label": "Clear a charge to Cloudflare's credits and turn the account back on",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airetestset K5480",
+     "label": "Turn monthly re-testing on or off",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aihealthset K5487",
+     "label": "Turn on or off sharing daily counts with Civicsmith",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aihealthpreview K5487",
+     "label": "See what the daily counts would send",
+     "status": "owed"
+    },
+    {
      "op": "owed:aitestopen DEC-420",
      "label": "Test an AI that isn't listed",
      "status": "owed"
@@ -6155,8 +6164,13 @@
      "status": "owed"
     },
     {
+     "op": "owed:aikeyseal DEC-465",
+     "label": "Keep it sealed",
+     "status": "owed"
+    },
+    {
      "op": "owed:aitermsaccept DEC-420",
-     "label": "Accept the terms that bind our use",
+     "label": "Accept the free-tier warning",
      "status": "owed"
     },
     {
@@ -6198,6 +6212,11 @@
     {
      "op": "owed:aimycheckset DEC-420",
      "label": "Require a check for my own work",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiorderset DEC-420",
+     "label": "Move an account up or down",
      "status": "owed"
     }
    ],
@@ -6301,6 +6320,11 @@
      "op": "owed:aiaccountpick DEC-420",
      "label": "Choose another account",
      "status": "owed"
+    },
+    {
+     "op": "owed:aiwaitswitch K5489",
+     "label": "Wait, then switch to another account if the provider is still down",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -6347,6 +6371,11 @@
     {
      "op": "owed:airesultsread DEC-420",
      "label": "Read the results for an AI",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airesultown K5482",
+     "label": "Open your team's own result",
      "status": "owed"
     }
    ],

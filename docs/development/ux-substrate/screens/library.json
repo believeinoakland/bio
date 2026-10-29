@@ -87,7 +87,7 @@
       },
       {
        "screen": "setup",
-       "act": "groupkeyset",
+       "act": "owed:aiaccountadd DEC-420",
        "what": "If your team will pay for the assistant, choose “Your team, with one API key” and paste the key. It is never shown again.",
        "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the team's account. Leave it empty and members bring their own."
       },
@@ -651,7 +651,7 @@
       },
       {
        "screen": "connect",
-       "act": "accountreferenceset",
+       "act": "owed:aiownadd DEC-420",
        "what": "Using an API key instead? Paste it under \"Using an API key instead\" and connect with it.",
        "why": "Anthropic bills you for each use of your own key; it serves only your questions."
       },

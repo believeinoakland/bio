@@ -163,7 +163,7 @@ add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscr
 add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
 add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member; {when} from ai.until.*');
 must(scr, 'mock-screens.js', 'reached its monthly limit for runs on October 12. It pauses runs until November 1; its other uses go on.');
-add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the team\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
+add('ai.queue.suspended', "Your sign-in no longer serves {project}: a second member joined, and a sign-in serves a project only while it has one member. Members' acts there now use their own accounts, or the team's key.", true, 'mock-screens.js queue (no longer drawn, DEC-490)', 'the project account suspended; names no member. Retired with project sign-ins (B570, ai-accounts R62); kept while notice-producers still sends it; the drawn notice is now screen.queue.ai.signinremoved');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
 must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
 add('ai.label.explored', 'Machine work · found while exploring · enabled by {owner}', true, 'DEC-189', 'shown only to the paying account\'s owners (question-explorer R5); {owner}: the team, the project\'s name, or the member\'s handle');
@@ -326,6 +326,21 @@ for (const s of reg) {
 
 // 8. Acts: each act's name as each screen labels it (a fixed term: protected), and what it does (protected where the act is
 //    signed, terminal, irreversible or outward: its explanation is the warning before it, DEC-157 (4))
+// DEC-490: the labels of the 11 acts ai-accounts retired (B570), kept while the modules still read them; no screen draws them
+add("act.groupkeyset.label.setup", "Hold the team's API key", true, 'registry.json (retired, DEC-490)');
+add("act.groupkeyswitch.label.setup", "Switch the team's key on or off", true, 'registry.json (retired, DEC-490)');
+add("act.groupkeynoticeseen.label.connect", "Read what the team's key means", true, 'registry.json (retired, DEC-490)');
+add("act.accountreferenceset.label.connect", "Connect with your own API key", true, 'registry.json (retired, DEC-490)');
+add("act.accountreferenceremove.label.connect", "Disconnect", true, 'registry.json (retired, DEC-490)');
+add("act.groupkeyset.label.teamai", "Hold the team's API key", true, 'registry.json (retired, DEC-490)');
+add("act.groupkeyswitch.label.teamai", "Switch the team's key on or off", true, 'registry.json (retired, DEC-490)');
+add("act.groupkeyremove.label.teamai", "Remove the team's key", true, 'registry.json (retired, DEC-490)');
+add("act.projectkeyset.label.queue", "Add an API key for a project", true, 'registry.json (retired, DEC-490)');
+add("act.projectkeyset.label.projectai", "Hold the project's API key", true, 'registry.json (retired, DEC-490)');
+add("act.projectsigninset.label.projectai", "Use your own sign-in for the project", true, 'registry.json (retired, DEC-490)');
+add("act.projectaccountswitch.label.projectai", "Switch the project's account on or off", true, 'registry.json (retired, DEC-490)');
+add("act.projectaccountremove.label.projectai", "Remove the project's account", true, 'registry.json (retired, DEC-490)');
+add("act.projectkeynoticeseen.label.projectai", "Read what the project's key means", true, 'registry.json (retired, DEC-490)');
 for (const s of reg) for (const a of s.acts) {
   const k = `act.${opkey(a.op)}.label.${s.id}`;
   if (!seen.has(k)) add(k, a.label, true, 'registry.json');
