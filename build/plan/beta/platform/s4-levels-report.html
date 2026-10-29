@@ -107,7 +107,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
           <tr><td>A long run at steady load, and records of 1, 5 and 25 GB</td><td>Nothing new is run on the test copy now (K5798)</td></tr>
           <tr><td>Institution's figures: members at once, record size</td><td>Its design is not built yet</td></tr>
           <tr><td>Everything Enterprise adds</td><td>No Enterprise account (K5454)</td></tr>
-          <tr><td>The file reader's start-up time, transfer speed and idle cost on Cloudflare</td><td>Needs a small test deployment, which BOB decides on. Measured on our own machine only.</td></tr>
+          <tr><td>The file reader's idle cost on Cloudflare, and whether it stops when idle</td><td>A test deployment on 29 October measured its start-up (4 to 18 seconds for a new reader) and its reading times (a 48 MP photo takes about 65 seconds). Its idle cost could not be settled: the readers were not recorded as stopping when idle, and the bill for the period was not read.</td></tr>
           <tr><td>Uploads of 100 to 500 MB in parts</td><td>Not run on the test copy</td></tr>
           <tr><td>The cache (C) under load; a room per project (A)</td><td>No way to read the cache's hits; A is on paper</td></tr>
         </tbody>
