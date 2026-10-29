@@ -1,6 +1,6 @@
 # The probe run for P-M17 and L3-L5 (K5800): BOB's commands, in order
 
-**Status** · For BOB #334, PLATFORM #4, 2026-10-29. Branch `proto/levels-2-3-1f` at `b6f26ef2cf` (throwaway, never merged). K5800's conditions: account `20b533579290b9b93168345edd3b7f72` only; `ReaderProbe` on the published reader digest only (no MinProbe, no image built, K1898); `standard-1`; the short scenarios; at most a 24-hour idle run; then teardown; about $5 in all. **Times are my estimates**, from my local runs of the same image at the same shape (`results/l3-image-local.json`, `l4-image-local.json`) and the worker's; every Cloudflare figure (provisioning, cold start, R2 speed) is unknown until this run.
+**Status** · For BOB #334, PLATFORM #4, 2026-10-29; revised after BOB's first steps (P-54). Branch `proto/levels-2-3-1f` at `3945eff822` (throwaway, never merged). K5800's conditions: account `20b533579290b9b93168345edd3b7f72` only; `ReaderProbe` on the published reader digest only (no MinProbe, no image built, K1898); `standard-1`; the short scenarios; at most a 24-hour idle run; then teardown; about $5 in all. **Times are my estimates**, from my local runs of the same image at the same shape (`results/l3-image-local.json`, `l4-image-local.json`) and the worker's; every Cloudflare figure (provisioning, cold start, R2 speed) is unknown until this run.
 
 ## What this run measures, and what it cannot
 - **Measures:** container cold start from never run (5 new instances) and from sleep; the product's own path R2 -> Worker -> container for L3 (photos), L4 (LibreOffice), L5 (archives), with the Worker's R2 read time, the container's answer and completion or refusal; whether the platform restarts an idle container's host within 24 hours (the object's start/stop event log); the L1 byte-pass floor if the L1 fixtures are added (optional, not in this list).
@@ -14,11 +14,11 @@
 | 1 | `apt-get install -y p7zip-full libimage-exiftool-perl libheif-examples libheif-plugin-x265 libheif-plugin-libde265` (ImageMagick, ffmpeg and LibreOffice were present in my session) | 1-2 min |
 | 2 | `node ../gen/gen-all.mjs --out=/home/user/fix1f --set=l3,l4,l5 --tier=local --skip=' (doc\|ppt) \|rtf .*--mib=(50\|100)\|--mib=(400\|480) \|blob \|--mib=1900'` (26 fixtures, all under 95 MiB; writes `/home/user/fix1f/MANIFEST.jsonl`) | 6-10 min |
 | 3 | `export CLOUDFLARE_ACCOUNT_ID=20b533579290b9b93168345edd3b7f72` then `node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 --which=reader` (dry run; prints "containers ReaderProbe") | 5 s |
-| 4 | `node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 --which=reader --go` (R2 bucket create, `wrangler deploy`; no image is built) | 1-5 min (provisioning unknown) |
+| 4 | `node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 --which=reader --max-instances=6 --go` (a cap on running instances, not a cost) (R2 bucket create, `wrangler deploy`; no image is built) | 1-5 min (provisioning unknown) |
 | 5 | `npx wrangler secret put PROBE_TOKEN --config wrangler.generated.json` (paste the output of `openssl rand -hex 24`; at least 16 characters; never in a file, never printed) | 10 s |
 | 6 | `export PROBE_BASE_URL=https://plat-s1-probe.<workers.dev subdomain>.workers.dev` and `PROBE_TOKEN=<the token>`, then `node run-remote.mjs --scenario=health` | 5 s |
 | 7 | `node run-remote.mjs --scenario=seed --sizes=10,50,100 --upload=/home/user/fix1f` (160 MiB made in the Worker; about 0.6 GB of fixtures through `/put`) | 3-8 min |
-| 8 | `node run-remote.mjs --scenario=coldstart --which=reader --n=5` (5 never-run instances of the 1.15 GB image, 3 warm calls each) | 3-10 min |
+| 8 | `node run-remote.mjs --scenario=coldstart --which=reader --n=3` (3 never-run instances of the 1.15 GB image, 3 warm calls each; **n must not exceed `max_instances`**: the first run used n=5 against 3, my error, P-54) | 2-6 min |
 | 9 | `node run-remote.mjs --scenario=fromsleep --which=reader --wait-s=360` | 7 min |
 | 10 | `node run-remote.mjs --scenario=reader --manifest=/home/user/fix1f/MANIFEST.jsonl --set=l3` | 4-7 min (201 s locally) |
 | 11 | `node run-remote.mjs --scenario=reader --manifest=/home/user/fix1f/MANIFEST.jsonl --set=l4` | 2-4 min (the 10 MiB RTF 46 s locally) |
