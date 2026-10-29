@@ -3,10 +3,10 @@
    It never runs wrangler unless --go is given; without --go it writes wrangler.generated.json (git-ignored) and prints the commands it WOULD run. It never prints a secret.
    Usage (from proto-mem/1f/probe, on a machine with docker running, network, and `npm install` done here):
      export CLOUDFLARE_ACCOUNT_ID=20b533579290b9b93168345edd3b7f72        # the guard compares this to the permitted account; a different value is refused
-     node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 [--sleep-after=5m] [--go]
+     node deploy.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files --instance-type=standard-1 [--which=reader] [--sleep-after=5m] [--go]
    Steps the --go run performs, in order, each stopping the script on failure:
      1. npx wrangler r2 bucket create <bucket>                          (skipped with --bucket-exists)
-     2. npx wrangler deploy --config wrangler.generated.json            (builds both images with docker, pushes them, deploys the Worker and the two container classes)
+     2. npx wrangler deploy --config wrangler.generated.json            (with --which=reader: no image is built; the Worker and ReaderProbe on the published digest)
    Then BOB sets the secret by hand (never in a file, never printed):  npx wrangler secret put PROBE_TOKEN --config wrangler.generated.json   (paste `openssl rand -hex 24`; keep it for PROBE_TOKEN in the run commands) */
 import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -25,10 +25,19 @@ if (a["sleep-after"] && !/^\d+[smh]$/.test(a["sleep-after"])) refuse("--sleep-af
 if (!["standard-1", "standard-4"].includes(itype)) refuse(`instance type ${itype}: only standard-1 and standard-4 are measured.`);
 const cfg = readFileSync(join(here, "wrangler.template.json"), "utf8").replaceAll("__NAME__", name).replaceAll("__BUCKET__", bucket).replaceAll("__ITYPE__", itype).replaceAll("__SLEEP__", a["sleep-after"] || "5m");
 const parsed = JSON.parse(cfg);
+/* --which=reader (BOB, K5800): ReaderProbe only, on the published reader digest; no MinProbe class, binding or migration entry (its image would be built, and no image is built in a session, K1898) */
+const which = a.which || "all";
+if (!["all", "reader"].includes(which)) refuse(`--which must be reader or all (got ${which}).`);
+if (which === "reader") {
+  parsed.containers = parsed.containers.filter((c) => c.class_name === "ReaderProbe");
+  parsed.durable_objects.bindings = parsed.durable_objects.bindings.filter((b) => b.class_name === "ReaderProbe");
+  parsed.migrations = parsed.migrations.map((m) => ({ ...m, new_sqlite_classes: m.new_sqlite_classes.filter((c) => c === "ReaderProbe") }));
+  if (parsed.containers.some((c) => !/^docker\.io\/civicsmith\/reader-container@sha256:[0-9a-f]{64}$/.test(c.image))) refuse("ReaderProbe must name the published reader digest.");
+}
 if (parsed.account_id !== PERMITTED) refuse("the template's account_id is not the permitted account.");
 writeFileSync(join(here, "wrangler.generated.json"), JSON.stringify(parsed, null, 2) + "\n");
 const steps = [...(a["bucket-exists"] ? [] : [["npx", "wrangler", "r2", "bucket", "create", bucket]]), ["npx", "wrangler", "deploy", "--config", "wrangler.generated.json"]];
-console.log(`account ${PERMITTED} ok; Worker ${name}; bucket ${bucket}; instance type ${itype}; config written to wrangler.generated.json`);
+console.log(`account ${PERMITTED} ok; Worker ${name}; bucket ${bucket}; instance type ${itype}; containers ${parsed.containers.map((c) => c.class_name).join(", ")}; config written to wrangler.generated.json`);
 for (const s of steps) {
   console.log((a.go ? "RUN  " : "WOULD RUN  ") + s.join(" "));
   if (a.go) { try { execFileSync(s[0], s.slice(1), { cwd: here, stdio: "inherit", env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: PERMITTED } }); } catch { refuse(`step failed: ${s.join(" ")}`); } }

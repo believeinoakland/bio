@@ -41,7 +41,9 @@ const plan = {
   l5: [M("zip-random", ["--mib=480", "--members=20"]), M("zip-random", ["--mib=400", "--members=1"]), M("zip-many", ["--members=10000", "--mib-total=1900"]), M("blob", ["--bytes=524288000"]), M("blob", ["--bytes=524288001"]), M("zip-nest", ["--depth=3"]), M("zip-nest", ["--depth=4"]),
     M("zip-bomb-zeros", ["--mib=1900"]), M("bz2-bomb", ["--gib=3"]), M("targz", ["--mib=200", "--members=50"]), M("tarbz2", ["--mib=200", "--members=50"]), M("tarxz", ["--mib=200", "--members=50"]), M("7z", ["--mib=200", "--members=50"]), M("targz", ["--mib=200", "--members=50", "--content=words"]), M("tarbz2", ["--mib=200", "--members=50", "--content=words"]), M("tarxz", ["--mib=200", "--members=50", "--content=words"]), M("7z", ["--mib=200", "--members=50", "--content=words"])],
 };
+const skip = arg.skip ? new RegExp(arg.skip) : null;
 for (const s of sets) for (const cmd of plan[s] || []) {
+  if (skip && skip.test(cmd.join(" "))) continue;
   if (arg.dry) { console.log(cmd.join(" ")); continue; }
   const t0 = Date.now();
   try { const o = execFileSync(cmd[0], cmd.slice(1), { stdio: ["ignore", "pipe", "inherit"], maxBuffer: 1 << 26 }).toString().trim(); appendFileSync(join(out, "MANIFEST.jsonl"), o.split("\n").filter((l) => l.startsWith("{")).join("\n") + "\n"); console.error(`ok ${s} ${(Date.now() - t0) / 1000}s ${cmd.slice(2).join(" ")}`); }

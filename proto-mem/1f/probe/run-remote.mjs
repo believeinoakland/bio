@@ -3,6 +3,7 @@
    request header and is never printed, logged or written to a result file). It refuses a base URL whose host does not start with plat-s1 (set PROBE_ALLOW_LOCAL=1 to allow 127.0.0.1 for the local self-test).
    Results: one JSON line per measurement appended to --out (default ../results/remote-<scenario>-<UTC timestamp>.jsonl). Wall times are CLIENT-side (the spec asks for client wall time).
    node run-remote.mjs --scenario=health
+   node run-remote.mjs --scenario=wipe                                                          deletes every object in the probe's bucket (before teardown.mjs)
    node run-remote.mjs --scenario=seed [--sizes=10,50,100] [--upload=DIR --only=REGEX]         R2 objects r<N>mib (made in the Worker) and/or generated fixtures put through /put (<= the zone's body cap)
    node run-remote.mjs --scenario=coldstart [--which=min,reader] [--n=5]                        first request to NEW container instances (never run) then warm repeats
    node run-remote.mjs --scenario=fromsleep --which=min --wait-s=360                             ping, wait past sleepAfter (class default 5m; PROBE_SLEEP_AFTER on the Worker overrides), ping again
@@ -37,6 +38,7 @@ const manifest = () => (a.manifest ? readFileSync(a.manifest, "utf8").split("\n"
 const base = (f) => f.split("/").pop(); const only = a.only ? new RegExp(a.only) : null;
 
 const S = {
+  async wipe() { log({ what: "wipe the probe bucket", ...(await call("/wipe", { method: "POST" })) }); },
   async health() { log({ ...(await call("/health")) }); },
   async seed() {
     for (const mib of String(a.sizes || "10,50,100").split(",").map(Number)) log({ what: `gen r${mib}mib`, ...(await call(`/gen?key=r${mib}mib&bytes=${mib * 1048576}&kind=random&salt=${mib}`)) });
@@ -108,5 +110,7 @@ const S = {
   },
 };
 if (!S[scenario]) refuse(`unknown scenario ${scenario}`);
+/* the published reader image serves only POST /convert, /frames, /archive and GET /version (its container/server.mjs:81 answers 404 otherwise); these scenarios need MinProbe's /sink, /pull, /source, /hold */
+if (a.which === "reader" && ["transfer", "output", "hold", "sigterm"].includes(scenario)) refuse(`scenario ${scenario} needs MinProbe's routes; with --which=reader run health, seed, coldstart, fromsleep, bytepass, reader, idle.`);
 log({ phase: "begin", base_host: url.hostname, out: outFile });
 await S[scenario]();

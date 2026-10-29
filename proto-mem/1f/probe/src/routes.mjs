@@ -108,6 +108,9 @@ export async function handle(request, env, ctx, hooks) {
         genStream(bytes, kind, Number(u.searchParams.get("salt") || 1)).pipeTo(writable).catch(() => {}); const o = await env.PROBE_R2.put(u.searchParams.get("key"), readable);
         return json({ ok: true, key: u.searchParams.get("key"), size: o.size, kind, ms: Math.round(now() - t0) }); }
       case "PUT /put": { must(u, "key"); const len = Number(request.headers.get("content-length")); if (!(len > 0)) return json({ ok: false, error: "Content-Length required" }, 411); const t0 = now(); const o = await env.PROBE_R2.put(u.searchParams.get("key"), request.body); return json({ ok: true, size: o.size, ms: Math.round(now() - t0) }); }
+      case "POST /wipe": { /* empties the probe's own bucket (R2 refuses to delete a bucket that holds objects) before teardown.mjs */
+        let deleted = 0, cursor; do { const l = await env.PROBE_R2.list({ cursor, limit: 1000 }); const keys = l.objects.map((o) => o.key); if (keys.length) { await env.PROBE_R2.delete(keys); deleted += keys.length; } cursor = l.truncated ? l.cursor : undefined; } while (cursor);
+        return json({ ok: true, deleted }); }
       case "GET /head": { must(u, "key"); const h = await env.PROBE_R2.head(u.searchParams.get("key")); return h ? json({ ok: true, size: h.size }) : json({ ok: false }, 404); }
       case "GET /bytepass": must(u, "key"); return await bytepass(env, u);
       case "GET /ping": { const t0 = now(); const res = await hooks.instance(which, inst).fetch(new Request(`http://probe${u.searchParams.get("path") || "/ping"}`)); const h = now() - t0; const text = await res.text(); let body = null; try { body = JSON.parse(text); } catch { body = text.slice(0, 300); } return json({ ok: res.ok, which, inst, status: res.status, worker_to_container_ms: Math.round(h), body }); }

@@ -34,6 +34,6 @@ export class ReaderProbe extends Base {}
 
 export default {
   async fetch(request, env, ctx) {
-    return handle(request, env, ctx, { instance: (which, name) => { const ns = which === "reader" ? env.READER_PROBE : env.MIN_PROBE; return ns.get(ns.idFromName(name)); } });
+    return handle(request, env, ctx, { instance: (which, name) => { const ns = which === "reader" ? env.READER_PROBE : env.MIN_PROBE; if (!ns) throw Object.assign(new Error(`container class for which=${which} is not deployed (deploy.mjs --which=reader has ReaderProbe only)`), { status: 400 }); return ns.get(ns.idFromName(name)); } });
   },
 };

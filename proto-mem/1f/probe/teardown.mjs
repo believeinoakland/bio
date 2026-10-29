@@ -2,7 +2,7 @@
 /* proto-mem/1f (THROWAWAY): removes what deploy.mjs made. Same account/name guard. Without --go it only prints the commands.
    node teardown.mjs --name=plat-s1-probe --bucket=plat-s1-probe-files [--go]
    Note: `wrangler delete` of a Worker with containers removes the Worker and its Durable Object classes; whether the pushed container images in the account's registry are removed too is NOT known here -
-   BOB checks the dashboard (Containers) or `npx wrangler containers list` and `npx wrangler containers delete <id>` for leftovers. A bucket must be emptied before deletion: the object keys are in run-remote's log. */
+   BOB checks the dashboard (Containers) or `npx wrangler containers list` and `npx wrangler containers delete <id>` for leftovers. A bucket must be emptied before deletion: run `node run-remote.mjs --scenario=wipe` first. */
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
