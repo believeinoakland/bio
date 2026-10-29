@@ -1,0 +1,13 @@
+{"ts":"2026-10-29T00:46:51.213Z","scenario":"seed","phase":"begin","base_host":"plat-s1-probe.believeinoakland.workers.dev","out":"/home/user/wt-1f/proto-mem/1f/results/remote-seed-2026-10-29T00-46-51-213Z.jsonl"}
+{"ts":"2026-10-29T00:46:52.759Z","scenario":"seed","what":"gen r10mib","status":200,"client_wall_ms":1545,"body":{"ok":true,"key":"r10mib","size":10485760,"kind":"random","ms":740},"error":null}
+{"ts":"2026-10-29T00:46:54.963Z","scenario":"seed","what":"gen r50mib","status":200,"client_wall_ms":2204,"body":{"ok":true,"key":"r50mib","size":52428800,"kind":"random","ms":2016},"error":null}
+{"ts":"2026-10-29T00:46:58.567Z","scenario":"seed","what":"gen r100mib","status":200,"client_wall_ms":3604,"body":{"ok":true,"key":"r100mib","size":104857600,"kind":"random","ms":3382},"error":null}
+{"ts":"2026-10-29T00:46:59.318Z","scenario":"seed","what":"put 7z-200mib-50m.7z","size":33225,"status":200,"client_wall_ms":749,"body":{"ok":true,"size":33225,"ms":494},"error":null}
+{"ts":"2026-10-29T00:47:04.975Z","scenario":"seed","what":"put 7z-w-200mib-50m.7z","size":67282318,"status":200,"client_wall_ms":5657,"body":{"ok":true,"size":67282318,"ms":3083},"error":null}
+{"ts":"2026-10-29T00:47:06.376Z","scenario":"seed","what":"put avif-12mp.avif","size":4148254,"status":200,"client_wall_ms":1398,"body":{"ok":true,"size":4148254,"ms":523},"error":null}
+{"ts":"2026-10-29T00:47:06.999Z","scenario":"seed","what":"put bz2-zeros-3gib.bz2","size":2289,"status":200,"client_wall_ms":623,"body":{"ok":true,"size":2289,"ms":465},"error":null}
+{"ts":"2026-10-29T00:47:08.793Z","scenario":"seed","what":"put heic-12mp.heic","size":6708055,"status":200,"client_wall_ms":1793,"body":{"ok":true,"size":6708055,"ms":735},"error":null}
+{"ts":"2026-10-29T00:47:11.338Z","scenario":"seed","what":"put heic-24mp.heic","size":13363406,"status":200,"client_wall_ms":2545,"body":{"ok":true,"size":13363406,"ms":1085},"error":null}
+{"ts":"2026-10-29T00:47:14.443Z","scenario":"seed","what":"put heic-48mp.heic","size":26732328,"status":200,"client_wall_ms":3104,"body":{"ok":true,"size":26732328,"ms":1562},"error":null}
+{"ts":"2026-10-29T00:47:16.208Z","scenario":"seed","what":"put jpeg-12mp.jpg","size":7546240,"status":200,"client_wall_ms":1765,"body":{"ok":true,"size":7546240,"ms":750},"error":null}
+{"ts":"2026-10-29T00:47:18.450Z","scenario":"seed","what":"put jpeg-24mp.jpg","size":15092730,"status":200,"client_wall_ms":2242,"body":{"ok":true,"size":15092730,"ms":1063},"error":null}

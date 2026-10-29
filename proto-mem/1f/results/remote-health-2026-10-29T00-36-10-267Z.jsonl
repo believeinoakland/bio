@@ -1,0 +1,2 @@
+{"ts":"2026-10-29T00:36:10.268Z","scenario":"health","phase":"begin","base_host":"plat-s1-probe.believeinoakland.workers.dev","out":"/home/user/wt-1f/proto-mem/1f/results/remote-health-2026-10-29T00-36-10-267Z.jsonl"}
+{"ts":"2026-10-29T00:36:11.065Z","scenario":"health","status":200,"client_wall_ms":793,"body":{"ok":true,"name":"plat-s1-probe","local":false},"error":null}
