@@ -1,0 +1,377 @@
+{
+ "when": "2026-10-29T00:18:52.249Z",
+ "label": "LOCAL, not platform: the published reader image in local docker, standard-1 shape",
+ "set": "l3",
+ "image": "docker.io/civicsmith/reader-container@sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
+ "shape": {
+  "memory": "4g",
+  "memory_swap": "4g",
+  "cpus": "0.5"
+ },
+ "command": "node proto-mem/1f/local/run-image.mjs --set=l3 --out=../results/l3-image-local.json",
+ "host": {
+  "cpus": "4",
+  "node": "v26.10.0"
+ },
+ "results": [
+  {
+   "case": "avif-12mp.avif",
+   "route": "frames",
+   "kind": "avif",
+   "file_bytes": 4149018,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 366,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 11202,
+   "first_record_ms": 11199,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 11673248,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 232,
+   "cgroup_failcnt": 0,
+   "cpu_s": 5.8,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "heic-12mp.heic",
+   "route": "frames",
+   "kind": "heic",
+   "file_bytes": 6708055,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 289,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 13033,
+   "first_record_ms": 13033,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 12010876,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 258,
+   "cgroup_failcnt": 0,
+   "cpu_s": 6.7,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "heic-24mp.heic",
+   "route": "frames",
+   "kind": "heic",
+   "file_bytes": 13363406,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 344,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 26086,
+   "first_record_ms": 26085,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 24019292,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 474,
+   "cgroup_failcnt": 0,
+   "cpu_s": 13.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "heic-48mp.heic",
+   "route": "frames",
+   "kind": "heic",
+   "file_bytes": 26732328,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 329,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 54782,
+   "first_record_ms": 54781,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 48033741,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 950,
+   "cgroup_failcnt": 0,
+   "cpu_s": 27.6,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "jpeg-12mp.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 7546240,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 293,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 11088,
+   "first_record_ms": 11087,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 12019278,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 275,
+   "cgroup_failcnt": 0,
+   "cpu_s": 5.8,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "jpeg-24mp.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 15092730,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 325,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 22383,
+   "first_record_ms": 22383,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 24027361,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 526,
+   "cgroup_failcnt": 0,
+   "cpu_s": 11.4,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "jpeg-48mp.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 30185406,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 322,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 48903,
+   "first_record_ms": 48902,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 48041717,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 1128,
+   "cgroup_failcnt": 0,
+   "cpu_s": 24.6,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "jpeg-solid-12000x10000.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 468910,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 250,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 302,
+   "first_record_ms": 302,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "UNREADABLE",
+    "why": "convert-im6.q16: cache resources exhausted `/tmp/rc-frames-dChnKu/in.jpg' @ error/cache.c/OpenPixelCache/4124.\nconvert-im6.q16: no images defined `/tmp/rc-frame"
+   },
+   "peak_cgroup_mb": 31,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.4,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:UNREADABLE"
+  },
+  {
+   "case": "jpeg-solid-12001x10000.jpg",
+   "route": "frames",
+   "kind": "jpeg",
+   "file_bytes": 469223,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 307,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 19,
+   "first_record_ms": 19,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "PIXELS_OVER",
+    "pixels": 120010000,
+    "limit": 120000000
+   },
+   "peak_cgroup_mb": 18,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:PIXELS_OVER"
+  },
+  {
+   "case": "png-12mp.png",
+   "route": "frames",
+   "kind": "png",
+   "file_bytes": 24024676,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 284,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 2628,
+   "first_record_ms": 2628,
+   "records": {
+    "frame": 1,
+    "facts": 1
+   },
+   "payload_bytes_out": 24024676,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 203,
+   "cgroup_failcnt": 0,
+   "cpu_s": 1.5,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "tiff-40p.tif",
+   "route": "frames",
+   "kind": "tiff",
+   "file_bytes": 24954664,
+   "bounds": {
+    "bytes": 52428800,
+    "pixels": 120000000,
+    "edge": 65535,
+    "pages": 5000,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 337,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 7318,
+   "first_record_ms": 7318,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "UNREADABLE",
+    "why": "convert-im6.q16: cache resources exhausted `/tmp/rc-frames-plEgTg/in.tif' @ error/cache.c/OpenPixelCache/4124.\nconvert-im6.q16: no images defined `/tmp/rc-frame"
+   },
+   "peak_cgroup_mb": 1321,
+   "cgroup_failcnt": 0,
+   "cpu_s": 3.9,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:UNREADABLE"
+  }
+ ]
+}

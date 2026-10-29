@@ -1,0 +1,152 @@
+{
+ "when": "2026-10-29T00:25:06.108Z",
+ "label": "LOCAL, not platform: the published reader image in local docker, standard-1 shape",
+ "set": "l4",
+ "image": "docker.io/civicsmith/reader-container@sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
+ "shape": {
+  "memory": "4g",
+  "memory_swap": "4g",
+  "cpus": "0.5"
+ },
+ "command": "node proto-mem/1f/local/run-image.mjs --set=l4 --out=../results/l4-image-local.json",
+ "host": {
+  "cpus": "4",
+  "node": "v26.10.0"
+ },
+ "results": [
+  {
+   "case": "rtf-100mib.rtf",
+   "route": "convert",
+   "kind": "rtf",
+   "file_bytes": 104857602,
+   "bounds": {
+    "bytes": 104857600,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 309,
+   "idle_cgroup_mb": 15,
+   "wall_ms": 378,
+   "first_record_ms": null,
+   "records": {},
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": "fetch failed",
+   "refusal": null,
+   "peak_cgroup_mb": 120,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.4,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "client-error"
+  },
+  {
+   "case": "rtf-10mib.rtf",
+   "route": "convert",
+   "kind": "rtf",
+   "file_bytes": 10485665,
+   "bounds": {
+    "bytes": 104857600,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 286,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 45808,
+   "first_record_ms": 45805,
+   "records": {
+    "converted": 1
+   },
+   "payload_bytes_out": 2191426,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 313,
+   "cgroup_failcnt": 0,
+   "cpu_s": 23.1,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "rtf-50mib.rtf",
+   "route": "convert",
+   "kind": "rtf",
+   "file_bytes": 52428796,
+   "bounds": {
+    "bytes": 104857600,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 325,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 956214,
+   "first_record_ms": 956213,
+   "records": {
+    "converted": 1
+   },
+   "payload_bytes_out": 10938092,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 1271,
+   "cgroup_failcnt": 0,
+   "cpu_s": 478.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "sheet-65535x100.xls",
+   "route": "convert",
+   "kind": "xls",
+   "file_bytes": 84882944,
+   "bounds": {
+    "bytes": 52428800,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 301,
+   "idle_cgroup_mb": 15,
+   "wall_ms": 179,
+   "first_record_ms": null,
+   "records": {},
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": "fetch failed",
+   "refusal": null,
+   "peak_cgroup_mb": 69,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.3,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "client-error"
+  },
+  {
+   "case": "sheet-65535x20.xls",
+   "route": "convert",
+   "kind": "xls",
+   "file_bytes": 18228736,
+   "bounds": {
+    "bytes": 52428800,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 287,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 12601,
+   "first_record_ms": 12601,
+   "records": {
+    "converted": 1
+   },
+   "payload_bytes_out": 7721589,
+   "end": null,
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 430,
+   "cgroup_failcnt": 0,
+   "cpu_s": 6.5,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  }
+ ]
+}
