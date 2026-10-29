@@ -1,4 +1,14 @@
 {
-  "services": [],
-  "urls": []
+  "services": [
+    { "name": "Cloudflare token (account 20b533579290b9b93168345edd3b7f72)", "url": "https://api.cloudflare.com/client/v4/user/tokens/verify", "active": "result.status=active", "expires": "result.expires_on" },
+    { "name": "Cloudflare account 20b533579290b9b93168345edd3b7f72 readable", "url": "https://api.cloudflare.com/client/v4/accounts/20b533579290b9b93168345edd3b7f72", "active": "result.id=20b533579290b9b93168345edd3b7f72" },
+    { "name": "repository rulesets readable", "url": "https://api.github.com/repos/civicsmith/civicsmith/rulesets" }
+  ],
+  "urls": [
+    "https://biosmoke8.believeinoakland.workers.dev/",
+    "https://newgroup.believeinoakland.workers.dev/",
+    "https://civicsmith.org/",
+    "https://raw.githubusercontent.com/believeinoakland/bio/main/release/NOTICE.json"
+  ],
+  "variables": ["JOURNEY_ADMIN_HANDLE", "JOURNEY_ADMIN_PASSWORD", "JOURNEY_MEMBER_HANDLE", "JOURNEY_MEMBER_PASSWORD", "CF_TOKEN", "CF_ACCT", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"]
 }
