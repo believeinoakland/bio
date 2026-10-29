@@ -1,0 +1,656 @@
+{
+ "when": "2026-10-29T00:42:06.044Z",
+ "label": "LOCAL, not platform: the published reader image in local docker, standard-1 shape",
+ "set": "l5",
+ "image": "docker.io/civicsmith/reader-container@sha256:c1422b2661fa7993590493af11dc7d55ba75ea68b74fd4311b7001ee0f6d250b",
+ "shape": {
+  "memory": "4g",
+  "memory_swap": "4g",
+  "cpus": "0.5"
+ },
+ "command": "node proto-mem/1f/local/run-image.mjs --set=l5 --out=../results/l5-image-local.json",
+ "host": {
+  "cpus": "4",
+  "node": "v26.10.0"
+ },
+ "results": [
+  {
+   "case": "7z-200mib-50m.7z",
+   "route": "archive",
+   "kind": "7z",
+   "file_bytes": 33225,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 279,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 30,
+   "first_record_ms": 27,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "RATIO_OVER",
+    "member": null,
+    "ratio": 6311.969902182092,
+    "limit": 1100
+   },
+   "peak_cgroup_mb": 17,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:RATIO_OVER"
+  },
+  {
+   "case": "7z-w-200mib-50m.7z",
+   "route": "archive",
+   "kind": "7z",
+   "file_bytes": 67282318,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 331,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 192824,
+   "first_record_ms": 714,
+   "records": {
+    "member": 50,
+    "end": 1
+   },
+   "payload_bytes_out": 209715200,
+   "end": {
+    "type": "end",
+    "members": 50,
+    "unpacked": 209715200,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 251,
+   "cgroup_failcnt": 0,
+   "cpu_s": 96.6,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "blob-524288000.bin",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 524288000,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 318,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 3296,
+   "first_record_ms": 3295,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "UNREADABLE",
+    "why": "\nERROR: /tmp/rc-archive-pI8xYr/in : Cannot open the file as archive\n\n\n"
+   },
+   "peak_cgroup_mb": 568,
+   "cgroup_failcnt": 0,
+   "cpu_s": 1.9,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:UNREADABLE"
+  },
+  {
+   "case": "blob-524288001.bin",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 524288001,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 302,
+   "idle_cgroup_mb": 15,
+   "wall_ms": 3172,
+   "first_record_ms": null,
+   "records": {},
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": "fetch failed",
+   "refusal": null,
+   "peak_cgroup_mb": 564,
+   "cgroup_failcnt": 0,
+   "cpu_s": 1.8,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "client-error"
+  },
+  {
+   "case": "bz2-zeros-3gib.bz2",
+   "route": "archive",
+   "kind": "bz2",
+   "file_bytes": 2289,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 358,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 34,
+   "first_record_ms": 34,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "RATIO_OVER",
+    "member": null,
+    "ratio": 1100.4980340760158,
+    "limit": 1100
+   },
+   "peak_cgroup_mb": 22,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.3,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:RATIO_OVER"
+  },
+  {
+   "case": "tar-bz2-200mib-50m.tar.bz2",
+   "route": "archive",
+   "kind": "bz2",
+   "file_bytes": 67523,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 295,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 2587,
+   "first_record_ms": 2587,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "RATIO_OVER",
+    "member": null,
+    "ratio": 1100.0231624779706,
+    "limit": 1100
+   },
+   "peak_cgroup_mb": 27,
+   "cgroup_failcnt": 0,
+   "cpu_s": 1.5,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:RATIO_OVER"
+  },
+  {
+   "case": "tar-bz2-w-200mib-50m.tar.bz2",
+   "route": "archive",
+   "kind": "bz2",
+   "file_bytes": 44265732,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 321,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 45369,
+   "first_record_ms": 23097,
+   "records": {
+    "member": 50,
+    "end": 1
+   },
+   "payload_bytes_out": 209715200,
+   "end": {
+    "type": "end",
+    "members": 50,
+    "unpacked": 209743872,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 102,
+   "cgroup_failcnt": 0,
+   "cpu_s": 22.9,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "tar-gz-200mib-50m.tar.gz",
+   "route": "archive",
+   "kind": "gz",
+   "file_bytes": 714880,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 338,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 3147,
+   "first_record_ms": 1454,
+   "records": {
+    "member": 50,
+    "end": 1
+   },
+   "payload_bytes_out": 209715200,
+   "end": {
+    "type": "end",
+    "members": 50,
+    "unpacked": 209745920,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 72,
+   "cgroup_failcnt": 0,
+   "cpu_s": 1.8,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "tar-gz-w-200mib-50m.tar.gz",
+   "route": "archive",
+   "kind": "gz",
+   "file_bytes": 68370233,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 311,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 6875,
+   "first_record_ms": 3629,
+   "records": {
+    "member": 50,
+    "end": 1
+   },
+   "payload_bytes_out": 209715200,
+   "end": {
+    "type": "end",
+    "members": 50,
+    "unpacked": 209745920,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 126,
+   "cgroup_failcnt": 0,
+   "cpu_s": 3.7,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "tar-xz-200mib-50m.tar.xz",
+   "route": "archive",
+   "kind": "xz",
+   "file_bytes": 31348,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 278,
+   "idle_cgroup_mb": 16,
+   "http_status": 200,
+   "wall_ms": 276,
+   "first_record_ms": 276,
+   "records": {
+    "refusal": 1
+   },
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": null,
+   "refusal": {
+    "code": "RATIO_OVER",
+    "member": null,
+    "ratio": 1100.1760877886948,
+    "limit": 1100
+   },
+   "peak_cgroup_mb": 43,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.4,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "refused:RATIO_OVER"
+  },
+  {
+   "case": "tar-xz-w-200mib-50m.tar.xz",
+   "route": "archive",
+   "kind": "xz",
+   "file_bytes": 52178692,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 318,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 15002,
+   "first_record_ms": 7696,
+   "records": {
+    "member": 50,
+    "end": 1
+   },
+   "payload_bytes_out": 209715200,
+   "end": {
+    "type": "end",
+    "members": 50,
+    "unpacked": 209745920,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 133,
+   "cgroup_failcnt": 0,
+   "cpu_s": 7.7,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "zip-many-10000m-1900mib.zip",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 8638768,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 323,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 317007,
+   "first_record_ms": 582,
+   "records": {
+    "member": 10000,
+    "end": 1
+   },
+   "payload_bytes_out": 1992290000,
+   "end": {
+    "type": "end",
+    "members": 10000,
+    "unpacked": 1992290000,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 109,
+   "cgroup_failcnt": 0,
+   "cpu_s": 158.7,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "zip-nest-3.zip",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 350,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 321,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 28,
+   "first_record_ms": 28,
+   "records": {
+    "member": 1,
+    "end": 1
+   },
+   "payload_bytes_out": 240,
+   "end": {
+    "type": "end",
+    "members": 1,
+    "unpacked": 240,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 17,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "zip-nest-4.zip",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 460,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 281,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 20,
+   "first_record_ms": 20,
+   "records": {
+    "member": 1,
+    "end": 1
+   },
+   "payload_bytes_out": 350,
+   "end": {
+    "type": "end",
+    "members": 1,
+    "unpacked": 350,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 17,
+   "cgroup_failcnt": 0,
+   "cpu_s": 0.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "zip-random-400mib-1m.zip",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 419430518,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 271,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 14540,
+   "first_record_ms": 14539,
+   "records": {
+    "member": 1,
+    "end": 1
+   },
+   "payload_bytes_out": 419430400,
+   "end": {
+    "type": "end",
+    "members": 1,
+    "unpacked": 419430400,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 1636,
+   "cgroup_failcnt": 0,
+   "cpu_s": 6.2,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "zip-random-480mib-20m.zip",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 503318422,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 298,
+   "idle_cgroup_mb": 15,
+   "http_status": 200,
+   "wall_ms": 6992,
+   "first_record_ms": 3014,
+   "records": {
+    "member": 20,
+    "end": 1
+   },
+   "payload_bytes_out": 503316480,
+   "end": {
+    "type": "end",
+    "members": 20,
+    "unpacked": 503316480,
+    "bytes": 0
+   },
+   "error": null,
+   "refusal": null,
+   "peak_cgroup_mb": 690,
+   "cgroup_failcnt": 0,
+   "cpu_s": 3.7,
+   "oom_killed": false,
+   "container_running_after": true,
+   "outcome": "completed"
+  },
+  {
+   "case": "zip-zeros-1900mib.zip",
+   "route": "archive",
+   "kind": "zip",
+   "file_bytes": 1933588,
+   "bounds": {
+    "bytes": 524288000,
+    "unpacked": 2147483648,
+    "ratio": 1100,
+    "members": 10000,
+    "member": 2147483648,
+    "name": 4096,
+    "timeMs": 900000
+   },
+   "container_start_to_listening_ms": 369,
+   "idle_cgroup_mb": 15,
+   "wall_ms": 46185,
+   "first_record_ms": null,
+   "records": {},
+   "payload_bytes_out": 0,
+   "end": null,
+   "error": "fetch failed",
+   "refusal": null,
+   "peak_cgroup_mb": null,
+   "cgroup_failcnt": null,
+   "cpu_s": null,
+   "oom_killed": true,
+   "container_running_after": false,
+   "outcome": "client-error"
+  }
+ ]
+}
