@@ -53,7 +53,7 @@ const SOURCE_DEPTH_MAX = 32;
 const INGEST_KEY_MAX = 200;
 /* R36: the five connection kinds and their words, by the design's key where it has one, else money's own provisional row. */
 /* the sentence of the reason `neighbours` gives when no date is asked (the row is read by its key) */
-export const NO_DATE_ASKED = localize("money.neighbours.no_date_asked", "No date was asked, so whether this fact was in force on a date is not judged.");
+const NO_DATE_ASKED = localize("money.neighbours.no_date_asked", "No date was asked, so whether this fact was in force on a date is not judged.");
 const KIND_WORDS = Object.freeze({
   money_transfer: localize("label.connectionkinds.money_transfer", "money moved"),
   money_payment: localize("label.connectionkinds.money_payment", "money paid"),
