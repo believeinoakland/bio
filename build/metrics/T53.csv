@@ -105,3 +105,8 @@ session_01RAN5em7nwdkWJw7eMNHB2W,job,EVENTS #2,events,,,,,0,,,replaced; unmeasur
 session_01RAN5enbGxwnMWs4dv3Yky9,job,MONEY #2,money,10579290,182220,1147,12528,0,,,replaced
 session_01RAN5enwSuSydTbcY1oSBC4,job,PEOPLE #2,people,,,,,0,,,replaced; unmeasured: archive_session returned no usage
 session_01RAN5ekL1dkjcJWEbCSo5V8,job,REGISTERS #2,registers,18280535,199424,1710,45765,1,2219,yes,replaced
+session_01RAN5eoi81759MKCXNufdQz,job,MONEY #3,money,9268945,215302,637,13352,0,,,
+session_01RAN5ek3MGxuQapoz9ufqLN,job,EVENTS #3,events,8463264,252726,629,14384,0,,,
+session_01RAN5emoSv2FGNh24qYevXS,job,PEOPLE #3,people,6630433,175758,116,13328,0,,,
+session_01RAN5eoLB9NK4d4zqJTFNwM,job,REGISTERS #3,registers,13165456,537876,626,15100,1,2219,yes,
+session_01RAN5emNNYfeZYx5QS4YFKx,BOB-final,BOB #339,,149196019,4502734,10537,1513628,,,,
