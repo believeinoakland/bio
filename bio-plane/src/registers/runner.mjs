@@ -504,8 +504,8 @@ export const runnerMethods = {
       const wrote = performance.now();
       this.tx(() => {
         const w = this.port.put(delta);
-        for (const m of member) this.sql.exec(`INSERT OR IGNORE INTO register_import_rows (import_id, piece, seg_n, row_no, row_key, content_hash, src_row, project) VALUES (?,?,?,?,?,?,?,?)`,
-                                              row.import_id, p.piece, seg.n, m.idx, m.key, m.hash, m.src_row, row.project);
+        for (const m of member) this.sql.exec(`INSERT OR IGNORE INTO register_import_rows (import_id, register, piece, seg_n, row_no, row_key, content_hash, src_row, project) VALUES (?,?,?,?,?,?,?,?,?)`,
+                                              row.import_id, row.register, p.piece, seg.n, m.idx, m.key, m.hash, m.src_row, row.project);
         this.sql.exec(`UPDATE register_imports SET rows_new = rows_new + ?, rows_unchanged = rows_unchanged + ?, rows_tombstoned = rows_tombstoned + ? WHERE import_id=?`, w.written, sameN + w.existed, tomb, row.import_id);
         if (finishedSeg) { ing.seg += 1; ing.rows = 0; delete ing.byte; } else { ing.rows += taken; ing.byte = pos; }
         /* rows skipped over as tombstoned or already placed are counted in `taken` too, so the position moves past them */

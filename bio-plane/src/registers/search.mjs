@@ -291,10 +291,10 @@ export const searchMethods = {
       if (s) shas.set(s.sha256, [...(shas.get(s.sha256) ?? []), p]);
     }
     const done = this.tx(() => {
-      const r = this.record.expunge({ module: "registers", table: "register_cells", key: { register: reg, row_key: key }, ground,
+      const r = this.record.expunge({ module: "registers", table: "register_import_rows", key: { register: reg, row_key: key }, ground,
         ...(ground === "court_order" ? { order } : {}), ...(ground === "lawful_demand" ? { demandKind } : {}), by: member });
       if (!r || r.ok === false) return r;
-      this.sql.exec(`DELETE FROM register_rows WHERE register=? AND row_key=?`, reg, key);
+      this.port.remove({ register: reg, row_key: key });   /* the cells and the index, through the port (R22) */
       this.sql.exec(`DELETE FROM register_cites WHERE register=? AND row_key=?`, reg, key);
       this.sql.exec(`INSERT OR IGNORE INTO register_removed (register, row_key) VALUES (?,?)`, reg, key);
       return r;
@@ -305,7 +305,6 @@ export const searchMethods = {
     }
     /* each segment that held the row is replaced by the segment minus the row (a new digest), the old object purged (R30) */
     const rewritten = [];
-    this.sql.exec(`DELETE FROM register_import_rows WHERE row_key=? AND import_id IN (SELECT import_id FROM register_imports WHERE register=?)`, key, reg);
     for (const [oldSha, at] of shas) {
       const res = await this.rewriteSegment(oldSha, at, reg, key);
       if (res) rewritten.push(res);
@@ -335,7 +334,7 @@ export const searchMethods = {
     const segs = this.rows(`SELECT import_id, piece, n FROM register_segments WHERE sha256=?`, oldSha);
     this.tx(() => {
       this.sql.exec(`UPDATE register_segments SET sha256=?, bytes=?, rows = rows - ? WHERE sha256=?`, newSha, out.length, drop.size, oldSha);
-      this.sql.exec(`UPDATE register_cells SET segment_sha=? WHERE segment_sha=?`, newSha, oldSha);
+      this.port.repoint({ from: oldSha, to: newSha });
       /* the rows after a removed one move up by the number removed before them */
       for (const s of segs) {
         const gone = [...drop].sort((x, y) => x - y);

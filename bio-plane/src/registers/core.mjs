@@ -69,7 +69,7 @@ export class Registers {
     this.#freeBytes = freeBytes;
     migrateRegisters(this.sql);
     this.port = port || sqliteRowStore(this.sql, { freeBytes: () => this.#shelfFree(), termsOf: (reg) => this.definitionOf(reg)?.definition ?? null });
-    const d = this.record.declareTable("registers", registersTables((scope) => this.port.rebuild(scope)));
+    const d = this.record.declareTable("registers", registersTables((scope) => this.port.rebuild(scope), (scope) => (typeof this.port.rebuildTokens === "function" ? this.port.rebuildTokens(scope) : [])));
     if (d && d.ok === false && d.reason !== "TABLE_DECLARED") throw new Error(`registers: ${d.reason}`);
     this.#registerHooks();
   }

@@ -45,7 +45,7 @@ test("R24: five imports are searched by name (either order), amount, date and fi
     assert.equal(typeof x.matched, "number");
   }
   const row = r.name.rows[0];
-  assert.deepEqual(Object.keys(row).sort(), ["cells", "cited", "import", "imported_at", "register", "row_key", "source_date", "src_row", "version"]);
+  assert.deepEqual(Object.keys(row).sort(), ["cells", "cited", "import", "imported_at", "label_key", "register", "row_key", "source_date", "src_row", "version"]);
   assert.equal(row.version, 1);
   assert.equal(row.cited, false);
 });

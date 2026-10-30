@@ -50,7 +50,7 @@ test("R30 (G4, R69): a removed row is in no table, object, cache or log; searchR
   assert.equal(w.registers.searchRows({ scope: { register: "town_filings" }, name: "Quillon", viewer: V("bob") }).rows.length, 0);
   assert.equal(w.registers.rowOf({ import: 1, row_key: key, viewer: V("bob") }).reason, "NO_SUCH_REGISTER_ROW");
   assert.equal(w.registers.citeRow({ import: 1, row_key: key, author: V("bob"), viewer: V("bob") }).reason, "ROW_REMOVED");
-  const t = w.record.tombstones({ table: "register_cells" }).tombstones;
+  const t = w.record.tombstones({ table: "register_import_rows" }).tombstones;
   assert.equal(t.length, 1);
   assert.deepEqual([t[0].ground, t[0].by, t[0].key.register], ["unlawful", "alice", "town_filings"]);
   assert.ok(!JSON.stringify(t).includes(SENT_NAME), "the tombstone holds none of the row");
@@ -84,7 +84,7 @@ test("R31 control: the other keys of the re-import land; a lawful demand of a ki
   const out = await REMOVE(w, keyOf(w, 3), { ground: "lawful_demand", demandKind: "officer_privacy" });
   assert.equal(out.ok, true);
   assert.equal((await REMOVE(w, keyOf(w, 4), { ground: "court_order", order: "Case 12-345" })).ok, true);
-  assert.deepEqual(w.record.tombstones({ table: "register_cells" }).tombstones.map((t) => [t.ground, t.demandKind ?? t.order]), [["lawful_demand", "officer_privacy"], ["court_order", "Case 12-345"]]);
+  assert.deepEqual(w.record.tombstones({ table: "register_import_rows" }).tombstones.map((t) => [t.ground, t.demandKind ?? t.order]), [["lawful_demand", "officer_privacy"], ["court_order", "Case 12-345"]]);
   w.clock.ms += 3_600_000;
   START(w, { scope: "project", project: w.P, author: V("bob"), viewer: V("bob") });
   await w.drain({ [URL_]: served(enc(csv(12))) });

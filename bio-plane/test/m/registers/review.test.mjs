@@ -139,3 +139,32 @@ test("R11, R23: a file larger than one act reads is refused before anything is w
   free = null;
   assert.equal((await w.registers.importStart({ register: "town_filings", filter: {}, scope: "project", project: w.P, author: V("bob"), viewer: V("bob"), file: enc(csv(3)), holes: { table: "2025" } })).ok, true);
 });
+
+test("R22: a removal reaches the cells and the index only through the port: with the in-memory rowStore the row is removed, its tombstone recorded, and search no longer finds it", async () => {
+  const { memoryRowStore } = await import("../../../src/registers/index.mjs");
+  const { DEF } = await import("./fixture.mjs");
+  let w;
+  const port = memoryRowStore({ termsOf: () => DEF("town_filings"), members: (imp, key, hash) => w.sql(`SELECT 1 AS x FROM register_import_rows WHERE import_id=? AND row_key=? AND content_hash=?`, imp, key, hash).length > 0 });
+  w = seeded({ port });
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(12, { cell: (i) => rowOf(i, i === 5 ? { donor_name: "Quillon Removed" } : {}) }))) });
+  assert.equal(w.count("register_cells"), 0, "the SQL cells are not this port's");
+  assert.equal(w.registers.searchRows({ scope: { register: "town_filings" }, name: "Quillon", viewer: V("bob") }).rows.length, 1);
+  const key = w.sql(`SELECT row_key FROM register_import_rows WHERE src_row=6`)[0].row_key;
+  const out = await w.registers.rowExpunge({ register: "town_filings", row_key: key, ground: "unlawful", reason: "a minor's name", author: V("alice") });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.equal(w.registers.searchRows({ scope: { register: "town_filings" }, name: "Quillon", viewer: V("bob") }).rows.length, 0);
+  assert.equal(port.versionsOf({ scopes: ["team"], register: "town_filings", row_key: key }).length, 0);
+  assert.equal(w.record.tombstones({ table: "register_import_rows" }).tombstones.length, 1);
+});
+
+test("R23: a name or organization criterion is read from the token index, not by scanning the rows; the token index is declared rebuildable and rebuilds the same", async () => {
+  const w = seeded();
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(40))) });
+  const plan = w.sql(`EXPLAIN QUERY PLAN SELECT r.row_key FROM register_rows r WHERE r.register=? AND (r.scope_key, r.register, r.row_key, r.content_hash) IN (SELECT scope_key, register, row_key, content_hash FROM register_tokens WHERE kind='n' AND token=?)`, "town_filings", "donor").map((r) => r.detail).join(" | ");
+  assert.match(plan, /register_tokens USING (COVERING )?INDEX|SEARCH register_tokens/);
+  assert.doesNotMatch(plan, /SCAN r\b|SCAN register_rows/);
+  assert.deepEqual(w.record.rebuildAndCompare("registers", "register_tokens"), { same: true });
+  assert.deepEqual(w.registers.searchRows({ scope: { register: "town_filings" }, name: "Donor 14", viewer: V("bob") }).rows.map((r) => r.cells.donor_name), ["Donor 14"]);
+});

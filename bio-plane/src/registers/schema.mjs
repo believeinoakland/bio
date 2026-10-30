@@ -97,6 +97,7 @@ CREATE INDEX IF NOT EXISTS register_segments_sha ON register_segments(sha256);
 -- R21: which version stood at which place of an import (a descriptor, no cell)
 CREATE TABLE IF NOT EXISTS register_import_rows (
   import_id    INTEGER NOT NULL,
+  register     TEXT NOT NULL,
   piece        TEXT NOT NULL,
   seg_n        INTEGER NOT NULL,
   row_no       INTEGER NOT NULL,
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS register_import_rows (
   PRIMARY KEY (import_id, piece, seg_n, row_no)
 );
 CREATE INDEX IF NOT EXISTS register_import_rows_key ON register_import_rows(import_id, row_key);
+CREATE INDEX IF NOT EXISTS register_import_rows_reg ON register_import_rows(register, row_key);
 -- R21: a row version's cells, once per sight scope
 CREATE TABLE IF NOT EXISTS register_cells (
   scope_key    TEXT NOT NULL,
@@ -147,6 +149,17 @@ CREATE TABLE IF NOT EXISTS register_rows (
 CREATE INDEX IF NOT EXISTS register_rows_date ON register_rows(register, scope_key, date);
 CREATE INDEX IF NOT EXISTS register_rows_filer ON register_rows(register, filer_id);
 CREATE INDEX IF NOT EXISTS register_rows_amount ON register_rows(register, amount_micro);
+-- R23: the name and organization tokens of each index row, so a name criterion is an index read, not a scan (derived, rebuildable)
+CREATE TABLE IF NOT EXISTS register_tokens (
+  kind         TEXT NOT NULL,   -- n (name) | o (organization)
+  token        TEXT NOT NULL,
+  scope_key    TEXT NOT NULL,
+  register     TEXT NOT NULL,
+  row_key      TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  project      TEXT,
+  PRIMARY KEY (kind, token, scope_key, register, row_key, content_hash)
+);
 -- R32: a project's interest in a register; every version is kept
 CREATE TABLE IF NOT EXISTS register_interests (
   interest_id INTEGER NOT NULL,
@@ -205,16 +218,19 @@ const base = { purge: "clear", expunge: "none", export: "yes", sight: "group", d
 const projectKeyed = { keys: ["project"], sight: "source" };
 
 /** R22: the declarations, each with its classes (record-core R21). The index's `rebuild` is the module's (`rebuildOf`). */
-export function registersTables(rebuildOf) {
+export function registersTables(rebuildOf, rebuildTokensOf = () => []) {
   return Object.freeze([
     { ...base, name: "register_proposals", version_chain: true },
     { ...base, name: "register_definitions", version_chain: true },
     { ...base, ...projectKeyed, name: "register_imports", version_chain: true },
     { ...base, ...projectKeyed, name: "register_segments" },
-    { ...base, ...projectKeyed, name: "register_import_rows", export: "never" },
+    /* R30: the removal's tombstone is recorded over the descriptors (the cells and the index are the port's to remove) */
+    { ...base, ...projectKeyed, name: "register_import_rows", export: "never", expunge: "tombstone" },
     { ...base, ...projectKeyed, name: "register_cells", export: "never", expunge: "tombstone" },
     { ...base, ...projectKeyed, name: "register_rows", export: "never", expunge: "tombstone", derive: "derived-rebuildable",
       key: ["scope_key", "register", "row_key", "content_hash"], from: ["register_cells"], rebuild: (scope) => rebuildOf(scope) },
+    { ...base, ...projectKeyed, name: "register_tokens", export: "never", expunge: "tombstone", derive: "derived-rebuildable",
+      key: ["kind", "token", "scope_key", "register", "row_key", "content_hash"], from: ["register_cells"], rebuild: (scope) => rebuildTokensOf(scope) },
     { ...base, ...projectKeyed, name: "register_interests", version_chain: true },
     { ...base, ...projectKeyed, name: "register_changes" },
     { ...base, export: "yes", name: "register_removed" },

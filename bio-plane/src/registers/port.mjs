@@ -47,27 +47,30 @@ export function indexRowOf(version, cells, definition) {
 }
 
 const SQL_LIST_MAX = 200;
-const LIKE_MAX = 50;
+/* the token rows of an index row: its name and organization tokens */
+const tokensOf = (r) => [...new Set(r.name_tokens.trim().split(" ").filter(Boolean))].map((t) => ["n", t])
+  .concat([...new Set(r.org_tokens.trim().split(" ").filter(Boolean))].map((t) => ["o", t]))
+  .map(([kind, token]) => ({ kind, token, scope_key: r.scope_key, register: r.register, row_key: r.row_key, content_hash: r.content_hash, project: r.project ?? null }));
 
 /* the SQL where of the pre-filter (looser than `matches`, never tighter) */
 function whereOf(filter, p = "") {
   const conds = [], args = [];
   const f = isObj(filter) ? filter : {};
-  const tokenGroups = (list, col) => {
+  /* R23: each token of a name is read from the token index, never by a scan of the rows */
+  const tokenGroups = (list, kind) => {
     const groups = [];
     for (const name of list) {
       const toks = nameTokens(name);
       if (!toks.length) return null;
-      const usable = toks.filter((t) => t.length + 4 <= LIKE_MAX);
-      groups.push(usable.length ? `(${usable.map(() => `${col} LIKE ?`).join(" AND ")})` : "1");
-      for (const t of usable) args.push(`% ${t} %`);
+      groups.push(`(${toks.map(() => `(${p}scope_key, ${p}register, ${p}row_key, ${p}content_hash) IN (SELECT scope_key, register, row_key, content_hash FROM register_tokens WHERE kind='${kind}' AND token=?)`).join(" AND ")})`);
+      args.push(...toks);
     }
     return groups.length ? `(${groups.join(" OR ")})` : null;
   };
   const sub = [];
   const withArgs = (build) => { const mark = args.length; const c = build(); if (c === null) args.length = mark; else sub.push(c); };
-  if (Array.isArray(f.names) && f.names.length && f.names.length <= SQL_LIST_MAX) withArgs(() => tokenGroups(f.names, `${p}name_tokens`));
-  if (Array.isArray(f.organizations) && f.organizations.length && f.organizations.length <= SQL_LIST_MAX) withArgs(() => tokenGroups(f.organizations, `${p}org_tokens`));
+  if (Array.isArray(f.names) && f.names.length && f.names.length <= SQL_LIST_MAX) withArgs(() => tokenGroups(f.names, "n"));
+  if (Array.isArray(f.organizations) && f.organizations.length && f.organizations.length <= SQL_LIST_MAX) withArgs(() => tokenGroups(f.organizations, "o"));
   for (const [k, col] of [["filer_ids", "filer_id"], ["forms", "form"], ["licence_numbers", "licence_no"], ["docket_numbers", "docket_no"]]) {
     const v = f[k];
     if (Array.isArray(v) && v.length && v.length <= SQL_LIST_MAX) { sub.push(`${p}${col} IN (${v.map(() => "?").join(",")})`); args.push(...v.map((x) => String(x).trim())); }
@@ -108,6 +111,7 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
         const r = indexRowOf(d, d.cells, d.definition);
         const cols = Object.keys(r);
         sql.exec(`INSERT INTO register_rows (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`, ...cols.map((c) => r[c]));
+        for (const t of tokensOf(r)) sql.exec(`INSERT OR IGNORE INTO register_tokens (kind, token, scope_key, register, row_key, content_hash, project) VALUES (?,?,?,?,?,?,?)`, t.kind, t.token, t.scope_key, t.register, t.row_key, t.content_hash, t.project);
         written++;
       }
       return { written, existed };
@@ -157,8 +161,16 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
     remove({ register, row_key }) {
       const held = rows(`SELECT DISTINCT segment_sha FROM register_cells WHERE register=? AND row_key=?`, register, row_key).map((r) => r.segment_sha);
       sql.exec(`DELETE FROM register_rows WHERE register=? AND row_key=?`, register, row_key);
+      sql.exec(`DELETE FROM register_tokens WHERE register=? AND row_key=?`, register, row_key);
       sql.exec(`DELETE FROM register_cells WHERE register=? AND row_key=?`, register, row_key);
       return { segments: held };
+    },
+    /** a segment replaced by its rewrite (R30): the versions it held now point at the new digest */
+    repoint({ from, to }) { sql.exec(`UPDATE register_cells SET segment_sha=? WHERE segment_sha=?`, to, from); },
+    /** the token rows rebuilt from the cells (R23), in the table's key order */
+    rebuildTokens(scope) {
+      return this.rebuild(scope).flatMap(tokensOf)
+        .sort((a, b) => [a.kind, a.token, a.scope_key, a.register, a.row_key, a.content_hash].join("\u0000") < [b.kind, b.token, b.scope_key, b.register, b.row_key, b.content_hash].join("\u0000") ? -1 : 1);
     },
     /** the index rows rebuilt from the cells (R22); `scope` an object of column names to values or null */
     rebuild(scope) {
@@ -246,6 +258,8 @@ export function memoryRowStore({ freeBytes = null, termsOf, members = null } = {
       for (const [k, c] of [...cells]) if (c.register === register && c.row_key === row_key) { segs.add(c.segment_sha); cells.delete(k); index.delete(k); }
       return { segments: [...segs] };
     },
+    repoint({ from, to }) { for (const c of cells.values()) if (c.segment_sha === from) c.segment_sha = to; },
+    rebuildTokens(scope) { return this.rebuild(scope).flatMap(tokensOf); },
     rebuild(scope) {
       const out = [];
       for (const c of cells.values()) {

@@ -370,7 +370,7 @@ test("R41: import rows, interests, proposals, own definitions and tombstones are
   for (const t of ["register_cells", "register_rows", "register_import_rows", "register_cites"]) assert.ok(never.includes(t), `${t} is never exported`);
   assert.ok(!JSON.stringify(exported.map((t) => w.sql(`SELECT * FROM ${t}`))).includes("Exported"), "no cell in any exported table");
   assert.ok(w.record.declaredTables().some((d) => d.name === "tombstones" && d.export === "yes"), "the tombstone is exportable");
-  assert.ok(!JSON.stringify(w.record.tombstones({ table: "register_cells" })).includes("Exported"));
+  assert.ok(!JSON.stringify(w.record.tombstones({ table: "register_import_rows" })).includes("Exported"));
 });
 
 test("R42: size: the module stays within its expected lines (2,500 to 3,500; BOB reports at 4,000)", () => {
