@@ -24,6 +24,7 @@
 | the latest handoff (replaced whole at each handoff) | `build/handoff.md` |
 | the old plan, frozen, and its triage | `docs/development/transition/old-plan/` |
 | the restore point from before the new process | branch `snapshot/pre-refactor-2026-09-25` |
+| walk captures and screenshots, never in git (REP 6; PROTOCOL §7d) | R2 bucket `bio-walks` on account 20b533579290b9b93168345edd3b7f72; every object expires 30 days after upload (lifecycle rule `expire-30-days`); the report with the keys goes to the tranche branch |
 
 ## Tests
 
