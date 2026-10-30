@@ -4,13 +4,13 @@
 
 **case-grammar**, **case-catalogue**, **publication**, **public-read**, **case-import**
 - T53 · A5 (DEC-461), A8 (DEC-464) · case-document format `/10`: the ungraded-passages and typed-passages blocks, their C-41.18 and C-41.19 checks, the edition's statements recorded and served, imported editions' statements kept apart, typist and checkers credited as each chose · `planning/lines-A5-A8-case-modules.md` (L23 K5548, L26 K5552, L11 K5525 decided)
-**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (R32) · `planning/plan-T53-capabilities.md` §A Layer 8
+**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (network-notices R32) · `planning/plan-T53-capabilities.md` §A Layer 8
 **English in tests** (K5565) · every module with sites carries one conversion entry for its own, done in this tranche; 58 modules gain a job by it alone · `planning/plan-T53-tests-english.md`
 
 ## plan-T53-capabilities.md
 
 **case-grammar**
-- T53 · N1259 (K4403 (3), (4)) · a cited row travels as flat `extract_*` fields, the limit's three; the file does not. `bio-case-document/10`: one format; N1259-d's extract fields are optional rows in the `/10` A5/A8 declare · N1259-d R35, R36, **numbered R38, R39**. R36 `[waits: Bob's: a member's authored observation exempt from "relied-on documents travel whole" (DEC-100), if read as doctrine (K1483)]`
+- T53 · N1259 (K4403 (3), (4)) · a cited row travels as flat `extract_*` fields, the limit's three; the file does not. `bio-case-document/10`: one format; N1259-d's extract fields are optional rows in the `/10` A5/A8 declare · N1259-d R35, R36, **numbered R38, R39**. case-disclosures R41 (its N1259-d R36): settled by K5531 (a member's own written observation is the group's words; R26 and DEC-100 (2) stand)
 
 ## plan-T53-tests-english.md
 
