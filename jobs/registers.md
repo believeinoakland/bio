@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #3 · session_01RAN5eoLB9NK4d4zqJTFNwM · WAITING: the 1,000,000-row runs of R12, R20, R23 (R67) at e33fe9f (the search-order index fix), in the background; then complete with R14, R21, R30, R72 named · PR #60
+**Status** · REGISTERS #3 · session_01RAN5eoLB9NK4d4zqJTFNwM · WAITING: stopped by BOB on Bob's order; resume only on BOB's word · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
