@@ -44,7 +44,30 @@ test("R8 control: an edit validates or is refused by the filter's own code; a pr
   assert.equal(w.registers.checkFilter(w.registers.definitionOf("town_filings").definition, { names: ["Ann Lee"] }).ok, true);
 });
 
-test.todo("R8 against the real entities service: `entities.subjectsOfProject` (entities R74) is not merged on this tranche yet; the seam test replaces the handed provider when it is");
+test("R8 against the real entities service: the subjects the project's inquiries name (an institution, a person with a filer id) prefill organizations, names and filer ids; an entity the project does not name adds nothing; an unseen project is NO_SUCH_PROJECT", () => {
+  const w = seeded();
+  const ent = (kind, label) => w.entities.createEntity({ kind, label, note: "a subject of the project", declaredBy: V("bob") }).entity_id;
+  const firm = ent("institution", "Firm 3"), donor = ent("person", "Donor 5"), bystander = ent("person", "Donor 9");
+  assert.equal(w.entities.addIdentifier({ entityId: donor, scheme: "filer", id: "F10003", basis: "the filing", by: V("bob") }).ok, true);
+  const inquiry = (n, subject) => {
+    const md = ["---", "object_type: inquiry", "schema: inquiry@1", `title: "Q${n}"`, "current_state: open", "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`,
+      `project: ${w.P}`, `subject_entity: ${subject}`, "references: []", "state_history: []", "---", "", "## Question", "", `Who? (${bystander} is mentioned, not named a subject)`, ""].join("\n");
+    const r = w.promotion.promote({ bundleId: `${w.record.allocId("INQ", "2026").id}-q`, base: null, snapKey: `q${n}`, author: V("bob"), ownerMemberId: "bob", files: [{ path: "bundle.md", text: md }], meta: { object_type: "inquiry" } });
+    assert.equal(r.ok, true, JSON.stringify(r));
+  };
+  inquiry(1, firm);
+  inquiry(2, donor);
+  const f = w.registers.registerFilter({ register: "town_filings", project: w.P, viewer: V("bob") });
+  assert.equal(f.ok, true, JSON.stringify(f));
+  assert.deepEqual(f.filter, { names: ["Donor 5"], organizations: ["Firm 3"], filer_ids: ["F10003"] });
+  assert.equal(f.prefilled, true);
+  assert.deepEqual(f.basis.map((b) => b.criterion).sort(), ["filer_ids", "names", "organizations"]);
+  assert.ok(!JSON.stringify(f).includes("Donor 9"), "an entity merely mentioned is not a subject");
+  assert.equal(w.registers.registerFilter({ register: "town_filings", project: w.P, viewer: V("dave") }).reason, "NO_SUCH_PROJECT");
+  /* control: a project naming no subject gives the whole register */
+  const bare = w.project("Bare", "bob");
+  assert.deepEqual(w.registers.registerFilter({ register: "town_filings", project: bare, viewer: V("bob") }).filter, {});
+});
 
 test("R9: new rows are counted only when the source counted them for this filter and is append-only, else estimated, else not stated; each figure carries its basis; nothing is written", async () => {
   const w = seeded({ view: appendOnly() });

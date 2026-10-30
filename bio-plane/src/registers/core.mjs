@@ -8,6 +8,7 @@ import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index
 import { validateFilter, filterFingerprint, prefillFrom, autoWatchable, CONTACT_ROLES } from "../register-readers/index.mjs";
 import { validateRegisterDefinition } from "../../../jurisdictions/index.mjs";
 import { profileView } from "../acquisition/index.mjs";
+import { ORGANISATION_KINDS } from "../entities/index.mjs";
 import { localize } from "../setup-words/index.mjs";
 import { migrateRegisters, registersTables } from "./schema.mjs";
 import { sqliteRowStore, memoryRowStore } from "./port.mjs";
@@ -206,7 +207,8 @@ export class Registers {
         const last = i.finished_at || i.imported_at;
         if (Number.isFinite(cad) && last) next = new Date(Date.parse(last) + cad * 3600000).toISOString();
       } else if (!autoWatchable(f)) watched = "by_act";
-    }
+    } else if (i.scope === SCOPE_TEAM && this.rows(`SELECT i.project FROM register_interests i WHERE i.register=? AND i.ended=0 AND i.version=(SELECT MAX(version) FROM register_interests WHERE interest_id=i.interest_id)`, i.register)
+      .some((r) => this.seesProject(r.project, viewer))) watched = "by_act";   /* a team pre-read a visible interest names: re-checked by a member's act */
     return { import: i.import_id, scope: i.scope, ...(i.project ? { project: i.project } : {}), state: i.state, source_date: i.source_date ?? "not_stated",
              imported_at: i.imported_at, rows_in: i.rows_in, rows_out: i.rows_out, filter: parse(i.filter), filter_fingerprint: i.filter_fp,
              watched, ...(next ? { next_check: next } : {}) };
@@ -296,7 +298,8 @@ export class Registers {
   /* ---- R8: the filter, prefilled from the project ---- */
 
   /** The project's named subjects and identifiers the viewer may see, through `entities.subjectsOfProject` (`entities` R74): `{subjects, identifiers, period?}`
-   *  as `prefillFrom` reads them. R74 answers each subject with its identifiers; they are lifted out here. */
+   *  as `prefillFrom` reads them. R74 answers each subject with its identifiers; they are lifted out here, and an entity kind is read in the prefill's
+   *  words: a person is a person, an organisation kind of `entities` (`ORGANISATION_KINDS`) is an organization, any other kind enters as itself. */
   factsOfProject(project, viewer) {
     const via = this.subjectsOpt || (this.entities && typeof this.entities.subjectsOfProject === "function" ? (p, v) => this.entities.subjectsOfProject({ project: p, viewer: v }) : null);
     const none = { subjects: [], identifiers: [], period: null };
@@ -304,7 +307,7 @@ export class Registers {
     try {
       const f = via(project, viewer);
       if (!isObj(f) || f.ok === false) return none;
-      const subjects = Array.isArray(f.subjects) ? f.subjects.filter(isObj) : [];
+      const subjects = (Array.isArray(f.subjects) ? f.subjects.filter(isObj) : []).map((s) => (ORGANISATION_KINDS.includes(s.kind) ? { ...s, kind: "organization" } : s));
       const ids = Array.isArray(f.identifiers) ? f.identifiers : subjects.flatMap((s) => (Array.isArray(s.identifiers) ? s.identifiers : []));
       return { subjects, identifiers: ids, period: isObj(f.period) ? f.period : null };
     } catch { return none; }

@@ -59,6 +59,21 @@ test("R2: an import with a filer-id interest shows auto and its next check; one 
   assert.equal(w.registers.registerList({ viewer: V("bob") }).known.find((k) => k.key === "county_raw").held[0].watched, "none");
 });
 
+test("R2: a team pre-read an interest names shows by_act to a member who sees that interest, and none to one who does not; a pre-read no interest names shows none", async () => {
+  const w = seeded();
+  const pre = w.registers.importStart({ register: "town_filings", filter: {}, scope: "team", author: V("alice"), viewer: V("alice"), holes: { table: "2025" } });
+  assert.equal(pre.ok, true);
+  const watched = (v) => w.registers.registerList({ viewer: v }).known.find((k) => k.key === "town_filings").held[0].watched;
+  assert.equal(watched(V("bob")), "none", "no interest names it");
+  const H = w.project("Secret", "bob", [], { hidden: true });
+  assert.equal(w.registers.interestSet({ register: "town_filings", project: H, filter: { filer_ids: ["F10001"] }, author: V("bob"), viewer: V("bob") }).ok, true);
+  assert.equal(watched(V("bob")), "by_act", "re-checked only by a member's registerRefresh");
+  assert.equal(watched(V("dave")), "none", "a hidden project's interest is not inferred (R19)");
+  /* forgetting the interest: it names the pre-read no more */
+  assert.equal(w.registers.interestForget({ project: H, register: "town_filings", author: V("bob"), viewer: V("bob") }).ok, true);
+  assert.equal(watched(V("bob")), "none");
+});
+
 test("R2: a hidden project's import is absent for a non-participant and present for a participant", async () => {
   const w = seeded();
   const H = w.project("Secret", "bob", [], { hidden: true });

@@ -75,10 +75,11 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
   /* (a hand-built object of that shape: nothing else in this file answers for another module) */
   const sweep = (() => { const claims = new Set(); let epoch = 0; return { paused: () => ({ paused: false }), openEpoch: () => ++epoch, claim: (c, s, e) => { const k = `${c}|${s}|${e}`; if (claims.has(k)) return false; claims.add(k); return true; }, closeEpoch: () => {}, running: new Set() }; })();
   const entities = entitiesOf(host, { record, membership, provenance: () => content.provenance });
+  entities.migrate();
   const acq = { streamRegister, probeRegister, sourceChanged, keyedFetch };
   const depsBounds = { stream_max: 5 * 1024 ** 3, segment_max: 64 * 1024 * 1024, ...bounds };
   const evidencePurge = async (sha) => { await w0.b.delete(`bio/captures/${sha}`); };
-  const registers = registersOf(host, { record, membership, promotion, evidencePurge, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
+  const registers = registersOf(host, { record, membership, promotion, evidencePurge, acquisition: acq, store, content, extraction, entities, now: () => clock.ms, bounds: depsBounds,
     ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}), ...(subjects ? { subjects } : {}) });
   let n = 0;
   const w = {
@@ -99,7 +100,7 @@ export function world({ bounds = {}, phase = null, now = 1_790_000_000_000, admi
     },
     /** the object restarted: a fresh instance over the same storage, as a Durable Object's is after eviction */
     restart() {
-      w.registers = new Registers({ storage: host.storage, record, membership, promotion, evidencePurge, acquisition: acq, store, content, extraction, now: () => clock.ms, bounds: depsBounds,
+      w.registers = new Registers({ storage: host.storage, record, membership, promotion, evidencePurge, acquisition: acq, store, content, extraction, entities, now: () => clock.ms, bounds: depsBounds,
         ...(phase ? { phase } : {}), ...(port ? { port } : {}), ...(freeBytes ? { freeBytes } : {}), ...(view ? { view } : {}), ...(subjects ? { subjects } : {}) });
       return w.registers;
     },
