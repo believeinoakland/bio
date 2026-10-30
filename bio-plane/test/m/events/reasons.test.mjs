@@ -38,28 +38,28 @@ test("R54 sequence over a pair whose cited orders disagree answers why {key: eve
 test("R54 sequence over a pair whose precision does not settle the order answers the reason civil-time gives, a {key, vars} passed on exactly, and word of it is non-empty; control: a pair that is settled answers no why", () => {
   const w = world();
   const a = w.event({ value: "2026-07-01" }).event_id, b = w.event({ value: "2026-07-01T10:00" }).event_id;
-  const q = w.ev.sequence({ a, b });
+  const q = w.ev.sequence({ a, b, viewer: MEMBER });
   assert.equal(q.answer, "undetermined");
   assert.equal(typeof q.why.key, "string");
   assert.equal(typeof q.why.vars, "object");
   assert.ok(drawn(q.why).length > 0);
   assert.deepEqual(stringWhys(q), []);
   const c = w.event({ value: "2026-07-05" }).event_id;
-  const settled = w.ev.sequence({ a, b: c });
+  const settled = w.ev.sequence({ a, b: c, viewer: MEMBER });
   assert.deepEqual([settled.answer, settled.why], ["before", undefined]);
 });
 
 test("R54 an event with no when answers sequence undetermined with why {key: events.why.placed_nowhere_event, vars: {}}; a when held with no zone answers a keyed reason too", () => {
   const w = world();
   const a = w.event({ value: "2026-07-01" }).event_id, n = w.event({}).event_id;
-  const q = w.ev.sequence({ a, b: n });
+  const q = w.ev.sequence({ a, b: n, viewer: MEMBER });
   assert.deepEqual(q.why, { key: "events.why.placed_nowhere_event", vars: {} });
   assert.equal(word(q.why.key, q.why.vars), word("events.why.placed_nowhere_event"));
   const view = testView();
   delete view.time_zone;
   const z = world({ view, profiles: false });
   const x = z.event({ value: "2026-07-01" }).event_id, y = z.event({ value: "2026-07-02" }).event_id;
-  const zq = z.ev.sequence({ a: x, b: y });
+  const zq = z.ev.sequence({ a: x, b: y, viewer: MEMBER });
   assert.equal(zq.answer, "undetermined");
   assert.deepEqual(zq.why, { key: "events.text.held_zone_span", vars: {} });
   assert.ok(word(zq.why.key, zq.why.vars).length > 0);
@@ -77,7 +77,7 @@ test("R54 a stale when_cache answers readEvent when undetermined with why {key: 
   assert.deepEqual(item.why, { key: "events.why.cache_stale", vars: {} });
   assert.deepEqual(item.grade_why, { key: "events.why.grade_time_unread", vars: {} });
   assert.equal(reasonText(item.grade_why), word("events.why.grade_time_unread"));
-  const q = w.ev.sequence({ a: e, b: w.event({ value: "2027-01-01" }).event_id });
+  const q = w.ev.sequence({ a: e, b: w.event({ value: "2027-01-01" }).event_id, viewer: MEMBER });
   assert.deepEqual([q.answer, q.why], ["undetermined", { key: "events.why.cache_stale", vars: {} }]);
   assert.ok(drawn(q.why).length > 0);
   assert.deepEqual(stringWhys([read, item, q]), []);

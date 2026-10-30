@@ -10,27 +10,50 @@ const doc = { kind: "document" };
 /* An event of `kind` attested by one dated fact of a fresh capture, its date `value` (a day, or an EDTF band as an object). */
 const dated = (w, value, extra = {}) => w.event({ value, ...extra }).event_id;
 
-test("R31 R51 Terms (Viewer) sequence with no viewer reads no cited relation: a pair the dates leave undetermined answers undetermined, never the cited order; a member who sees the citation gets it", () => {
+test("R31 R51 Terms (Viewer) sequence with no viewer fails closed: it sees no event, so neither a cited relation nor a date order is answered, as for an absent event; a member who sees the citation gets it", () => {
   const w = world();
   const a = dated(w, "2026-07-01"), b = dated(w, "2026-07-01");
   const r = w.ev.relate({ from: a, to: b, kind: "precedes", attestation: { captureSha: w.capture("order"), extent: doc }, by: MEMBER });
   assert.equal(r.ok, true);
+  const c = dated(w, "2026-07-03");
   for (const viewer of [undefined, null, ""]) {
-    const q = w.ev.sequence({ a, b, viewer });
-    assert.equal(q.answer, "undetermined");
-    assert.equal(q.basis, undefined);
-    assert.equal(q.relation_id, undefined);
+    for (const [x, y] of [[a, b], [a, c]]) {
+      const q = w.ev.sequence({ a: x, b: y, viewer });
+      assert.equal(q.reason, "NO_SUCH_EVENT");
+      assert.deepEqual([q.answer, q.basis, q.relation_id, q.why], [undefined, undefined, undefined, undefined]);
+    }
   }
-  const none = w.ev.sequence({ a, b });
-  assert.equal(none.answer, "undetermined");
-  assert.equal(none.why.key, "civil-time.precision_precision_held");
   /* control: a member sees the citation */
   const seen = w.ev.sequence({ a, b, viewer: MEMBER });
   assert.deepEqual([seen.answer, seen.basis, seen.relation_id], ["before", "cited", r.relation.relation_id]);
-  /* control: dates that settle the order answer it to any reader, and no cited relation is shown beside it without sight */
-  const c = dated(w, "2026-07-03");
-  const settled = w.ev.sequence({ a, b: c });
-  assert.deepEqual([settled.answer, settled.basis, settled.cited], ["before", "dates", undefined]);
+  /* control: dates that settle the order answer it to a member */
+  const settled = w.ev.sequence({ a, b: c, viewer: MEMBER });
+  assert.deepEqual([settled.answer, settled.basis], ["before", "dates"]);
+});
+
+test("R31 R40 (K5818) an event the viewer may not see is refused NO_SUCH_EVENT, as an absent one, alike, either way round: no order, date or why is answered for it; control: a viewer who sees both gets the order", () => {
+  const w = world();
+  w.project("PROJ-2026-0001-p", "bob");
+  const open = dated(w, "2026-07-01");
+  const fencedSha = w.capture("fenced", { bundleId: "INFO-2026-0009-h", project: "PROJ-2026-0001-p" });
+  const hidden = w.event({ value: "2026-07-03", capture: fencedSha, by: "member:bob" }).event_id;
+  assert.match(hidden, /^EVT-/);
+  const ghost = "EVT-2026-9999";
+  /* the outsider sees `open`, never `hidden` */
+  assert.equal(w.ev.readEvent({ eventId: open, viewer: OUTSIDER }).found, true);
+  assert.equal(w.ev.readEvent({ eventId: hidden, viewer: OUTSIDER }).found, false);
+  const strip = (x) => ({ ...x, event_id: undefined });
+  for (const [x, y, named] of [[open, hidden, hidden], [hidden, open, hidden]]) {
+    const q = w.ev.sequence({ a: x, b: y, viewer: OUTSIDER });
+    assert.equal(q.reason, "NO_SUCH_EVENT");
+    assert.equal(q.event_id, named);
+    assert.deepEqual([q.answer, q.why, q.basis], [undefined, undefined, undefined]);
+    /* alike: the answer for a hidden event is the answer for one never held, but for the id as asked */
+    const absent = w.ev.sequence({ a: x === hidden ? ghost : x, b: y === hidden ? ghost : y, viewer: OUTSIDER });
+    assert.deepEqual(strip(q), strip(absent));
+  }
+  /* control: bob sees both, and the dates order them */
+  assert.deepEqual([w.ev.sequence({ a: open, b: hidden, viewer: "member:bob" }).answer, w.ev.sequence({ a: hidden, b: open, viewer: "member:bob" }).answer], ["before", "after"]);
 });
 
 test("R46 R61 usesOf answers no use whose event was withdrawn by withdrawEvent, as none withdrawn by withdrawUse; the event stays readable, shown withdrawn; another use is still answered", () => {

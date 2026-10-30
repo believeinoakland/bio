@@ -1389,9 +1389,11 @@ export class Events {
   /** R31, R51: before, after or undetermined with why; computed on each read, never stored. Where the dates leave the
    *  order undetermined, a standing cited `precedes` relation between the two answers it, `basis: "cited"`; where the
    *  dates settle it, they govern and each such relation is answered beside, agreeing or not. A relation is read only
-   *  through the viewer's sight (R40): an absent viewer sees none (Terms: fail closed). */
+   *  through the viewer's sight (R40): an absent viewer sees none (Terms: fail closed). An event the viewer may not see
+   *  is refused as an absent one, alike: no order, date or why is answered for it (R31; K5818). */
   sequence({ a, b, viewer = null } = {}) {
-    const ia = this.#resolve(a), ib = this.#resolve(b);
+    const seen = (e) => { const id = this.#resolve(e); return id && this.#visibleAttestations(id, viewer).length ? id : null; };
+    const ia = seen(a), ib = seen(b);
     if (!ia || !ib) return noSuchEvent(!ia ? a ?? null : b ?? null);
     const d = this.#datedOrder(ia, ib), base = { ok: true, a: ia, b: ib };
     if (d.stale) return { ...base, answer: "undetermined", why: d.why };
