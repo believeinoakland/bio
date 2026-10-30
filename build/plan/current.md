@@ -105,7 +105,7 @@
 - T53-204 · N1219, DEC-466 · reads passed through, `airunparts`
 - T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick `[written: K5748: ai-runs R106]`
 - T53-206 · K5565 · English in tests: its entry
-- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; R29's column list names them
+- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; observation-log R40's fields name them
 - T53-627 · agent-steps R56 (K5815) · R107: a tick's report entry keeps `produced_by`, checked as R72 and R104 check a label, served by `op=airunlog` (R100)
 - rows: `build/plan/T53-R1/ai-runs.md`
 **run-productions**
@@ -131,7 +131,7 @@
 - rows: `build/plan/T53-R1/question-explorer.md`
 **answers**
 - T53-217 · K5565 · English in tests: its entry
-- T53-548 · K5666 · `ASK_SCOPE` gains `aicredential`, as credentials' `AI_GRANT_OPS` (scope.test.mjs R1)
+- T53-548 · K5666 · `ASK_SCOPE` gains `aicredential`, as credentials' `AI_GRANT_OPS` (ai-accounts R65; scope.test.mjs R1)
 - rows: `build/plan/T53-R1/answers.md`
 **agent-steps**
 - T53-218 · K5457 · entry by need, Gate 1 per part, `idem`

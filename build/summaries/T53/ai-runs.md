@@ -143,11 +143,10 @@ bias (`build/requirements/bias.md`): declared bias sets and the effective lens i
 - bias R13, R14, R15, R16, R17, R18 · `biasManifest({scope, scopeId, viewer, limit, offset})` (`op=biasmanifest`, synchronous): unseen project scope or nothing in force → `in_force: false`, "no manifest was in force", never an empty lens; pins not `adopted` in `pins_proposed`; unreadable pin → `in_force: null`, `unresolved_pins`; group then project statements (locked kept, `lock_violations`); `statements_sha` over the whole set; `bundles`, `residue`, `statements` page (200, ≤ 2,000), `total`, `truncated`.
 
 observation-log (`build/requirements/observation-log.md`): append-only record of looking: level, authority, what was found (or not); the one writer, vocabulary, sight fence.
-- observation-log R29 · (T53-602's "R29's column list") `observation_log` columns `seq`, `at`, `actor_class`, `actor`, `authority_kind`, `authority`, `level`, `subject_kind`, `subject`, `state`, `governed`, `condition`, `bound`, `terminal`, `result_kind`, `result_ref`, `detail` (with `leads`, `lead_shares`): a stated read contract changed only with this requirement; writes stay observation-log's.
+- observation-log R29 · `observation_log` columns `seq`, `at`, `actor_class`, `actor`, `authority_kind`, `authority`, `level`, `subject_kind`, `subject`, `state`, `governed`, `condition`, `bound`, `terminal`, `result_kind`, `result_ref`, `detail` (with `leads`, `lead_shares`): a stated read contract changed only with this requirement; writes stay observation-log's.
 - observation-log R40 · An entry may carry `read` `{record, n, total, outcome}` (`1 <= n <= total`; `answered`/`refused`) or `disagree` `{record, levels}` (≥ 2 distinct levels, in order), at most one, only for authority `run` or `step`; `null` when absent; no state, coverage or sight change; refusals after C-22.4: `OBSERVATION_FIELD_MALFORMED`, `OBSERVATION_FIELD_NOT_ALLOWED` (new C-22 row, BOB's at START, by key). T/C as source.
 - observation-log R41 · The fields have no sight of their own: the row is seen whole or withheld whole.
 
-Mismatch: T53-602 says "R29's column list names them"; observation-log R29 as written names neither `read` nor `disagree`.
 
 retrieval (`build/requirements/retrieval.md`): the query language over the record.
 
@@ -182,6 +181,6 @@ ai-catalogue (`build/requirements/ai-catalogue.md`): what a copy knows of offera
 - T53-204 · N1219, DEC-466 · `read` and `disagree` passed through (R99), `op=airunlog` (R100), segments as parts, hops and refusals recorded (R101, R102), `op=airunparts` "How this run went" (R103), the label names the AI, never the account (R104) · `lane-ai-design/draft-run-record.md`.
 - T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick (R106; `[written: K5748: ai-runs R106]`).
 - T53-206 · K5565 · English in tests (R54's keys): assertions read the product's word key and values, never a copied sentence; a B site first gets its key; a C site kept as input or removed with its reason; tests touched for other entries converted too. CENSUS: literal A/B 0/1; regex A/B/C 9/5/6 (11 files). Test: the words check's baseline loses the module's files; suite green.
-- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; R29's column list names them.
+- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; observation-log R40's fields name them.
 
 Mismatch: R107 is marked not yet met (T53), but no entry above names it.
