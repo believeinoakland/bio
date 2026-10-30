@@ -1176,7 +1176,7 @@ export class People {
       }
     }
     const items = [...byId.values()];
-    const seq = (a, b) => { try { return this.#events.sequence({ a: a.event_id, b: b.event_id }); } catch { return { undetermined: true, why: why("people.why.record_settle_order") }; } };
+    const seq = (a, b) => { try { return this.#events.sequence({ a: a.event_id, b: b.event_id, viewer }); } catch { return { undetermined: true, why: why("people.why.record_settle_order") }; } };
     const memo = new Map();
     const order = (a, b) => {
       const k = `${a.event_id}\u0000${b.event_id}`;

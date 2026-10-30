@@ -2,7 +2,7 @@
    `{key, vars}` drawn through `word(key, vars)`, never English; a reason an owner answers is passed on as it answers it. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, doc } from "./fixture.mjs";
+import { world, ANN, OUT, doc } from "./fixture.mjs";
 import { sequenceUndetermined } from "../events/fixtures.mjs";
 import { BOUNDS, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { validAt } from "../../../src/civil-time/index.mjs";
@@ -180,4 +180,21 @@ test("R26 (K5811 F2; connection-grammar R6, R10) a hub is judged per kind agains
   const only = w.p.neighbours({ node, kinds: ["not_same_as"], at: "2024-01-01", viewer: ANN });
   assert.equal(only.hub, undefined);
   assert.equal(only.items.length, Math.min(hubBoundOf("not_same_as"), BOUNDS.fanout));
+});
+
+test("R40, R16 (BOB #338 CHANGE; events R31, R51) statementsOf asks events.sequence as the viewer reading: a cited precedes order the viewer may see places two same-day statements; one hidden from it is not used, and the pair is answered order_undetermined", () => {
+  const w = world();
+  const p = w.person("Una Vale");
+  const a = w.event("statement", { start: "2020-01-05" }, [{ entity: p, role: "speaker" }]);
+  const b = w.event("statement", { start: "2020-01-05" }, [{ entity: p, role: "speaker" }]);
+  const before = w.p.statementsOf({ entityId: p, viewer: ANN });
+  assert.equal(before.order_undetermined.length, 1, "control: the same day at day precision does not settle the order");
+  const r = w.ev.relate({ from: a, to: b, kind: "precedes", attestation: doc(w.capture("order", { fenced: true })), by: ANN });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
+  const ann = w.p.statementsOf({ entityId: p, viewer: ANN });
+  assert.deepEqual(ann.items.map((x) => x.event_id), [a, b], "the cited order, which ann may see, places them");
+  assert.deepEqual(ann.order_undetermined, []);
+  const out = w.p.statementsOf({ entityId: p, viewer: OUT });
+  assert.equal(out.order_undetermined.length, 1, "the order cited inside a project out may not see is not used");
+  assert.equal(typeof out.order_undetermined[0].why.key, "string", "its reason a key (R40)");
 });
