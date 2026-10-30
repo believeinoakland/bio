@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: the 1,000,000-row runs of R20 and R12/R67 at fe2b6311 (a batch's write now ends by time, 40734e87); R23 passed at 27b860de and is rerun at fe2b6311 after · PR #60
+**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: proc job complete's gate on 1e1af83f (K5819 applied: R12, R20, R23, R67 at the suite's size; R14, R21, R30, R72 open) · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
