@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: R20 at 27b860de held its reads but one write transaction took 371 ms (bound 150): measuring which one at 1,000,000 rows; R23 passed at 27b860de (page 52 ms); R12/R67 running at f69c2756 · PR #60
+**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: R20's slow transactions at 1,000,000 rows are reading batches (250-617 ms) at every table size: measuring whether they are garbage-collection pauses; R23 passed at 27b860de; R12/R67 running at f69c2756 · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
