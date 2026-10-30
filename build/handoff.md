@@ -1,15 +1,16 @@
 # Handoff
 
-HANDOFF for BOB #337 · 2026-10-30 · tranche @ ccdfb987 · epoch E1
+HANDOFF for BOB #338 · 2026-10-30 · tranche @ 10ba9b77 · epoch E1
 Queue (in order):
-- none
+- MERGE query-language: PR #55
 Out:
 - none
 Lanes: none
-Next: wait for ROOT's word that process flaw 1 is fixed on neoprocess main, then proc layer start --layer 5; meanwhile trim and settle layer 6's oversized requirements
-Product work waits on process flaw 1 (proc layer start refuses all 127 modules of layers 5-11: readingSet counts the whole layers.md and every use's whole Public part); six flaws are in build/plan/process-issues/2026-10-30-bob336.md, sent to ROOT twice (filing on neoprocess refused: R-BOB-336-1, -2). Wait for ROOT's word that the fix is on neoprocess main, then `proc layer start --layer 5`.
-Done meanwhile: round 2 opened (layers 5-11); ONB-4 bucket bio-walks, ONB-6 regression (K5805); money R42 (K5806); trims of registers, events, money, people (K5807, K5810), each checked by a fresh reviewer; their ambiguities settled from code (K5808, K5809, K5811, K5812), code defects placed as entries in their layer-5 blocks.
-Layer 5 is ready to start. Next prep, by the same pipeline (trim worker, fresh reviewer, restore, settle from code): layer 6's 16 modules over 30 KB (list in the flaw report's section 1). Hold module splits until the lane says what a job's set and limit are.
-Owed at R2's close: the completion round is T53-completion.md, not next.md (flaw 3); do not let round close promote next.md.
+Next: when ROOT says the gate fix is on neoprocess main, merge PR #55; when the lane rules on the set limit, trim or split money, registers, people, events and start them
+Product work waits on two process reports on state/E1, sent to ROOT for Bob and the neoProcess lane: issues/2026-10-30-bob-337-1.md (40 KB job set: 93 of 128 modules of layers 5-11 over; last service block takes every later line) and issues/2026-10-30-bob-337-2.md (gate installs npm only from a root lock; Civicsmith locks per member, so CI's artifact verify fails; PR #55's run 41007558877).
+PR #55 (query-language, COMPLETE, no review decided) merges once the gate is fixed on neoprocess main: re-run `proc merge --module query-language` with the new gate's head and conclusion.
+After it merges: drop query-language's three lines (grammar 1, statements 1, t33 2) from build/tests-english-baseline.json (its report; outside its paths).
+Layer 5's money, registers, people, events are held until the lane rules on the limit (registers already trimmed 52 to 41 KB, still over on its own file). Then trim or split by the ruling, and start them.
+CLAUDE.md shims drift fixed on tranche (10ba9b77). BOB #336's usage row written (ad89624e).
 
-START BOB #337: tranche @ ccdfb987
+START BOB #338: tranche @ 10ba9b77
