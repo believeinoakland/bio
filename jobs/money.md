@@ -1,6 +1,6 @@
 # money (transient)
 
-**Status** · MONEY #1 · - · STARTING · PR #57
+**Status** · MONEY #1 · session_01RAN5eoi13x8acXQF8FD5H3 · STARTING · PR #57
 **Runs** · 0
 **Owed** · none
 **Model** · opus
