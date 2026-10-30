@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #2 · session_01RAN5ekL1dkjcJWEbCSo5V8 · WAITING: the 1,000,000-row runs of R12, R20, R23 (R67) in the background, and BOB's answer to my REPORT on R21 and R30; then complete again · PR #60
+**Status** · REGISTERS #2 · session_01RAN5ekL1dkjcJWEbCSo5V8 · WAITING: the 1,000,000-row runs of R12, R20, R23 (R67) in the background; BOB #339 answered (R21's row-store pointer done in this job); then complete with R14, R21, R30, R72 named · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
