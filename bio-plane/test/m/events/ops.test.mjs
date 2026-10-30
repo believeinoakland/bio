@@ -36,7 +36,7 @@ test("R36 eventsOps: one arm per act and read, parameters from the url (the cont
   assert.equal(call(w, "actalias", { by: MEMBER }, { actId: "ACT-2026-0007", eventId: e.event_id }).ok, true);
   assert.equal(call(w, "eventforact", { act: "ACT-2026-0007" }).event_id, e.event_id);
   const e2 = w.event({ value: "2026-02-05" }).event_id;
-  assert.equal(call(w, "sequence", { a: e.event_id, b: e2 }).answer, "before");
+  assert.equal(call(w, "sequence", { a: e.event_id, b: e2, viewer: MEMBER }).answer, "before");
   assert.equal(call(w, "eventmerge", { by: "class:daemon" }, { keep: e.event_id, absorb: e2, reason: "r" }).reason, "MEMBER_ACT_ONLY");
   assert.equal(call(w, "proceedingstatus", { proceeding: p, at: "2026-02-02", viewer: MEMBER }).reason, "NOT_A_PROCEEDING");
   assert.equal(call(w, "readoptin", { by: MEMBER }, { captureClasses: [] }).reason, "NOT_AN_ADMIN");
@@ -69,7 +69,7 @@ test("R42 no place is named in the module's behaviour, defaults or outward text;
   assert.equal(f.dated_fact.zone, null);
   const v = w.ev.readEvent({ eventId: e, viewer: MEMBER }).event;
   assert.deepEqual([v.when.start, v.when.end, v.when.zone], [null, null, null]);
-  assert.equal(w.ev.sequence({ a: e, b: e }).answer, "undetermined");
+  assert.equal(w.ev.sequence({ a: e, b: e, viewer: MEMBER }).answer, "undetermined");
   /* the zone is the governing zone (K5292): the team's stated zone over the profile's, so another statement, another zone */
   const w2 = world({ view: {} });
   assert.equal(w2.record.setSetting("team_time_zone", "UTC", MEMBER).ok !== false, true);
