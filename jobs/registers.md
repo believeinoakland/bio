@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: the 1,000,000-row runs of R20 and R23 at 27b860de (the scan read every match for one page; fixed) and R12/R67 at f69c2756 · PR #60
+**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: R20 at 27b860de held its reads but one write transaction took 371 ms (bound 150): measuring which one at 1,000,000 rows; R23 passed at 27b860de (page 52 ms); R12/R67 running at f69c2756 · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
