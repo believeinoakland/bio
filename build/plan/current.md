@@ -189,7 +189,7 @@
 - rows: `build/plan/T53-R1/case-tensions.md`
 **publication**
 - T53-246 · A5, A8 · case-document `/10`, edition statements, credits
-- T53-247 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-247 · K5471 (6) · JOURNEYS's defects: its rows; its one row (R-96 owner half, retired publication R83) moved to docket T53-251 (K5816): nothing of it is publication's
 - T53-248 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/publication.md`
 **publish-schedule**
@@ -197,7 +197,7 @@
 - rows: `build/plan/T53-R1/publish-schedule.md`
 **docket**
 - T53-250 · K5471 (6) · JOURNEYS's defects: its rows
-- T53-251 · K5571 · publication R83 moves here
+- T53-251 · K5571 · publication R83 moves here, as docket R33 (JOURNEYS R-96 owner half, K5816)
 - T53-252 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/docket.md`
 **public-read**
@@ -222,6 +222,7 @@
 - C T52-24
 - T53-264 · K5006 · reds: first settle, then fix
 - T53-265 · K5565 · English in tests: its entry
+- T53-628 · docket R33 (K5816) · ratifying an edition calls docket's `docketRecordEdition`, as docket R33 says "the module that ratifies an edition calls it" `[owed: BOB's requirement line before START]`
 - rows: `build/plan/T53-R1/ratification.md`
 **case-checker**
 - T53-266 · N1259 · CAPABILITIES rows

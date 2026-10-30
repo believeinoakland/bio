@@ -10,7 +10,7 @@
 ## plan-T53-capabilities.md
 
 **case-grammar**
-- T53 · N1259 (K4403 (3), (4)) · a cited row travels as flat `extract_*` fields, the limit's three; the file does not. `bio-case-document/10`: one format; N1259-d's extract fields are optional rows in the `/10` A5/A8 declare · N1259-d R35, R36, **numbered R38, R39**. case-disclosures R41 (its N1259-d R36) `[waits: Bob's: a member's authored observation exempt from "relied-on documents travel whole" (DEC-100), if read as doctrine (K1483)]`
+- T53 · N1259 (K4403 (3), (4)) · a cited row travels as flat `extract_*` fields, the limit's three; the file does not. `bio-case-document/10`: one format; N1259-d's extract fields are optional rows in the `/10` A5/A8 declare · N1259-d R35, R36, **numbered R38, R39**. case-disclosures R41 (its N1259-d R36): settled by K5531 (a member's own written observation is the group's words; R26 and DEC-100 (2) stand)
 
 ## plan-T53-tests-english.md
 

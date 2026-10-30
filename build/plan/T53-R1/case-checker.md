@@ -2,7 +2,7 @@
 
 ## plan-T53-draft.md
 
-**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (R32) · `planning/plan-T53-capabilities.md` §A Layer 8
+**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (network-notices R32) · `planning/plan-T53-capabilities.md` §A Layer 8
 **Today's reds** (`reds-T53.md`) · 22 in promotion, ratification, case-checker, following, screens-daily, screens-intake, screens-inquiry (three to screens-document), control-plane; each `first: settle` stale or real, then fixed; struck where TESTS-SWEEP's sweep fixes it · `planning/plan-T53-reds.md`
 **English in tests** (K5565) · every module with sites carries one conversion entry for its own, done in this tranche; 58 modules gain a job by it alone · `planning/plan-T53-tests-english.md`
 
