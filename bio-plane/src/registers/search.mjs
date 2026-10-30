@@ -4,7 +4,7 @@
 import { sha256HexSync } from "../record-grammar/index.mjs";
 import { matches, filterFingerprint } from "../register-readers/index.mjs";
 import { isObj, str, json, parse, refusal } from "./core.mjs";
-import { decodeAfter } from "./port.mjs";
+import { decodeAfter, countableFilter } from "./port.mjs";
 import { localize } from "../setup-words/index.mjs";
 import { reducedParser, csvField } from "./reduced.mjs";
 
@@ -89,6 +89,7 @@ export const searchMethods = {
     if (!imports.length) return { ok: true, rows: [], matched: 0, capped: false, imports: [], no_import_held: true, absence: { level: "no_import_held", imports: [] }, text_key: "register.absence.no_import" };
     const gens = filters.map((f) => this.port.scan({ scopes, register: f.key, importId: importRow ? importRow.import_id : null, filter: f.filter, after: cursor.c })[Symbol.iterator]());
     const defOf = new Map(filters.map((f) => [f.key, f]));
+    const countable = typeof this.port.countAfter === "function" && filters.every((f) => countableFilter(f.filter));
     const deadline = this.nowMs() + budget;
     const out = [];
     let matched = cursor.n, capped = false, stopped = null, last = null, prev = null, more = false;
@@ -102,6 +103,17 @@ export const searchMethods = {
       more = true;
       /* past the page the matches are counted, exactly up to MATCH_COUNT_MAX, else `capped`; a later page still answers its rows (R24) */
       if (limited.length) break;
+      /* a filter the index judges exactly is counted there, no row read, so a page's time does not grow with the matches held (R23) */
+      if (countable) {
+        const left = this.bounds.MATCH_COUNT_MAX - matched + 1;
+        let n = 0;
+        for (const f of filters) {
+          if (n >= left) break;
+          n += this.port.countAfter({ scopes, register: f.key, importId: importRow ? importRow.import_id : null, filter: f.filter, after: this.cursorOf(last), cap: left - n });
+        }
+        if (left <= 0 || n >= left) { capped = true; matched = Math.max(matched, this.bounds.MATCH_COUNT_MAX); } else matched += n;
+        break;
+      }
       if (matched >= this.bounds.MATCH_COUNT_MAX) { capped = true; break; }
       matched++;
     }

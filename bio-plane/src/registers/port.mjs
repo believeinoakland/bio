@@ -87,6 +87,21 @@ function whereOf(filter, p = "") {
   return { sql: sub.join(" AND "), args, conds };
 }
 
+/** R23, R24: whether the pre-filter is exactly `register-readers`' `judge` for this filter, so its matches can be counted from the index
+ *  without reading a row: a number is the same trimmed equality, a date the same bounds (none fails), a name the same tokens; an amount
+ *  (rounded to millionths here), a place, a list past SQL_LIST_MAX or a name with no token is not. */
+export function countableFilter(filter) {
+  const f = isObj(filter) ? filter : {};
+  for (const [k, v] of Object.entries(f)) {
+    if (v === undefined) continue;
+    if (["filer_ids", "forms", "licence_numbers", "docket_numbers"].includes(k)) { if (!Array.isArray(v) || !v.length || v.length > SQL_LIST_MAX) return false; continue; }
+    if (k === "names" || k === "organizations") { if (!Array.isArray(v) || !v.length || v.length > SQL_LIST_MAX || v.some((n) => !nameTokens(n).length)) return false; continue; }
+    if (k === "date") { if (!isObj(v)) return false; continue; }
+    return false;
+  }
+  return true;
+}
+
 /* the search order as a cursor: date descending (none last), then key, hash, scope */
 export const encodeAfter = (e) => btoa(JSON.stringify([e.date ?? null, e.row_key, e.content_hash, e.scope_key]));
 export function decodeAfter(token) {
@@ -128,21 +143,17 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
     /** a lazy iterator over the held versions a filter could match, in the search order */
     *scan({ scopes, register = null, importId = null, filter = {}, after = null }) {
       if (!scopes.length) return;
-      const w = whereOf(filter, "r.");
-      const conds = [`r.scope_key IN (${scopes.map(() => "?").join(",")})`], args = [...scopes];
-      if (register) { conds.push(`r.register=?`); args.push(register); }
-      if (importId !== null) { conds.push(`EXISTS (SELECT 1 FROM register_import_rows m WHERE m.import_id=? AND m.row_key=r.row_key AND m.content_hash=r.content_hash)`); args.push(importId); }
-      if (w.sql) { conds.push(w.sql); args.push(...w.args); }
-      const cur = after ? decodeAfter(after) : null;
-      if (cur) {
-        const [d, k, h, s] = cur;
-        if (d === null) { conds.push(`(r.date IS NULL AND (r.row_key > ? OR (r.row_key = ? AND (r.content_hash > ? OR (r.content_hash = ? AND r.scope_key > ?)))))`); args.push(k, k, h, h, s); }
-        else { conds.push(`(r.date IS NULL OR r.date < ? OR (r.date = ? AND (r.row_key > ? OR (r.row_key = ? AND (r.content_hash > ? OR (r.content_hash = ? AND r.scope_key > ?))))))`); args.push(d, d, k, k, h, h, s); }
-      }
+      const { conds, args } = scanWhere({ scopes, register, importId, filter, after });
       const q = `SELECT r.scope_key, r.register, r.row_key, r.content_hash, r.date, c.cells, c.first_import, c.segment_sha, c.src_row
                    FROM register_rows r JOIN register_cells c ON c.scope_key=r.scope_key AND c.register=r.register AND c.row_key=r.row_key AND c.content_hash=r.content_hash
                   WHERE ${conds.join(" AND ")} ORDER BY (r.date IS NULL), r.date DESC, r.row_key, r.content_hash, r.scope_key`;
       for (const r of sql.exec(q, ...args)) yield { ...r, cells: JSON.parse(r.cells) };
+    },
+    /** R23, R24: the versions after `after` a `countableFilter` matches, each key and hash once whatever its scopes, counted from the index up to `cap` */
+    countAfter({ scopes, register = null, importId = null, filter = {}, after = null, cap }) {
+      if (!scopes.length) return 0;
+      const { conds, args } = scanWhere({ scopes, register, importId, filter, after });
+      return rows(`SELECT COUNT(*) AS n FROM (SELECT DISTINCT r.register, r.row_key, r.content_hash FROM register_rows r WHERE ${conds.join(" AND ")} LIMIT ?)`, ...args, cap)[0].n;
     },
     listByKeyRange({ scopes, register, from = "", to = null, limit = 200 }) {
       if (!scopes.length) return [];
@@ -191,6 +202,22 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
       return out.filter(Boolean);
     },
   };
+}
+
+/* the conditions of a scan over the index `r`: scopes, register, import, the filter's pre-filter and the cursor */
+function scanWhere({ scopes, register = null, importId = null, filter = {}, after = null }) {
+  const w = whereOf(filter, "r.");
+  const conds = [`r.scope_key IN (${scopes.map(() => "?").join(",")})`], args = [...scopes];
+  if (register) { conds.push(`r.register=?`); args.push(register); }
+  if (importId !== null) { conds.push(`EXISTS (SELECT 1 FROM register_import_rows m WHERE m.import_id=? AND m.row_key=r.row_key AND m.content_hash=r.content_hash)`); args.push(importId); }
+  if (w.sql) { conds.push(w.sql); args.push(...w.args); }
+  const cur = after ? decodeAfter(after) : null;
+  if (cur) {
+    const [d, k, h, s] = cur;
+    if (d === null) { conds.push(`(r.date IS NULL AND (r.row_key > ? OR (r.row_key = ? AND (r.content_hash > ? OR (r.content_hash = ? AND r.scope_key > ?)))))`); args.push(k, k, h, h, s); }
+    else { conds.push(`(r.date IS NULL OR r.date < ? OR (r.date = ? AND (r.row_key > ? OR (r.row_key = ? AND (r.content_hash > ? OR (r.content_hash = ? AND r.scope_key > ?))))))`); args.push(d, d, k, k, h, h, s); }
+  }
+  return { conds, args };
 }
 
 /* ======================================================================== the in-memory implementation */
@@ -253,6 +280,11 @@ export function memoryRowStore({ freeBytes = null, termsOf, members = null } = {
         yield { scope_key: r.scope_key, register: r.register, row_key: r.row_key, content_hash: r.content_hash, date: r.date,
                 cells: structuredClone(c.cells), first_import: c.first_import, segment_sha: c.segment_sha, src_row: c.src_row };
       }
+    },
+    countAfter({ scopes, register = null, importId = null, filter = {}, after = null, cap }) {
+      const seen = new Set();
+      for (const r of this.scan({ scopes, register, importId, filter, after })) { seen.add([r.register, r.row_key, r.content_hash].join("\u0000")); if (seen.size >= cap) break; }
+      return seen.size;
     },
     listByKeyRange({ scopes, register, from = "", to = null, limit = 200 }) {
       return [...cells.values()].filter((c) => c.register === register && scopes.includes(c.scope_key) && c.row_key >= from && (to === null || c.row_key < to))

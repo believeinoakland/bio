@@ -29,6 +29,25 @@ test("R24: rows past the counted matches are still answered: 150 matches paged b
   assert.deepEqual([first.matched, first.capped], [100, true]);
 });
 
+test("R24, R23: past the page the count is exact whether the filter is counted from the index (a number, a name, a date) or read row by row (an amount): each equals the rows the pages join to", async () => {
+  const w = seeded();
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(400))) });
+  for (const q of [{ filer_id: "F10003" }, { name: "Donor" }, { date: { from: "2025-03-01", to: "2025-06-30" } }, { amount: { min: "150", max: "420" } }, { filer_id: "F10003", amount: { min: "150" } }]) {
+    const rows = [];
+    let after, first;
+    for (let i = 0; i < 60; i++) {
+      const p = w.registers.searchRows({ scope: { register: "town_filings" }, limit: 10, viewer: V("bob"), ...q, ...(after ? { after } : {}) });
+      first ??= p;
+      rows.push(...p.rows);
+      if (!p.next) break;
+      after = p.next;
+    }
+    assert.ok(rows.length > 10, JSON.stringify(q));
+    assert.deepEqual([first.matched, first.capped], [rows.length, false], JSON.stringify(q));
+  }
+});
+
 test("R27: compare on a use-limited register pages to RESULT_CAP rows in all and carries the limit; a repeated cite carries it too", async () => {
   const w = seeded({ view: limited(), bounds: { RESULT_CAP: 30 } });
   START(w);

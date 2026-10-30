@@ -6,7 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 import { seeded, world, sourceKeyed, V, served, csv, rowOf, enc, URL_, DEF } from "./fixture.mjs";
 import { memoryRowStore, sqliteRowStore, migrateRegisters, contentHashOf, REGISTERS_SCHEMA } from "../../../src/registers/index.mjs";
 import { matches } from "../../../src/register-readers/index.mjs";
-import { decodeAfter } from "../../../src/registers/port.mjs";
+import { decodeAfter, countableFilter } from "../../../src/registers/port.mjs";
 
 const START = (w, over = {}) => w.registers.importStart({ register: "town_filings", filter: {}, scope: "project", project: w.P, author: V("bob"), viewer: V("bob"), holes: { table: "2025" }, ...over });
 const def = DEF("town_filings");
@@ -64,6 +64,17 @@ for (const [name, make] of Object.entries(impls)) {
       assert.ok(decodeAfter(after));
     }
     assert.deepEqual(paged.map((r) => r.row_key), all.map((r) => r.row_key));
+    /* R23, R24: an exactly judged filter's matches after a cursor are counted from the index: the same number the verified scan gives, at most the cap */
+    const mid = all[9];
+    const at = btoa(JSON.stringify([mid.date ?? null, mid.row_key, mid.content_hash, mid.scope_key]));
+    for (const filter of [{}, { filer_ids: ["F10003"] }, { names: ["Donor 14"] }, { date: { from: "2025-03-01" } }, { organizations: ["Firm 15"], forms: ["460-15"] }]) {
+      assert.equal(countableFilter(filter), true);
+      const verified = [...p.scan({ scopes: ["team"], register: "town_filings", filter, after: at })].filter((r) => matches(r.cells, filter, def)).length;
+      assert.equal(p.countAfter({ scopes: ["team"], register: "town_filings", filter, after: at, cap: 1000 }), verified, JSON.stringify(filter));
+    }
+    assert.equal(p.countAfter({ scopes: ["team"], register: "town_filings", filter: {}, after: at, cap: 7 }), 7, "at most the cap");
+    assert.equal(countableFilter({ amount: { min: "1" } }), false, "an amount is rounded in the index, so it is read and judged");
+    assert.equal(countableFilter({ names: ["--"] }), false, "a name with no token");
     /* key ranges and versions */
     assert.deepEqual(p.listByKeyRange({ scopes: ["team"], register: "town_filings", from: "K0010", to: "K0013" }).map((r) => r.row_key), ["K0010", "K0011", "K0012"]);
     p.put([version(5, "team", { note: "changed" })]);
