@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #1 · session_01RAN5eoAN35mnNq3LJBy4Fh · WORKING · PR #60
+**Status** · REGISTERS #1 · session_01RAN5eoAN35mnNq3LJBy4Fh · WAITING: REPORT to BOB: R21 (storage) and R30 (evidence purge) need other modules' services; carrying on with the 1M runs · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
