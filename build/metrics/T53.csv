@@ -90,3 +90,4 @@ session_018BhcegRyJVFNeHWmgrovKm,BOB-cleared,reply: ROUTINES DELETED (trig_01MDk
 session_018BhcegRyJVFNeHWmgrovKm,BOB-final,,92720922,1126476,1775,251038,,,
 session_018BhcegbvLHhXeZARZh5PyC,BOB-cleared,reply: ROUTINES DELETED (trig_01FPFySkXfAz8ErELD3neHXU  BOB #334's takeover check). My hourly backstops were one-shot and have all fired. No enabled routine into session_018BhcegbvLHhXeZARZh5PyC remains (list_triggers  enabled  has_more false). Nothing of mine is running  deployed or unpushed.,,,,,,,
 session_018BhcegbvLHhXeZARZh5PyC,BOB-final,,61738022,4848492,497,84948,,,
+,refusal,BOB #336,bob,,,,,,,scope,issue_write(process issue) · predicted · to ROOT by send_message; the report is on tranche at build/plan/process-issues/2026-10-30-bob336.md  for ROOT to carry to the neoProcess lane
