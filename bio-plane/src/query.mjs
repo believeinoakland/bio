@@ -2021,7 +2021,7 @@ function relationOf(second, warnings) {
   if (pr && typeof pr === "object" && typeof pr.table === "string" && typeof pr.key === "string"
       && IDENT.test(pr.table) && IDENT.test(pr.key))
     return { table: pr.table, key: pr.key };
-  warnings.push("projection: not a table and a key; the projection is read from bundles");
+  warnings.push(localize("query-language.query.projection_not_a_table", "projection: not a table and a key; the projection is read from bundles"));
   return null;
 }
 
@@ -2035,7 +2035,7 @@ function fieldRelationsOf(second, warnings) {
   const out = new Map();
   if (fs === null || fs === undefined) return out;
   if (typeof fs !== "object" || Array.isArray(fs)) {
-    warnings.push("fields: not a map of fields to relations; every field is read as before");
+    warnings.push(localize("query-language.query.fields_not_a_map", "fields: not a map of fields to relations; every field is read as before"));
     return out;
   }
   for (const [name, r] of Object.entries(fs)) {
@@ -2287,7 +2287,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       ast = toPassage(ast, false);
       if (moved.size) {
         ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
-        ctx.warnings.push("words read as passage words (rows=passage); use text: for the record's own text");
+        ctx.warnings.push(localize("query-language.query.words_read_as_passage", "words read as passage words (rows=passage); use text: for the record's own text"));
       }
     }
   }
@@ -2313,7 +2313,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       ast = drop(ast, false);
       if (moved.size) {
         ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
-        ctx.warnings.push("bare words ignored (rows=leg); use text: for the record's own text");
+        ctx.warnings.push(localize("query-language.query.bare_words_ignored_rows_leg", "bare words ignored (rows=leg); use text: for the record's own text"));
       }
     }
   }
