@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #2 · session_01RAN5ekL1dkjcJWEbCSo5V8 · WAITING: the 1,000,000-row runs of R12, R20, R23 (R67) at fe330ce, in the background (BOB #339); then complete with R14, R21, R30, R72 named · PR #60
+**Status** · REGISTERS #2 · session_01RAN5ekL1dkjcJWEbCSo5V8 · WAITING: the module suite on the R23 search-order index fix (the 1M runs at fe330ce failed R20, R23 on a sort of every match); then commit and the 1,000,000-row runs again · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
