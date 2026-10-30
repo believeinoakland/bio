@@ -80,7 +80,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 
 **hiddenRuns(viewer), onRunOpened(module, fn)** (N191, N223; `DEPLOYMENT_SEQUENCE` moved to `run-rules` R9)
 - **R42** (N191, D-486) `hiddenRuns(viewer) → {sql, args}`, a module-level function: the one predicate for "runs over projects this viewer cannot see". It is a WHERE tail over a run id that excludes exactly the runs R19 would answer `found: false`, an empty tail for a credential with no person behind it, and every run for an absent or unrecognised viewer (fail closed). It is what this module registers with `retrieval` (R36, retrieval R57) and `observation-log`, and it is what `legacy-store` reads in place of its `#hiddenSets` copy. It is pure over its argument and never throws.
-- **R43** (N223, K259) `onRunOpened(module, fn)`: a later module (`scheduler`, its R9) registers once at start; a malformed registration, or a second by the same module, is refused through `membership`'s `listenerRefusal` (its R81: `LISTENER_MALFORMED`, `LISTENER_DECLARED`), and the listeners run in the modules' total order (`membership`'s `MODULE_ORDER`, R83). After each successful `open` (R10) commits, every listener is called once with `{run, contextType, contextId, expires}`. A listener that throws or rejects never changes the run or the answer.
+- **R43** (N223, K259) `onRunOpened(module, fn)`: a later module (`scheduler`, its R9) registers once at start; a malformed registration, or a second by the same module, is refused through `member-roster`'s `listenerRefusal` (its R26: `LISTENER_MALFORMED`, `LISTENER_DECLARED`), and the listeners run in the modules' total order (`member-roster`'s `MODULE_ORDER`, its R27). After each successful `open` (R10) commits, every listener is called once with `{run, contextType, contextId, expires}`. A listener that throws or rejects never changes the run or the answer.
 - **R44** *(retired: moved to run-rules R9, K617)*
 
 **Use and the ceiling** (T33-50; Q0-6; K1450, K1502: the ceiling is per member, set by the member, and an administrator may set a lower one for the copy's own load) (T40; N812: the counter, the ceilings and the reads moved to `ai-use`, which holds each account's limits; K2373)
@@ -176,7 +176,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`, `bundles` and `refs` by its read contract.
 - `credentials`: `aiCredentialLook` (its R15; K757) (R18). (T47) `aiRunCredentialMint`, `aiRunCredentialsEnd` and `AI_RUN_WRITES` (its R63; R14, R18).
 - `ai-accounts` (T48; N996, split map §5): `accountFor` (its R7, R11; R18, R52, R79), `accountReferenceState` (its R2), `groupKeyState` (its R6), `groupKeySwitches` (its R9) and `accountUses` (its R15), read here where they were read from `credentials`; `credentials` keeps only the run credentials and `aiCredentialLook` above.
-- `membership`: `membershipOf(ctx)`, the bundle gate, `inSight`, `participation`, `existenceAct`, `viewerPredicate`; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
+- `membership`: `membershipOf(ctx)`, the bundle gate, `inSight`, `participation`, `existenceAct`, `viewerPredicate`. `member-roster`: `listenerRefusal` (its R26) and `MODULE_ORDER` (its R27) (N202; `membership` R81, R83 until T51).
 - `promotion`: `registerStep` for R25–R26.
 - `connections`: `citesInto` (R10's projects, R19's questions).
 - `bias`: `biasManifest` (R10, R20); the work-product registration (R30).
@@ -184,7 +184,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 - `retrieval`: the hidden-run predicate and `surfaced_in` decoration it offers (R36).
 - `inquiry`: `migratedSurfacing` (its R49), the migration-replay arm of `surfaced_in` (R27; map §5.8; K674).
 - `contradiction`: the run gate it offers (R37).
-- `civil-time`: `localDay` (R49, R50; T33-50). `membership`: also `notAnAdmin` and the administrator test (R50, R51; T33-50).
+- `civil-time`: `localDay` (R49, R50; T33-50). `member-roster`: also `notAnAdmin` and the administrator test (its R28, R23; R50, R51; T33-50).
 - `ai-use` (T40; N812, K2373): `useCheck` and `countUsage` (its R3, R1), for R52.
 - (T53) `ai-accounts`: `hopFor` (its R50), the disclosure record (`aisend`, `aisendrefuse`) and `accountFor` (R93–R96); `ai-catalogue`: `entryOf`, for `display_name` (R104; layer 2, no cycle); `agent-model`: `entryFor`'s label and `health` over the Worker's `op=aipathready` (R95, R97, R98); `scheduler`'s consumer slot (R98), registered into at start, never imported; `run-rules`: `partAdmittedOn` over `ai-gate`'s verdicts, handed in (R78); `agent-harness`: `ROLE_NEEDS`, `partOf`, `disclosureGate` through the Worker (R93).
 
