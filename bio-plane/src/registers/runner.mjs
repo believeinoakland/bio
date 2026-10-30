@@ -465,9 +465,10 @@ export const runnerMethods = {
          transaction bound; nothing already read is parsed again, so a batch's time does not grow with its place in the segment */
       const batchStart = this.nowMs();
       const rowCap = Math.max(20, Math.min(this.bounds.INGEST_BATCH_ROWS, Math.floor((this.bounds.SLICE_TX_MS * 0.6) / Math.max(0.001, this.rowMs ?? 0.5))));
-      const delta = [], member = [];
+      /* each row read, in order: its byte, its index, and what writing it means (a new version, one already held, a tombstoned key, a replayed place) */
+      const items = [];
       const placed = (idx) => this.one(`SELECT 1 AS x FROM register_import_rows WHERE import_id=? AND piece=? AND seg_n=? AND row_no=?`, row.import_id, p.piece, seg.n, idx);
-      let k = ing.rows, taken = 0, newN = 0, sameN = 0, tomb = 0, stop = false;
+      let k = ing.rows, taken = 0, stop = false;
       const occ = new Map();
       const occurrence = (digest) => {
         if (!occ.has(digest)) occ.set(digest, Number(this.one(`SELECT COUNT(*) AS n FROM register_import_rows WHERE import_id=? AND row_key >= ? AND row_key < ?`, row.import_id, `${digest}${SEP}`, `${digest}${SEP}\uffff`).n));
@@ -486,7 +487,7 @@ export const runnerMethods = {
         if (!fields) continue;
         const idx = k++;
         taken++;
-        if (placed(idx)) continue;   /* a replayed position: already read (R17) */
+        if (placed(idx)) { items.push({ at, idx, kind: "placed" }); continue; }   /* a replayed position: already read (R17) */
         const cells = {};
         for (let i = 1; i < header.length; i++) cells[header[i]] = fields[i] ?? "";
         const src_row = Number(fields[0]);
@@ -495,26 +496,40 @@ export const runnerMethods = {
         if (def.row_key_basis === "content") key = `${hash}${SEP}${occurrence(hash)}`;
         else key = (def.row_key || []).map((c) => cells[c] ?? "").join(SEP);
         if (multi) key = `${p.piece}${SEP}${key}`;
-        if (removed(key)) { tomb++; continue; }
+        if (removed(key)) { items.push({ at, idx, kind: "tomb" }); continue; }
         const version = { scope_key, register: row.register, row_key: key, content_hash: hash, project: row.project };
-        if (this.port.has(version)) sameN++; else { newN++; delta.push({ ...version, first_import: row.import_id, segment_sha: seg.sha256, seg_row: idx + 1, byte_at: at, byte_len: end - at, src_row, cells, definition: def }); }
-        member.push({ idx, key, hash, src_row });
+        const d = this.port.has(version) ? null : { ...version, first_import: row.import_id, segment_sha: seg.sha256, seg_row: idx + 1, byte_at: at, byte_len: end - at, src_row, cells, definition: def };
+        items.push({ at, idx, kind: "row", m: { idx, key, hash, src_row }, d });
       }
-      const finishedSeg = !stop;
       const wrote = performance.now();
+      let writ = 0;
       this.tx(() => {
-        const w = this.port.put(delta);
-        for (const m of member) this.sql.exec(`INSERT OR IGNORE INTO register_import_rows (import_id, register, piece, seg_n, row_no, row_key, content_hash, src_row, project) VALUES (?,?,?,?,?,?,?,?,?)`,
-                                              row.import_id, row.register, p.piece, seg.n, m.idx, m.key, m.hash, m.src_row, row.project);
-        this.sql.exec(`UPDATE register_imports SET rows_new = rows_new + ?, rows_unchanged = rows_unchanged + ?, rows_tombstoned = rows_tombstoned + ? WHERE import_id=?`, w.written, sameN + w.existed, tomb, row.import_id);
-        if (finishedSeg) { ing.seg += 1; ing.rows = 0; delete ing.byte; } else { ing.rows += taken; ing.byte = pos; }
-        /* rows skipped over as tombstoned or already placed are counted in `taken` too, so the position moves past them */
+        /* R20: the write itself is bounded by time: rows are written one by one, and at half of SLICE_TX_MS the batch ends at the
+           first row not yet written, whose byte the cursor keeps; a slow stretch of the store or a pause makes a shorter batch,
+           never a longer hold of the worker */
+        const writeEnd = wrote + this.bounds.SLICE_TX_MS * 0.5;
+        let written = 0, same = 0, tomb = 0, next = null;
+        for (let i = 0; i < items.length; i++) {
+          if (i > 0 && performance.now() >= writeEnd) { next = items[i]; break; }
+          const it = items[i];
+          writ++;
+          if (it.kind === "tomb") { tomb++; continue; }
+          if (it.kind !== "row") continue;
+          if (it.d) { const w = this.port.put([it.d]); written += w.written; same += w.existed; } else same++;
+          this.sql.exec(`INSERT OR IGNORE INTO register_import_rows (import_id, register, piece, seg_n, row_no, row_key, content_hash, src_row, project) VALUES (?,?,?,?,?,?,?,?,?)`,
+                        row.import_id, row.register, p.piece, seg.n, it.m.idx, it.m.key, it.m.hash, it.m.src_row, row.project);
+        }
+        this.sql.exec(`UPDATE register_imports SET rows_new = rows_new + ?, rows_unchanged = rows_unchanged + ?, rows_tombstoned = rows_tombstoned + ? WHERE import_id=?`, written, same, tomb, row.import_id);
+        /* rows skipped over as tombstoned or already placed move the position past them too */
+        if (next) { ing.rows = next.idx; ing.byte = next.at; }
+        else if (stop) { ing.rows += taken; ing.byte = pos; }
+        else { ing.seg += 1; ing.rows = 0; delete ing.byte; }
         cursor.ing = ing;
         const done = ing.seg >= p.segments.length;
         if (done) p.state = "done";
         save(pieces, cursor);
       });
-      if (taken > 0) this.rowMs = (this.rowMs ?? 0.5) * 0.5 + ((performance.now() - wrote) / taken) * 0.5;
+      if (writ > 0) this.rowMs = (this.rowMs ?? 0.5) * 0.5 + ((performance.now() - wrote) / writ) * 0.5;
       if (ing.seg >= p.segments.length) { more = false; break; }
       await tick();
     }

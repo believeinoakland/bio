@@ -130,6 +130,27 @@ test("R12, R20: with a real clock and a 5 ms transaction bound, a 30,000-row seg
   assert.ok(ticks.length > 3);
 });
 
+test("R20: when the store turns slow the write still ends within SLICE_TX_MS: each batch stops at the first row it has no time for, and the next reads on from it, so the import ends with every row, the same as an unhindered one", async () => {
+  const n = 600;
+  const bounds = { SLICE_TX_MS: 20, INGEST_SLICE_BATCHES: 4 };
+  const plain = seeded({ bounds });
+  START(plain);
+  await plain.drain({ [URL_]: served(enc(csv(n))) });
+  const w = seeded({ bounds });
+  START(w);
+  const put = w.registers.port.put.bind(w.registers.port);
+  w.registers.port.put = (d) => { const until = performance.now() + 4 * d.length; while (performance.now() < until); return put(d); };   /* 4 ms a row, real time */
+  w.registers.rowMs = 0.01;   /* the estimate says rows are cheap: the batch is sized far too large for this store */
+  const txs = [];
+  const transact = w.record.transact.bind(w.record);
+  w.record.transact = (fn) => { const t = performance.now(); try { return transact(fn); } finally { txs.push(performance.now() - t); } };
+  await w.drain({ [URL_]: served(enc(csv(n))) }, { max: 2000 });
+  assert.equal(w.sql(`SELECT state FROM register_imports`)[0].state, "indexed");
+  assert.equal(w.count("register_cells"), n);
+  assert.equal(digest(w), digest(plain), "the same row table, descriptors and segments as an unhindered import");
+  assert.ok(Math.max(...txs) <= bounds.SLICE_TX_MS + 4, `no transaction over the bound (${Math.max(...txs).toFixed(1)} ms over ${txs.length})`);
+});
+
 test("R13: a running import shows its pieces and progress; pause runs nothing; resume continues from the cursor; stop keeps what was brought in and says so; a hidden import is NO_SUCH_REGISTER_IMPORT", async () => {
   const w = seeded({ bounds: { segment_max: 8 * 1024, INGEST_BATCH_ROWS: 20, INGEST_SLICE_BATCHES: 1 } });
   const st = START(w);
