@@ -104,3 +104,4 @@ session_01RAN5endEY62aX9eDnxRNqY,job,QUERY-LANGUAGE #1,query-language,26829588,9
 session_01RAN5em7nwdkWJw7eMNHB2W,job,EVENTS #2,events,,,,,0,,,replaced; unmeasured: archive_session returned no usage
 session_01RAN5enbGxwnMWs4dv3Yky9,job,MONEY #2,money,10579290,182220,1147,12528,0,,,replaced
 session_01RAN5enwSuSydTbcY1oSBC4,job,PEOPLE #2,people,,,,,0,,,replaced; unmeasured: archive_session returned no usage
+session_01RAN5ekL1dkjcJWEbCSo5V8,job,REGISTERS #2,registers,18280535,199424,1710,45765,1,2219,yes,replaced
