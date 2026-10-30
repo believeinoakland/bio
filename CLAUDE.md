@@ -1,6 +1,6 @@
 # Built by neoProcess
 
-The process is `neobobkrause/neoprocess`, attached at `/home/user/neoprocess` on its branch `main` (if it is missing, attach it with add_repo, clone it there and check that branch out). Nothing about the process is decided in this repository: it supplies what `/home/user/neoprocess/PRODUCT-SUPPLIES.md` lists, and nothing else.
+The process is `neobobkrause/neoprocess`, attached at `/home/user/neoprocess` on its branch `main` (each session's start clones it there read-only when it is missing; if it is still missing, run `git clone --branch main https://github.com/neobobkrause/neoprocess /home/user/neoprocess`). Nothing about the process is decided in this repository: it supplies what `/home/user/neoprocess/PRODUCT-SUPPLIES.md` lists, and nothing else.
 
 At the start of every session, before anything else, invoke the skill `neoprocess` with your role as its argument: `/neoprocess bob`, `/neoprocess job`, `/neoprocess lane` or `/neoprocess root`. It prints your process text, which you read whole and never scan (P20), and the start command that records your role; the hooks refuse every act until it is recorded.
 
