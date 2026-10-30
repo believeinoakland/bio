@@ -1,6 +1,6 @@
 # query-language (transient)
 
-**Status** · QUERY-LANGUAGE #1 · session_01RAN5endEY62aX9eDnxRNqY · MERGED · PR #55
+**Status** · QUERY-LANGUAGE #1 · session_01RAN5endEY62aX9eDnxRNqY · ARCHIVED · PR #55
 **Runs** · 1
 **Owed** · none
 **Model** · opus
