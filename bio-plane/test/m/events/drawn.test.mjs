@@ -189,7 +189,8 @@ test("R51 two standing relations ordering the pair both ways answer undetermined
   w.ev.withdrawRelation({ relationId: bc, reason: "superseded by the fenced source", by: MEMBER });
   assert.equal(w.ev.sequence({ a: b, b: c, viewer: MEMBER }).basis, "cited");
   assert.equal(w.ev.sequence({ a: b, b: c, viewer: OUTSIDER }).answer, "undetermined");
-  assert.equal(w.ev.sequence({ a: b, b: c, viewer: null }).answer, "undetermined", "an absent viewer sees no cited order");
+  const blind = w.ev.sequence({ a: b, b: c, viewer: null });
+  assert.deepEqual([blind.reason, blind.answer, blind.basis], ["NO_SUCH_EVENT", undefined, undefined], "an absent viewer sees no event, so no cited order (R31, K5818)");
 });
 
 test("R51 when an attestation later dates the pair, the dates govern and the relation is answered beside with agrees true or false; it is never withdrawn by the module; sequence is computed on each read and stores nothing", () => {

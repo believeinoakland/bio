@@ -99,11 +99,11 @@ function change(k, eventId, detail) {
   k.rows(`INSERT INTO event_changes (event_id, kind, detail, reason, by_actor, at) VALUES (?,?,?,?,?,?)`, eventId, "source_changed",
          JSON.stringify(detail), word("events.rows.source_value_changed"), MACHINE, k.now());
 }
-function participant(k, eventId, entityId, role, attestationId, voteValue = null) {
+function participant(k, eventId, entityId, role, attestationId, voteValue = null, checked = null) {
   const live = k.one(`SELECT * FROM event_participants WHERE event_id=? AND role=? AND entity_id=? AND superseded_by IS NULL`, eventId, role, entityId);
   if (live && (live.vote_value ?? null) === (voteValue ?? null)) return { id: Number(live.participant_id), added: false };
   const pid = k.insert("event_participants", { event_id: eventId, entity_id: entityId, role, vote_value: voteValue,
-    attestation_id: attestationId, by_actor: MACHINE, at: k.now() });
+    vote_checked: role === "voted" ? (checked ? 1 : 0) : null, attestation_id: attestationId, by_actor: MACHINE, at: k.now() });
   if (live) {
     k.rows(`UPDATE event_participants SET superseded_by=?, superseded_actor=?, superseded_at=?, superseded_why=? WHERE participant_id=?`,
            pid, MACHINE, k.now(), word("events.rows.source_value_changed"), live.participant_id);
@@ -255,7 +255,7 @@ function vote(k, held, row, f, out) {
   const m = k.voteMatch(typeof f.value === "string" ? f.value : f.value == null ? "" : String(f.value));
   if (!m.ok) { out.unresolved.push({ row: row.source, key: row.key, why: m.detail, refusal: m.reason }); return; }
   const aid = rowAttestation(k, eventId, held, row);
-  const p = participant(k, eventId, ent, "voted", aid, m.value);
+  const p = participant(k, eventId, ent, "voted", aid, m.value, m.checked);
   if (p.added) out.written.push({ key: row.key, event_id: eventId, participant_id: p.id }); else out.unchanged++;
   keepSource(k, row.key, "participant", String(p.id), { value: f.value }, held.sha);
 }
