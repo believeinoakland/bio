@@ -126,7 +126,7 @@ export const runnerMethods = {
 
   /* ------------------------------------------------------------------ R11: queue an import */
 
-  importStart({ register, filter, scope, project, author, viewer, holes, pieces, file, kind = "import", reason = null, on_behalf = null, interest = null, previous = null, force = false } = {}) {
+  importStart({ register, filter, scope, project, author, viewer, holes, pieces, file, kind = "import", reason = null, on_behalf = null, interest = null, previous = null, force = false, recheck = false } = {}) {
     const by = str(author);
     if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_IMPORT_REGISTER", localize("registers.refusal.MACHINE_CANNOT_IMPORT_REGISTER", "an import is a member's act; a machine starts none"), {});
     const d = this.definitionOf(register);
@@ -140,7 +140,8 @@ export const runnerMethods = {
     if (!checked.ok) return checked;
     const sc = scope === "team" ? "team" : scope === "project" ? "project" : null;
     if (!sc) return refusal("SCOPE_INVALID", localize("registers.refusal.SCOPE_INVALID", "an import is for a project or for the team"), { field: "scope" });
-    if (sc === "team" && !this.isAdmin(by)) return refusal("NOT_AN_ADMIN", localize("registers.refusal.NOT_AN_ADMIN", "this is an administrator's act"), {});
+    /* a team pre-read is an administrator's act; a member's re-check of one already held is the member's (R33, R2) */
+    if (sc === "team" && !this.isAdmin(by) && !(recheck && kind === "refresh")) return refusal("NOT_AN_ADMIN", localize("registers.refusal.NOT_AN_ADMIN", "this is an administrator's act"), {});
     let proj = null;
     if (sc === "project") {
       proj = str(project);
@@ -177,6 +178,11 @@ export const runnerMethods = {
     if (def.status === "not_measured") return refusal("REGISTER_NOT_MEASURED", localize("registers.refusal.REGISTER_NOT_MEASURED", "this register has not been measured, so it cannot be imported yet; your team can bring it in with its own definition"), { register: def.key });
     if (def.gate === "people_search") return refusal("REGISTER_PEOPLE_SEARCH", localize("registers.refusal.REGISTER_PEOPLE_SEARCH", "a paid people-search is not a register this product reaches"), { register: def.key });
     if (!bytes || !bytes.length) return refusal("FILE_EMPTY", localize("registers.refusal.FILE_EMPTY", "the file has no bytes; nothing was brought in"), { field: "file" });
+    /* the act reads the file whole within its time (R11, R40) and a slice's memory (R23): a larger file is refused, nothing written */
+    const max = Math.floor(this.bounds.SLICE_MEMORY_MB * 1048576);
+    if (bytes.length > max) return refusal("FILE_TOO_LARGE", localize("registers.refusal.FILE_TOO_LARGE", "the file is larger than one import act reads ({max} bytes); nothing was brought in", { max: String(max) }), { field: "file", size: bytes.length, bound: max });
+    const s = this.shelf(bytes.length);
+    if (s.free_bytes !== null && s.warn) return refusal("SHELF_NEARLY_FULL", localize("registers.refusal.SHELF_NEARLY_FULL", "the object is nearly full ({pct}%), so the import is not resumed until room is made", { pct: String(s.would_use_pct) }), { shelf: s });
     return null;
   },
 
@@ -305,9 +311,10 @@ export const runnerMethods = {
   },
 
   /** R23: whether the shelf lets a slice write; a pause with the figures, or null */
-  shelfPause(row, extra = 0) {
+  shelfPause(row, extra = 0, resumed = false) {
     const s = this.shelf(extra);
     if (s.free_bytes === null || !s.warn) return null;
+    if (resumed && !s.over) return null;   /* resumed past the warning mark by a member's act: it runs on until the refusal mark (R23) */
     this.sql.exec(`UPDATE register_imports SET state='paused', paused_reason='shelf', reason=? WHERE import_id=?`, localize("registers.pause.shelf", "shelf: {pct}% of the object would be used", { pct: String(s.would_use_pct) }), row.import_id);
     return { paused: "shelf", shelf: s };
   },
@@ -321,7 +328,8 @@ export const runnerMethods = {
     const save = (p = pieces, c = cursor, extra = "") => this.sql.exec(`UPDATE register_imports SET pieces=?, cursor=?${extra} WHERE import_id=?`, json(p), json(c), row.import_id);
     const phase = pieces.find((p) => p.state !== "done");
     if (!this.nowStarted(row)) this.sql.exec(`UPDATE register_imports SET started_at=? WHERE import_id=?`, this.nowIso(), row.import_id);
-    const pauseShelf = this.shelfPause(row, cursor.est_stored ?? 0);
+    /* the bytes still to be written: none once the segments are stored (reading) */
+    const pauseShelf = this.shelfPause(row, cursor.ing ? 0 : (cursor.est_stored ?? 0), cursor.shelf_resumed === true);
     if (pauseShelf) { save(); return pauseShelf; }
     if (row.state === "paused") this.sql.exec(`UPDATE register_imports SET state='fetching', paused_reason=NULL WHERE import_id=?`, row.import_id);
     if (!phase) return this.finish(row, def, pieces, cursor, now);
@@ -566,11 +574,12 @@ export const runnerMethods = {
       return { ok: true, state: "paused", reason: "member" };
     }
     if (row.state !== "paused") return { ok: true, existed: true, state: row.state };
-    const s = this.shelf(parse(row.cursor)?.est_stored ?? 0);
+    const s = this.shelf(parse(row.cursor)?.ing ? 0 : (parse(row.cursor)?.est_stored ?? 0));
     if (row.paused_reason === "shelf" && s.free_bytes !== null && s.would_use_pct >= this.bounds.SHELF_REFUSE_PCT)
       return refusal("SHELF_NEARLY_FULL", localize("registers.refusal.SHELF_NEARLY_FULL", "the object is nearly full ({pct}%), so the import is not resumed until room is made", { pct: String(s.would_use_pct) }), { shelf: s });
     const cur = parse(row.cursor) || {};
-    this.sql.exec(`UPDATE register_imports SET state=?, paused_reason=NULL, due_ms=? WHERE import_id=?`, cur.ing ? "reading" : "fetching", this.nowMs(), row.import_id);
+    if (row.paused_reason === "shelf") cur.shelf_resumed = true;
+    this.sql.exec(`UPDATE register_imports SET state=?, paused_reason=NULL, due_ms=?, cursor=? WHERE import_id=?`, cur.ing ? "reading" : "fetching", this.nowMs(), json(cur), row.import_id);
     return { ok: true, state: cur.ing ? "reading" : "fetching" };
   },
 

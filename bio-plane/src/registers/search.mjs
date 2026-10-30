@@ -98,11 +98,15 @@ export const searchMethods = {
       if (!matches(r.cells, f.filter, f.def)) continue;
       if (prev && prev.register === r.register && prev.row_key === r.row_key && prev.content_hash === r.content_hash) continue;
       prev = r;
+      if (out.length < allowed) { out.push(this.rowShape(r, f.def, importRow, scopes)); last = r; matched++; continue; }
+      more = true;
+      /* past the page the matches are counted, exactly up to MATCH_COUNT_MAX, else `capped`; a later page still answers its rows (R24) */
+      if (limited.length) break;
       if (matched >= this.bounds.MATCH_COUNT_MAX) { capped = true; break; }
-      if (out.length < allowed) { out.push(this.rowShape(r, f.def, importRow, scopes)); last = r; matched++; }
-      else { matched++; more = true; if (limited.length) break; }
+      matched++;
     }
     /* the exact count to 10,000 over the rest is counted only while the budget lasts */
+    if (matched > this.bounds.MATCH_COUNT_MAX) { matched = this.bounds.MATCH_COUNT_MAX; capped = true; }
     const body = { ok: true, rows: out, matched, capped, imports: searched };
     if (more && out.length) body.next = b64({ c: this.cursorOf(last), n: cursor.n + out.length });
     else if (limited.length && out.length === allowed && cursor.n + out.length >= this.bounds.RESULT_CAP && more) body.capped_by = "RESULT_CAP";
@@ -121,7 +125,7 @@ export const searchMethods = {
     const lim = this.useLimitOf(def);
     return { import: imp ? imp.import_id : r.first_import, register: r.register, row_key: r.row_key, src_row: r.src_row, cells: r.cells,
              imported_at: imp ? imp.imported_at : null, source_date: imp ? (imp.source_date ?? "not_stated") : "not_stated",
-             version: hashes.indexOf(r.content_hash) + 1, cited, ...(lim ? { use_limit: lim } : {}) };
+             version: hashes.indexOf(r.content_hash) + 1, cited, label_key: "register.extract", ...(lim ? { use_limit: lim } : {}) };
   },
 
   /* ------------------------------------------------------------------ R28: read a row, cite it */
@@ -175,9 +179,10 @@ export const searchMethods = {
     const extract = {
       register: imp.register, file, reduced_sha256: seg.sha256, original_sha256: seg.original_sha256, original_covers: seg.covers,
       source_date: imp.source_date ?? "not_stated", imported_at: imp.imported_at, src_row: m.src_row, kept_columns: ["src_row", ...this.kept(def)],
-      dropped_columns: (red.dropped_columns || []).map((c) => c.name), label_key: "register.extract" };
+      dropped_columns: (red.dropped_columns || []).map((c) => c.name), label_key: "register.extract", reduced_key: "register.reduced" };
     const held = this.one(`SELECT content_id FROM register_cites WHERE register=? AND row_key=? AND content_hash=? AND import_id=?`, imp.register, m.row_key, m.content_hash, imp.import_id);
-    if (held) return { ok: true, existed: true, content_id: held.content_id, extract };
+    const limit = this.useLimitOf(def);
+    if (held) return { ok: true, existed: true, content_id: held.content_id, extract, ...(limit ? { use_limit: limit } : {}) };
     if (!seg.bundle_id || !this.content || typeof this.content.contentMint !== "function")
       return refusal("SEGMENT_NOT_FILED", localize("registers.refusal.SEGMENT_NOT_FILED", "this segment is not filed as a document yet, so a row of it cannot be cited"), {});
     const n = m.row_no + 2;
@@ -218,12 +223,16 @@ export const searchMethods = {
     const n = limit === undefined || limit === null ? this.bounds.COMPARE_PAGE_MAX : limit;
     if (!Number.isInteger(n) || n < 1 || n > this.bounds.COMPARE_PAGE_MAX) return refusal("SEARCH_BAD_LIMIT", localize("registers.refusal.SEARCH_BAD_LIMIT", "a search returns 1 to {max} rows at a time", { max: String(this.bounds.COMPARE_PAGE_MAX) }), {});
     const cur = after ? unb64(after) : null;
-    if (after && (!isObj(cur) || typeof cur.k !== "string" || !["added", "changed", "removed"].includes(cur.kind))) return refusal("BAD_CURSOR", localize("registers.refusal.BAD_CURSOR", "that page marker is not one this search gave"), {});
+    if (after && (!isObj(cur) || typeof cur.k !== "string" || !["added", "changed", "removed"].includes(cur.kind) || (cur.n !== undefined && !Number.isInteger(cur.n)))) return refusal("BAD_CURSOR", localize("registers.refusal.BAD_CURSOR", "that page marker is not one this search gave"), {});
     const kinds = ["added", "changed", "removed"];
     const items = [];
     let next = null;
     const cellsOf = (imp, key, hash) => this.port.get({ scope_key: imp.scope_key, register: imp.register, row_key: key, content_hash: hash })?.cells ?? null;
     const lim = this.useLimitOf(def);
+    /* R27: a limited register's rows are paged to RESULT_CAP in all, as a search's are */
+    const shown = cur && Number.isInteger(cur.n) ? cur.n : 0;
+    if (lim && shown >= this.bounds.RESULT_CAP) return refusal("RESULT_CAP", localize("registers.refusal.RESULT_CAP", "a search of this register shows at most {max} rows; narrow it", { max: String(this.bounds.RESULT_CAP) }), {});
+    const pageMax = lim ? Math.min(n, this.bounds.RESULT_CAP - shown) : n;
     const deadline = this.nowMs() + (Number.isFinite(budget_ms) ? budget_ms : this.bounds.SEARCH_BUDGET_DEFAULT);
     let stopped = null;
     outer:
@@ -236,22 +245,22 @@ export const searchMethods = {
           ? q(`SELECT a.row_key, a.content_hash, a.src_row FROM register_import_rows a WHERE a.import_id=? AND a.row_key > ? AND NOT EXISTS (SELECT 1 FROM register_import_rows b WHERE b.import_id=? AND b.row_key=a.row_key) ORDER BY a.row_key LIMIT ?`, E, start, Lt, n + 1)
           : q(`SELECT a.row_key, a.content_hash AS before_hash, b.content_hash, b.src_row FROM register_import_rows a JOIN register_import_rows b ON b.row_key=a.row_key AND b.import_id=? WHERE a.import_id=? AND a.row_key > ? AND b.content_hash <> a.content_hash ORDER BY a.row_key LIMIT ?`, Lt, E, start, n + 1);
       for (const r of rows) {
-        if (items.length >= n) { next = b64({ kind, k: items[items.length - 1].key, }); break outer; }
-        if (this.nowMs() >= deadline) { stopped = { reason: "time" }; next = items.length ? b64({ kind, k: items[items.length - 1].key }) : null; break outer; }
+        if (items.length >= pageMax) { next = b64({ kind, k: items[items.length - 1].key, n: shown + items.length }); break outer; }
+        if (this.nowMs() >= deadline) { stopped = { reason: "time" }; next = items.length ? b64({ kind, k: items[items.length - 1].key, n: shown + items.length }) : null; break outer; }
         if (kind === "changed") {
           const before = cellsOf(early, r.row_key, r.before_hash), afterC = cellsOf(late, r.row_key, r.content_hash);
           const fields = Object.keys(afterC ?? {}).filter((f) => (before ?? {})[f] !== afterC[f]);
-          items.push({ kind, key: r.row_key, changes: fields.map((field) => ({ key: r.row_key, field, before: before?.[field] ?? null, after: afterC[field] })) });
+          items.push({ kind, key: r.row_key, changes: fields.map((field) => ({ key: r.row_key, field, before: before?.[field] ?? null, after: afterC[field] })), label_key: "register.extract" });
         } else {
           const owner = kind === "added" ? late : early;
           const label = kind === "removed" && !stated ? "possibly_removed" : kind;
-          items.push({ kind: label, key: r.row_key, src_row: r.src_row, cells: cellsOf(owner, r.row_key, r.content_hash) });
+          items.push({ kind: label, key: r.row_key, src_row: r.src_row, cells: cellsOf(owner, r.row_key, r.content_hash), label_key: "register.extract" });
         }
       }
-      if (items.length >= n && !next) {
+      if (items.length >= pageMax && !next) {
         /* the page filled exactly at the end of this kind: the next page starts at the next kind */
         const idx = kinds.indexOf(kind) + 1;
-        if (idx < kinds.length) next = b64({ kind: kinds[idx], k: "" });
+        if (idx < kinds.length) next = b64({ kind: kinds[idx], k: "", n: shown + items.length });
         break;
       }
     }

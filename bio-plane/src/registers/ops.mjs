@@ -24,7 +24,8 @@ const TABLE = {
   registerpreread:      ["act", ADMIN, true, "reversible", 1000, ["register", "filter", "holes", "pieces", "file"], ["register"], localize("registers.declared.registerpreread", "queues a team pre-read of a register, an administrator's act")],
   registerimportset:    ["act", MEMBER, true, "reversible", 500, ["import", "action"], ["import", "action"], localize("registers.declared.registerimportset", "pauses, resumes or stops an import")],
   registerrowcite:      ["act", MEMBER, true, "reversible", 1000, ["import", "row_key"], ["import", "row_key"], localize("registers.declared.registerrowcite", "cites a row as a labelled extract")],
-  registerinterest:     ["act", MEMBER, true, "reversible", 500, ["register", "project", "filter", "watch"], ["register", "project", "filter"], localize("registers.declared.registerinterest", "a project states the filter its watching looks for")],
+  registerinterest:     ["act", MEMBER, true, "reversible", 500, ["register", "project", "filter", "watch", "forget", "interest"], ["register", "project"], localize("registers.declared.registerinterest", "a project states the filter its watching looks for, or forgets it (forget: true), its history kept")],
+  registerinterests:    ["read", MEMBER, false, "read", 500, ["project", "register"], ["project"], localize("registers.declared.registerinterests", "a project's stated interests and their history")],
   registerrefresh:      ["act", MEMBER, true, "reversible", 1000, ["interest", "import", "force"], [["interest", "import"]], localize("registers.declared.registerrefresh", "a member's own re-check of an interest or an import")],
   registerwatch:        ["act", MEMBER, true, "reversible", 1000, ["interest"], ["interest"], localize("registers.declared.registerwatch", "switches a stated interest's watch on, when its filter is by a number")],
   registerwatchstop:    ["act", MEMBER, true, "reversible", 500, ["interest"], ["interest"], localize("registers.declared.registerwatchstop", "switches a stated interest's watch off; the interest and its history stay")],
@@ -50,7 +51,7 @@ export function registersOps(registers, url, body) {
   const read = (name) => { const v = b[name] !== undefined ? b[name] : q(name); if (typeof v !== "string") return v; try { const j = JSON.parse(v); return j !== null && typeof j === "object" ? j : v; } catch { return v; } };
   const num = (name) => { const v = read(name); return typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : v; };
   const who = () => ({ author: b.author ?? b.by ?? q("author") ?? q("by"), viewer: q("viewer") ?? b.viewer });
-  const field = (name) => (["limit", "budget_ms", "src_row", "id"].includes(name) ? num(name) : ["force", "watch", "withdraw"].includes(name) ? (read(name) === true || read(name) === "true" ? true : read(name) === "false" ? false : undefined) : read(name));
+  const field = (name) => (["limit", "budget_ms", "src_row", "id"].includes(name) ? num(name) : ["force", "watch", "withdraw", "forget"].includes(name) ? (read(name) === true || read(name) === "true" ? true : read(name) === "false" ? false : undefined) : read(name));
   const picked = (op) => Object.fromEntries(DECLARED_OPS[op].fields.accepts.map((f) => [f, field(f)]).filter(([, v]) => v !== undefined));
   const missing = (op) => {
     for (const r of DECLARED_OPS[op].fields.requires) {
@@ -75,7 +76,9 @@ export function registersOps(registers, url, body) {
     registerpreread: arm("registerpreread", (a) => registers.importStart({ ...a, scope: "team", ...who() })),
     registerimportset: arm("registerimportset", (a) => registers.importSet({ ...a, ...who() })),
     registerrowcite: arm("registerrowcite", (a) => registers.citeRow({ ...a, ...who() })),
-    registerinterest: arm("registerinterest", (a) => registers.interestSet({ ...a, ...who() })),
+    registerinterest: arm("registerinterest", (a) => (a.forget === true ? registers.interestForget({ interest: a.interest, project: a.project, register: a.register, ...who() })
+      : registers.interestSet({ ...a, ...who() }))),
+    registerinterests: arm("registerinterests", (a) => registers.interestOf({ project: a.project, register: a.register, viewer: who().viewer })),
     registerrefresh: arm("registerrefresh", (a) => registers.registerRefresh({ ...a, ...who() })),
     registerwatch: arm("registerwatch", (a) => registers.watchSet({ interest: a.interest, watch: true, ...who() })),
     registerwatchstop: arm("registerwatchstop", (a) => registers.watchSet({ interest: a.interest, watch: false, ...who() })),

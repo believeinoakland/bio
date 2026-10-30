@@ -211,7 +211,7 @@ export class Registers {
       .some((r) => this.seesProject(r.project, viewer))) watched = "by_act";   /* a team pre-read a visible interest names: re-checked by a member's act */
     return { import: i.import_id, scope: i.scope, ...(i.project ? { project: i.project } : {}), state: i.state, source_date: i.source_date ?? "not_stated",
              imported_at: i.imported_at, rows_in: i.rows_in, rows_out: i.rows_out, filter: parse(i.filter), filter_fingerprint: i.filter_fp,
-             watched, ...(next ? { next_check: next } : {}) };
+             watched, ...(next ? { next_check: next } : {}), reduced_key: "register.reduced" };
   }
 
   currentInterest(project, register) {

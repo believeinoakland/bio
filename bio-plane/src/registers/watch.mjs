@@ -2,7 +2,7 @@
  * (requirements: R32–R34, R44, R46). Nothing is inferred: an interest is a filter a member attaches or accepts from the prefill
  * (R8); a watch is by a number, never by a name (R36). Methods installed on `Registers`. */
 import { autoWatchable, validateFilter } from "../register-readers/index.mjs";
-import { sourceChanged } from "../acquisition/index.mjs";
+import { sourceChanged, KEYED_PURPOSES } from "../acquisition/index.mjs";
 import { queryAddress } from "../../../jurisdictions/index.mjs";
 import { noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { isMachineIdentity } from "../record-grammar/index.mjs";
@@ -131,10 +131,10 @@ export const watchMethods = {
     const bad = d ? this.actRefusal(d.definition) : null;
     if (bad) return bad;
     return this.startRefresh({ interest_id: null, project: imp.project, register: imp.register, filter: imp.filter, filter_fp: imp.filter_fp, scope: imp.scope }, d.definition, parse(imp.filter),
-      { reason: "refresh", author: by, check: !force, force, scope: imp.scope, holes: parse(imp.holes) });
+      { reason: "refresh", author: by, check: !force, force, scope: imp.scope, holes: parse(imp.holes), recheck: true });
   },
 
-  async startRefresh(cur, definition, filter, { reason, author, check, force = false, scope = "project", holes = null }) {
+  async startRefresh(cur, definition, filter, { reason, author, check, force = false, scope = "project", holes = null, recheck = false }) {
     const sc = cur.project ? "project" : "team";
     const key = sc === "project" ? `project:${cur.project}` : "team";
     const fp = cur.filter_fp;
@@ -152,7 +152,7 @@ export const watchMethods = {
       if (!changed) return refusal("REFRESH_UNCHANGED", localize("registers.refusal.REFRESH_UNCHANGED", "the source has not changed since the last look, so it was not fetched again"), { previous: prev.import_id });
     }
     return this.importStart({ register: definition.key, filter, scope: sc, project: cur.project, author, viewer: author, holes, kind: "refresh", reason,
-      on_behalf: author, interest: cur.interest_id ?? null, previous: prev ? prev.import_id : null, force });
+      on_behalf: author, interest: cur.interest_id ?? null, previous: prev ? prev.import_id : null, force, recheck });
   },
 
   /* a refresh that ended: its change against the previous import, as counts (R33, R34) */
@@ -188,17 +188,18 @@ export const watchMethods = {
 
   async officersLookup({ query, author, viewer } = {}) {
     const by = str(author) || str(viewer);
-    if (!by || isMachineIdentity(by)) {
-      return by === "class:daemon" || by === "daemon" ? refusal("NOT_PERMITTED", localize("registers.refusal.NOT_PERMITTED", "a keyed outside service is used for a member's act, never by a machine or the daemon"), {})
-        : refusal("MACHINE_CANNOT_LOOK_UP_OFFICERS", localize("registers.refusal.MACHINE_CANNOT_LOOK_UP_OFFICERS", "the lookup is a member's act; a machine looks up nothing"), {});
-    }
+    if (by === "class:daemon" || by === "daemon") return refusal("NOT_PERMITTED", localize("registers.refusal.NOT_PERMITTED", "a keyed outside service is used for a member's act, never by a machine or the daemon"), {});
+    if (!this.memberOf(by)) return refusal("MACHINE_CANNOT_LOOK_UP_OFFICERS", localize("registers.refusal.MACHINE_CANNOT_LOOK_UP_OFFICERS", "the lookup is a member's act; a machine looks up nothing"), {});
     const view = this.view();
     const t = (Array.isArray(view.query_templates) ? view.query_templates : []).find((x) => x && x.scheme === "company");
     const reg = t ? this.shipped().find((r) => r.key === t.register) : null;
     if (!reg) return refusal("NO_SUCH_REGISTER", localize("registers.refusal.NO_SUCH_REGISTER", "no register on the list or defined by your team has that key"), {});
     const addr = queryAddress(view, "company", reg.key, typeof query === "string" ? query.trim() : query);
     if (!addr.ok) return refusal(addr.reason === "VALUE_NOT_OF_FORM" ? "QUERY_NOT_NAMED" : addr.reason, localize("registers.refusal.LOOKUP_NOT_NUMBERED", "the lookup is by a company number, never by a name"), { field: "query" });
-    const r = await this.acq.keyedFetch(this.store, { service: "ca-officers", purpose: "officers-lookup", request: { url: addr.address, method: "GET" }, viewer: by });
+    /* the service is the one acquisition's purpose names (acquisition R130), never named here (R43) */
+    const service = (KEYED_PURPOSES["officers-lookup"]?.services ?? [])[0];
+    if (!service) return refusal("KEYED_SERVICE_OFF", localize("registers.refusal.KEYED_SERVICE_OFF", "the lookup's service is not offered"), {});
+    const r = await this.acq.keyedFetch(this.store, { service, purpose: "officers-lookup", request: { url: addr.address, method: "GET" }, viewer: by });
     if (!r || r.ok !== true) return r && r.reason ? { ...r, ok: false } : refusal("LOOKUP_FAILED", localize("registers.refusal.LOOKUP_FAILED", "the lookup did not complete"), {});
     const day = new Date(this.nowMs()).toISOString().slice(0, 10);
     this.sql.exec(`INSERT INTO register_lookup_use (day, count) VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET count = count + 1`, day);
