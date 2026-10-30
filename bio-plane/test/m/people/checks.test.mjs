@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUT, BOSS, MACHINE, PRESET_PERSONS } from "./fixture.mjs";
-import { SHIPPED_CHECKS, GATE_RATE_MAX, HINT_MARK, peopleOps } from "../../../src/people/index.mjs";
+import { SHIPPED_CHECKS, GATE_RATE_MAX, HINT_MARK, FORBIDDEN_WORDS, peopleOps } from "../../../src/people/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const span = (from, to) => ({ from, to });
@@ -115,7 +115,7 @@ test("R24 a machine check version's results are answered only once its gate is r
   const res = open.results[0];
   assert.deepEqual([res.by, res.layer, res.label], ["the machine's", "hypothesis", "Noticed"]);
   assert.ok(res.derivation.rows.length && res.denominator.label);
-  assert.doesNotMatch(JSON.stringify(open), /conflict|suspicious|knows|most connected/i);
+  assert.doesNotMatch(JSON.stringify(open), new RegExp(FORBIDDEN_WORDS.join("|"), "i"), "R29's words");
   /* a new version has its own gate */
   const v2 = w.p.defineCheck({ check: rd.check, name: "revolving door", condition: RD, denominator: "same", by: MACHINE });
   assert.equal(v2.version, 2);
@@ -207,7 +207,7 @@ test("R24 (T35; DEC-131) each answered result, wherever it reaches a member (op=
   const answered = op.checks[0].results;
   assert.equal(answered.length, 1);
   assert.equal(told.length, 1);
-  const sentence = "Hint · machine work. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.";
+  const sentence = word("people.check_noticed_hint", { hint_mark: word("mark.hint.label") });
   for (const r of [answered[0], told[0]]) {
     assert.equal(r.mark, word("mark.hint.label"), "DEC-131's words, exactly");
     assert.equal(r.mark, HINT_MARK);
@@ -224,4 +224,31 @@ test("R24 (T35; DEC-131) each answered result, wherever it reaches a member (op=
   const own = w.p.defineCheck({ name: "my door", condition: RD, denominator: "people with a government post", by: ANN });
   w.p.evaluateChecks({ budgetMs: 10000 });
   for (const r of w.p.checkResults({ check: own.check, viewer: ANN }).checks[0].results) assert.equal(r.mark, HINT_MARK);
+});
+
+test("R22, R24, R31 (K5811 F1) listChecks is an in-process read, never an op: each check version with its definition and whether its gate is open, never a result; a check made inside a project the viewer may not see is neither answered nor counted; an absent viewer is refused; it writes nothing", () => {
+  const w = world();
+  door(w);
+  w.p.evaluateChecks({ budgetMs: 10000 });
+  const proj = w.project();
+  const inner = w.p.defineCheck({ name: "inner", condition: RD, denominator: "d", project: proj, by: ANN });
+  const rd = shipped(w);
+  assert.equal(rd.open, false, "the shipped check's gate is not recorded");
+  w.p.recordCheckGate({ check: rd.check, version: 1, goldSet: "g", falseAlarmRate: 0.1, by: BOSS });
+  const writes = () => JSON.stringify(["interest_checks", "interest_check_results", "interest_check_gates"].map((t) => w.rows(`SELECT * FROM ${t}`)));
+  const before = writes();
+  const ann = w.p.listChecks({ viewer: ANN });
+  assert.equal(writes(), before, "the read writes nothing");
+  assert.equal(ann.checks.find((c) => c.check === rd.check).open, true, "R24: the gate's state, once recorded");
+  for (const c of ann.checks) {
+    assert.deepEqual(Object.keys(c).sort(), ["at", "by", "check", "condition", "denominator", "machine", "name", "open", "project", "version"]);
+    assert.equal("results" in c || "derivation" in c, false, "never a result");
+  }
+  assert.ok(ann.checks.some((c) => c.check === inner.check), "a participant sees the project's check");
+  const out = w.p.listChecks({ viewer: OUT });
+  assert.ok(!out.checks.some((c) => c.check === inner.check), "R31: an outsider neither sees nor counts it");
+  assert.equal(out.checks.length, ann.checks.length - 1);
+  assert.equal(w.p.listChecks({ viewer: null }).ok, false, "an absent viewer fails closed");
+  const ops = peopleOps(w.p, new URL("https://plane.example/"), null);
+  assert.ok(!Object.values(ops).some((arm) => arm.toString().includes("listChecks")), "no op answers it");
 });

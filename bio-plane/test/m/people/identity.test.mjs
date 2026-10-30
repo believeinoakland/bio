@@ -80,7 +80,10 @@ test("R2 the grade is earned from the basis, never stated: identifier A only wit
   const good = pair(w, { ids: ["P004", "P004"] });
   const A = w.p.claimIdentity({ a: good.a, b: good.b, kind: "same_as", basis: "identifier", evidence: good.ev, note: "n", by: ANN, grade: "D" });
   assert.equal(A.grade, "A", "a caller's grade field is never read");
-  assert.equal(A.why, "claimed the same person, grade A, because both records hold the identifier ellery_person P004, valid at 2020-03-01 and 2021-06-01");
+  assert.equal(A.why, word("people.index.said_grade_grade_because_because", {
+    said: word("label.identityclaimkinds.same_as"), grade: "A",
+    because: word("people.records_hold_identifier", { scheme: "ellery_person", id: "P004", d_a: "2020-03-01", d_b: "2021-06-01" }),
+  }));
   /* corroborated_name: the same post on each, valid at each date */
   const c = pair(w, { ids: [null, null] });
   const post = w.entity("office", "Harbour Master");
@@ -108,7 +111,9 @@ test("R2 the grade is earned from the basis, never stated: identifier A only wit
   assert.equal(dn.condition, word("people.two_records_share"));
   const C = w.p.claimIdentity({ a: c.a, b: c.b, kind: "unsure", basis: "name", evidence: { a: c.ev.a, b: c.ev.b }, note: "n", by: ANN });
   assert.equal(C.grade, "C");
-  assert.equal(C.why, "claimed unsure whether the same person, grade C, because both records carry the name 'Michael Houston'");
+  assert.equal(C.why, word("people.index.said_grade_grade_because_because", {
+    said: word("people.claimed_unsure_whether"), grade: "C", because: word("people.records_carry_name", { shared: "Michael Houston" }),
+  }));
   const D = w.p.claimIdentity({ ...d, kind: "not_same_as", basis: "testimony", note: "different people", by: ANN });
   assert.equal(D.grade, "D");
   assert.equal(D.why, word("people.index.said_grade_grade_because_because", {
