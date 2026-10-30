@@ -102,3 +102,4 @@ session_01RAN5eoAN35mnNq3LJBy4Fh,job,REGISTERS #1,registers,68065492,718973,2414
 ,refusal,BOB #339,bob,,,,,,,classifier,archive_session(QUERY-LANGUAGE #1 session_01RAN5endEY62aX9eDnxRNqY  merged and retired) · unpredicted · to ROOT by send_message: the session was started by BOB #337 (archived)  so ROOT  its ancestor  archives it and sends the usage; unpredicted: the same act on four of BOB #338's job sessions passed minutes earlier
 session_01RAN5endEY62aX9eDnxRNqY,job,QUERY-LANGUAGE #1,query-language,26829588,956014,3259,38977,1,3029,0/1,
 session_01RAN5em7nwdkWJw7eMNHB2W,job,EVENTS #2,events,,,,,0,,,replaced; unmeasured: archive_session returned no usage
+session_01RAN5enbGxwnMWs4dv3Yky9,job,MONEY #2,money,10579290,182220,1147,12528,0,,,replaced
