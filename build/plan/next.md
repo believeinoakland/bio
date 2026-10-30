@@ -95,3 +95,12 @@
 
 ## Carried from T52 R1 (K5417)
 - Layers 8 to 11 and file-scanner's T52-100, whole: `build/plan/carried-T52-R1.md` (the PLANNING lane folds each into the beta plan).
+
+## Owed by onboarding (the onboarding session, 29 Oct 2026; `build/GRANTS.md`, open rows)
+
+- ONB-1 · BOB (session setup) · until the neoProcess lane answers the report on a product's session setup (GRANTS open row 1), every session runs `CLAUDE_CODE_REMOTE=true bash .claude/hooks/session-start.sh` before its first test and puts `/opt/node26/bin` first on its `PATH`; then follow the lane's answer
+- ONB-2 · bundler, installer (`bio-plane/src/setup.mjs:458`; `newgroup/src/steps/api.mjs:118-120`; `bio-plane/src/acquisition/checks.mjs:24`) · the release address and the contact URL name `believeinoakland/bio`; move them to `civicsmith/civicsmith` in a release that also keeps the old address answering for copies already installed (the old raw address answers 200 today, measured 29 Oct)
+- ONB-3 · journey-check (`bio-plane/src/journey-check/run.mjs:31-33, 53-70, 306`) · the live walk launches Chromium on the direct route; K4733 (`build/situations/deploy-and-walk.md`) requires the environment's proxy unchanged
+- ONB-4 · BOB (capture storage, PROTOCOL §7d) · an R2 bucket for walk captures with a 30-day expiry on account 20b533579290b9b93168345edd3b7f72, named in the manifest; none exists (measured 29 Oct)
+- ONB-5 · BOB (the sitting) · the walkthrough for Bob's grants (GRANTS §4) from `build/GRANTS.md`: the variables read by no code (`BIO_RELEASE_SEED`, `BIO_ADMIN_TOKEN`, `BIO_MEMBER_TOKEN`, `BIO_INSTANCE`, `BIO_RATIFY_SEED`) out of the `BIO` environment (PERMISSIONS §10.4)
+- ONB-6 · site, regression (`site/test/browser.test.mjs:16`; `.github/workflows/regression.yml:34-39`) · the regression never installs `site/`, so site's browser test fails to import `playwright-core`
