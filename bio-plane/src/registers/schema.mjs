@@ -150,7 +150,12 @@ CREATE TABLE IF NOT EXISTS register_rows (
   PRIMARY KEY (scope_key, register, row_key, content_hash)
 );
 CREATE INDEX IF NOT EXISTS register_rows_date ON register_rows(register, scope_key, date);
-CREATE INDEX IF NOT EXISTS register_rows_filer ON register_rows(register, filer_id);
+-- R23: a number criterion reads its rows already in the search order (date descending, none last, then key), so a page
+-- takes its first rows and never sorts every match: its time does not grow with the rows held
+CREATE INDEX IF NOT EXISTS register_rows_filer_o ON register_rows(register, filer_id, (date IS NULL), date DESC, row_key, content_hash, scope_key) WHERE filer_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS register_rows_form_o ON register_rows(register, form, (date IS NULL), date DESC, row_key, content_hash, scope_key) WHERE form IS NOT NULL;
+CREATE INDEX IF NOT EXISTS register_rows_licence_o ON register_rows(register, licence_no, (date IS NULL), date DESC, row_key, content_hash, scope_key) WHERE licence_no IS NOT NULL;
+CREATE INDEX IF NOT EXISTS register_rows_docket_o ON register_rows(register, docket_no, (date IS NULL), date DESC, row_key, content_hash, scope_key) WHERE docket_no IS NOT NULL;
 CREATE INDEX IF NOT EXISTS register_rows_amount ON register_rows(register, amount_micro);
 -- R23: the name and organization tokens of each index row, so a name criterion is an index read, not a scan (derived, rebuildable)
 CREATE TABLE IF NOT EXISTS register_tokens (

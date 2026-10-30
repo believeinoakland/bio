@@ -190,6 +190,18 @@ test("R22: the point lookup and the one-criterion page are index reads, not scan
   assert.match(plan(`SELECT * FROM register_cells WHERE register=? AND row_key >= ? AND row_key < ?`, "r", "a", "b"), /INDEX/);
 });
 
+test("R23: a page by a number criterion (filer, form, licence, docket) reads its rows already in the search order: no sort of every match, so the page's time does not grow with the rows held", async () => {
+  const w = seeded();
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(30))) });
+  for (const col of ["filer_id", "form", "licence_no", "docket_no"]) {
+    const plan = w.sql(`EXPLAIN QUERY PLAN SELECT r.scope_key, r.register, r.row_key, r.content_hash, r.date, c.cells FROM register_rows r JOIN register_cells c ON c.scope_key=r.scope_key AND c.register=r.register AND c.row_key=r.row_key AND c.content_hash=r.content_hash
+                        WHERE r.scope_key IN (?,?) AND r.register=? AND r.${col} IN (?) ORDER BY (r.date IS NULL), r.date DESC, r.row_key, r.content_hash, r.scope_key`, "team", "project:P", "town_filings", "X").map((r) => r.detail).join(" | ");
+    assert.match(plan, new RegExp(`SEARCH r USING (COVERING )?INDEX \\w+ \\(register=\\? AND ${col}=\\?\\)`), `${col}: ${plan}`);
+    assert.doesNotMatch(plan, /TEMP B-TREE/, `${col}: no sort of the matches (${plan})`);
+  }
+});
+
 test("R23: with the shelf nearly full an import pauses with reason shelf and the figures, nothing written past the pause; resume is refused while it would pass 90%; with room it runs", async () => {
   const total = 10 * 1024 ** 3;
   let free = total * 0.05;
