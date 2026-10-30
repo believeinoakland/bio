@@ -46,11 +46,11 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: setup-words
 
-- Purpose only (§ Purpose; T53-369): the interface's word list as frozen data (`words.json`), the key and value source for the English-in-tests entry.
+  Purpose only (§ Purpose; T53-369): the interface's word list as frozen data (`words.json`), the key and value source for the English-in-tests entry.
 
 ## Uses: record-grammar
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: record-core
 
@@ -88,7 +88,7 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: sources
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: answers
 
@@ -105,11 +105,11 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: affordances
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: tasks
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: queue
 
@@ -127,15 +127,15 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: attestation
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: provenance-routes
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: calibration
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: extraction
 
@@ -143,39 +143,39 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: content
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: entities
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: connections
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: progressions
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: bias
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: observation-log
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: retrieval
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: inquiry-grammar
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: inquiry
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: basis-versions
 
@@ -183,11 +183,11 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: contradiction
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: run-productions
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: capture-requests
 
@@ -195,7 +195,7 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: intent
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: file-safety
 
@@ -232,7 +232,7 @@ Purpose (R1): the record store's door `dispatch(req)`: routes each internal requ
 
 ## Uses: test-support
 
-- Purpose only (§ Purpose; no service named by store-door).
+  Purpose only (§ Purpose; no service named by store-door).
 
 ## Uses: admission
 
