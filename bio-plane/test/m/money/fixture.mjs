@@ -14,6 +14,7 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { Lines } from "../../../src/lines/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Money } from "../../../src/money/index.mjs";
+import { localFactsOf } from "../../../src/local-facts/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -79,11 +80,14 @@ export function world({ events = true, lines = true, calculations = true, now = 
   const bindings = new Map();
   const calc = calculations ? { bindingOf: (key) => bindings.get(key) ?? null } : null;
   let clock = 0;
-  const m = new Money(st, { record, membership, entities: e, provenance: prov, events: events ? ev : null, lines: lines ? ln : null, calculations: calc, ...(localFacts ? { localFacts } : {}),
+  /* the real local-facts on the same host, its clock the test's (a stated year lapses after 183 days) */
+  const lfClock = { now: "2026-10-06T00:00:00.000Z" };
+  const lf = localFacts ?? localFactsOf(host, { record, membership, now: () => lfClock.now });
+  const m = new Money(st, { record, membership, entities: e, provenance: prov, events: events ? ev : null, lines: lines ? ln : null, calculations: calc, localFacts: lf,
     now: now || (() => new Date(Date.UTC(2026, 9, 6, 0, 0, clock++)).toISOString().replace(/\.\d{3}Z$/, "Z")) });
   m.migrate();
   const w = {
-    st, host, record, membership, prov, e, ev, ln, m, bindings,
+    st, host, record, membership, prov, e, ev, ln, m, bindings, lfClock,
     /* A real event, attested by a member's testimony, concerning `concerns`; a real cited relation between two. */
     event(kind, concerns = []) {
       const r = ev.createEvent({ kind, concerns, attestations: [{ testimony: `I saw the ${kind}` }], by: ANN });
