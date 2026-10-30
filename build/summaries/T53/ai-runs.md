@@ -73,7 +73,7 @@ T49–T50 amendments
 - R89 · `open` takes `project` (joined), recorded, passed to the mint.
 
 Segments, hops, a stop at the step boundary (T53; K5457)
-- R91 *(not yet met: T53)* · `/run` answers 202 at once. `segment_end` `{by, done, refusals, error?, ai_stop?}`, `by` null on its own bound, `ai_stop` only under `agent-steps` R52 or R53. T: a `limit` outcome → `ai_stop.reason` `limit`, `done` false; C: bound end no `ai_stop`.
+- R91 *(not yet met: T53)* · **Segments and labels.** `ai_run_segments` (purge R38, counted) per segment `{run, n, account_id, level, owner, provider, plan, means, entries_used, payer_owner, member, started, ended, end, hop_in}`; first at first dispatch, entries, labels from ticks' `usage`, `end` from `segment_end`. R19 answers `segments`, `labels` (segment numbers) to member and paying owners. T: two segments, rows and labels; C: outsider `found: false`.
 - R92 *(not yet met: T53)* · **Every hop recorded per segment.** A dispatch on another account than the last segment's writes in its transaction `hop_in = {run, step, from, to, reason, payer_change}` (`reason` ∈ `limit`, `unavailable`, `lapsed`, `capability`, `auth`, `member_switch`, `ai-accounts` R50; `payer_change` `{from_owner, to_owner}` or null per `hopFor`). Same account: none. Only at segment boundaries (no mid-segment mint); nothing written to `state`. T: `limit` stop on next account → one hop; C: same account none.
 - R93 *(not yet met: T53)* · **The hop is `ai-accounts`' decision.** After `ai_stop` `limit`, `unavailable`, `lapsed`, `capability`, `auth`, or a member's switch, ask `ai-accounts.hopFor({member, act, from: {account_id, entry_id}, reason, at_step_boundary: true})` and act unchanged: next account (R92, R94) or refusal. `ai-accounts` alone applies its rules (ordered list, Gate 1, checks, same owner or opt-in, never another member's personal subscription, never a switched-off use). Exhausted → plain words naming who can act (`ai.refused.listexhausted`), run held (R95), never looped, never closed without the refusal logged. T: next account dispatched; `LIST_EXHAUSTED` held, key in log; C: switched-off use refused, no dispatch.
 - R94 *(not yet met: T53)* · **The member may decline.** A hop is shown to the member (R91). With `payer_change` it waits for `op=aicontinue` or `op=aistop` (DEC-420), her act only (others `AI_RUN_NOT_PRINCIPAL`); decline ends `cancelled`, partial results kept; without, dispatched at once, cancellable. T: waits; decline `cancelled`; C: same payer no wait.
@@ -96,7 +96,7 @@ The run record (T53; N1219, DEC-466)
 Uses: the used modules below (`record-core` `transact`, `declarePurge`; `membership` `participation`, `existenceAct`; `member-roster` `listenerRefusal` (R26), `MODULE_ORDER` (R27), `notAnAdmin` (R28); `promotion` `registerStep`; `bias` `biasManifest`; `ai-use` `useCheck`, `countUsage`; `credentials` mint and end). (T53) `ai-accounts` `hopFor` (R50), `aisend`, `aisendrefuse`; `ai-catalogue` `entryOf` (R104); `agent-model` `health` via `op=aipathready`; `scheduler`'s consumer slot; `run-rules` `partAdmittedOn`; `agent-harness` `ROLE_NEEDS`, `partOf`, `disclosureGate`.
 
 Fixed (REQ 4): Uses and R43 cite `member-roster` R26, R27, R28 (and R23).
-Mismatch: R101 and R103 cite `ai_run_segments`, `labels` and the viewers rule as R91's; R91's text names none of them.
+Fixed: R91 restored to the draft's (R101, R103 cite it); it held `agent-worker` R91's amendment, kept there.
 
 Invariants:
 - R31 · One exit; log append-only.
