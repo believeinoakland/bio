@@ -99,3 +99,4 @@ session_01RAN5emV76rKZ7RhRcf8djk,job,EVENTS #1,events,26950107,274006,194,44376,
 session_01RAN5eoi13x8acXQF8FD5H3,job,MONEY #1,money,15231274,181576,1967,24489,0,,,replaced
 session_01RAN5eoKPmPF7RkMR8PFqmf,job,PEOPLE #1,people,20248843,434289,2241,29684,0,,,replaced
 session_01RAN5eoAN35mnNq3LJBy4Fh,job,REGISTERS #1,registers,68065492,718973,2414,99259,1,2219,yes,replaced
+,refusal,BOB #339,bob,,,,,,,classifier,archive_session(QUERY-LANGUAGE #1 session_01RAN5endEY62aX9eDnxRNqY  merged and retired) · unpredicted · to ROOT by send_message: the session was started by BOB #337 (archived)  so ROOT  its ancestor  archives it and sends the usage; unpredicted: the same act on four of BOB #338's job sessions passed minutes earlier
