@@ -47,6 +47,8 @@ export function indexRowOf(version, cells, definition) {
 }
 
 const SQL_LIST_MAX = 200;
+/* R23: the scan's first chunk (a search page of 50 and the one after it) and its largest */
+const SCAN_CHUNK_FIRST = 64, SCAN_CHUNK_MAX = 4096;
 /* the token rows of an index row: its name and organization tokens */
 const tokensOf = (r) => [...new Set(r.name_tokens.trim().split(" ").filter(Boolean))].map((t) => ["n", t])
   .concat([...new Set(r.org_tokens.trim().split(" ").filter(Boolean))].map((t) => ["o", t]))
@@ -143,11 +145,19 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
     /** a lazy iterator over the held versions a filter could match, in the search order */
     *scan({ scopes, register = null, importId = null, filter = {}, after = null }) {
       if (!scopes.length) return;
-      const { conds, args } = scanWhere({ scopes, register, importId, filter, after });
-      const q = `SELECT r.scope_key, r.register, r.row_key, r.content_hash, r.date, c.cells, c.first_import, c.segment_sha, c.src_row
-                   FROM register_rows r JOIN register_cells c ON c.scope_key=r.scope_key AND c.register=r.register AND c.row_key=r.row_key AND c.content_hash=r.content_hash
-                  WHERE ${conds.join(" AND ")} ORDER BY (r.date IS NULL), r.date DESC, r.row_key, r.content_hash, r.scope_key`;
-      for (const r of sql.exec(q, ...args)) yield { ...r, cells: JSON.parse(r.cells) };
+      /* R23: read in bounded chunks, each from the last one's place in the search order, so a page reads what it takes and no
+         more, whether or not the host's `exec` reads its whole answer at once; a chunk grows as the caller keeps reading */
+      let at = after, chunk = SCAN_CHUNK_FIRST;
+      for (;;) {
+        const { conds, args } = scanWhere({ scopes, register, importId, filter, after: at });
+        const got = rows(`SELECT r.scope_key, r.register, r.row_key, r.content_hash, r.date, c.cells, c.first_import, c.segment_sha, c.src_row
+                     FROM register_rows r JOIN register_cells c ON c.scope_key=r.scope_key AND c.register=r.register AND c.row_key=r.row_key AND c.content_hash=r.content_hash
+                    WHERE ${conds.join(" AND ")} ORDER BY (r.date IS NULL), r.date DESC, r.row_key, r.content_hash, r.scope_key LIMIT ?`, ...args, chunk);
+        for (const r of got) yield { ...r, cells: JSON.parse(r.cells) };
+        if (got.length < chunk) return;
+        at = encodeAfter(got[got.length - 1]);
+        chunk = Math.min(chunk * 4, SCAN_CHUNK_MAX);
+      }
     },
     /** R23, R24: the versions after `after` a `countableFilter` matches, each key and hash once whatever its scopes, counted from the index up to `cap` */
     countAfter({ scopes, register = null, importId = null, filter = {}, after = null, cap }) {
