@@ -22,7 +22,7 @@
 - T53-156 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-157 · K5565 · English in tests: its entry
 - K5806 · BOB · R42's list of dimensions is R11's (wording fixed; a different source is no difference); `neighbours` asked with no `at` keeps `connection-grammar`'s registry rule (a null date is undetermined), unchanged
-- K5810 · BOB · the 12 ambiguities the trim kept as written (`build/plan/trims/money.notes.md`) settled in the requirements `[owed: BOB, before START]`
+- K5812 · BOB (from the code at 996730f4, `build/plan/trims/money.settle.md`) · four defects the requirements as now stated refuse: F1 `reconcile` answers only `rounding` when amounts disagree across precisions (index.mjs:1077; rules.test.mjs:70-71): R11, R42 name `amount` with both values; F2 `parties` compares only entity or fund (index.mjs:1071): names as written differ too; F3 `createSet` takes any string as a trail's `concerns` and refuses a non-string `NO_LABEL` (index.mjs:1097-1099): R28's id checked, its own code; F4 `moneysets`, `moneyby`, `fiscalyears` are untested under `declaredOpHolds` (R27)
 - rows: `build/plan/T53-R1/money.md`
 **registers**
 - first: take in the round-1 job's branch `job/T53/registers` (fd326eb: its code and tests, 4,204 lines). It waited only because its `tests` path was not yet on the tranche.
