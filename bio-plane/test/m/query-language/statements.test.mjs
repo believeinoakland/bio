@@ -317,7 +317,7 @@ test("R17 plan.cached names each cached column and route; cachedNotes publishes 
 });
 
 test("R31 rows=passage reads bare words as passage: words, with the warning; text:, negations and selectors keep their meaning", () => {
-  const WARN = "words read as passage words (rows=passage); use text: for the record's own text";
+  const WARN = word("query-language.query.words_read_as_passage");
   const w = world();
   w.bundle("D", { type: "information", body: "notes about nothing" });
   w.bundle("E", { type: "information", body: "pothole in the record text" });
@@ -365,7 +365,7 @@ test("R31 rows=passage reads bare words as passage: words, with the warning; tex
 });
 
 test("R32 rows=leg ignores bare words, with the warning; text:, negations and selectors keep their meaning", () => {
-  const WARN = "bare words ignored (rows=leg); use text: for the record's own text";
+  const WARN = word("query-language.query.bare_words_ignored_rows_leg");
   const w = world();
   w.bundle("Q1", { type: "inquiry", body: "is the crosswalk light working", current_state: "open" });
   w.bundle("Q2", { type: "inquiry", body: "the crosswalk was repaired last week", current_state: "open" });

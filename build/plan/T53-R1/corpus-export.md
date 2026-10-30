@@ -4,7 +4,7 @@
 
 **corpus-export**
 - T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` (READY, K5569) · rows: `planning/plan-T53-platform-rows.md`
-**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (R32) · `planning/plan-T53-capabilities.md` §A Layer 8
+**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (network-notices R32) · `planning/plan-T53-capabilities.md` §A Layer 8
 **English in tests** (K5565) · every module with sites carries one conversion entry for its own, done in this tranche; 58 modules gain a job by it alone · `planning/plan-T53-tests-english.md`
 
 ## plan-T53-capabilities.md

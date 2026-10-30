@@ -9,9 +9,9 @@
 ## plan-T53-journeys.md
 
 **review**
-- T53 · R-98 (owner half) · a reader grant's acknowledgement is stored with no reader name · REG3 R-98 · D3 review R?1.
+- T53 · R-98 (owner half) · a reader grant's acknowledgement is stored with no reader name · REG3 R-98 · D3 review R46.
 - T53 · R-99 · owner's "Acknowledge what it leaves out" reaches the reviewer route, 404 `NO_REVIEW_COPY` · REG3 R-99 · MERGE T52-26 (W13, case-inputs), still open on 0.87.0; no draft line.
-- T53 · R-107 (owner part) · acknowledge/comment both answer "Sent to the team." · REG3 R-107 · D3 screens-publish R?12 (decided, K5560, J7 = B: shown by name only if the reader ticks that it may be); register owner review.
+- T53 · R-107 (owner part) · acknowledge/comment both answer "Sent to the team." · REG3 R-107 · D3 screens-publish R99 (decided, K5560, J7 = B: shown by name only if the reader ticks that it may be); register owner review.
 
 ## plan-T53-tests-english.md
 
