@@ -54,7 +54,7 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 
 ### Uses
 
-- (T41; RUN-PRODUCTIONS #8 J2, K2496) `extraction`: `unitsOf`, the `readings`/`reading_refs` read contract (R21, R23); `text-chain`: `captureBound`; `leg-earning`: the capture's earned ceiling (R21); `record-grammar`: `idPattern`, `isStepId`, `sha256HexSync`, `acceptanceRecord` (R22); `membership`: `projectAuthority` (R22); `ai-accounts` (T48; N996, split map §5; was `credentials`, which this module no longer uses): `aiKeepAwayState` (its R21) and `projectsKeptAway` (its R22), the material limits a reading keeps to (R21, R24); `steps`: `recordProduct` (R21). R17 holds six tables.
+- (T41; RUN-PRODUCTIONS #8 J2, K2496) `extraction`: `unitsOf`, the `readings`/`reading_refs` read contract (R21, R23); `text-chain`: `captureBound`; `leg-earning`: the capture's earned ceiling (R21); `record-grammar`: `idPattern`, `isStepId`, `sha256HexSync`, `acceptanceRecord` (R22); `membership`: `projectAuthority` (R22); `ai-accounts` (T48; N996, split map §5; was `credentials`, which this module no longer uses): `aiKeepAwayState` (its R21) and `projectsKeptAway` (its R22), the material limits a reading keeps to (R21, R24); `steps`: `recordProduct` (R21). R17 holds two tables.
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `text-chain`: `readingSource`, `readingSourceJson`, `readingSourceFromColumns`, `describeChain`.
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`, `bundles` and `files` by its read contract.

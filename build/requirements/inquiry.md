@@ -176,13 +176,13 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - `inquiry-grammar`: the grammar functions and `GROUND_LABEL_RE` (re-exported at the grammar face), `INQUIRY_GRAMMAR_CHECKS` (C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8), its registration (its R6).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `declarePurge`, the `bundles` read contract (R37; `group_id` for `divide`, N287).
-- `membership`: `viewerPredicate`, `inSight` (R80) (R43, R61); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202). (`inSight`, `existenceAct` and `projectAuthority` were cite's and sever's, now `citation`'s.)
+- `membership`: `viewerPredicate`, `inSight` (R80) (R43, R61); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202); `isAdministrator` (R87; its home `member-roster` R23, reached through `membership` in the same name, `member-roster`'s copy window). (`inSight`, `existenceAct` and `projectAuthority` were cite's and sever's, now `citation`'s.)
 - `promotion`: `promote`, `registerStep`; the facts `caseMember`, `publishedRegistry` and `producingGroup` read through its `fact(name)` (K83 (5), N56).
 - `content`: `citationRefusals`, `resolveCitation`, `captureFor`, `checkContentExtent`, `citationExtent`, `citationContentId`, `standings`.
 - `connections`: `themeLegFindings` (R46), `citesInto`, `edgeSevered` (R22), `portionGrades` (R13), the `refs` read contract (R58).
 - `retrieval`: `selectionResolve` (R19–R20); `registerSearchDecoration` (its R78; R60; T42).
 - `progressions`: `notADisposition` and `DISPOSITIONS` (its R35), R20's refusal (N285).
-- `entities`: `has` (R7), `strongestByCapture` (R16).
+- `entities`: `has` (R7), `strongestByCapture` (R16), `entitiesByAlias` (its R6; R63).
 - `provenance`: the `register` read contract (R48).
 - `extraction`: the `readings` and `reading_text_source` read contract (its R58).
 - `text-chain`: `captureBound`, `isTranscribed`.
