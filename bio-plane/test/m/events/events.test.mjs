@@ -119,7 +119,7 @@ test("R10 a read whose when_cache differs from its rebuild fails closed: when un
   const v = w.ev.readEvent({ eventId: e, viewer: MEMBER }).event;
   assert.equal(v.when, "undetermined");
   assert.deepEqual(v.why, { key: "events.why.cache_stale", vars: {} }, "a key with its fills, never English");
-  assert.equal(w.ev.sequence({ a: e, b: w.event({ value: "2027-01-01" }).event_id }).answer, "undetermined");
+  assert.equal(w.ev.sequence({ a: e, b: w.event({ value: "2027-01-01" }).event_id, viewer: MEMBER }).answer, "undetermined");
   w.record.rebuildDerived("events", "event_when_cache");
   assert.equal(w.ev.readEvent({ eventId: e, viewer: MEMBER }).event.when.value, "2026-06-01");
   /* a mark from record-core's convention is read as stale too */
@@ -259,7 +259,7 @@ test("R6 R7 the one-site answers noSuchEvent and noSuchDatedFact (K1568, K1569):
     w.ev.splitEvent({ eventId: ghost, attestations: [1], reason: "r", by: MEMBER }),
     w.ev.relate({ from: e, to: ghost, kind: "answers", attestation: { testimony: "t" }, by: MEMBER }),
     w.ev.aliasAct({ actId: "ACT-2026-0001", eventId: ghost, by: MEMBER }),
-    w.ev.sequence({ a: e, b: ghost }),
+    w.ev.sequence({ a: e, b: ghost, viewer: MEMBER }),
     w.ev.createEvent({ kind: "meeting", attestations: [{ testimony: "t" }], concerns: [ghost], by: MEMBER }),
   ];
   for (const a of answers) assert.deepEqual({ ...a, end: undefined }, { ...noSuchEvent(ghost), end: undefined });

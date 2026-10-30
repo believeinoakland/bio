@@ -52,6 +52,8 @@ const SOURCE_DEPTH_MAX = 32;
 /* R31: an ingest key, at most. */
 const INGEST_KEY_MAX = 200;
 /* R36: the five connection kinds and their words, by the design's key where it has one, else money's own provisional row. */
+/* the sentence of the reason `neighbours` gives when no date is asked (the row is read by its key) */
+const NO_DATE_ASKED = localize("money.neighbours.no_date_asked", "No date was asked, so whether this fact was in force on a date is not judged.");
 const KIND_WORDS = Object.freeze({
   money_transfer: localize("label.connectionkinds.money_transfer", "money moved"),
   money_payment: localize("label.connectionkinds.money_payment", "money paid"),
@@ -244,12 +246,11 @@ export class Money {
 
   /* R39 (T53; DEC-458): the governing view is the active profiles combined with the team's one layer, which `local-facts`
      provides (`teamLayer`, its R30) and the caller appends after the recorded ids; where it is absent or does not combine,
-     the profiles alone. The layer is read for the fiscal years it states, as an internal reader: what a caller is told is
-     the period a key maps to, never the layer. */
+     the profiles alone. Asked as an internal call (no viewer): what a caller is told is the period a key maps to, never the layer. */
   #team() {
     const lf = this.#lf();
     if (!lf || typeof lf.teamLayer !== "function") return null;
-    try { const t = lf.teamLayer({ viewer: "admin" }); return isObj(t) && t.ok !== false && !t.refused ? t : null; } catch { return null; }
+    try { const t = lf.teamLayer({}); return isObj(t) && t.ok !== false && !t.refused ? t : null; } catch { return null; }
   }
   #view() {
     const ids = typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
@@ -286,10 +287,11 @@ export class Money {
       if ((e.profile !== "team" && e.origin !== "team") || !gov) return { ...base, from: "records" };
       const path = gov.level === "federal" ? "team/federal/fiscal_year" : `team/${gov.level}:${gov.place}/fiscal_year`;
       let st = null;
-      try { st = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path, viewer: "admin" }) : null; } catch { st = null; }
-      const latest = st && isObj(st.latest) ? st.latest : null;
+      try { st = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path }) : null; } catch { st = null; }
+      /* local-facts R32: `governs.says` is "stated by <member>, <date>"; `how` is how the member checked */
+      const says = st && isObj(st.governs) && typeof st.governs.says === "string" ? st.governs.says : null;
       return { ...base, from: "stated", government: { level: gov.level, ...(gov.place ? { place: gov.place } : {}) },
-               stated: { by: latest ? latest.by ?? null : null, at: latest ? latest.at ?? null : null, how: latest ? latest.how ?? null : null },
+               stated: { says, how: st && typeof st.how === "string" ? st.how : null },
                status: st && typeof st.status === "string" ? st.status : "confirmed",
                ...(st && st.status === "disputed" && typeof st.why === "string" ? { dispute: st.why } : {}) };
     };
@@ -1066,15 +1068,16 @@ export class Money {
     if (x.kind !== y.kind) push("kind", x.kind, y.kind);
     if (x.phase !== y.phase || x.stage !== y.stage) push(word("money.push.phase_stage"), { phase: x.phase, stage: x.stage }, { phase: y.phase, stage: y.stage });
     if (x.currency !== y.currency) push("currency", x.currency, y.currency);
-    const ends = (r) => ({ from: r.from_entity ?? r.from_fund ?? null, to: r.to_entity ?? r.to_fund ?? null });
+    /* K5812 F2: each party whole (entity, fund, account, name as written), so names as written that differ differ */
+    const party = (r, p) => Object.fromEntries(["entity", "fund", "account", "as_written"].filter((k) => r[`${p}_${k}`] !== null).map((k) => [k, r[`${p}_${k}`]]));
+    const ends = (r) => ({ from: party(r, "from"), to: party(r, "to") });
     if (canonicalJson(ends(x)) !== canonicalJson(ends(y))) push("parties", ends(x), ends(y));
     const overlap = overlaps(x, y);
     const equal = x.precision !== "range" && y.precision !== "range" && x.amount === y.amount;
     const amounts = equal ? "equal" : overlap ? word("money.text.within_coarser_fact") : "differ";
-    if (!overlap) {
-      if (x.precision !== y.precision) push("rounding", x.precision, y.precision);
-      else push("amount", x.amount ?? { low: x.amount_low, high: x.amount_high }, y.amount ?? { low: y.amount_low, high: y.amount_high });
-    }
+    /* K5812 F1 (R11, R42): amounts that do not agree within the coarser precision differ as `amount`, with both values,
+       whatever their precisions */
+    if (!overlap) push("amount", x.amount ?? { low: x.amount_low, high: x.amount_high }, y.amount ?? { low: y.amount_low, high: y.amount_high });
     const open = this.#partialKeys([x, y]);
     return { ok: true, a: x.fact_id, b: y.fact_id, consistent: differs.length === 0, amounts, differs,
              says: differs.length ? word("money.says.two_readings_differ") : word("money.says.two_readings_consistent"),
@@ -1093,7 +1096,10 @@ export class Money {
         return refusal("NO_CONTRACT", localize("money.index.an_attribution_set_concerns_one", "an attribution set concerns one registered entity of kind contract"));
       c = concerns;
     } else if (concerns !== undefined && concerns !== null && concerns !== "") {
-      if (typeof concerns !== "string") return refusal("NO_LABEL", localize("money.index.a_trail_concerns_one_id", "a trail concerns one id, or none"));
+      /* K5812 F3 (R28, Terms): a trail's `concerns` is an id a fact's `concerns` may name, or a project's id, held and
+         visible to the writer; anything else, unseen alike, is SET_CONCERNS_UNKNOWN */
+      if (!this.#setConcernsHeld(concerns, by))
+        return refusal("SET_CONCERNS_UNKNOWN", localize("money.index.a_trail_concerns_a_held_id", "a trail concerns one id the record holds and the writer can see: an event, a line, an entity of kind {list}, or a project; or none", { list: String(list(CONCERNS_KINDS)) }), { concerns: typeof concerns === "string" ? concerns.slice(0, 60) : null });
       c = concerns;
     }
     const at = this.#now();
@@ -1102,6 +1108,19 @@ export class Money {
       this.#sql.exec(`INSERT INTO money_sets (set_id, purpose, label, concerns, by, at) VALUES (?,?,?,?,?,?)`, id, purpose, clip(label), c, by ?? null, at);
       return { ok: true, set_id: id, purpose, label: clip(label), concerns: c, at };
     });
+  }
+  /* K5812 F3: whether `id` is one a trail may concern for `by`: an event held, an entity of a concerns kind, a line `by`
+     can see (R1's concerns), or a project's bundle `by` can see (R28) */
+  #setConcernsHeld(id, by) {
+    if (!filled(id)) return false;
+    if (id.startsWith("EVT-")) { const ev = this.#ev(); return !!ev && typeof ev.has === "function" && ev.has(id); }
+    if (id.startsWith("ENT-")) { const ent = this.#ent(); return ent.has(id) && CONCERNS_KINDS.includes(kindOf(ent, id)); }
+    if (id.startsWith("LIN-")) {
+      const ln = this.#ln();
+      try { return !!ln && typeof ln.readLine === "function" && ln.readLine({ lineId: id, viewer: by ?? "" }).found === true; } catch { return false; }
+    }
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+    return !!b && b.object_type === "project" && this.#visibleBundle(id, by ?? "");
   }
   include(args = {}) { return this.#setAct("include", args); }
   exclude(args = {}) { return this.#setAct("exclude", args); }
@@ -1404,6 +1423,10 @@ export class Money {
      date asked. Cheap, so R37 counts a node's facts by it before any edge is built. */
   #validity(r, at) {
     const valid = { from: r.period_from, to: r.period_to, precision: r.period_precision, zone: r.period_zone };
+    /* no date asked: `validAt` cannot judge, and the registry's contract (connection-grammar R6) judges the same, so each fact is
+       undetermined with a keyed reason (`{key, vars}`), never the thrown message */
+    if (at === undefined || at === null || at === "")
+      return { valid, v: { undetermined: true, why: { key: "money.neighbours.no_date_asked", vars: {} } } };
     let v;
     try { v = validAt({ valid }, at); } catch (e) { v = { undetermined: true, why: String(e && e.message ? e.message : e) }; }
     if (v === "out" || (v && v.refused)) return null;

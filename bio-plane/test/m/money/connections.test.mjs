@@ -182,3 +182,22 @@ test("R37 control: a node under the bound answers its items as before; a money s
   assert.equal(s.m.include({ setId: set, factId: s.inside, reason: "r", by: ANN }).ok, true);
   assert.equal(s.m.neighbours({ node: set, at: AT, viewer: ANN }).hub, undefined);
 });
+
+test("R16 with no date asked (`at` null) each fact is an edge marked undetermined with a keyed reason, never a thrown message, and the registry accepts the answer", () => {
+  const s = owned();
+  for (const at of [null, undefined]) {
+    const a = s.m.neighbours({ node: s.vendor, at, viewer: ANN });
+    assert.deepEqual(a.items.map((i) => i.id).sort(), [s.inside, s.out, s.open].sort());
+    for (const i of a.items) {
+      assert.deepEqual(Object.keys(i.undetermined.why).sort(), ["key", "vars"], i.id);
+      assert.equal(typeof i.undetermined.why.key, "string");
+    }
+  }
+  const reg = createRegistry();
+  s.m.registerConnections(reg);
+  const walked = reg.neighbours({ owner: "money", node: s.vendor, at: null, viewer: ANN, scope: null });
+  assert.equal(walked.refused, undefined, walked.why);
+  assert.equal(walked.items.length, 3);
+  /* control: a date asked still judges in and out */
+  assert.deepEqual(s.m.neighbours({ node: s.vendor, at: AT, viewer: ANN }).items.find((i) => i.id === s.inside).undetermined, undefined);
+});

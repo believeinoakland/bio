@@ -134,3 +134,17 @@ test("R23 a listener that throws fails the write, and nothing is written", () =>
   assert.deepEqual([r.ok, r.reason], [false, "LISTENER_FAILED"]);
   assert.equal(s.one(`SELECT count(*) AS n FROM money_facts`).n, 0);
 });
+
+test("R12 R28 (K5812 F3) a trail's concerns is an id a fact may concern or a project the writer sees; any other id, a non-string, or an unseen project is SET_CONCERNS_UNKNOWN; control: each held kind is taken", () => {
+  const s = seeded();
+  s.project("PROJ-1", "bob");
+  const trail = (concerns, by = ANN) => s.m.createSet({ purpose: "trail", label: "t", concerns, by });
+  for (const bad of ["PROJ-NOWHERE", "ENT-nothing", "EVT-nothing", 42, { id: "PROJ-1" }])
+    assert.equal(trail(bad).reason, "SET_CONCERNS_UNKNOWN", JSON.stringify(bad));
+  assert.equal(trail(s.city).reason, "SET_CONCERNS_UNKNOWN", "an institution is no kind a fact concerns");
+  assert.equal(trail("PROJ-1", OUTSIDER).reason, "SET_CONCERNS_UNKNOWN", "a project the writer cannot see is answered as absent");
+  assert.equal(trail("PROJ-1", BOB).ok, true);
+  assert.equal(trail(s.contract).ok, true);
+  assert.equal(trail(s.event("payment", [s.contract])).ok, true);
+  assert.equal(trail(undefined).ok, true);
+});

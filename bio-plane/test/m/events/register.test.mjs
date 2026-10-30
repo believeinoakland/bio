@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, testView, metered, sha, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { courtlistenerDocket, courtlistenerApi } from "../../../../court-doctypes/index.mjs";
+import { eventsOps } from "../../../src/events/index.mjs";
 
 const FIX = new URL("../../../../court-doctypes/test/fixtures/", import.meta.url);
 const text = (n) => readFileSync(new URL(n, FIX), "utf8");
@@ -123,17 +124,64 @@ test("R58 control: a hidden capture contributes no attestation to a viewer who m
   assert.equal(a.w.ev.readEvent({ eventId: id, viewer: OUTSIDER }).event.attestations.length, 1);
 });
 
-for (const n of [20, 200]) {
-  test(`R60 timeline of ${n} captures answers ok within a bounded work per event; an unknown capture contributes nothing`, () => {
-    const w = world(), shas = [];
-    for (let i = 0; i < n; i++) { const s = w.capture(`t${i}`); shas.push(s); for (let j = 0; j < 3; j++) w.event({ capture: s, value: "2026-03-01" }); }
-    const m = metered(w, () => w.ev.timeline({ captures: [...shas.slice(0, n - 1), sha("unknown")], viewer: MEMBER, limit: 500 }));
-    assert.equal(m.value.ok, true);
-    assert.equal(m.value.world.items.length + m.value.world.placed_nowhere.length, Math.min(500, 3 * (n - 1)));
-    assert.ok(m.statements <= 4 * Math.min(500, 3 * (n - 1)), `${m.statements} statements`);
-    assert.equal(w.ev.timeline({ captures: shas.slice(0, 2), viewer: MEMBER, lanes: ["world"] }).ok, true);
-  });
+/* R60 (JOURNEYS R-84): the read the standard page sends (`screens-investigate` standard.mjs: op `timeline`, `captures` its
+   held captures joined by commas in the query, at most 200 as its `heldcaptures` read asks, no `limit`), through the ops
+   arm, over 200 held captures each attesting two events and stating a date. */
+function standardPage() {
+  const w = world(), shas = [];
+  for (let i = 0; i < 200; i++) {
+    const s = w.capture(`t${i}`); shas.push(s);
+    w.event({ capture: s, value: `2026-03-${String(1 + (i % 28)).padStart(2, "0")}` });
+    w.event({ capture: s });
+  }
+  const read = (query) => {
+    const url = new URL("https://plane.test/");
+    for (const [k, v] of Object.entries({ op: "timeline", viewer: MEMBER, ...query })) url.searchParams.set(k, v);
+    return eventsOps(w.ev, url, null).timeline();
+  };
+  return { w, shas, read };
 }
+/* The most values one statement of `fn` binds (R56: a Durable Object's SQLite allows 100). */
+function widest(w, fn) {
+  const sql = w.st.sql, exec = sql.exec;
+  let most = 0;
+  sql.exec = (...a) => { most = Math.max(most, a.length - 1); return exec.apply(sql, a); };
+  try { return { value: fn(), most }; } finally { sql.exec = exec; }
+}
+const ids = (lane) => [...lane.items, ...lane.placed_nowhere].map((i) => i.event_id ?? i.dated_fact_id).sort();
+
+test("R60 the standard page's timeline read of its 200 held captures answers ok through the ops arm, its lanes bounded as R27; with a limit of 500 every event and dated fact of them, within a bounded work per item and under 100 bound values a statement", () => {
+  const { w, shas, read } = standardPage();
+  const page = widest(w, () => read({ captures: shas.join(",") }));
+  assert.equal(page.value.ok, true);
+  assert.ok(page.most <= 99, `${page.most} values bound`);
+  assert.deepEqual(page.value.captures, shas);
+  /* R27's default limit, per list: 100 placed and 100 placed nowhere of the 400 events, 100 of the 200 dated facts */
+  assert.deepEqual([page.value.world.items.length, page.value.world.placed_nowhere.length, page.value.world.truncated], [100, 100, true]);
+  assert.deepEqual([page.value.dated.items.length, page.value.dated.placed_nowhere.length, page.value.dated.truncated], [100, 0, true]);
+  const m = metered(w, () => read({ captures: shas.join(","), limit: "500" }));
+  assert.equal(m.value.ok, true);
+  assert.equal(ids(m.value.world).length, 400);
+  assert.equal(m.value.world.items.length, 200);
+  assert.equal(m.value.world.placed_nowhere.length, 200);
+  assert.equal(ids(m.value.dated).length, 200);
+  assert.ok(m.statements <= 4 * 400, `${m.statements} statements`);
+});
+
+test("R60 R53 an unknown capture among the page's captures adds nothing and names nothing: the answer equals the one without it; the set alone is unchanged by captures not asked", () => {
+  const { w, shas, read } = standardPage();
+  const known = shas.slice(0, 199);
+  const without = read({ captures: known.join(","), limit: "500" }), withUnknown = read({ captures: [...known, sha("unknown")].join(","), limit: "500" });
+  assert.equal(withUnknown.ok, true);
+  assert.deepEqual(ids(withUnknown.world), ids(without.world));
+  assert.deepEqual(ids(withUnknown.dated), ids(without.dated));
+  assert.equal(ids(without.world).length, 398);
+  const who = w.entity("Una Unrelated");
+  const alone = read({ set: who });
+  assert.equal(alone.ok, true);
+  assert.deepEqual([alone.world.items, alone.world.placed_nowhere, alone.dated], [[], [], undefined]);
+  assert.equal(read({ captures: [...shas, sha("one more")].join(",") }).reason, "TOO_MANY_CAPTURES");
+});
 
 test("R61 withdrawEvent: reasoned, kept and shown withdrawn in readEvent and timeline; a repeat is already; refusals", () => {
   const w = world();

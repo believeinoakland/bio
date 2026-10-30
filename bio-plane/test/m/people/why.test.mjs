@@ -2,9 +2,9 @@
    `{key, vars}` drawn through `word(key, vars)`, never English; a reason an owner answers is passed on as it answers it. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, doc } from "./fixture.mjs";
+import { world, ANN, OUT, doc } from "./fixture.mjs";
 import { sequenceUndetermined } from "../events/fixtures.mjs";
-import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { BOUNDS, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { validAt } from "../../../src/civil-time/index.mjs";
 import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
@@ -153,4 +153,48 @@ test("R40 a claim whose validity does not settle the date is a hop marked undete
   /* no start nor end is stated: civil-time answers its reason as a key, and it is passed on as it answers it (R40) */
   assert.deepEqual(u.why, validAt({ valid: { from: null, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: "2024-01-01", precision: "day", zone: "UTC" }).why);
   assert.deepEqual(Object.keys(u), ["why"], "no sentence and no key beside it: the hop's reason is the one key");
+});
+
+test("R26 (K5811 F2; connection-grammar R6, R10) a hub is judged per kind against hubBoundOf(kind): claims on a node more than the hub bound in all but within each kind's bound are paged, never a hub; one kind over its bound is a hub named by that kind's set size", () => {
+  const w = world();
+  const node = w.person("Split Hub");
+  const per = { same_as: 0, unsure: 0, not_same_as: 0 };
+  const claim = (kind) => { assert.equal(w.p.claimIdentity({ a: node, b: w.person(`S ${kind} ${per[kind]++}`), kind, basis: "testimony", note: "said so", by: ANN }).ok, true); };
+  /* every kind at its bound: more than BOUNDS.hub in all, none over its own */
+  for (const kind of ["unsure", "not_same_as"]) for (let i = 0; i < hubBoundOf(kind); i++) claim(kind);
+  const total = hubBoundOf("unsure") + hubBoundOf("not_same_as");
+  assert.ok(total > BOUNDS.hub);
+  const first = w.p.neighbours({ node, at: "2024-01-01", viewer: ANN });
+  assert.equal(first.hub, undefined, "within each kind's bound: no hub");
+  assert.equal(first.items.length, Math.min(total, BOUNDS.fanout));
+  const pages = [first.items];
+  for (let at = first.next; at !== undefined;) { const n = w.p.neighbours({ node, at: "2024-01-01", page: at, viewer: ANN }); pages.push(n.items); at = n.next; }
+  assert.equal(new Set(pages.flat().map((i) => i.id)).size, total, "every claim is paged, once");
+  /* one kind over its bound: a hub with no items, its set size that kind's */
+  claim("unsure");
+  const hub = w.p.neighbours({ node, at: "2024-01-01", viewer: ANN });
+  assert.deepEqual(hub.items, []);
+  assert.equal(hub.hub.set_size, hubBoundOf("unsure") + 1);
+  assert.deepEqual(hub.hub.why_key, keyed("people.why.person_end_identity", { hub: hubBoundOf("unsure") }));
+  /* asking only the kinds within their bound pages them */
+  const only = w.p.neighbours({ node, kinds: ["not_same_as"], at: "2024-01-01", viewer: ANN });
+  assert.equal(only.hub, undefined);
+  assert.equal(only.items.length, Math.min(hubBoundOf("not_same_as"), BOUNDS.fanout));
+});
+
+test("R40, R16 (BOB #338 CHANGE; events R31, R51) statementsOf asks events.sequence as the viewer reading: a cited precedes order the viewer may see places two same-day statements; one hidden from it is not used, and the pair is answered order_undetermined", () => {
+  const w = world();
+  const p = w.person("Una Vale");
+  const a = w.event("statement", { start: "2020-01-05" }, [{ entity: p, role: "speaker" }]);
+  const b = w.event("statement", { start: "2020-01-05" }, [{ entity: p, role: "speaker" }]);
+  const before = w.p.statementsOf({ entityId: p, viewer: ANN });
+  assert.equal(before.order_undetermined.length, 1, "control: the same day at day precision does not settle the order");
+  const r = w.ev.relate({ from: a, to: b, kind: "precedes", attestation: doc(w.capture("order", { fenced: true })), by: ANN });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
+  const ann = w.p.statementsOf({ entityId: p, viewer: ANN });
+  assert.deepEqual(ann.items.map((x) => x.event_id), [a, b], "the cited order, which ann may see, places them");
+  assert.deepEqual(ann.order_undetermined, []);
+  const out = w.p.statementsOf({ entityId: p, viewer: OUT });
+  assert.equal(out.order_undetermined.length, 1, "the order cited inside a project out may not see is not used");
+  assert.equal(typeof out.order_undetermined[0].why.key, "string", "its reason a key (R40)");
 });
