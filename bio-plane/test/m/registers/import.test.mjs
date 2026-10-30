@@ -69,22 +69,24 @@ test("R12: importDue and importWake answer from the queue; with nothing queued, 
 });
 
 test("R12 (G9, R67): an import killed between each pair of slices ends as an uninterrupted run does: the same row table, counts and segment digests", async () => {
-  const text = csv(900, { cell: (i) => rowOf(i) });
+  const n = Number(process.env.REGISTERS_RESTART_ROWS || 900);
+  const text = csv(n, { cell: (i) => rowOf(i) });
   const small = { segment_max: 12 * 1024 };
   const bounds = { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 40, INGEST_SLICE_BATCHES: 1, SLICE_FETCH_BYTES: 30 * 1024 };
   const whole = seeded({ bounds: { ...small, ...bounds } });
   START(whole);
-  const a = await whole.drain({ [URL_]: served(enc(text)) });
+  const max = Math.max(400, Math.ceil(n / 20));
+  const a = await whole.drain({ [URL_]: served(enc(text)) }, { max });
   const killed = seeded({ bounds: { ...small, ...bounds } });
   START(killed);
-  const b = await killed.drain({ [URL_]: served(enc(text)) }, { restartEach: true });
+  const b = await killed.drain({ [URL_]: served(enc(text)) }, { restartEach: true, max });
   assert.equal(whole.sql(`SELECT state FROM register_imports`)[0].state, "indexed");
   assert.equal(killed.sql(`SELECT state FROM register_imports`)[0].state, "indexed");
   assert.ok(whole.count("register_segments") > 3, "several segments, so several slices");
   assert.ok(a.ticks.length > 8 && b.ticks.length === a.ticks.length, "the same slices");
   assert.deepEqual(counts(killed), counts(whole));
   assert.equal(digest(killed), digest(whole), "the row table, its descriptors and the segment digests are the same");
-  assert.equal(counts(whole).register_cells, 900);
+  assert.equal(counts(whole).register_cells, n);
 });
 
 test("R12: a slice killed in the middle of reading a segment resumes from its position; a paused host runs no slice; a failing source is retried three times with growing delay, then failed with its reason and retries", async () => {
@@ -313,6 +315,7 @@ test("R19 control: a team import is visible to every member; a row first stored 
 test("R20 (G9, K4354): during a large import a member's list and search answer within budget and no write transaction holds the worker longer than SLICE_TX_MS", async () => {
   const rows = Number(process.env.REGISTERS_ROWS || 30000);
   const w = seeded({ bounds: { segment_max: 1024 * 1024, SLICE_TX_MS: 100 } });
+  const maxTicks = Math.max(400, Math.ceil(rows / 2000));
   START(w);
   const txs = [];
   const transact = w.record.transact.bind(w.record);
@@ -321,7 +324,7 @@ test("R20 (G9, K4354): during a large import a member's list and search answer w
   const net = network({ [URL_]: served(enc(text)) });
   const reads = [];
   try {
-    for (let i = 0; i < 400 && w.registers.importDue(w.clock.ms, w.sweep); i++) {
+    for (let i = 0; i < maxTicks && w.registers.importDue(w.clock.ms, w.sweep); i++) {
       await w.registers.importTick(w.clock.ms, 1000, w.sweep);
       const t0 = performance.now();
       w.registers.registerList({ viewer: V("bob") });

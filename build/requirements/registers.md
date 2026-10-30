@@ -120,7 +120,7 @@ Holds the public registers a team imported, whole or in part, by fixed steps wit
 
 - **R71** (registers; T53; N1259; K4405 (4); K1492) **A team's own register is held to the same conduct.** Test: a team definition with a contact column kept, no terms, a gated host or `people_search` is refused; its first import drops every unassigned column (sentinel scan); only its team lists it. Control: a valid one imports.
 
-- **R72** (registers; T53; N1259; K4403 (3), (4)) **A cited row is an extract whose labels are true.** Test: cite a fixture row, package and check a case: both fingerprints equal the segment's hop, `src_row` locates the row in the fixture, the case checker passes it stating `unverifiable`, a changed byte fails it. Control: the unchanged case passes.
+- **R72** *(not yet met: T53)* (registers; T53; N1259; K4403 (3), (4)) **A cited row is an extract whose labels are true.** Test: cite a fixture row, package and check a case: both fingerprints equal the segment's hop, `src_row` locates the row in the fixture, the case checker passes it stating `unverifiable`, a changed byte fails it. Control: the unchanged case passes.
 
 **Content's row context** (K5730)
 

@@ -193,3 +193,20 @@ test("R23: a slice holds one segment and little else: no segment of an import is
   assert.ok(Math.max(...sizes) <= 0.02 * 1048576 / 2 + 400, `segments stay within the bound (${Math.max(...sizes)})`);
   assert.equal(small.count("register_cells"), rows);
 });
+
+test("R23: an index of REGISTERS_INDEX_ROWS rows (1,000,000 by the requirement; 30,000 by default to keep the gate short) answers rowOf and a one-criterion page within 1,500 ms", async () => {
+  const rows = Number(process.env.REGISTERS_INDEX_ROWS || 30000);
+  const w = seeded({ bounds: { segment_max: 1024 * 1024 } });
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(rows))) }, { max: Math.max(400, Math.ceil(rows / 2000)) });
+  assert.equal(w.count("register_cells"), rows);
+  const key = w.sql(`SELECT row_key FROM register_import_rows WHERE src_row=?`, Math.floor(rows / 2))[0].row_key;
+  const timed = (f) => { const t = performance.now(); const out = f(); return [out, performance.now() - t]; };
+  const [row, rowMs] = timed(() => w.registers.rowOf({ import: 1, row_key: key, viewer: V("bob") }));
+  assert.equal(row.ok, true);
+  const [page, pageMs] = timed(() => w.registers.searchRows({ scope: { register: "town_filings" }, filer_id: "F10003", limit: 50, viewer: V("bob") }));
+  assert.equal(page.rows.length, 50);
+  assert.ok(rowMs < 1500, `rowOf ${rowMs.toFixed(0)} ms over ${rows} rows`);
+  assert.ok(pageMs < 1500, `one-criterion page ${pageMs.toFixed(0)} ms over ${rows} rows`);
+  console.log(`R23 measured: ${rows} rows, rowOf ${rowMs.toFixed(1)} ms, one-criterion page ${pageMs.toFixed(1)} ms`);
+});
