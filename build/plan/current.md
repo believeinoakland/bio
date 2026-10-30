@@ -222,7 +222,7 @@
 - C T52-24
 - T53-264 · K5006 · reds: first settle, then fix
 - T53-265 · K5565 · English in tests: its entry
-- T53-628 · docket R33 (K5816) · ratifying an edition calls docket's `docketRecordEdition`, as docket R33 says "the module that ratifies an edition calls it" `[owed: BOB's requirement line before START]`
+- T53-628 · docket R33 (K5816) · ratifying an edition calls docket's `docketRecordEdition`, as docket R33 says "the module that ratifies an edition calls it" `[owed: BOB's requirement line and the `uses` edge to docket (earlier in the order) before START]`
 - rows: `build/plan/T53-R1/ratification.md`
 **case-checker**
 - T53-266 · N1259 · CAPABILITIES rows
