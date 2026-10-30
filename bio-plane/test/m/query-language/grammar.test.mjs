@@ -77,13 +77,13 @@ test("R1 the grammar: implicit AND/OR, capital operators, negation, parentheses,
 test("R2 an unknown field is free text with a warning; an unknown has: or sort: field is dropped with a warning", () => {
   const w = corpus();
   const p = compile({ q: "sewer:fund", viewer: V });
-  assert.ok(p.warnings.includes('unknown field "sewer"; read as free text'));
+  assert.ok(p.warnings.includes(word("query-language.query.unknown_field_stringify_read_as", { stringify: '"sewer"' })));
   assert.deepEqual(w.ids({ q: "sewer:fund", viewer: V }), ["C"]);
   const h = compile({ q: "has:nope water", viewer: V });
-  assert.ok(h.warnings.includes('has: unknown field "nope"'));
+  assert.ok(h.warnings.includes(word("query-language.query.has_unknown_field_stringify", { stringify: '"nope"' })));
   assert.deepEqual(h.ast.op, "text", "the has: term is dropped, the rest stands");
   const s = compile({ q: "sort:nope water", viewer: V });
-  assert.ok(s.warnings.includes('sort: unknown field "nope"'));
+  assert.ok(s.warnings.includes(word("query-language.query.sort_unknown_field_stringify", { stringify: '"nope"' })));
   assert.equal(s.sort.field, "relevance");
 });
 
@@ -148,12 +148,17 @@ test("R5 meaning selectors: bare words from record-grammar, qualified sub-fields
   assert.deepEqual(ids("leg:<=B"), ["Q1"], "a comparison on the bare field");
   assert.deepEqual(ids("resolves:>=B"), ["Q1"]);
   assert.deepEqual(ids("concerns:ENT-1"), ["Q1"]);
+  /* `capture` is claimed by the sub-fields whose vocabulary holds it, in the arm's own order. */
+  const claims = Object.entries(MEANING.leg.sub).filter(([, s]) => (s.vocab || []).includes("capture")).map(([n]) => n);
+  assert.equal(claims.length, 2);
   const drops = {
-    "leg:capture": /leg: "capture" is both .* say leg:.*=capture or leg:.*=capture/,
-    "leg:bogus=x": /leg: unknown sub-field "bogus"; known: /,
-    "leg:grade>=": /compares grade against nothing/,
-    "passage:>=bar": /compares a full-text field/,
-    "passage:text>=bar": /compares a full-text field/,
+    "leg:capture": exact("query-language.query.arm_stringify_is_both_claims", { arm: "leg", stringify: '"capture"',
+      claims: claims.join(" and "), map: claims.map((c) => `leg:${c}=capture`).join(" or ") }),
+    "leg:bogus=x": exact("query-language.query.arm_unknown_sub_field_stringify", { arm: "leg", stringify: '"bogus"',
+      keys: Object.keys(MEANING.leg.sub).join(", ") }),
+    "leg:grade>=": exact("query-language.query.arm_stringify_compares_subname_against", { arm: "leg", stringify: '"grade>="', subName: "grade" }),
+    "passage:>=bar": exact("query-language.query.arm_stringify_compares_a_full", { arm: "passage", stringify: '">=bar"', arm_2: "passage" }),
+    "passage:text>=bar": exact("query-language.query.arm_stringify_compares_a_full", { arm: "passage", stringify: '"text>=bar"', arm_2: "passage" }),
     "passage:---": exact("query-language.query.arm_stringify_has_no_word", { arm: "passage", stringify: '"---"' }),
   };
   for (const [q, re] of Object.entries(drops)) {
@@ -280,7 +285,7 @@ test("R24 NEAR: proximity in free text, text: and passage:, capitals only, with 
   const clamp = compile({ q: "NEAR(alpha beta, 500)", viewer: V });
   assert.ok(clamp.warnings.includes(word("query.distance_outside_read", { source: "NEAR(alpha beta, 500)", clamped: "500", near_max: "100", n: "100" })));
   assert.deepEqual(ids("NEAR(alpha beta, 500)"), ["A", "B"]);
-  assert.ok(compile({ q: "NEAR(alpha beta, -2)", viewer: V }).warnings.some((x) => /read as 0/.test(x)));
+  assert.ok(compile({ q: "NEAR(alpha beta, -2)", viewer: V }).warnings.includes(word("query.distance_outside_read", { source: "NEAR(alpha beta, -2)", clamped: "-2", near_max: "100", n: "0" })));
   for (const [q, whyKey, vars] of [["NEAR(alpha)", "query.why.proximity_needs_two", { kept: "one term" }],
                                    ["NEAR(alpha beta, 2.5)", "query.why.distance_whole_number", { dist: '"2.5"' }],
                                    ["NEAR(alpha beta, x)", "query.why.distance_whole_number", { dist: '"x"' }],
