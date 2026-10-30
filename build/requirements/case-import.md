@@ -187,7 +187,7 @@ Terms.
 - (T51; K4169) `membership`: `inSight`, `noSuchProject` (its R78), `projectAuthority` (its R55, R122) for R29–R31. `strength`: `strengthOf` (R31). `bias`: `biasManifest` at project scope (its R15, R31). `basis-versions`: `projectQuestions` (its R41, R30). `case-grammar`: `lensOf`, `lensStatementKey` (its R9) and `biasApplicationsOf` (its R24, R27). `test-support`: `declaredOpHolds` (the tests of R33).
 - `public-read` (G50, fix round 6; tests only): `buildCaseFile` and the container writer, which make the `/4` case file that `g50-import.test.mjs` imports (the discriminated paths of two captures of one `ref`). No call is made to it from the module.
 - `public-read` (T46; N903): the shape of R34's `group_fields`, which R4 records as the caller hands it; no call is made to it. Its user: `conformance` reads R4's `group_fields` (its R32).
-- `case-grammar` (T53; A58): the `ungraded_passages:` block reader `ungradedPassagesOf` (its R36), for R34 and R35.
+- `case-grammar` (T53; A5 (DEC-461)): the `ungraded_passages:` block reader `ungradedPassagesOf` (its R36), for R34 and R35.
 
 ### Invariants
 

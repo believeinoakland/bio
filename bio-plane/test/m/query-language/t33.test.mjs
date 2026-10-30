@@ -6,12 +6,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
 import { kinds, phases, stages, bases } from "../../../src/money/index.mjs";
-import { localize, word } from "../../../src/setup-words/index.mjs";
-import { compile, savedForm, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, DEFAULT_FACETS }
+import { word } from "../../../src/setup-words/index.mjs";
+import { compile, savedForm, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, DEFAULT_FACETS, MEANING }
   from "../../../src/query.mjs";
 
 const V = "class:member";
 const sorted = (a) => [...a].sort();
+const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/* A warning read by its key, whole; `open` names the one variable whose words are another module's (civil-time's
+   refusal), matched as any text. */
+const exact = (key, vars, open = null) => {
+  const HOLE = "\u0007";
+  return new RegExp(`^${esc(word(key, open ? { ...vars, [open]: HOLE } : vars)).replace(HOLE, ".+")}$`);
+};
 const ZONE = "America/Los_Angeles";   // west of UTC, and 2026-03-08 is a 23-hour day there
 
 /* The local day of an instant in ZONE, by Intl: the oracle. */
@@ -96,13 +103,13 @@ test("R27 an impossible date, a date with no zone, a zone civil-time refuses and
   w.bundle("A", { body: "water", created: "2026-03-01T12:00:00Z" });
   w.bundle("B", { body: "water", created: "2026-04-01T12:00:00Z" });
   const cases = [
-    ["created:2026-02-31", ZONE, /"2026-02-31" is not a calendar date; dropped/],
-    ["created:2026-03-01..2026-13-01", ZONE, /"2026-13-01" is not a calendar date; dropped/],
-    ["created:>=2026-03-01", null, /names a local day and no time zone is given; dropped/],
-    ["created:2026-03-01", "", /no time zone is given/],
-    ["created:2026-03-01", 7, /no time zone is given/],
-    ["created:2026-03-01", "Mars/Olympus", /created: "2026-03-01": .*; dropped/],
-    ["created:2026-03-09..2026-03-07", ZONE, /ends before it starts; dropped/],
+    ["created:2026-02-31", ZONE, exact("query-language.query.name_stringify_is_not_a", { name: "created", stringify: '"2026-02-31"' })],
+    ["created:2026-03-01..2026-13-01", ZONE, exact("query-language.query.name_stringify_is_not_a", { name: "created", stringify: '"2026-13-01"' })],
+    ["created:>=2026-03-01", null, exact("query-language.query.name_stringify_names_a_local", { name: "created", stringify: '">=2026-03-01"' })],
+    ["created:2026-03-01", "", exact("query-language.query.name_stringify_names_a_local", { name: "created", stringify: '"2026-03-01"' })],
+    ["created:2026-03-01", 7, exact("query-language.query.name_stringify_names_a_local", { name: "created", stringify: '"2026-03-01"' })],
+    ["created:2026-03-01", "Mars/Olympus", exact("query-language.query.name_stringify_why_dropped", { name: "created", stringify: '"2026-03-01"' }, "why")],
+    ["created:2026-03-09..2026-03-07", ZONE, exact("query-language.query.name_stringify_ends_before_it", { name: "created", stringify: '"2026-03-09..2026-03-07"' })],
   ];
   for (const [term, zone, re] of cases) {
     const p = compile({ q: `${term} water`, viewer: V, zone });
@@ -212,7 +219,7 @@ test("R29 a T33 field with no relation named is dropped with its warning, never 
     for (const second of [undefined, {}, { fields: { [T33.find((x) => x !== f)]: REL[T33.find((x) => x !== f)] } }]) {
       for (const term of [`${f}:"${VALUES[f][0]}"`, `has:${f}`, `-${f}:x`, `${f}:*`]) {
         const p = compile({ q: `water ${term}`, viewer: V, zone: "UTC" }, second);
-        assert.deepEqual(p.warnings, [localize("query-language.query.stringify_is_not_available_here", "{stringify} is not available here; read as nothing", { stringify: JSON.stringify(f) })], `${term}`);
+        assert.deepEqual(p.warnings, [word("query-language.query.stringify_is_not_available_here", { stringify: JSON.stringify(f) })], `${term}`);
         assert.deepEqual(p.drops, p.warnings);
         assert.deepEqual(everyStatement(p), everyStatement(compile({ q: "water", viewer: V, zone: "UTC" }, second)), term);
         for (const [, s] of everyStatement(p)) assert.ok(!s.sql.includes(FIELDS[f].col), `${term} reads ${FIELDS[f].col}`);
@@ -224,11 +231,11 @@ test("R29 a T33 field with no relation named is dropped with its warning, never 
   for (const f of T33) {
     assert.ok(!(f in SORTABLE), f);
     const s = compile({ q: `sort:${f} water`, viewer: V }, { fields: REL });
-    assert.deepEqual(s.drops, [localize("query-language.query.sort_stringify_can_hold_many", "sort: {stringify} can hold many values per record; not a sort", { stringify: JSON.stringify(f) })]);
+    assert.deepEqual(s.drops, [word("query-language.query.sort_stringify_can_hold_many", { stringify: JSON.stringify(f) })]);
     assert.equal(s.sort.field, "relevance");
     assert.equal(compile({ q: "", viewer: V, sort: f }, { fields: REL }).sort.field, "updated", "the parameter too");
     const fc = compile({ q: "", viewer: V, facets: [f, "type"] }, { fields: REL });
-    assert.deepEqual([fc.facetFields, fc.warnings], [["type"], [localize("query-language.query.facets_stringify_can_hold_many", "facets: {stringify} can hold many values per record; not a facet", { stringify: JSON.stringify(f) })]]);
+    assert.deepEqual([fc.facetFields, fc.warnings], [["type"], [word("query-language.query.facets_stringify_can_hold_many", { stringify: JSON.stringify(f) })]]);
   }
   /* R7 and R8 through every relation: member input moves only args, and every gate mark is the one gate's. */
   const shapes = (v) => everyStatement(compile({ q: T33.map((f) => `${f}:"${v}"`).join(" "), viewer: "member:ann",
@@ -264,10 +271,14 @@ test("R30 savedForm: the form a standing question keeps, or a refusal when it is
   assert.equal(savedForm({ q: "water", ids: [] }).ok, true, "an empty id list is no selection");
   const drops = savedForm({ q: "water nope:x leg:bogus=1 created:2026-02-31 standard:STD-1 has:zz fm:a;b", sort: "nope" });
   assert.equal(drops.reason, "SAVED_QUERY_DROPS");
-  assert.deepEqual(drops.warnings, ['sort: "nope" is not a sort key', 'unknown field "nope"; read as free text',
-    'leg: unknown sub-field "bogus"; known: source, role, axis, grade, ground, target',
-    'created: "2026-02-31" is not a calendar date; dropped', '"standard" is not available here; read as nothing',
-    'has: unknown field "zz"', 'fm: path "a;b" is not a frontmatter path']);
+  assert.deepEqual(drops.warnings, [
+    word("query-language.query.sort_stringify_is_not_a", { stringify: '"nope"' }),
+    word("query-language.query.unknown_field_stringify_read_as", { stringify: '"nope"' }),
+    word("query-language.query.arm_unknown_sub_field_stringify", { arm: "leg", stringify: '"bogus"', keys: Object.keys(MEANING.leg.sub).join(", ") }),
+    word("query-language.query.name_stringify_is_not_a", { name: "created", stringify: '"2026-02-31"' }),
+    word("query-language.query.stringify_is_not_available_here", { stringify: '"standard"' }),
+    word("query-language.query.has_unknown_field_stringify", { stringify: '"zz"' }),
+    word("query-language.query.fm_path_stringify_is_not", { stringify: '"a;b"' })]);
   for (const q of ["leg:capture", "passage:---", "created:2026-03-01", "sort:standard", "leg:grade>="])
     assert.equal(savedForm({ q: `water ${q}` }).reason, "SAVED_QUERY_DROPS", q);
   /* What the caller will run it with counts: a field it can read and a zone it gives are not drops. */

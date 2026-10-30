@@ -2,7 +2,7 @@
 
 ## plan-T53-draft.md
 
-**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (R32) · `planning/plan-T53-capabilities.md` §A Layer 8
+**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (network-notices R32) · `planning/plan-T53-capabilities.md` §A Layer 8
 **network-notices** (layer 8; listed with layer 11's) · T53 · K5507, K5527 (6) · R23 prepares a submission to the network pages, not the directory of groups (civicsmith.org's list, R32); Purpose, R30 and `site`'s note reworded · `planning/lines-K5527-texts-and-listing.md` §5
 **English in tests** (K5565) · every module with sites carries one conversion entry for its own, done in this tranche; 58 modules gain a job by it alone · `planning/plan-T53-tests-english.md`
 

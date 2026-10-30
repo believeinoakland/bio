@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
 import { compile, cachedNotes, viewerPredicate, GATE_MARK, FIELDS } from "../../../src/query.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "class:member";
 /* Relations of the caller's own naming, none of them retrieval's, inquiry's or strength's: nothing here may assume a
@@ -129,16 +130,16 @@ test("R26 a relation that is not three identifiers, a name that is not a field, 
   const opts = { q: "capture:A legs:>1", viewer: V, rows: "leg", sort: "connection", facets: ["capture", "legs"] };
   const plain = everyStatement(compile(opts));
   const bad = [
-    [{ legs: { table: "t; DROP TABLE bundles", key: "k", col: "c" } }, 'fields: "legs" is not a table, a key and a column; read as before'],
-    [{ legs: { table: "t", key: "k" } }, 'fields: "legs" is not a table, a key and a column; read as before'],
-    [{ legs: { table: "t", key: "k k", col: "c" } }, 'fields: "legs" is not a table, a key and a column; read as before'],
-    [{ legs: "t" }, 'fields: "legs" is not a table, a key and a column; read as before'],
-    [{ legs: null }, 'fields: "legs" is not a table, a key and a column; read as before'],
-    [{ strength: { table: "t", key: "k", col: "c" } }, 'fields: "strength" is not a field; ignored'],
-    [{ leg: { table: "t", key: "k", col: "c" } }, 'fields: "leg" is not a field; ignored'],
-    ["legs", "fields: not a map of fields to relations; every field is read as before"],
-    [[FIELDS_REL.legs], "fields: not a map of fields to relations; every field is read as before"],
-    [7, "fields: not a map of fields to relations; every field is read as before"],
+    [{ legs: { table: "t; DROP TABLE bundles", key: "k", col: "c" } }, word("query-language.query.fields_stringify_is_not_a_2", { stringify: '"legs"' })],
+    [{ legs: { table: "t", key: "k" } }, word("query-language.query.fields_stringify_is_not_a_2", { stringify: '"legs"' })],
+    [{ legs: { table: "t", key: "k k", col: "c" } }, word("query-language.query.fields_stringify_is_not_a_2", { stringify: '"legs"' })],
+    [{ legs: "t" }, word("query-language.query.fields_stringify_is_not_a_2", { stringify: '"legs"' })],
+    [{ legs: null }, word("query-language.query.fields_stringify_is_not_a_2", { stringify: '"legs"' })],
+    [{ strength: { table: "t", key: "k", col: "c" } }, word("query-language.query.fields_stringify_is_not_a", { stringify: '"strength"' })],
+    [{ leg: { table: "t", key: "k", col: "c" } }, word("query-language.query.fields_stringify_is_not_a", { stringify: '"leg"' })],
+    ["legs", word("query-language.query.fields_not_a_map")],
+    [[FIELDS_REL.legs], word("query-language.query.fields_not_a_map")],
+    [7, word("query-language.query.fields_not_a_map")],
   ];
   for (const [fields, warning] of bad) {
     const p = compile(opts, { fields });
@@ -147,7 +148,7 @@ test("R26 a relation that is not three identifiers, a name that is not a field, 
   }
   /* One bad entry does not spoil a good one. */
   const mixed = compile(opts, { fields: { legs: FIELDS_REL.legs, capture: { table: "x" } } });
-  assert.deepEqual(mixed.warnings, ['fields: "capture" is not a table, a key and a column; read as before']);
+  assert.deepEqual(mixed.warnings, [word("query-language.query.fields_stringify_is_not_a_2", { stringify: '"capture"' })]);
   assert.ok(everyStatement(mixed).some(([, s]) => s.sql.includes("rel_legs")));
   for (const none of [undefined, null, {}, { fields: null }, { fields: {} }, { projection: null }])
     assert.deepEqual(compile(opts, none).warnings, [], JSON.stringify(none));

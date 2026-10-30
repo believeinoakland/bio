@@ -105,7 +105,8 @@
 - T53-204 · N1219, DEC-466 · reads passed through, `airunparts`
 - T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick `[written: K5748: ai-runs R106]`
 - T53-206 · K5565 · English in tests: its entry
-- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; R29's column list names them
+- T53-602 · observation-log R40, R41 (K5786) · R99, R100 build on observation-log's writer and readers; `op=airunlog` serves the `read` and `disagree` columns; observation-log R40's fields name them
+- T53-627 · agent-steps R56 (K5815) · R107: a tick's report entry keeps `produced_by`, checked as R72 and R104 check a label, served by `op=airunlog` (R100)
 - rows: `build/plan/T53-R1/ai-runs.md`
 **run-productions**
 - T53-207 · K5571 · agent-steps R54's idem obligations get lines (6)
@@ -130,7 +131,7 @@
 - rows: `build/plan/T53-R1/question-explorer.md`
 **answers**
 - T53-217 · K5565 · English in tests: its entry
-- T53-548 · K5666 · `ASK_SCOPE` gains `aicredential`, as credentials' `AI_GRANT_OPS` (scope.test.mjs R1)
+- T53-548 · K5666 · `ASK_SCOPE` gains `aicredential`, as credentials' `AI_GRANT_OPS` (ai-accounts R65; scope.test.mjs R1)
 - rows: `build/plan/T53-R1/answers.md`
 **agent-steps**
 - T53-218 · K5457 · entry by need, Gate 1 per part, `idem`
@@ -188,7 +189,7 @@
 - rows: `build/plan/T53-R1/case-tensions.md`
 **publication**
 - T53-246 · A5, A8 · case-document `/10`, edition statements, credits
-- T53-247 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-247 · K5471 (6) · JOURNEYS's defects: its rows; its one row (R-96 owner half, retired publication R83) moved to docket T53-251 (K5816): nothing of it is publication's
 - T53-248 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/publication.md`
 **publish-schedule**
@@ -196,7 +197,7 @@
 - rows: `build/plan/T53-R1/publish-schedule.md`
 **docket**
 - T53-250 · K5471 (6) · JOURNEYS's defects: its rows
-- T53-251 · K5571 · publication R83 moves here
+- T53-251 · K5571 · publication R83 moves here, as docket R33 (JOURNEYS R-96 owner half, K5816)
 - T53-252 · K5565 · English in tests: its entry
 - rows: `build/plan/T53-R1/docket.md`
 **public-read**
@@ -221,6 +222,7 @@
 - C T52-24
 - T53-264 · K5006 · reds: first settle, then fix
 - T53-265 · K5565 · English in tests: its entry
+- T53-628 · docket R33 (K5816) · ratifying an edition calls docket's `docketRecordEdition`, as docket R33 says "the module that ratifies an edition calls it" `[owed: BOB's requirement line and the `uses` edge to docket (earlier in the order) before START]`
 - rows: `build/plan/T53-R1/ratification.md`
 **case-checker**
 - T53-266 · N1259 · CAPABILITIES rows
