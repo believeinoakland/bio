@@ -22,6 +22,7 @@
 - T53-156 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-157 · K5565 · English in tests: its entry
 - K5806 · BOB · R42's list of dimensions is R11's (wording fixed; a different source is no difference); `neighbours` asked with no `at` keeps `connection-grammar`'s registry rule (a null date is undetermined), unchanged
+- K5810 · BOB · the 12 ambiguities the trim kept as written (`build/plan/trims/money.notes.md`) settled in the requirements `[owed: BOB, before START]`
 - rows: `build/plan/T53-R1/money.md`
 **registers**
 - first: take in the round-1 job's branch `job/T53/registers` (fd326eb: its code and tests, 4,204 lines). It waited only because its `tests` path was not yet on the tranche.
@@ -33,6 +34,7 @@
 - rows: `build/plan/T53-R1/query-language.md`
 **people**
 - T53-623 · the independent audit (K5794) · identity.test.mjs:111's copied grade-C sentence read by `word(...)`, as in the grade B and D cases two lines away
+- K5810 · BOB · the 6 ambiguities the trim kept as written (`build/plan/trims/people.notes.md`) settled in the requirements `[owed: BOB, before START]`
 - rows: `build/plan/T53-R1/people.md`
 **events**
 - T53-624 · the independent audit (K5794) · R60's test uses the walked standard's fixture and 200 captures, as its Test says (register.test.mjs uses synthetic captures only)
