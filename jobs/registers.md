@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: the 1,000,000-row runs of R20 and R23 again at 8b7b0948 (both read past the page too slowly at f69c2756; fixed) and R12/R67 at f69c2756 · PR #60
+**Status** · REGISTERS #4 · session_01RAN5ekPTzwHFU3miqXtwqf · WAITING: the 1,000,000-row runs of R20 and R23 at 27b860de (the scan read every match for one page; fixed) and R12/R67 at f69c2756 · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
