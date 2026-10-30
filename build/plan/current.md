@@ -26,7 +26,7 @@
 **registers**
 - first: take in the round-1 job's branch `job/T53/registers` (fd326eb: its code and tests, 4,204 lines). It waited only because its `tests` path was not yet on the tranche.
 - T53-173 · N1259, K4403, K4405 · CAPABILITIES rows
-- K5807 · BOB · the 9 ambiguities the trim kept as written (`build/plan/trims/registers.notes.md`) settled in the requirements `[owed: BOB, before START]`
+- K5808 · BOB · the trim's ambiguities settled in the requirements (R2, R7, R8, R9, R11, R65, R66, Status, R73's heading)
 - rows: `build/plan/T53-R1/registers.md`
 **query-language**
 - T53-622 · the independent audit (K5794) · the English regex sites at grammar.test.mjs:154-156 and :283 read by key, and the baseline lines its report said it removed (grammar.test.mjs 1, t33.test.mjs 2)
