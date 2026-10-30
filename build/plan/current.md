@@ -34,7 +34,7 @@
 - rows: `build/plan/T53-R1/query-language.md`
 **people**
 - T53-623 · the independent audit (K5794) · identity.test.mjs:111's copied grade-C sentence read by `word(...)`, as in the grade B and D cases two lines away
-- K5810 · BOB · the 6 ambiguities the trim kept as written (`build/plan/trims/people.notes.md`) settled in the requirements `[owed: BOB, before START]`
+- K5811 · BOB (from the code, `build/plan/trims/people.settle.md`) · F1 `listChecks` (index.mjs:1772-1778) is required by no line yet answers every check's condition, denominator and gate to any viewer not denied, and notice-producers (index.mjs:417) calls it: the job states it as an in-process read under R24's gate and R31's sight, or retires it with its caller's read moved to `checkResults`, and reports which; F2 `neighbours` sums the three identity kinds against `BOUNDS.hub` (index.mjs:1809-1827); R26 and `connection-grammar` R6 judge a hub per kind by `hubBoundOf(kind)`
 - rows: `build/plan/T53-R1/people.md`
 **events**
 - T53-624 · the independent audit (K5794) · R60's test uses the walked standard's fixture and 200 captures, as its Test says (register.test.mjs uses synthetic captures only)
