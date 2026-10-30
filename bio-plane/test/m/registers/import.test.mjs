@@ -71,11 +71,14 @@ test("R12: importDue and importWake answer from the queue; with nothing queued, 
 test("R12 (G9, R67): an import killed between each pair of slices ends as an uninterrupted run does: the same row table, counts and segment digests", async () => {
   const n = Number(process.env.REGISTERS_RESTART_ROWS || 900);
   const text = csv(n, { cell: (i) => rowOf(i) });
-  const small = { segment_max: 12 * 1024 };
-  const bounds = { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 40, INGEST_SLICE_BATCHES: 1, SLICE_FETCH_BYTES: 30 * 1024 };
+  /* small slices for the gate's 900 rows; at the requirement's 1,000,000 the slices are of ordinary size, still killed between each pair */
+  const big = n > 10000;
+  const small = { segment_max: big ? 1024 * 1024 : 12 * 1024 };
+  const bounds = big ? { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 500, INGEST_SLICE_BATCHES: 4, SLICE_FETCH_BYTES: 4 * 1024 * 1024 }
+    : { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 40, INGEST_SLICE_BATCHES: 1, SLICE_FETCH_BYTES: 30 * 1024 };
   const whole = seeded({ bounds: { ...small, ...bounds } });
   START(whole);
-  const max = Math.max(400, Math.ceil(n / 20));
+  const max = big ? Math.ceil(n / 50) : Math.max(400, Math.ceil(n / 20));
   const a = await whole.drain({ [URL_]: served(enc(text)) }, { max });
   const killed = seeded({ bounds: { ...small, ...bounds } });
   START(killed);
@@ -83,7 +86,8 @@ test("R12 (G9, R67): an import killed between each pair of slices ends as an uni
   assert.equal(whole.sql(`SELECT state FROM register_imports`)[0].state, "indexed");
   assert.equal(killed.sql(`SELECT state FROM register_imports`)[0].state, "indexed");
   assert.ok(whole.count("register_segments") > 3, "several segments, so several slices");
-  assert.ok(a.ticks.length > 8 && b.ticks.length === a.ticks.length, "the same slices");
+  /* a batch's write ends by time (R20), so where slices end differs between runs; what R12 asks is the same end, below */
+  assert.ok(a.ticks.length > 8 && b.ticks.length > 8, `several slices, each followed by a restart (${a.ticks.length} and ${b.ticks.length})`);
   assert.deepEqual(counts(killed), counts(whole));
   assert.equal(digest(killed), digest(whole), "the row table, its descriptors and the segment digests are the same");
   assert.equal(counts(whole).register_cells, n);
