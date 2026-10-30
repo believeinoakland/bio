@@ -145,7 +145,7 @@ test("R31 sequence: before, after or undetermined with why, through civil-time.c
   const c = w.event({ value: "2026-07-02T09:00" }).event_id;
   const a2 = w.event({ value: "2026-07-01" }).event_id;
   const n = w.event({}).event_id;
-  const s = (x, y) => w.ev.sequence({ a: x, b: y });
+  const s = (x, y) => w.ev.sequence({ a: x, b: y, viewer: MEMBER });
   assert.equal(s(a, c).answer, "before");
   assert.equal(s(c, a).answer, "after");
   assert.equal(s(b, c).answer, "before");

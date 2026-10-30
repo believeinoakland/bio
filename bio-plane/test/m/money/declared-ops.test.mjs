@@ -8,10 +8,10 @@ import { DECLARED_OPS, moneyOps } from "../../../src/money/index.mjs";
 import { seeded, sha, ANN } from "./fixture.mjs";
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
 /* the door's names for the arms they alias */
-const ARM = { recordfact: "moneyrecord", createset: "moneysetcreate", include: "moneysetinclude", exclude: "moneysetexclude", reconcile: "moneyreconcile" };
+const ARM = { recordfact: "moneyrecord", createset: "moneysetcreate", include: "moneysetinclude", exclude: "moneysetexclude", reconcile: "moneyreconcile", fiscalyears: "moneyfiscalyears" };
 /* a seeded world with a set and two facts, whose ids stand for the sample ones */
 const mkEnv = async () => { const s = seeded(); s.setId = s.m.createSet({ purpose: "trail", label: "a set", by: ANN }).set_id; s.f1 = s.rec(); s.f2 = s.rec({ basis: "cash" }); return s; };
-const ids = (fields, env) => { const f = { ...fields }; if ("setId" in f) f.setId = env.setId; if ("factId" in f || "id" in f) { if ("factId" in f) f.factId = env.f1; if ("id" in f) f.id = env.f1; } if ("a" in f) f.a = env.f1; if ("b" in f) f.b = env.f2; if ("contract" in f) f.contract = env.contract; return f; };
+const ids = (fields, env) => { const f = { ...fields }; if ("setId" in f) f.setId = env.setId; if ("factId" in f || "id" in f) { if ("factId" in f) f.factId = env.f1; if ("id" in f) f.id = env.f1; } if ("a" in f) f.a = env.f1; if ("b" in f) f.b = env.f2; if ("contract" in f) f.contract = env.contract; if ("entity" in f) f.entity = env.city; return f; };
 const asDoor = (url, fields, env, op) => moneyOps(env.m, url, { ...fields, by: ANN })[ARM[op] ?? op]();
 
 /* a refusal names a field by its code (the table) or, as the default does, by the field as a whole word of its code or detail */
@@ -63,4 +63,20 @@ test("R27 money declares committedagainstpaid: its requires alone raise no refus
 test("R27 money declares authoritychain: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "authoritychain", declaration: DECLARED_OPS["authoritychain"], call: mk("authoritychain", {"viewer":"member:ann"}, null, null, (fields, env) => (ids(fields, env))),
     refusedNaming: named({"id":["NO_FACT"]}, true), same: sameCode });
+});
+
+/* K5812 F4: the three reads declared at T51 and T53 are held as the other seven are */
+test("R27 money declares moneysets: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "moneysets", declaration: DECLARED_OPS["moneysets"], call: mk("moneysets", {"viewer":"member:ann"}),
+    refusedNaming: named({"concerns":["NO_CONCERNS"]}, true), values: { concerns: "PROJ-1" }, same: sameCode });
+});
+
+test("R27 money declares moneyby: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "moneyby", declaration: DECLARED_OPS["moneyby"], call: mk("moneyby", {"viewer":"member:ann"}, null, null, (fields, env) => (ids(fields, env))),
+    refusedNaming: named({"entity":["NO_ENTITY"]}, true), same: sameCode });
+});
+
+test("R27 money declares fiscalyears: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "fiscalyears", declaration: DECLARED_OPS["fiscalyears"], call: mk("fiscalyears", {"viewer":"member:ann"}),
+    refusedNaming: named({}, true), same: sameCode });
 });

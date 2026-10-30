@@ -157,7 +157,7 @@ test("R24 a posting time is a publication event within its meeting, when an uppe
   assert.equal(pub().kind, "publication");
   assert.deepEqual(pub().within, [meeting]);
   assert.deepEqual([pub().when.start, pub().when.end, pub().when.precision], [null, "2025-12-30T18:00:01Z", "upper_bound"]);
-  assert.equal(w.ev.sequence({ a: pubId, b: meeting }).answer, "before", "on or before the agenda's value, which precedes the meeting");
+  assert.equal(w.ev.sequence({ a: pubId, b: meeting, viewer: MEMBER }).answer, "before", "on or before the agenda's value, which precedes the meeting");
   /* a supplemental republication carries a later value: the bound does not move */
   w.ev.followedImport({ captureSha: legistar(w, "9451-b", { body: { ...base, EventAgendaLastPublishedUTC: "2026-01-05T09:00:00.000" }, locator: loc }), body, period: ALL });
   assert.equal(pub().when.end, "2025-12-30T18:00:01Z");

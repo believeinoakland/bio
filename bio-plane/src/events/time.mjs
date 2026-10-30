@@ -80,20 +80,31 @@ export function placeAgainst(w, s) {
   return "overlaps";
 }
 
-/** R29: order a list of `{when, …}` items by start then end then id, each marked with the neighbours its order with is
- *  undetermined (a band with its bounds, R31), the items with no `when` listed apart as "placed nowhere". */
+/** R29: order a list of `{when, …}` items by start then end then id, each marked with every other item its order with is
+ *  undetermined (a band with its bounds, R31), the items with no `when` listed apart as "placed nowhere". Two whens with
+ *  both bounds and a zone are R31's comparison of their spans (civil-time R5: before only when one ends by the other's
+ *  start), so those pairs are read by one sweep in start order; every pair with another when is asked of `sequenceOf`. */
 export function orderByWhen(items, idOf) {
   const placed = items.filter((i) => i.when), nowhere = items.filter((i) => !i.when);
   const key = (w) => w.start || w.end || "";
   placed.sort((x, y) => (key(x.when) < key(y.when) ? -1 : key(x.when) > key(y.when) ? 1 : 0)
     || String(x.when.end || "").localeCompare(String(y.when.end || "")) || String(idOf(x)).localeCompare(String(idOf(y))));
-  const out = placed.map((i, n) => {
-    const with_ = [];
-    for (let k = Math.max(0, n - 25); k < Math.min(placed.length, n + 26); k++) {
-      if (k === n) continue;
-      const s = sequenceOf(i.when, placed[k].when);
-      if (s && s.undetermined) with_.push(idOf(placed[k]));
+  const w = placed.map((i) => i.when), marks = placed.map(() => new Set());
+  const mark = (i, k) => { marks[i].add(k); marks[k].add(i); };
+  const spans = [], others = [];
+  w.forEach((x, n) => (x.start && x.end && x.zone && x.precision !== "upper_bound" ? spans : others).push(n));
+  /* spans in start order: one overlaps each later span until the first starting at or after its end */
+  for (let p = 0; p < spans.length; p++)
+    for (let q = p + 1; q < spans.length && w[spans[q]].start < w[spans[p]].end; q++) mark(spans[p], spans[q]);
+  const other = new Set(others);
+  for (const i of others)
+    for (let k = 0; k < placed.length; k++) {
+      if (k === i || (other.has(k) && k < i)) continue;
+      const s = sequenceOf(w[i], w[k]);
+      if (s && s.undetermined) mark(i, k);
     }
+  const out = placed.map((i, n) => {
+    const with_ = [...marks[n]].sort((a, b) => a - b).map((k) => idOf(placed[k]));
     return { ...i, order: with_.length ? { undetermined: true, with: with_, band: { start: i.when.start, end: i.when.end } }
                                        : { undetermined: false } };
   });

@@ -535,17 +535,20 @@ export class Events {
   #voteValues() { const e = this.#voteEntries(); return e ? e.map((x) => x.value) : null; }
   /* R11: the value held for a vote, or a refusal. A member's value is matched on `value`; a value an import reads from a
      source (`fromSource`, R22) that is no entry's `value` is matched exactly on an entry's `label`, and that entry's
-     `value` is held (K1788). With none held, the value is kept as written, unchecked. */
+     `value` is held (K1788). With none held, the value is kept as written, unchecked. `checked` is recorded with the row
+     when it is written, never worked out again when it is read. */
   #voteMatch(voteValue, { fromSource = false } = {}) {
     if (!said(voteValue)) return refuse("NO_VOTE_VALUE", localize("events.index.a_vote_is_held_with", "a vote is held with the value the record states"));
     const v = voteValue.trim(), entries = this.#voteEntries();
-    if (!entries) return { ok: true, value: v };
+    if (!entries) return { ok: true, value: v, checked: false };
     const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
-    if (hit) return { ok: true, value: hit.value };
+    if (hit) return { ok: true, value: hit.value, checked: true };
     const values = entries.map((x) => x.value);
     return refuse("UNKNOWN_VOTE_VALUE", localize("events.index.a_vote_value_is_one", "a vote value is one of the profile's: {values}", { values: String(values.join(", ")) }), { values });
   }
   #voteRefusal(voteValue) { const m = this.#voteMatch(voteValue); return m.ok ? null : m; }
+  /* R11: whether a vote value written now is checked against the profile's values (1) or kept as written (0). */
+  #voteChecked(role) { return role === "voted" ? (this.#voteEntries() ? 1 : 0) : null; }
 
   /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. An event
    *  of a use's kind (R43, R44) is held only with its facet, through its own act. */
@@ -588,7 +591,8 @@ export class Events {
         this.#insert("event_concerns", { event_id: eventId, end_id: end, by_actor: stamp(by), at });
       for (const p of parts)
         this.#insert("event_participants", { event_id: eventId, entity_id: p.entityId, role: p.role,
-          vote_value: p.role === "voted" ? p.voteValue.trim() : null, attestation_id: attIds[p.attestation], by_actor: stamp(by), at });
+          vote_value: p.role === "voted" ? p.voteValue.trim() : null, vote_checked: this.#voteChecked(p.role),
+          attestation_id: attIds[p.attestation], by_actor: stamp(by), at });
       if (facet) facet(eventId, attIds);
       this.#setWhen(eventId);
       return { ok: true, event_id: eventId, attestation_ids: attIds };
@@ -780,7 +784,8 @@ export class Events {
       const aid = attId ?? this.#addAttestation(id, attRow, by);
       if (attId === null) this.#setWhen(id);
       const pid = this.#insert("event_participants", { event_id: id, entity_id: entityId, role,
-        vote_value: role === "voted" ? voteValue.trim() : null, attestation_id: aid, by_actor: stamp(by), at: this.#instant() });
+        vote_value: role === "voted" ? voteValue.trim() : null, vote_checked: this.#voteChecked(role), attestation_id: aid,
+        by_actor: stamp(by), at: this.#instant() });
       return { ok: true, event_id: id, participant_id: pid, attestation_id: aid };
     });
   }
@@ -798,7 +803,7 @@ export class Events {
     return this.#tx(() => {
       const at = this.#instant();
       const pid = this.#insert("event_participants", { event_id: p.event_id, entity_id: entityId, role: p.role, vote_value: p.vote_value,
-        attestation_id: p.attestation_id, by_actor: stamp(by), at });
+        vote_checked: p.vote_checked ?? null, attestation_id: p.attestation_id, by_actor: stamp(by), at });
       this.#sql.exec(`UPDATE event_participants SET superseded_by=?, superseded_actor=?, superseded_at=?, superseded_why=? WHERE participant_id=?`,
                      pid, stamp(by), at, reason.trim().slice(0, REASON_MAX), p.participant_id);
       this.#tell({ eventId: p.event_id, change: "participant_re_resolved", participantId: pid, was: p.entity_id, now: entityId });
@@ -1066,7 +1071,8 @@ export class Events {
   }
   #participantView(p, viewer, attById, memo = null) {
     const a = attById.get(Number(p.attestation_id)) || this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, p.attestation_id);
-    const checked = p.role === "voted" && this.#voteValues() !== null;
+    /* R11: checked as recorded when the row was written; a row with no record of a check reads unchecked */
+    const checked = p.role === "voted" && Number(p.vote_checked) === 1;
     return { participant_id: Number(p.participant_id), entity_id: p.entity_id, role: p.role,
              ...(p.role === "voted" ? { vote_value: p.vote_value, vote_value_checked: checked,
                  ...(checked ? {} : { vote_value_why: reason("events.vote_value_why") }) } : {}),
@@ -1173,12 +1179,13 @@ export class Events {
     }
     return out;
   }
+  /* R29: `from` and `to` bound the placed items only; an item with no `when` is kept, to be listed apart as placed nowhere. */
   #range(items, from, to) {
     const zone = this.zone();
     const f = spanOfBound(from, zone), t = spanOfBound(to, zone);
     if ((f && f.bad) || (t && t.bad)) return { bad: (f && f.bad) || t.bad };
     if (!f && !t) return { items };
-    return { items: items.filter((i) => i.when && (!f || placeAgainst(i.when, f) !== "before") && (!t || placeAgainst(i.when, t) !== "after")) };
+    return { items: items.filter((i) => !i.when || ((!f || placeAgainst(i.when, f) !== "before") && (!t || placeAgainst(i.when, t) !== "after"))) };
   }
   #bounded(items, limit, idOf = (i) => i.event_id) {
     const cap = clamp(limit);
@@ -1381,9 +1388,12 @@ export class Events {
 
   /** R31, R51: before, after or undetermined with why; computed on each read, never stored. Where the dates leave the
    *  order undetermined, a standing cited `precedes` relation between the two answers it, `basis: "cited"`; where the
-   *  dates settle it, they govern and each such relation is answered beside, agreeing or not. */
-  sequence({ a, b, viewer = "class:admin" } = {}) {
-    const ia = this.#resolve(a), ib = this.#resolve(b);
+   *  dates settle it, they govern and each such relation is answered beside, agreeing or not. A relation is read only
+   *  through the viewer's sight (R40): an absent viewer sees none (Terms: fail closed). An event the viewer may not see
+   *  is refused as an absent one, alike: no order, date or why is answered for it (R31; K5818). */
+  sequence({ a, b, viewer = null } = {}) {
+    const seen = (e) => { const id = this.#resolve(e); return id && this.#visibleAttestations(id, viewer).length ? id : null; };
+    const ia = seen(a), ib = seen(b);
     if (!ia || !ib) return noSuchEvent(!ia ? a ?? null : b ?? null);
     const d = this.#datedOrder(ia, ib), base = { ok: true, a: ia, b: ib };
     if (d.stale) return { ...base, answer: "undetermined", why: d.why };

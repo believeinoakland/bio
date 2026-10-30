@@ -68,7 +68,8 @@ test("R11 reconcile names each dimension that differs, with the values on each s
   const stage = s.m.reconcile({ a, b: s.rec({ stage: "incurred" }) });
   assert.deepEqual(stage.differs.map((d) => d.dimension), [word("money.push.phase_stage")]);
   const rounded = s.m.reconcile({ a, b: s.rec({ amount: "1400000", as_read: "$1.4 million", precision: "rounded" }) });
-  assert.deepEqual(rounded.differs.map((d) => d.dimension), ["rounding"]);
+  /* K5812 F1: amounts that do not agree within the coarser precision differ as amount, with both values, never "rounding" */
+  assert.deepEqual(rounded.differs, [{ dimension: "amount", a: "1250000.00", b: "1400000" }]);
   const amount = s.m.reconcile({ a, b: s.rec({ amount: "1250001.00" }) });
   assert.deepEqual(amount.differs, [{ dimension: "amount", a: "1250000.00", b: "1250001.00" }]);
   for (const x of [r, stage, rounded, amount])
