@@ -61,6 +61,7 @@
 - T53-583 · K5715, R126, R127 · met once T53-580 and T53-581 land
 - T53-589 · N1261 (K5747) · `checks.mjs` reads DEC-412's `refusal.CAPTURE_NOT_KEPT` row (R29, R31) instead of its stand-in
 - ONB-2 · onboarding (`next.md` ONB-2, placed here) · `checks.mjs:24`: the contact URL names `believeinoakland/bio`: it names `civicsmith/civicsmith`, as instance-setup ONB-2 in round 2
+- T53-625 · registers' report (K5814) · an in-hand door: `streamRegister` (register.mjs:282) only fetches the piece from its hosts; it also takes a member's file in hand (`bytes` in place of the fetch), reduced by the same reducer, and answers the same provenance document with the member as the source, so registers files those segments as it does fetched ones (registers R14, R28, R46 (2))
 **file-safety**
 - T53-589 · N1261 (K5747) · `checks.mjs` reads `refusal.SIGNATURES_RUN_RECENT` by `rowWord` (R24) instead of its stand-in
 - T53-571 · K5705, R66 · the container's other picture kinds: uses reader-container (the edge entered at START) and image-cover's redraw (T53-570)
@@ -85,6 +86,8 @@
 - T53-623 · the independent audit (K5794) · identity.test.mjs:111's copied grade-C sentence read by `word(...)`, as the grade B and D cases two lines away; to its open layer-5 job if work resumes before layer 5 closes
 **events**
 - T53-624 · the independent audit (K5794) · R60's test uses the walked standard's fixture and 200 captures, as its Test says (register.test.mjs uses synthetic captures only); to its open layer-5 job if work resumes before layer 5 closes
+**registers**
+- T53-626 · registers' report (K5814) · after acquisition T53-625: the file door (`runner.mjs` fileImport) streams through acquisition's in-hand door and files its segments through promotion (`bundle_id` set), so `citeRow` on a file import's row answers, not `SEGMENT_NOT_FILED`; R14 then met for file imports too
 **progressions**
 - T53-611 · K5786 · feeds:179's noSha sentence keyed by `localize` at its use and read by key in the test (after extraction T53-610)
 
