@@ -17,7 +17,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
 import { isMachineIdentity, BASIS_GRADES, sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 import { validAt, compare, isCalendarDate, bounds } from "../civil-time/index.mjs";
-import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
+import { defaultRegistry, BOUNDS, hubBoundOf } from "../connection-grammar/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent, canonicalExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
@@ -1769,7 +1769,10 @@ export class People {
     return { ok: true, checks: out };
   }
 
-  /** R22: the checks with their versions, for the switch and the gate. */
+  /** R22 (K5811 F1): the checks with their versions, for the switch, the gate and `notice-producers`' reading of a
+   *  result's condition: an in-process read, never an op. Each version answers its definition and whether R24's gate
+   *  is open, never a result; a check made inside a project the viewer may not see is neither answered nor counted
+   *  (R31); an absent viewer is refused. Writes nothing. */
   listChecks({ viewer = null } = {}) {
     if (this.#denied(viewer)) return People.#noViewer();
     return { ok: true, checks: this.#rows(`SELECT * FROM interest_checks ORDER BY check_id, version`).filter((c) => this.#seesProject(c.project, viewer))
@@ -1824,9 +1827,16 @@ export class People {
                    grade: { assertion: c.grade, ends: [c.grade, c.grade] }, derived: null, why: c.why,
                    ...(j === "in" ? {} : { undetermined: { why: keyedReason(j.why, "people.why.owner_settle_validity") } }) });
     }
-    if (items.length > BOUNDS.hub)
-      return { items: [], hub: { set_size: items.length, why: word("people.why.person_end_identity", { hub: BOUNDS.hub }),
-             why_key: why("people.why.person_end_identity", { hub: BOUNDS.hub }) } };
+    /* R26 (K5811 F2; connection-grammar R6, R10): a hub is judged per kind, each kind's set against `hubBoundOf(kind)`;
+       the first kind over its bound, by name, is named by its set size */
+    const perKind = new Map();
+    for (const it of items) perKind.set(it.kind, (perKind.get(it.kind) || 0) + 1);
+    const over = [...perKind].filter(([k, n]) => n > hubBoundOf(k)).sort((x, y) => (x[0] < y[0] ? -1 : 1))[0];
+    if (over) {
+      const hub = hubBoundOf(over[0]);
+      return { items: [], hub: { set_size: over[1], why: word("people.why.person_end_identity", { hub }),
+             why_key: why("people.why.person_end_identity", { hub }) } };
+    }
     const start = Number.isInteger(page) && page > 0 ? page : 0;
     const slice = items.slice(start, start + BOUNDS.fanout);
     return { items: slice, ...(start + BOUNDS.fanout < items.length ? { next: start + BOUNDS.fanout } : {}) };
