@@ -59,6 +59,20 @@ fi
 # enforced the old process on every push. The new process's checks are in believeinoakland/civicos-process
 # (PROCESS-MECHANICS §8), and it is no longer installed.
 
+# 2d · the process clone at its main (BOB #340, 2026-10-30; Bob: the jobs must run the current process; P3) -------------
+# The shims' first SessionStart hook clones neoProcess only when /home/user/neoprocess is missing, and the cloud image
+# already holds an old clone (678ab08 and cba4a07 measured on 30 Oct, while main was a2c1048), so a session started after
+# a fix ran without it (process issue 2026-10-30-bob-339-3). Fast-forward it to the process's main; never reset or force.
+PROC_DIR="/home/user/neoprocess"
+if [ -d "$PROC_DIR/.git" ]; then
+  before="$(git -C "$PROC_DIR" rev-parse --short HEAD 2>/dev/null)"
+  if git -C "$PROC_DIR" fetch -q origin main 2>/dev/null && git -C "$PROC_DIR" merge -q --ff-only origin/main 2>/dev/null; then
+    say "neoprocess $before -> $(git -C "$PROC_DIR" rev-parse --short HEAD)"
+  else
+    say "FAILED to fast-forward neoprocess from $before to origin/main: the session runs an old process"
+  fi
+fi
+
 # 3 · dependencies ----------------------------------------------------------------------------
 for pkg in bio-plane pdf-worker ocr-worker newgroup file-scanner agent-runner sheet-worker; do   # the bundle members verified at each merge (manifest)
   dir="$REPO/$pkg"
