@@ -1,12 +1,12 @@
 # Build manifest
 
-**Status** · The one place that says where the product's build state, requirements canon and tests live (PROCESS-MECHANICS §1). The process itself is defined in `believeinoakland/civicos-process`.
+**Status** · The one place that says where the product's build state, requirements canon and tests live (PROCESS-MECHANICS §1). The process itself is neoProcess, defined in `neobobkrause/neoprocess` (onboarded 29 Oct 2026: `build/onboarding/`; the old process, `believeinoakland/civicos-process`, is retired).
 
 ## Where things are
 
 | what | where |
 | --- | --- |
-| the process: principles, mechanics, role indexes and situations, the process tool, hooks and checks | `believeinoakland/civicos-process`, cloned at `/home/user/civicos-process`; each role's skill here (`.claude/skills/civicos-bob`, `civicos-job`) is written by its `proc shims` |
+| the process: principles, rulebooks, design files, the process tool, hooks and checks | `neobobkrause/neoprocess`, cloned at `/home/user/neoprocess`; `CLAUDE.md`, the skill `.claude/skills/neoprocess/`, `.claude/settings.json` and the gate and prune workflows are written by its `proc shims` |
 | the product's own procedures, each read whole when its situation arises | `build/situations/`: `release.md`, `deploy-and-walk.md`, `fix-round.md`, `design-channel.md`; `job.md`, every job's standing rules, named in each START |
 | the requirements canon (mission, product requirements, construct designs) | listed in `requirements/README.md`; the files are under `docs/architecture/` and `docs/development/` |
 | the layers, with their contracts and rulings | `build/layers.md` (rendered: `build/layers-view.html`); their split history, `build/plan/archive/layers-history.md` |
@@ -83,5 +83,4 @@ The READING-ARCHITECTURE lane designed how Civicsmith reads every file type and 
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`; woken by a BOB's `send_message` and by the platform's event when a BOB it started fails. Current, on Bob's **primary** account: **ROOT #10**, `session_01XHjMEPkzmkLycoWtxb4yn6` (started by Bob 2026-10-26, replacing ROOT #7 `session_01NBNGB2ziVqiZg4ewLgRSWm`; K5313), replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy` is archived. On the **third** account, where the work runs since BOB #269 (K4786-K4790): **ROOT #9**, `session_01GndWUi5ubGmXCVVnFqtJAi` (started by Bob 2026-10-23; K4789), which started BOB #269. On the **secondary** account, superseded by ROOT #9 and unreachable from the third: **ROOT #8**, `session_01R3hvN64bYHG3vPQmYmaeLR` (started by Bob 2026-10-20; K4213), which started BOB #232 to #268; ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022) is superseded. Sessions on one account are unreachable from the other. Earlier ROOTs are archived (rulings K693–K2022).
-- **BOB:** invoke the skill `civicos-bob` (`CLAUDE.md`); it names the takeover reading.
-- **A module job:** invoke the skill `civicos-job`; its first command prints the START.
+- **BOB, a job, a lane, ROOT:** invoke the skill `neoprocess` with the role (`CLAUDE.md`); it prints the reading and the start command.

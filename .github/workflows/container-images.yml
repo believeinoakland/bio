@@ -61,10 +61,10 @@ jobs:
           push: true
           provenance: false
           tags: |
-            ghcr.io/believeinoakland/${{ matrix.name }}:${{ steps.v.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}:${{ steps.v.outputs.version }}
             docker.io/civicsmith/${{ matrix.name }}:${{ steps.v.outputs.version }}
       - name: digest
         run: |
           echo "image: docker.io/civicsmith/${{ matrix.name }}@${{ steps.push.outputs.digest }}"
-          echo "image: ghcr.io/believeinoakland/${{ matrix.name }}@${{ steps.push.outputs.digest }}"
-          echo "### ${{ matrix.name }} ${{ steps.v.outputs.version }}: \`docker.io/civicsmith/${{ matrix.name }}@${{ steps.push.outputs.digest }}\` (also \`ghcr.io/believeinoakland/${{ matrix.name }}@${{ steps.push.outputs.digest }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "image: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}@${{ steps.push.outputs.digest }}"
+          echo "### ${{ matrix.name }} ${{ steps.v.outputs.version }}: \`docker.io/civicsmith/${{ matrix.name }}@${{ steps.push.outputs.digest }}\` (also \`ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}@${{ steps.push.outputs.digest }}\`)" >> "$GITHUB_STEP_SUMMARY"

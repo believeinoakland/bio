@@ -1,48 +1,65 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
-      "Read",
-      "Grep",
-      "Glob",
-      "Bash",
-      "Bash(rm .git/hooks/*)",
-      "Bash(rm -f .git/hooks/*)",
-      "Edit(//home/user/civicos-process/**)",
-      "Write(//home/user/civicos-process/**)",
-      "mcp__Claude_Code_Remote__archive_session",
-      "Bash(git rm -q -- bio-plane/test/:*)",
-      "Bash(git rm -q -- agent-worker/test/:*)",
-      "Bash(git rm -q -- ocr-worker/test/:*)",
-      "mcp__github__merge_pull_request",
+      "Bash(node */tools/proc.mjs *)",
+      "Bash(node tools/proc.mjs *)",
+      "Bash(node */checks/run.mjs *)",
+      "Bash(node --test *)",
+      "Bash(git fetch *)",
+      "Bash(git pull --no-rebase *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push origin HEAD:*)",
+      "Bash(git push -u origin *)",
+      "Bash(git push origin *)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git ls-remote *)",
+      "mcp__claude-code-remote__create_session",
+      "mcp__claude-code-remote__send_message",
+      "mcp__claude-code-remote__send_later",
       "mcp__claude-code-remote__archive_session",
+      "mcp__claude-code-remote__get_session",
+      "mcp__claude-code-remote__list_events",
+      "mcp__claude-code-remote__subscribe_pr_activity",
+      "mcp__claude-code-remote__unsubscribe_pr_activity",
       "mcp__claude-code-remote__delete_trigger",
-      "Bash(node tools/mail.mjs xcheck:*)",
-      "Bash(node /home/user/civicos-process/tools/mail.mjs xcheck:*)"
+      "mcp__github__create_pull_request",
+      "mcp__github__update_pull_request",
+      "mcp__github__add_issue_comment",
+      "mcp__github__issue_write",
+      "mcp__github__pull_request_review_write",
+      "mcp__github__update_pull_request_branch",
+      "mcp__github__merge_pull_request",
+      "mcp__github__pull_request_read",
+      "mcp__github__get_job_logs"
     ],
     "deny": [
-      "Bash(git push --force:*)",
-      "Bash(git push -f:*)",
-      "Bash(git push --force-with-lease:*)",
-      "Bash(git push --force*)",
-      "Bash(git push * --force*)",
-      "Bash(git push * -f)",
-      "Bash(git push * -f *)",
-      "Bash(git push *+*)",
-      "Bash(git push *--mirror*)",
-      "Bash(git -C * push *--force*)",
-      "Bash(git -C * push * -f*)",
-      "Bash(git -C * push *+*)",
-      "Bash(git reset --hard:*)",
-      "Bash(git clean -fdx:*)",
-      "Bash(rm -rf:*)",
-      "Bash(sudo:*)",
-      "Bash(chmod 777:*)"
-    ],
-    "ask": [
-      "Write(.env)",
-      "Edit(.env)"
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push --mirror *)",
+      "Bash(git push origin --delete *)",
+      "Bash(git push origin :*)",
+      "Bash(git push origin HEAD:main)",
+      "Bash(git push origin main)",
+      "Bash(git push -u origin main)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -fd *)",
+      "Bash(git clean -fdx *)",
+      "Bash(git stash drop *)",
+      "Bash(git rebase *)",
+      "Bash(git commit --amend *)",
+      "Bash(git tag *)",
+      "Bash(git branch -D *)"
     ]
+  },
+  "env": {
+    "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP": "4"
   },
   "hooks": {
     "SessionStart": [
@@ -50,8 +67,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh",
-            "timeout": 600
+            "command": "[ -d \"/home/user/neoprocess/.git\" ] || git clone -q --branch main https://github.com/neobobkrause/neoprocess \"/home/user/neoprocess\" || echo \"neoProcess: could not clone neobobkrause/neoprocess to /home/user/neoprocess\" >&2"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
           }
         ]
       }
