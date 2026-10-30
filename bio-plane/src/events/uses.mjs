@@ -225,7 +225,8 @@ export function usesOf(k, { provision = null, decider = null, subject = null, ki
     if (off !== undefined) return refuse("KIND_NOT_DISCRETION", localize("events.uses.a_use_is_one_of", "a use is one of {USE_KINDS}", { USE_KINDS: String(USE_KINDS.join(", ")) }), { kinds: [...USE_KINDS] });
     let prov = null;
     if (given(provision)) { prov = provisionKey(provision); if (!prov) return malformed(localize("events.uses.the_provision_asked_for", "the provision asked for")); }
-    const where = [`e.alias_of IS NULL`, `u.withdrawn = 0`, `u.kind IN (${ks.map(() => "?").join(",")})`], args = [...ks];
+    /* R46: unwithdrawn, whether the use was withdrawn as a use (R45) or its event as an event (R61) */
+    const where = [`e.alias_of IS NULL`, `e.withdrawn_at IS NULL`, `u.withdrawn = 0`, `u.kind IN (${ks.map(() => "?").join(",")})`], args = [...ks];
     if (prov) { where.push(`u.provision_standard = ?`); args.push(prov.standard); if (prov.portion) { where.push(`u.provision_portion = ?`); args.push(prov.portion); } }
     for (const [role, id] of [["decider", decider], ["subject", subject]]) if (said(id)) {
       where.push(`EXISTS (SELECT 1 FROM event_participants p WHERE p.event_id = u.event_id AND p.role = '${role}' AND p.entity_id = ? AND p.superseded_by IS NULL)`);

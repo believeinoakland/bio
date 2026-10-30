@@ -214,6 +214,8 @@ CREATE TABLE IF NOT EXISTS event_read_optin (
 );
 `;
 
-/* Columns added after a table's first release, added at boot to a store that predates them (R48, T35; R61, T53). */
+/* Columns added after a table's first release, added at boot to a store that predates them (R48, T35; R61, T53). A
+   participant's vote_checked (R11, T53) is 1 when its vote value was checked against the profile's values as it was
+   written, 0 when it was kept as written; NULL on a row of another role, or one written before the check was recorded. */
 export const EVENTS_ADDED_COLUMNS = Object.freeze([["dated_facts", "question", "TEXT"], ["events", "withdrawn_actor", "TEXT"],
-  ["events", "withdrawn_at", "TEXT"], ["events", "withdrawn_why", "TEXT"]]);
+  ["events", "withdrawn_at", "TEXT"], ["events", "withdrawn_why", "TEXT"], ["event_participants", "vote_checked", "INTEGER"]]);
