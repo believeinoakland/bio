@@ -21,7 +21,7 @@
 - T53-155 · A2 · fiscal keys by the government's year
 - T53-156 · K5471 (6) · JOURNEYS's defects: its rows
 - T53-157 · K5565 · English in tests: its entry
-- R42's `source` against R11, and whether a null date stays undetermined (`money.neighbours.no_date_asked`) `[owed: BOB's reading, before START]`
+- K5806 · BOB · R42's list of dimensions is R11's (wording fixed; a different source is no difference); `neighbours` asked with no `at` keeps `connection-grammar`'s registry rule (a null date is undetermined), unchanged
 - rows: `build/plan/T53-R1/money.md`
 **registers**
 - first: take in the round-1 job's branch `job/T53/registers` (fd326eb: its code and tests, 4,204 lines). It waited only because its `tests` path was not yet on the tranche.

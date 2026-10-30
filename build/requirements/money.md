@@ -102,7 +102,7 @@ Terms.
 
 **A comparison names only what differs (T53; JOURNEYS R-76)**
 
-- **R42** (T53; JOURNEYS R-76 owner half, D2 money R?1; amends R11) **The answer to a comparison of two facts lists only the dimensions that differ.** The comparison R11 states answers, for the two facts, exactly the dimensions on which they differ among R11's (kind, party, period, amount, status; a different source is no difference, as R11 holds; K5786), each with both values, and no dimension on which they agree. Test: two facts differing in period alone answer `period` alone; two facts differing in period and amount answer those two. Control: two equal facts answer an empty list of differences, not every dimension.
+- **R42** (T53; JOURNEYS R-76 owner half, D2 money R?1; amends R11) **The answer to a comparison of two facts lists only the dimensions that differ.** The comparison R11 states answers, for the two facts, exactly the dimensions on which they differ among R11's (basis, period, rounding (precision), kind, phase or stage, currency, parties; a different source is no difference, as R11 holds; K5786, K5806), each with both values, and no dimension on which they agree. Test: two facts differing in period alone answer `period` alone; two facts differing in period and amount answer those two. Control: two equal facts answer an empty list of differences, not every dimension.
 
 ## Private
 
