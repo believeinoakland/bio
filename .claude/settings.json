@@ -67,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -d \"/home/user/neoprocess/.git\" ] || git clone -q --branch main https://github.com/neobobkrause/neoprocess \"/home/user/neoprocess\" || echo \"neoProcess: could not clone neobobkrause/neoprocess to /home/user/neoprocess\" >&2"
+            "command": "if [ -d \"/home/user/neoprocess/.git\" ]; then { [ \"$(git -C \"/home/user/neoprocess\" rev-parse --abbrev-ref HEAD)\" = main ] && [ -z \"$(git -C \"/home/user/neoprocess\" status --porcelain --untracked-files=no)\" ] && git -C \"/home/user/neoprocess\" fetch -q origin +refs/heads/main:refs/remotes/origin/main && git -C \"/home/user/neoprocess\" merge -q --ff-only origin/main; } || echo \"neoProcess: could not bring /home/user/neoprocess to the tip of main\" >&2; else git clone -q --branch main https://github.com/neobobkrause/neoprocess \"/home/user/neoprocess\" || echo \"neoProcess: could not clone neobobkrause/neoprocess to /home/user/neoprocess\" >&2; fi"
           },
           {
             "type": "command",
