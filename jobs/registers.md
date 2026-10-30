@@ -1,6 +1,6 @@
 # registers (transient)
 
-**Status** · REGISTERS #3 · session_01RAN5eoLB9NK4d4zqJTFNwM · WAITING: stopped by BOB on Bob's order; resume only on BOB's word · PR #60
+**Status** · REGISTERS #3 · session_01RAN5eoLB9NK4d4zqJTFNwM · ARCHIVED · PR #60
 **Runs** · 1
 **Owed** · none
 **Model** · opus
