@@ -67,6 +67,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "[ -d \"/home/user/neoprocess/.git\" ] || git clone -q --branch main https://github.com/neobobkrause/neoprocess \"/home/user/neoprocess\" || echo \"neoProcess: could not clone neobobkrause/neoprocess to /home/user/neoprocess\" >&2"
+          },
+          {
+            "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
           }
         ]
