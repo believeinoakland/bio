@@ -44,6 +44,8 @@
 **promotion**
 - T53-582 · K5715, capture's new rows · the census re-stamped for C-118.12 (`MAIL_NO_STATEMENT`), C-118.13 (`FILE_KIND_REFUSED`), C-139.22-.24 and every other check row minted in T53, last in its layer
 **record-core**
+- T53-629 · REGISTERS #1's report (K5817) · registers R30 removes a row's bytes from the evidence store, and `evidenceStore()` (R38; index.mjs:1987) offers head, get, put and putFromParts, no removal: add one
+  - its line, written into record-core.md at the round's START (K5377): **R93** (T53; K5817; K1493; State Rules I-19; amends R38) *(not yet met: T53)* **An evidence object removed by an expunge.** `evidenceStore().remove(key)` deletes the object under `key` from the bucket and answers `{ok: true, removed}` (`removed` false when none was held); a store with no bucket bound is `null`, as R38. Only a caller removing a row under R79 calls it, after the tombstone is recorded in the same act; nothing else in the store removes an evidence object. Never throws. Test: an object put, removed, then `head` answers none; removing it again answers `removed: false`. Control: another object is untouched.
 - T53-574 · K5705, FILE-SAFETY's finding · `purge` removes rows only, so derived objects of a purged capture (safe views, copies, pictures) stay in the store unreferenced: purge removes them too (whether record-core finds them or their owners register them for purge, settled at START)
 
 ## Layer 3
@@ -61,6 +63,7 @@
 - T53-583 · K5715, R126, R127 · met once T53-580 and T53-581 land
 - T53-589 · N1261 (K5747) · `checks.mjs` reads DEC-412's `refusal.CAPTURE_NOT_KEPT` row (R29, R31) instead of its stand-in
 - ONB-2 · onboarding (`next.md` ONB-2, placed here) · `checks.mjs:24`: the contact URL names `believeinoakland/bio`: it names `civicsmith/civicsmith`, as instance-setup ONB-2 in round 2
+- T53-630 · REGISTERS #1's report (K5817), registers R21 · `streamRegister` (R125-R127) takes from its caller which of a piece's kept rows are new or changed (a key not held, or a changed hash) and writes only those into the reduced segment it files as the import's capture, stating the count of the rest as `unchanged`; with no such answer from the caller it keeps every row, as today
 - T53-625 · registers' report (K5814) · an in-hand door: `streamRegister` (register.mjs:282) only fetches the piece from its hosts; it also takes a member's file in hand (`bytes` in place of the fetch), reduced by the same reducer, and answers the same provenance document with the member as the source, so registers files those segments as it does fetched ones (registers R14, R28, R46 (2))
 **file-safety**
 - T53-589 · N1261 (K5747) · `checks.mjs` reads `refusal.SIGNATURES_RUN_RECENT` by `rowWord` (R24) instead of its stand-in
@@ -87,6 +90,7 @@
 **events**
 - T53-624 · the independent audit (K5794) · R60's test uses the walked standard's fixture and 200 captures, as its Test says (register.test.mjs uses synthetic captures only); to its open layer-5 job if work resumes before layer 5 closes
 **registers**
+- T53-631 · REGISTERS #1's report (K5817) · R30: `purgeObject` removes the old segment object through record-core's `evidenceStore().remove` (T53-629), not an injected `evidencePurge`; R21: a re-import passes acquisition its held keys and hashes (T53-630), so its segment holds only new or changed rows; both then met
 - T53-626 · registers' report (K5814) · after acquisition T53-625: the file door (`runner.mjs` fileImport) streams through acquisition's in-hand door and files its segments through promotion (`bundle_id` set), so `citeRow` on a file import's row answers, not `SEGMENT_NOT_FILED`; R14 then met for file imports too
 **progressions**
 - T53-611 · K5786 · feeds:179's noSha sentence keyed by `localize` at its use and read by key in the test (after extraction T53-610)

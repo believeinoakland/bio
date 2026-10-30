@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
 import { compile, viewerPredicate, GATE_MARK } from "../../../src/query.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "class:member";
 /* A relation of the caller's own naming, its key not `bundle_id`: nothing here may assume retrieval's names. */
@@ -89,7 +90,7 @@ test("R25 the projection is read through the relation the caller names, keyed by
   /* Not a relation: said, and the projection read from bundles; never interpolated, never a throw. */
   for (const bad of [{ table: "x; DROP TABLE bundles", key: "k" }, { table: "t" }, { table: "t", key: "k k" }, "t", 7, true]) {
     const p = compile({ q: "schema:s1", viewer: V }, { projection: bad });
-    assert.ok(p.warnings.includes("projection: not a table and a key; the projection is read from bundles"), JSON.stringify(bad));
+    assert.ok(p.warnings.includes(word("query-language.query.projection_not_a_table")), JSON.stringify(bad));
     assert.deepEqual(everyStatement(p), everyStatement(compile({ q: "schema:s1", viewer: V })));
   }
   for (const none of [undefined, null, {}, { projection: null }, 7])

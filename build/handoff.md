@@ -1,16 +1,18 @@
 # Handoff
 
-HANDOFF for BOB #338 · 2026-10-30 · tranche @ 10ba9b77 · epoch E1
+HANDOFF for BOB #339 · 2026-10-30 · tranche @ f8731ab04b · epoch E1
 Queue (in order):
-- MERGE query-language: PR #55
+- ANSWER events: WAITING: REPORT to BOB: people's sequence call passes no viewer (people/index.mjs:1179); since F1 it sees no cited precedes
+- ANSWER registers: WAITING: the 1,000,000-row runs of R12, R20, R23 (R67) running in the background; then complete again (BOB #338's CHANGE)
+- READ PROCESS REPLY civicsmith/civicsmith:2026-10-30-money-1-1.md: A job's START tells it to merge a round-1 job branch the hooks refuse (https://github.com/neobobkrause/neoprocess/issues/84): read it whole by `git -C /home/user/neoprocess show origin/main:lane-neoprocess/replies/civicsmith-civicsmith-2026-10-30-money-1-1.md`, act on it, then `proc issue seen --report civicsmith/civicsmith:2026-10-30-money-1-1.md`
 Out:
 - none
 Lanes: none
-Next: when ROOT says the gate fix is on neoprocess main, merge PR #55; when the lane rules on the set limit, trim or split money, registers, people, events and start them
-Product work waits on two process reports on state/E1, sent to ROOT for Bob and the neoProcess lane: issues/2026-10-30-bob-337-1.md (40 KB job set: 93 of 128 modules of layers 5-11 over; last service block takes every later line) and issues/2026-10-30-bob-337-2.md (gate installs npm only from a root lock; Civicsmith locks per member, so CI's artifact verify fails; PR #55's run 41007558877).
-PR #55 (query-language, COMPLETE, no review decided) merges once the gate is fixed on neoprocess main: re-run `proc merge --module query-language` with the new gate's head and conclusion.
-After it merges: drop query-language's three lines (grammar 1, statements 1, t33 2) from build/tests-english-baseline.json (its report; outside its paths).
-Layer 5's money, registers, people, events are held until the lane rules on the limit (registers already trimmed 52 to 41 KB, still over on its own file). Then trim or split by the ruling, and start them.
-CLAUDE.md shims drift fixed on tranche (10ba9b77). BOB #336's usage row written (ad89624e).
+Next: consume the queue; answer registers' next COMPLETE and merge money, people, events as each completes; close layer 5 and start layer 6 (its 17 summaries are committed)
+Layers 6-8: every over-limit job has a committed task summary in build/summaries/T53/ (readingSet under 40,960). Layers 9-10: BOB #338's helpers were writing 15 summaries into its own scratchpad; they are lost with it: redo them (SESSIONS §6.3; every bullet cites R<n>). Layer 11: 29 over, several with own requirements of 100-140 KB: decide split (REQ 8) or summary.
+Registers: COMPLETE was sent back with 20 review gaps and the 1M runs (review posted on PR #60, verdict gaps); R14 stays not met (K5814, completion T53-625, T53-626). After it merges, fix registers' Uses (acquisition "its R84" is credentials R84; entities R37 for addIdentifier is R43).
+Events' WAITING was answered (people's viewer fix sent to PEOPLE #1 as a CHANGE); the job has not cleared its state.
+Owed before layer 8: ratification's requirement line and uses edge to docket (T53-628, K5816). Owed when agent-worker merges: agent-runner after ai-gate (K5576).
+query-language merged (e556e60), retire it at layer 5's close. Process issue 86 (merge vs BOB's tranche writes) fixed on neoprocess 5f1f65b3; Bob (K5813): process concerns go straight to neoProcess #16, session_01RAN5emLPV3t3uAq6znKJ2N.
 
-START BOB #338: tranche @ 10ba9b77
+START BOB #339: tranche @ f8731ab04b
