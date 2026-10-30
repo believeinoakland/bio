@@ -326,7 +326,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - **R48** (DEC-77 item 1). No key pairs an aspiration: aspirations are in contact, never in contradiction.
 - **R55** (DEC-85). Nothing answered to a viewer who sees a conflict half names or counts its other side, that side's kind, bundle, source, project or members, or the number of parties. The two exceptions are the opted-in projects after R52 and what a responder chose to disclose (R53). (T41, D64; amended) R50's named non-hidden parties are a third exception. The machine's reason and a member's explanation are never answered to such a viewer.
 
-Rows C-60.2, C-60.3 (`CONTRADICTION_PAIR_CHECKS`) and C-93.8–C-93.39 (`CONTRADICTION_CANDIDATE_CHECKS`) (R20; N345), with their translations; promotion stamps them:
+Rows C-60.2, C-60.3 (`CONTRADICTION_PAIR_CHECKS`) and C-93.8–C-93.42 (`CONTRADICTION_CANDIDATE_CHECKS`) (R20; N345), with their translations; promotion stamps them:
 
 | row | code | translation |
 |---|---|---|
@@ -364,6 +364,9 @@ Rows C-60.2, C-60.3 (`CONTRADICTION_PAIR_CHECKS`) and C-93.8–C-93.39 (`CONTRAD
 | C-93.37 | `RESPONSE_NO_TEXT` | "A response says something in your own words. Write it, and choose separately whether to share your cover or an email address. Nothing was written." |
 | C-93.38 | `DISCLOSURE_MALFORMED` | "What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written." |
 | C-93.39 | `DISCLOSURE_NOT_YOURS` | "A response may share only your own cover or your own email address. What was given is someone else's, so it was not shared. Share your own, or nothing. Nothing was written." |
+| C-93.40 | `FLAG_NO_PASSAGE` | "Setting two documents side by side as a contradiction names a passage in each, as a document and the part of it. One of them is missing, is not held here, or is not one you can see; which of the two is named. Nothing was written." |
+| C-93.41 | `FLAG_SAME_DOCUMENT` | "A contradiction is between two documents, and both passages are in the same one. Name a passage in a different document. Nothing was written." |
+| C-93.42 | `FLAG_NO_REASON` | "Saying two documents contradict is a kept decision, and a kept decision says why. Give the reason in your own words. Nothing was written." |
 
 ### Satisfies
 
