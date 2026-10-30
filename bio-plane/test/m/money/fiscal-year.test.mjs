@@ -6,7 +6,6 @@ import assert from "node:assert/strict";
 import { seeded, ANN } from "./fixture.mjs";
 import { localFactsOf, TEAM_ZONE_PATH } from "../../../src/local-facts/index.mjs";
 
-const stated = typeof localFactsOf(seeded().host).teamLayer === "function";
 const noStar = (r) => { for (const [k, v] of Object.entries(r)) if (typeof v === "string") assert.doesNotMatch(v, /\*/, k); };
 const PROFILE = "test-port-ellery";
 /* no place profile installed, the team's zone stated, as a team with no records is */
@@ -92,9 +91,63 @@ test("R40 the op arm and its declaration: fiscalyears is a read declared by its 
   assert.deepEqual([d.classes, d.mutating, d.weight, d.fields.requires], [["admin", "member", "probe"], false, "read", []]);
 });
 
-/* The statement of a government's year is `local-facts`' (R31); until its service is merged here these name the ids and
-   what each checks. */
-const owed = stated ? test : test.todo;
-owed("R39 with no profile, recordfact with {fiscal: 'FY2026-27', body: 'B'} after a member stated B's year records the range a records entry would; before it is refused; B's year maps no key for C; a layer-covered government keeps the records' year", () => {});
-owed("R40 after a member states B's year it is answered as stated, with the member, date and how; a government neither holds is not listed", () => {});
-owed("R41 a lapsed stated year answers known with status unconfirmed and still maps; a disputed one answers known with status disputed, the dispute named; a year from the records carries no stated status", () => {});
+/* A government's year stated by a member (local-facts R31), through the real module. */
+const B = "team/city:Bville/fiscal_year", C = "team/city:Cville/fiscal_year";
+const YEAR = (body) => ({ body, start: "07-01", named_by: "end", label: "FY{start}-{end2}" });
+const state = (s, path, body, how = "read the budget page at its address") =>
+  localFactsOf(s.host).factConfirm({ path, act: "correct", value: YEAR(body), how, by: ANN, viewer: ANN });
+const period = (s, key, body) => s.m.recordFact(s.fact({ period: { fiscal: key, ...(body ? { body } : {}) } }));
+
+test("R39 a stated year maps a key as a record's does: refused before the statement, the sentence naming B; recorded after; never used for C or for a key with no body", () => {
+  const s = bare();
+  const before = period(s, "FY2026-27", "Bville");
+  assert.equal(before.code, "MONEY_BAD_PERIOD");
+  assert.match(before.detail, /Bville/);
+  noStar(before);
+  assert.equal(state(s, B, "Bville").ok, true);
+  const r = period(s, "FY2026-27", "Bville");
+  assert.equal(r.ok, true);
+  const p = s.m.readFact({ factId: r.fact_id, viewer: ANN }).fact.period;
+  assert.deepEqual([p.from, p.to, p.fiscal, p.body], ["2026-07-01", "2027-06-30", "FY2026-27", "Bville"]);
+  const c = period(s, "FY2026-27", "Cville");
+  assert.equal(c.code, "MONEY_BAD_PERIOD");
+  assert.match(c.detail, /Cville/);
+  noStar(c);
+  const none = period(s, "FY2026-27");
+  assert.equal(none.code, "MONEY_BAD_PERIOD");
+  noStar(none);
+  assert.equal(s.m.recordFact(s.fact({ period: { from: "2026-07-01", to: "2027-06-30" } })).ok, true);
+});
+
+test("R40 after a member states B's year it is answered as stated, with who and when and how; a government neither holds is not listed", () => {
+  const s = bare();
+  assert.equal(state(s, B, "Bville", "the clerk, by phone").ok, true);
+  const r = s.m.fiscalYears({ viewer: ANN });
+  assert.deepEqual(r.years.map((y) => y.body), ["Bville"]);
+  const y = r.years[0];
+  assert.deepEqual([y.from, y.start, y.named_by, y.status, y.government], ["stated", "07-01", "end", "confirmed", { level: "city", place: "Bville" }]);
+  assert.match(y.stated.says, new RegExp(`${ANN}.*2026-10-0[56]`));
+  assert.equal(y.stated.how, "the clerk, by phone");
+  assert.equal(r.every, null);
+  assert.deepEqual([s.m.fiscalYears({ body: "Bville" }).known, s.m.fiscalYears({ body: "Cville" }).known], [true, false]);
+  assert.match(s.m.fiscalYears({ body: "Cville" }).says, /Cville/);
+  noStar(s.m.fiscalYears({ body: "Cville" }));
+});
+
+test("R41 a lapsed stated year is known, answers unconfirmed and still maps; a disputed one answers disputed with the dispute named; the records' year carries no status", () => {
+  const s = bare();
+  state(s, B, "Bville");
+  state(s, C, "Cville");
+  s.lfClock.now = "2027-06-01T12:00:00.000Z";
+  const lapsed = s.m.fiscalYears({ body: "Bville" });
+  assert.deepEqual([lapsed.known, lapsed.year.status], [true, "unconfirmed"]);
+  assert.equal(period(s, "FY2026-27", "Bville").ok, true, "a lapsed year still maps");
+  const d = localFactsOf(s.host).factConfirm({ path: C, act: "dispute", how: "the page says otherwise", by: "member:dan", viewer: "member:dan" });
+  assert.equal(d.ok, true);
+  const disputed = s.m.fiscalYears({ body: "Cville" });
+  assert.deepEqual([disputed.known, disputed.year.status], [true, "disputed"]);
+  assert.match(disputed.year.dispute, /member:dan/);
+  assert.equal(period(s, "FY2026-27", "Cville").ok, true, "a disputed year still maps");
+  const rec = seeded().m.fiscalYears({ body: "Port Ellery Harbour District" });
+  assert.deepEqual([rec.year.from, rec.year.status, rec.year.stated], ["records", undefined, undefined]);
+});
