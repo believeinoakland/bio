@@ -106,8 +106,8 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
       for (const d of delta) {
         const had = rows(`SELECT 1 AS x FROM register_cells WHERE scope_key=? AND register=? AND row_key=? AND content_hash=?`, d.scope_key, d.register, d.row_key, d.content_hash).length > 0;
         if (had) { existed++; continue; }
-        sql.exec(`INSERT INTO register_cells (scope_key, register, row_key, content_hash, project, first_import, segment_sha, src_row, cells) VALUES (?,?,?,?,?,?,?,?,?)`,
-                 d.scope_key, d.register, d.row_key, d.content_hash, d.project ?? null, d.first_import, d.segment_sha, d.src_row, JSON.stringify(d.cells));
+        sql.exec(`INSERT INTO register_cells (scope_key, register, row_key, content_hash, project, first_import, segment_sha, seg_row, byte_at, byte_len, src_row, cells) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                 d.scope_key, d.register, d.row_key, d.content_hash, d.project ?? null, d.first_import, d.segment_sha, d.seg_row ?? null, d.byte_at ?? null, d.byte_len ?? null, d.src_row, JSON.stringify(d.cells));
         const r = indexRowOf(d, d.cells, d.definition);
         const cols = Object.keys(r);
         sql.exec(`INSERT INTO register_rows (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`, ...cols.map((c) => r[c]));
@@ -165,8 +165,15 @@ export function sqliteRowStore(sql, { freeBytes = null, termsOf, now = null } = 
       sql.exec(`DELETE FROM register_cells WHERE register=? AND row_key=?`, register, row_key);
       return { segments: held };
     },
-    /** a segment replaced by its rewrite (R30): the versions it held now point at the new digest */
-    repoint({ from, to }) { sql.exec(`UPDATE register_cells SET segment_sha=? WHERE segment_sha=?`, to, from); },
+    /** a segment replaced by its rewrite (R30): the versions it held now point at the new digest, each at its new row and
+     *  byte range (`places`: old row number → `{row, at, len}`) */
+    repoint({ from, to, places = new Map() }) {
+      for (const c of rows(`SELECT scope_key, register, row_key, content_hash, seg_row FROM register_cells WHERE segment_sha=?`, from)) {
+        const p = places.get(c.seg_row);
+        sql.exec(`UPDATE register_cells SET segment_sha=?, seg_row=?, byte_at=?, byte_len=? WHERE scope_key=? AND register=? AND row_key=? AND content_hash=?`,
+                 to, p ? p.row : c.seg_row, p ? p.at : null, p ? p.len : null, c.scope_key, c.register, c.row_key, c.content_hash);
+      }
+    },
     /** the token rows rebuilt from the cells (R23), in the table's key order */
     rebuildTokens(scope) {
       return this.rebuild(scope).flatMap(tokensOf)
@@ -222,7 +229,8 @@ export function memoryRowStore({ freeBytes = null, termsOf, members = null } = {
       for (const d of delta) {
         if (cells.has(id(d))) { existed++; continue; }
         cells.set(id(d), { scope_key: d.scope_key, register: d.register, row_key: d.row_key, content_hash: d.content_hash, project: d.project ?? null,
-                           first_import: d.first_import, segment_sha: d.segment_sha, src_row: d.src_row, cells: structuredClone(d.cells) });
+                           first_import: d.first_import, segment_sha: d.segment_sha, seg_row: d.seg_row ?? null, byte_at: d.byte_at ?? null, byte_len: d.byte_len ?? null,
+                           src_row: d.src_row, cells: structuredClone(d.cells) });
         index.set(id(d), indexRowOf(d, d.cells, d.definition));
         written++;
       }
@@ -258,7 +266,13 @@ export function memoryRowStore({ freeBytes = null, termsOf, members = null } = {
       for (const [k, c] of [...cells]) if (c.register === register && c.row_key === row_key) { segs.add(c.segment_sha); cells.delete(k); index.delete(k); }
       return { segments: [...segs] };
     },
-    repoint({ from, to }) { for (const c of cells.values()) if (c.segment_sha === from) c.segment_sha = to; },
+    repoint({ from, to, places = new Map() }) {
+      for (const c of cells.values()) {
+        if (c.segment_sha !== from) continue;
+        const p = places.get(c.seg_row);
+        Object.assign(c, { segment_sha: to, seg_row: p ? p.row : c.seg_row, byte_at: p ? p.at : null, byte_len: p ? p.len : null });
+      }
+    },
     rebuildTokens(scope) { return this.rebuild(scope).flatMap(tokensOf); },
     rebuild(scope) {
       const out = [];

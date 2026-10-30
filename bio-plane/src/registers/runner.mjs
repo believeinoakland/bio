@@ -480,7 +480,7 @@ export const runnerMethods = {
       if (!Number.isSafeInteger(ing.byte)) for (let n = 0; n < ing.rows && pos < bytes.length; n++) pos = rowEnd(bytes, pos);   /* a cursor from before `byte` was kept */
       while (pos < bytes.length) {
         if (taken >= rowCap || this.nowMs() - batchStart >= this.bounds.SLICE_TX_MS) { stop = true; break; }
-        const end = rowEnd(bytes, pos);
+        const at = pos, end = rowEnd(bytes, pos);
         const fields = fieldsOf(bytes.subarray(pos, end));
         pos = end;
         if (!fields) continue;
@@ -497,7 +497,7 @@ export const runnerMethods = {
         if (multi) key = `${p.piece}${SEP}${key}`;
         if (removed(key)) { tomb++; continue; }
         const version = { scope_key, register: row.register, row_key: key, content_hash: hash, project: row.project };
-        if (this.port.has(version)) sameN++; else { newN++; delta.push({ ...version, first_import: row.import_id, segment_sha: seg.sha256, src_row, cells, definition: def }); }
+        if (this.port.has(version)) sameN++; else { newN++; delta.push({ ...version, first_import: row.import_id, segment_sha: seg.sha256, seg_row: idx + 1, byte_at: at, byte_len: end - at, src_row, cells, definition: def }); }
         member.push({ idx, key, hash, src_row });
       }
       const finishedSeg = !stop;

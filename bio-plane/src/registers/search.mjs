@@ -317,14 +317,19 @@ export const searchMethods = {
     const bytes = await this.bytesOf(oldSha);
     const ev = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
     const drop = new Set(places.map((p) => p.row_no));
-    const kept = [];
+    const kept = [], from = [];   /* from: each kept line's row number in the old segment (header 0) */
     let header = null, idx = 0;
     if (bytes) {
       const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-      const p = reducedParser((fields) => { if (header === null) { header = fields; kept.push(fields); return; } if (!drop.has(idx++)) kept.push(fields); });
+      const p = reducedParser((fields) => { if (header === null) { header = fields; kept.push(fields); from.push(0); return; } const i = idx++; if (!drop.has(i)) { kept.push(fields); from.push(i + 1); } });
       p.feed(text); p.end();
     }
-    const out = new TextEncoder().encode(kept.map((f) => `${f.map(csvField).join(",")}\n`).join(""));
+    const enc = new TextEncoder();
+    const lines = kept.map((f) => enc.encode(`${f.map(csvField).join(",")}\n`));
+    const out = new Uint8Array(lines.reduce((n, l) => n + l.length, 0));
+    /* R21, R30: every kept row's pointer moves to its row and byte range in the new segment */
+    const moved = new Map();
+    for (let i = 0, at = 0; i < lines.length; at += lines[i].length, i++) { out.set(lines[i], at); if (i) moved.set(from[i], { row: i, at, len: lines[i].length }); }
     const newSha = sha256HexSync(out);
     let purged = false;
     if (ev && bytes) {
@@ -334,7 +339,7 @@ export const searchMethods = {
     const segs = this.rows(`SELECT import_id, piece, n FROM register_segments WHERE sha256=?`, oldSha);
     this.tx(() => {
       this.sql.exec(`UPDATE register_segments SET sha256=?, bytes=?, rows = rows - ? WHERE sha256=?`, newSha, out.length, drop.size, oldSha);
-      this.port.repoint({ from: oldSha, to: newSha });
+      this.port.repoint({ from: oldSha, to: newSha, places: moved });
       /* the rows after a removed one move up by the number removed before them */
       for (const s of segs) {
         const gone = [...drop].sort((x, y) => x - y);

@@ -88,6 +88,39 @@ test("R22: the two implementations answer the same for the same sequence", () =>
   assert.deepEqual(run(m), run(s));
 });
 
+test("R21, R30: each held version points at the segment that first held it, by row number and byte range: the range is that row's bytes; a changed row points into the new import's segment; after a removal the other rows' pointers still resolve", async () => {
+  const w = seeded();
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(30))) });
+  const dec = new TextDecoder();
+  const check = async () => {
+    const held = w.sql(`SELECT segment_sha, seg_row, byte_at, byte_len, src_row, first_import FROM register_cells ORDER BY src_row, first_import`);
+    for (const c of held) {
+      const bytes = await w.registers.bytesOf(c.segment_sha);
+      const line = dec.decode(bytes.subarray(c.byte_at, c.byte_at + c.byte_len));
+      assert.ok(line.endsWith("\n") && line.startsWith(`${c.src_row},`), `the range of source row ${c.src_row} is its row (${JSON.stringify(line.slice(0, 20))})`);
+      assert.equal(dec.decode(bytes).split("\n")[c.seg_row] + "\n", line, "the row number names the same row");
+    }
+    return held;
+  };
+  const first = await check();
+  assert.equal(first.length, 30);
+  w.clock.ms += 3_600_000;
+  START(w);
+  await w.drain({ [URL_]: served(enc(csv(30, { cell: (i) => rowOf(i, i === 7 ? { note: "changed" } : {}) }))) });
+  const second = await check();
+  const changed = second.filter((c) => c.first_import === 2);
+  assert.equal(changed.length, 1, "one new version");
+  assert.notEqual(changed[0].segment_sha, first[0].segment_sha, "it points into the second import's segment");
+  assert.equal(second.filter((c) => c.first_import === 1).every((c) => c.segment_sha === first[0].segment_sha), true, "the rest still point where they were first held");
+  const key = w.sql(`SELECT row_key FROM register_import_rows WHERE import_id=1 AND src_row=5`)[0].row_key;
+  const out = await w.registers.rowExpunge({ register: "town_filings", row_key: key, ground: "unlawful", reason: "the filer was a minor", author: V("alice") });
+  assert.equal(out.ok, true);
+  const after = await check();
+  assert.equal(after.length, 30, "31 versions less the removed row's");
+  assert.equal(after.some((c) => c.src_row === 5), false);
+});
+
 test("R21: a re-import of the same bytes writes no cell, no index row and no segment object beyond its descriptor; one changed row writes one of each; the first import still reads the old version", async () => {
   const w = seeded({ view: sourceKeyed() });
   START(w);

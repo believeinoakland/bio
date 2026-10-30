@@ -118,6 +118,9 @@ CREATE TABLE IF NOT EXISTS register_cells (
   project      TEXT,
   first_import INTEGER NOT NULL,
   segment_sha  TEXT NOT NULL,
+  seg_row      INTEGER,         -- the pointer into the segment that first held it: row number (header 0) and byte range
+  byte_at      INTEGER,
+  byte_len     INTEGER,
   src_row      INTEGER NOT NULL,
   cells        TEXT NOT NULL,   -- JSON: the kept cells
   PRIMARY KEY (scope_key, register, row_key, content_hash)
