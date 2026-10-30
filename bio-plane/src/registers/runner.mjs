@@ -19,6 +19,20 @@ const CONSUMER = "registers";
 const SEP = ROW_KEY_SEPARATOR;
 const utf8 = new TextDecoder("utf-8", { fatal: false });
 const tick = () => new Promise((r) => setTimeout(r, 0));
+/* the reduced copy's rows (register-readers R9: a field quoted only when it needs it): the byte after the row that starts at `at`,
+   a quoted line break never taken for the row's end */
+function rowEnd(bytes, at) {
+  let q = false;
+  for (let i = at; i < bytes.length; i++) { const c = bytes[i]; if (c === 0x22) q = !q; else if (c === 0x0a && !q) return i + 1; }
+  return bytes.length;
+}
+/* one row's fields, or null for a blank line */
+function fieldsOf(line) {
+  let out = null;
+  const p = reducedParser((f) => { if (out === null) out = f; });
+  p.feed(utf8.decode(line)); p.end();
+  return out && !(out.length === 1 && out[0] === "") ? out : null;
+}
 
 export const runnerMethods = {
   /* ------------------------------------------------------------------ pieces and bytes */
@@ -439,26 +453,32 @@ export const runnerMethods = {
       if (!seg) { more = false; break; }
       const bytes = await this.bytesOf(seg.sha256);
       if (!bytes) { save(pieces, { ...cursor, ing }); return this.failSlice(row, "SEGMENT_NOT_HELD", seg.sha256.slice(0, 12), now); }
-      const decoder = new TextDecoder("utf-8", { fatal: false });
-      /* a batch: parse from the segment's start, skip what was read, collect until the transaction bound */
+      /* a batch: read on from the byte where the last batch stopped (the cursor's `byte`), one row at a time, until the
+         transaction bound; nothing already read is parsed again, so a batch's time does not grow with its place in the segment */
       const batchStart = this.nowMs();
       const rowCap = Math.max(20, Math.min(this.bounds.INGEST_BATCH_ROWS, Math.floor((this.bounds.SLICE_TX_MS * 0.6) / Math.max(0.001, this.rowMs ?? 0.5))));
       const delta = [], member = [];
       const placed = (idx) => this.one(`SELECT 1 AS x FROM register_import_rows WHERE import_id=? AND piece=? AND seg_n=? AND row_no=?`, row.import_id, p.piece, seg.n, idx);
-      let header = null, k = 0, taken = 0, newN = 0, sameN = 0, tomb = 0, stop = false;
+      let k = ing.rows, taken = 0, newN = 0, sameN = 0, tomb = 0, stop = false;
       const occ = new Map();
       const occurrence = (digest) => {
-        if (!occ.has(digest)) occ.set(digest, Number(this.one(`SELECT COUNT(*) AS n FROM register_import_rows WHERE import_id=? AND row_key >= ? AND row_key < ?`, row.import_id, `${digest}${SEP}`, `${digest}${SEP}￿`).n));
+        if (!occ.has(digest)) occ.set(digest, Number(this.one(`SELECT COUNT(*) AS n FROM register_import_rows WHERE import_id=? AND row_key >= ? AND row_key < ?`, row.import_id, `${digest}${SEP}`, `${digest}${SEP}\uffff`).n));
         occ.set(digest, occ.get(digest) + 1);
         return occ.get(digest);
       };
-      const walker = reducedParser((fields) => {
-        if (stop) return;
-        if (header === null) { header = fields; return; }
+      const headEnd = rowEnd(bytes, 0);
+      const header = fieldsOf(bytes.subarray(0, headEnd));
+      let pos = Number.isSafeInteger(ing.byte) ? ing.byte : headEnd;
+      if (!Number.isSafeInteger(ing.byte)) for (let n = 0; n < ing.rows && pos < bytes.length; n++) pos = rowEnd(bytes, pos);   /* a cursor from before `byte` was kept */
+      while (pos < bytes.length) {
+        if (taken >= rowCap || this.nowMs() - batchStart >= this.bounds.SLICE_TX_MS) { stop = true; break; }
+        const end = rowEnd(bytes, pos);
+        const fields = fieldsOf(bytes.subarray(pos, end));
+        pos = end;
+        if (!fields) continue;
         const idx = k++;
-        if (idx < ing.rows) return;
-        if (taken >= rowCap || this.nowMs() - batchStart >= this.bounds.SLICE_TX_MS) { stop = true; return; }
-        if (placed(idx)) { taken++; return; }   /* a replayed position: already read (R17) */
+        taken++;
+        if (placed(idx)) continue;   /* a replayed position: already read (R17) */
         const cells = {};
         for (let i = 1; i < header.length; i++) cells[header[i]] = fields[i] ?? "";
         const src_row = Number(fields[0]);
@@ -467,15 +487,11 @@ export const runnerMethods = {
         if (def.row_key_basis === "content") key = `${hash}${SEP}${occurrence(hash)}`;
         else key = (def.row_key || []).map((c) => cells[c] ?? "").join(SEP);
         if (multi) key = `${p.piece}${SEP}${key}`;
-        taken++;
-        if (removed(key)) { tomb++; return; }
+        if (removed(key)) { tomb++; continue; }
         const version = { scope_key, register: row.register, row_key: key, content_hash: hash, project: row.project };
         if (this.port.has(version)) sameN++; else { newN++; delta.push({ ...version, first_import: row.import_id, segment_sha: seg.sha256, src_row, cells, definition: def }); }
         member.push({ idx, key, hash, src_row });
-      });
-      const CH = 1 << 16;
-      for (let i = 0; i < bytes.length && !stop; i += CH) walker.feed(decoder.decode(bytes.subarray(i, i + CH), { stream: true }));
-      if (!stop) { walker.feed(decoder.decode()); walker.end(); }
+      }
       const finishedSeg = !stop;
       const wrote = performance.now();
       this.tx(() => {
@@ -483,8 +499,8 @@ export const runnerMethods = {
         for (const m of member) this.sql.exec(`INSERT OR IGNORE INTO register_import_rows (import_id, piece, seg_n, row_no, row_key, content_hash, src_row, project) VALUES (?,?,?,?,?,?,?,?)`,
                                               row.import_id, p.piece, seg.n, m.idx, m.key, m.hash, m.src_row, row.project);
         this.sql.exec(`UPDATE register_imports SET rows_new = rows_new + ?, rows_unchanged = rows_unchanged + ?, rows_tombstoned = rows_tombstoned + ? WHERE import_id=?`, w.written, sameN + w.existed, tomb, row.import_id);
-        if (finishedSeg) { ing.seg += 1; ing.rows = 0; } else ing.rows += taken + 0;
-        /* rows skipped over as tombstoned are counted in `taken` too, so the position moves past them */
+        if (finishedSeg) { ing.seg += 1; ing.rows = 0; delete ing.byte; } else { ing.rows += taken; ing.byte = pos; }
+        /* rows skipped over as tombstoned or already placed are counted in `taken` too, so the position moves past them */
         cursor.ing = ing;
         const done = ing.seg >= p.segments.length;
         if (done) p.state = "done";

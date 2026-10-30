@@ -118,6 +118,18 @@ test("R12: a slice killed in the middle of reading a segment resumes from its po
   assert.notEqual(again.import, row.import_id);
 });
 
+test("R12, R20: with a real clock and a 5 ms transaction bound, a 30,000-row segment is read to its end: each batch reads on from where the last stopped, so no batch re-reads the rows before it", async () => {
+  const w = seeded({ bounds: { segment_max: 64 * 1024 * 1024, SLICE_TX_MS: 5 } });
+  w.registers.clock = () => Date.now();
+  START(w);
+  w.clock.ms = Date.now() + 3_600_000;   /* the alarm's instant: past every due time the real clock wrote */
+  const { ticks } = await w.drain({ [URL_]: served(enc(csv(30000))) }, { max: 5000, advance: 1 });
+  const row = w.sql(`SELECT state, rows_new FROM register_imports`)[0];
+  assert.deepEqual([row.state, row.rows_new], ["indexed", 30000]);
+  assert.equal(w.count("register_segments"), 1, "one segment, read in many batches");
+  assert.ok(ticks.length > 3);
+});
+
 test("R13: a running import shows its pieces and progress; pause runs nothing; resume continues from the cursor; stop keeps what was brought in and says so; a hidden import is NO_SUCH_REGISTER_IMPORT", async () => {
   const w = seeded({ bounds: { segment_max: 8 * 1024, INGEST_BATCH_ROWS: 20, INGEST_SLICE_BATCHES: 1 } });
   const st = START(w);
