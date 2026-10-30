@@ -60,6 +60,7 @@
 **acquisition**
 - T53-583 · K5715, R126, R127 · met once T53-580 and T53-581 land
 - T53-589 · N1261 (K5747) · `checks.mjs` reads DEC-412's `refusal.CAPTURE_NOT_KEPT` row (R29, R31) instead of its stand-in
+- ONB-2 · onboarding (`next.md` ONB-2, placed here) · `checks.mjs:24`: the contact URL names `believeinoakland/bio`: it names `civicsmith/civicsmith`, as instance-setup ONB-2 in round 2
 **file-safety**
 - T53-589 · N1261 (K5747) · `checks.mjs` reads `refusal.SIGNATURES_RUN_RECENT` by `rowWord` (R24) instead of its stand-in
 - T53-571 · K5705, R66 · the container's other picture kinds: uses reader-container (the edge entered at START) and image-cover's redraw (T53-570)
