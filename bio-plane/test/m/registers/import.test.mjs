@@ -69,16 +69,14 @@ test("R12: importDue and importWake answer from the queue; with nothing queued, 
 });
 
 test("R12 (G9, R67): an import killed between each pair of slices ends as an uninterrupted run does: the same row table, counts and segment digests", async () => {
-  const n = Number(process.env.REGISTERS_RESTART_ROWS || 900);
+  /* at the suite's size; the 1,000,000-row figure is a measurement (M-R7), never a module test (K5819) */
+  const n = 900;
   const text = csv(n, { cell: (i) => rowOf(i) });
-  /* small slices for the gate's 900 rows; at the requirement's 1,000,000 the slices are of ordinary size, still killed between each pair */
-  const big = n > 10000;
-  const small = { segment_max: big ? 1024 * 1024 : 12 * 1024 };
-  const bounds = big ? { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 500, INGEST_SLICE_BATCHES: 4, SLICE_FETCH_BYTES: 4 * 1024 * 1024 }
-    : { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 40, INGEST_SLICE_BATCHES: 1, SLICE_FETCH_BYTES: 30 * 1024 };
+  const small = { segment_max: 12 * 1024 };
+  const bounds = { SLICE_TX_MS: 100, INGEST_BATCH_ROWS: 40, INGEST_SLICE_BATCHES: 1, SLICE_FETCH_BYTES: 30 * 1024 };
   const whole = seeded({ bounds: { ...small, ...bounds } });
   START(whole);
-  const max = big ? Math.ceil(n / 50) : Math.max(400, Math.ceil(n / 20));
+  const max = 400;
   const a = await whole.drain({ [URL_]: served(enc(text)) }, { max });
   const killed = seeded({ bounds: { ...small, ...bounds } });
   START(killed);
@@ -350,7 +348,7 @@ test("R19 control: a team import is visible to every member; a row first stored 
 });
 
 test("R20 (G9, K4354): during a large import a member's list and search answer within budget and no write transaction holds the worker longer than SLICE_TX_MS", async () => {
-  const rows = Number(process.env.REGISTERS_ROWS || 30000);
+  const rows = 30000;   /* the suite's size; at 1,000,000 rows it is a measurement (M-R7), never a module test (K5819) */
   const w = seeded({ bounds: { segment_max: 1024 * 1024, SLICE_TX_MS: 100 } });
   const maxTicks = Math.max(400, Math.ceil(rows / 2000));
   START(w);

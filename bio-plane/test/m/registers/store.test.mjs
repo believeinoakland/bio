@@ -240,7 +240,7 @@ test("R23: with the shelf nearly full an import pauses with reason shelf and the
 test("R23: a slice holds one segment and little else: no segment of an import is larger than half of SLICE_MEMORY_MB, whatever segment size was asked for", async () => {
   const w = seeded({ bounds: { segment_max: 1024 ** 3 } });
   assert.equal(w.registers.bounds.segment_max, Math.floor((w.registers.bounds.SLICE_MEMORY_MB * 1048576) / 2));
-  const rows = Number(process.env.REGISTERS_SEGMENT_ROWS || 4000);
+  const rows = 4000;
   const small = seeded({ bounds: { SLICE_MEMORY_MB: 0.02 } });
   small.registers.importStart({ register: "town_filings", filter: {}, scope: "project", project: small.P, author: V("bob"), viewer: V("bob"), holes: { table: "2025" } });
   await small.drain({ [URL_]: served(enc(csv(rows))) });
@@ -250,8 +250,8 @@ test("R23: a slice holds one segment and little else: no segment of an import is
   assert.equal(small.count("register_cells"), rows);
 });
 
-test("R23: an index of REGISTERS_INDEX_ROWS rows (1,000,000 by the requirement; 30,000 by default to keep the gate short) answers rowOf and a one-criterion page within 1,500 ms", async () => {
-  const rows = Number(process.env.REGISTERS_INDEX_ROWS || 30000);
+test("R23: an index at the suite's size (30,000 rows) answers rowOf and a one-criterion page within 1,500 ms; at 1,000,000 rows that time is a measurement (M-R3), never a module test (K5819)", async () => {
+  const rows = 30000;
   const w = seeded({ bounds: { segment_max: 1024 * 1024 } });
   START(w);
   await w.drain({ [URL_]: served(enc(csv(rows))) }, { max: Math.max(400, Math.ceil(rows / 2000)) });
